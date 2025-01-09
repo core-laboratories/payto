@@ -7,7 +7,7 @@
 		ListBox
 	} from '$lib/components';
 
-	import { derived } from 'svelte/store';
+	import { derived, writable } from 'svelte/store';
 	import { constructor } from '$lib/store/constructor.store';
 	import { calculateColorDistance } from '$lib/helpers/euclidean-distance.helper';
 	import { join } from '$lib/helpers/join.helper';
@@ -23,13 +23,22 @@
 			calculateColorDistance($constructor.design.colorF || '#192a14', $constructor.design.colorB || '#77bc65')
 		)
 	);
+
+	const barcodeValue = derived(constructor, $constructor => $constructor.design.barcode ?? 'qr');
+
+	function updateBarcode(value: string | number) {
+		constructor.update(c => ({
+			...c,
+			design: { ...c.design, barcode: String(value) }
+		}));
+	}
 </script>
 
 <div class="[ flex flex-col gap-6 ]">
 	<FieldGroup>
 		<FieldGroupLabel>Company Name</FieldGroupLabel>
 		<FieldGroupText
-			placeholder="Acme Corporation"
+			placeholder="PayTo"
 			bind:value={$constructor.design.org}
 			maxlength="25"
 		/>
@@ -66,14 +75,19 @@
 	</FieldGroup>
 
 	<div class="[ flex flex-col ]">
-		<small class="[ -mb-1 text-gray-400 ]">
+		<p class="[ -mb-1 text-gray-400 ]">
 			Note: Similar Colors will not be accepted - the minimum Euclidean distance is 100.
-		</small>
+		</p>
 	</div>
 
 	<FieldGroup>
-		<FieldGroupLabel>Barcode type (QR code as default)</FieldGroupLabel>
-		<ListBox id="barcode-list" bind:value={$constructor.design.barcode} items={barcodeTypes} />
+		<FieldGroupLabel>Default Barcode Type</FieldGroupLabel>
+		<ListBox
+			id="barcode-list"
+			value={$barcodeValue}
+			on:change={e => updateBarcode(e.detail)}
+			items={barcodeTypes}
+		/>
 	</FieldGroup>
 
 	<button

@@ -70,7 +70,7 @@
 						{#if $org}
 							{$org}
 						{:else}
-							Acme Corporation
+							PayTo
 						{/if}
 					</span>
 				</div>
@@ -88,7 +88,7 @@
 						{#if $org}
 							{$org}
 						{:else}
-							Acme Corporation
+							PayTo
 						{/if}
 					</span>
 					<div class="text-right">
@@ -174,6 +174,6 @@
 		</div>
 	</div>
 
-	<div class="mt-3"><small class="[ -mb-1 text-gray-400 ]">Note: This is a preview of the design for Payto transfers, compatible with Apple Wallet layout guidelines. The barcode is a static example.</small></div>
+	<div class="mt-1.5"><span class="[ text-sm text-gray-400 ]">Note: This is a preview of the design.</span></div>
 
 </div>

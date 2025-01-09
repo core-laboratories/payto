@@ -150,27 +150,27 @@
 	<Row>
 		<Box>
 			<BoxTitle>
-				<label for="designCheckbox" class="mr-2">Design</label>
+				<label for="designCheckbox" class="mr-2">Pass</label>
 				<input
 					type="checkbox"
 					bind:checked={$designEnabled}
 					id="designCheckbox"
 				/>
 			</BoxTitle>
-			{#if $designEnabled}
-				<BoxContent>
-					<div class="flex flex-col gap-x-6 gap-y-4 md:flex-row">
-						<div class="w-full md:w-1/2">
+			<BoxContent>
+				{#if $designEnabled}
+					<div class="flex flex-col gap-x-6 gap-y-4 md:flex-row md:flex-nowrap">
+						<div class="w-full md:w-[400px] flex-shrink-0">
 							<WalletCard
 								bind:type={$type}
 							/>
 						</div>
-						<div class="w-full md:flex-grow">
+						<div class="w-full flex-1 min-w-0">
 							<DesignContent />
 						</div>
 					</div>
-				</BoxContent>
-			{/if}
+				{/if}
+			</BoxContent>
 		</Box>
 	</Row>
 	<Row>
@@ -187,7 +187,7 @@
 						>RFC 8905</a>.
 						<a
 							class="[ transition-all duration-200 ] [ visited:text-gray-200 hover:text-gray-300 ]"
-							href="https://github.com/bchainhub/payto/blob/master/docs/schema.md"
+							href="https://github.com/bchainhub/payto/blob/master/docs/scheme.md"
 							target="_blank"
 							rel="noreferrer"
 						>Documentation</a>.

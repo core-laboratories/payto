@@ -1,4 +1,4 @@
-# Payto Scheme
+# PayTo Scheme
 
 ## Specification: PAYTO Uniform Resource Identifier (URI) Scheme
 
@@ -32,7 +32,7 @@ payto-URI = "payto://" authority path-abempty [ "?" opts ]
 
 The primary operation on a PAYTO URI is its resolution. This is typically accomplished by making a payment to the designated recipient.
 
-## Payto Functionalities
+## PayTo Functionalities
 
 ### Network
 
@@ -266,7 +266,7 @@ Examples:
 
 Open navigation apps with the payto locations are possible via the [geo URI scheme](https://en.wikipedia.org/wiki/Geo_URI_scheme) or [comgooglemaps URI scheme](https://developers.google.com/maps/documentation/urls/get-started#universal-cross-platform-syntax), alternatively any other map application.
 
-### Design
+### Pass
 
 The PAYTO URI scheme is designed to be flexible and extensible. It allows for the inclusion of additional parameters to support various payment types and use-cases. The scheme is intended to be used in a wide range of applications, including web browsers, mobile apps, and other software that handles payments. For this purposes you can define the payment instruction with some of the possibilities:
 

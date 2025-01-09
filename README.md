@@ -1,4 +1,4 @@
-# Payto Money
+# PayTo Money
 
 > Decentralized Asset Transfer
 
@@ -6,14 +6,14 @@ The 'payto' URI scheme builder supports Payments as outlined in [RFC 8905](https
 
 ## Technical Specifications and Organizational Notes
 
-- [Extended Payto URI](docs/scheme.md)
+- [Extended PayTo URI](docs/scheme.md)
 - [RFC 8905](https://datatracker.ietf.org/doc/rfc8905/)
 
-## payTo libraries
+## PayTo libraries
 
 Typescript / JavaScript:
 
-- [Payto resource locator](https://github.com/bchainhub/payto-rl)
+- [PayTo resource locator](https://github.com/bchainhub/payto-rl)
 
 ## Project Initialization
 
