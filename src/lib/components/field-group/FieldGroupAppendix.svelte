@@ -7,7 +7,7 @@
 	const ctx = getFieldGroupContext();
 </script>
 
-<small class="[ -mb-1 text-gray-400 ]" id={ctx.descriptionId}>
+<small class="-mb-1 text-gray-400" id={ctx.descriptionId}>
 	{#if children}
 		<svelte:component this={children} />
 	{/if}

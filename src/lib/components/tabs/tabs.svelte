@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { writable } from 'svelte/store';
-	import { join } from '$lib/helpers/join.helper';
+	import { writable, derived } from 'svelte/store';
 	import { ListBox } from '$lib/components';
 	import { fade } from 'svelte/transition';
 	import { getObjectByType } from '$lib/helpers/get-object-by-type.helper';
@@ -36,12 +35,12 @@
 		ticker: paymentTypes[key].ticker
 	}));
 
-	$: tabs.set(selectedTab);
+	const activeTab = derived(tabs, $tabs => $tabs);
 </script>
 
 <div class="flex w-full flex-col gap-2">
 	<label id="payment-type-label" for="payment-type" class="font-bold">Payment Type</label>
-	<div class="[ flex flex-col items-stretch gap-4 ]">
+	<div class="flex flex-col items-stretch gap-4">
 		<div in:fade>
 			<ListBox id="payment-type" bind:value={selectedTab} items={listboxItems} />
 		</div>
@@ -49,12 +48,9 @@
 
 	<div class="mt-4">
 		{#each Object.keys(paymentTypes) as value}
-			{#if $tabs === value}
+			{#if $activeTab === value}
 				<div
-					class={join(
-						'[ outline-none ]',
-						'[ focus:outline-none focus-visible:ring-1 focus-visible:ring-opacity-75 focus-visible:ring-green-800 focus-visible:ring-offset-green-700 focus-visible:ring-offset-2 ]'
-					)}
+					class="outline-none focus:outline-none focus-visible:ring-1 focus-visible:ring-opacity-75 focus-visible:ring-green-800 focus-visible:ring-offset-green-700 focus-visible:ring-offset-2"
 					in:fade
 				>
 					<svelte:component this={paymentTypes[value].component} />

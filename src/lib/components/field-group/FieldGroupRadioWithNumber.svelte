@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { writable } from 'svelte/store';
-	import { join } from '$lib/helpers/join.helper';
+	import { writable, derived } from 'svelte/store';
 	import { getFieldGroupContext } from './fieldgroup.context';
 
 	interface Option {
@@ -28,20 +27,20 @@
 	export let disabled: boolean = false;
 	export let outputValue: string | null = '';
 
-	let internalCheckedValue = writable(defaultChecked || options[0]?.value || '');
-	let checkedValue: string = '';
+	const internalCheckedValue = writable(defaultChecked || options[0]?.value || '');
+	const checkedValue = derived(internalCheckedValue, $val => $val);
 
-	$: internalCheckedValue.subscribe((val) => (checkedValue = val));
+	const computedOutput = derived(
+		[checkedValue, writable(numberValue)],
+		([$checked, $number]) => $checked === 'd' && $number > 1 ? `${$number}d` : $checked
+	);
 
-	$: outputValue = checkedValue === 'd' && numberValue > 1 ? `${numberValue}d` : checkedValue;
+	// Subscribe to update the outputValue
+	computedOutput.subscribe(value => outputValue = value);
+
+	const computedClass = 'plb-2 pli-3 text-start bg-gray-900 rounded-md border-none caret-teal-500 focus:outline-none focus-visible:ring-4 focus-visible:ring-opacity-75 focus-visible:ring-green-800 focus-visible:ring-offset-green-700 focus-visible:ring-offset-2 w-1/4 sm:text-sm mr-2'
 
 	const ctx = getFieldGroupContext();
-
-	$: computedClass = join(
-		'[ plb-2 pli-3 text-start bg-gray-900 rounded-md border-none caret-teal-500 ]',
-		'[ focus:outline-none focus-visible:ring-4 focus-visible:ring-opacity-75 focus-visible:ring-green-800 focus-visible:ring-offset-green-700 focus-visible:ring-offset-2 ]',
-		'[ w-1/4 sm:text-sm mr-2 ]'
-	);
 </script>
 
 <div>
@@ -52,7 +51,7 @@
 					type="radio"
 					name="recurrencePattern"
 					value={option.value}
-					bind:group={checkedValue}
+					bind:group={$checkedValue}
 					on:change={() => internalCheckedValue.set(option.value)}
 					disabled={option.disabled || disabled} />
 				<span class="ml-1">{option.name}</span>
@@ -61,7 +60,7 @@
 	</div>
 	{#each options as option}
 		<div class="flex items-center">
-			{#if option.hasNumberInput && checkedValue === option.value}
+			{#if option.hasNumberInput && $checkedValue === option.value}
 				<label for="input-{option.name}" class="mr-2">{option.name}:</label>
 				<input
 					id="input-{option.name}"
@@ -71,7 +70,7 @@
 					min={numberMin}
 					max={numberMax}
 					placeholder={option.name}
-					disabled={checkedValue !== option.value || disabled} />
+					disabled={$checkedValue !== option.value || disabled} />
 			{/if}
 		</div>
 	{/each}

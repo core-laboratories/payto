@@ -7,10 +7,9 @@
 		ListBox
 	} from '$lib/components';
 
-	import { derived } from 'svelte/store';
+	import { derived, writable } from 'svelte/store';
 	import { constructor } from '$lib/store/constructor.store';
 	import { calculateColorDistance } from '$lib/helpers/euclidean-distance.helper';
-	import { join } from '$lib/helpers/join.helper';
 	import { enhance } from '$app/forms';
 
 	const barcodeTypes = [
@@ -27,6 +26,7 @@
 	);
 
 	const barcodeValue = derived(constructor, $constructor => $constructor.design.barcode ?? 'qr');
+	const isGenerating = writable(false);
 
 	function updateBarcode(value: string | number) {
 		constructor.update(c => ({
@@ -35,10 +35,25 @@
 		}));
 	}
 
-	let isGenerating = false;
+	const formEnhance = () => {
+		isGenerating.set(true);
+		return async ({ result }: { result: any }) => {
+			isGenerating.set(false);
+			if (result.type === 'success' && result.data instanceof Blob) {
+				const url = URL.createObjectURL(result.data);
+				const a = document.createElement('a');
+				a.href = url;
+				a.download = `payto-${Date.now()}.pkpass`;
+				document.body.appendChild(a);
+				a.click();
+				document.body.removeChild(a);
+				URL.revokeObjectURL(url);
+			}
+		};
+	};
 </script>
 
-<div class="[ flex flex-col gap-6 ]">
+<div class="flex flex-col gap-6">
 	<FieldGroup>
 		<FieldGroupLabel>Company Name</FieldGroupLabel>
 		<FieldGroupText
@@ -57,7 +72,7 @@
 		/>
 	</FieldGroup>
 
-	<div class="[ flex flex-col gap-6 ]">Theme setup:</div>
+	<div class="flex flex-col gap-6">Theme setup:</div>
 
 	<div>
 		Current Color Euclidean distance:
@@ -78,8 +93,8 @@
 		/>
 	</FieldGroup>
 
-	<div class="[ flex flex-col ]">
-		<p class="[ -mb-1 text-gray-400 ]">
+	<div class="flex flex-col">
+		<p class="-mb-1 text-gray-400">
 			Note: Similar Colors will not be accepted - the minimum Euclidean distance is 100.
 		</p>
 	</div>
@@ -97,38 +112,17 @@
 	<form
 		method="POST"
 		action="?/generatePass"
-		use:enhance={() => {
-			isGenerating = true;
-			return async ({ result }) => {
-				isGenerating = false;
-				if (result.type === 'success' && result.data instanceof Blob) {
-					const url = URL.createObjectURL(result.data);
-					const a = document.createElement('a');
-					a.href = url;
-					a.download = `payto-${Date.now()}.pkpass`;
-					document.body.appendChild(a);
-					a.click();
-					document.body.removeChild(a);
-					URL.revokeObjectURL(url);
-				}
-			};
-		}}
+		use:enhance={formEnhance}
 	>
 		<input type="hidden" name="props" value={JSON.stringify($constructor)} />
 		<input type="hidden" name="link" value={JSON.stringify({...$constructor, design: undefined})} />
 
 		<button
-			class={join(
-				'[ is-full bs-12 mbs-3 plb-2 pli-3 text-center text-white border border-gray-700 bg-gray-700 rounded-md transition-all duration-200 outline-none ]',
-				'[ focus-visible:ring-4 focus-visible:ring-opacity-75 focus-visible:ring-green-800 focus-visible:ring-offset-green-700 focus-visible:ring-offset-2 ]',
-				'[ active:scale-[.99] ]',
-				'[ sm:text-sm ]',
-				isGenerating ? 'opacity-50 cursor-not-allowed' : ''
-			)}
+			class="is-full bs-12 mbs-3 plb-2 pli-3 text-center text-white border border-gray-700 bg-gray-700 rounded-md transition-all duration-200 outline-none focus-visible:ring-4 focus-visible:ring-opacity-75 focus-visible:ring-green-800 focus-visible:ring-offset-green-700 focus-visible:ring-offset-2 active:scale-[.99] sm:text-sm {$isGenerating ? 'opacity-50 cursor-not-allowed' : ''}"
 			type="submit"
-			disabled={isGenerating}
+			disabled={$isGenerating}
 		>
-			{isGenerating ? 'Generating...' : 'Download Pass'}
+			{$isGenerating ? 'Generating...' : 'Download Pass'}
 		</button>
 	</form>
 </div>

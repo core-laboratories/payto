@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Component } from 'svelte';
-	import { join } from '$lib/helpers/join.helper';
+	import { derived, writable } from 'svelte/store';
 	import { setFieldGroupContext } from './fieldgroup.context';
 
 	setFieldGroupContext();
@@ -10,10 +10,15 @@
 	export let flexType: string = 'flex-col';
 	export let itemPosition: string = 'items-stretch';
 
-	$: computedClass = join('[ flex gap-2 ]', itemPosition, flexType, classValue);
+	const baseClass = 'flex gap-2';
+	const computedClass = derived(
+		[writable(itemPosition), writable(flexType), writable(classValue)],
+		([$itemPosition, $flexType, $classValue]) =>
+			`${baseClass} ${$itemPosition} ${$flexType} ${$classValue}`
+	);
 </script>
 
-<div class={computedClass}>
+<div class={$computedClass}>
 	{#if children}
 		<svelte:component this={children} />
 	{/if}
