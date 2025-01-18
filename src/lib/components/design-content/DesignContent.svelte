@@ -7,15 +7,17 @@
 		ListBox
 	} from '$lib/components';
 
-	import { derived, writable } from 'svelte/store';
+	import { derived } from 'svelte/store';
 	import { constructor } from '$lib/store/constructor.store';
 	import { calculateColorDistance } from '$lib/helpers/euclidean-distance.helper';
 	import { join } from '$lib/helpers/join.helper';
+	import { enhance } from '$app/forms';
 
 	const barcodeTypes = [
 		{ label: 'QR Code', value: 'qr', ticker: 'QR' },
 		{ label: 'PDF 417', value: 'pdf417', ticker: 'PDF' },
-		{ label: 'Aztec', value: 'aztec', ticker: 'Aztec' }
+		{ label: 'Aztec', value: 'aztec', ticker: 'Aztec' },
+		{ label: 'Code 128', value: 'code128', ticker: 'Code 128' }
 	];
 
 	const distance = derived(constructor, $constructor =>
@@ -32,6 +34,8 @@
 			design: { ...c.design, barcode: String(value) }
 		}));
 	}
+
+	let isGenerating = false;
 </script>
 
 <div class="[ flex flex-col gap-6 ]">
@@ -90,16 +94,41 @@
 		/>
 	</FieldGroup>
 
-	<button
-		class={join(
-			'[ is-full bs-12 mbs-auto plb-2 pli-3 text-center text-white border border-gray-700 bg-gray-700 rounded-md transition-all duration-200 outline-none ]',
-			'[ focus-visible:ring-4 focus-visible:ring-opacity-75 focus-visible:ring-green-800 focus-visible:ring-offset-green-700 focus-visible:ring-offset-2 ]',
-			'[ active:scale-[.99] ]',
-			'[ sm:text-sm ]'
-		)}
-		type="button"
-		on:pointerdown={() => constructor.resetDesign()}
+	<form
+		method="POST"
+		action="?/generatePass"
+		use:enhance={() => {
+			isGenerating = true;
+			return async ({ result }) => {
+				isGenerating = false;
+				if (result.type === 'success' && result.data instanceof Blob) {
+					const url = URL.createObjectURL(result.data);
+					const a = document.createElement('a');
+					a.href = url;
+					a.download = `payto-${Date.now()}.pkpass`;
+					document.body.appendChild(a);
+					a.click();
+					document.body.removeChild(a);
+					URL.revokeObjectURL(url);
+				}
+			};
+		}}
 	>
-		Clear
-	</button>
+		<input type="hidden" name="props" value={JSON.stringify($constructor)} />
+		<input type="hidden" name="link" value={JSON.stringify({...$constructor, design: undefined})} />
+
+		<button
+			class={join(
+				'[ is-full bs-12 mbs-3 plb-2 pli-3 text-center text-white border border-gray-700 bg-gray-700 rounded-md transition-all duration-200 outline-none ]',
+				'[ focus-visible:ring-4 focus-visible:ring-opacity-75 focus-visible:ring-green-800 focus-visible:ring-offset-green-700 focus-visible:ring-offset-2 ]',
+				'[ active:scale-[.99] ]',
+				'[ sm:text-sm ]',
+				isGenerating ? 'opacity-50 cursor-not-allowed' : ''
+			)}
+			type="submit"
+			disabled={isGenerating}
+		>
+			{isGenerating ? 'Generating...' : 'Download Pass'}
+		</button>
+	</form>
 </div>
