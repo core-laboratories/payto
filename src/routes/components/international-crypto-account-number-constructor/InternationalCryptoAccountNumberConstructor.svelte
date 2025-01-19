@@ -20,6 +20,7 @@
 	let timeDateValue = '';
 	let classUpperValue = $constructor.networks.ican.params?.currency?.value?.toLowerCase()?.startsWith('0x') ? '' : 'uppercase';
 	let tokens = TRANSPORT.ican.find(item => item.value === $constructor.networks.ican.network)?.tokens;
+	let addressValidated: boolean = false;
 	let addressError: boolean = false;
 	let addressTestnet: boolean = false;
 	let addressEnterprise: boolean = false;
@@ -74,6 +75,7 @@
 
 	function validateAddress(value: string, network?: string) {
 		if (value === '') {
+			addressValidated = false;
 			addressError = false;
 			addressTestnet = false;
 			addressEnterprise = false;
@@ -90,12 +92,14 @@
 			if (!result.success) {
 				const error = result.error.errors[0];
 				if (!error.fatal) {
+					addressValidated = true;
 					addressError = false;
 					addressTestnet = error.path.includes('testnet');
 					addressEnterprise = error.path.includes('enterprise');
 					addressMsg = error.message;
 					$constructor.networks.ican.destination = value;
 				} else {
+					addressValidated = false;
 					addressError = true;
 					addressTestnet = false;
 					addressEnterprise = false;
@@ -103,6 +107,7 @@
 					$constructor.networks.ican.destination = undefined;
 				}
 			} else {
+				addressValidated = true;
 				addressError = false;
 				addressTestnet = false;
 				addressEnterprise = false;
@@ -111,6 +116,7 @@
 
 			}
 		} catch (error: any) {
+			addressValidated = false;
 			addressError = true;
 			addressTestnet = false;
 			addressEnterprise = false;
@@ -186,7 +192,8 @@
 				classValue={`font-mono ${
 					addressError ? 'border-2 border-rose-500' :
 					addressTestnet ? 'border-2 border-amber-500' :
-					addressEnterprise ? 'border-2 border-amber-500' : ''
+					addressEnterprise ? 'border-2 border-amber-500' :
+					addressValidated ? 'border-2 border-emerald-500' : ''
 				}`}
 			/>
 			{#if addressError}
