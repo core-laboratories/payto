@@ -34,7 +34,7 @@ export const addressSchema = z.object({
 			if (!icanResult.isValid) {
 				ctx.addIssue({
 					code: z.ZodIssueCode.custom,
-					message: 'Invalid ICAN address format',
+					message: 'Invalid CORE address format',
 					path: ['wallet'],
 					fatal: true
 				});
@@ -45,7 +45,7 @@ export const addressSchema = z.object({
 			} else if (icanResult.metadata?.isTestnet && icanResult.network === 'xab') {
 				ctx.addIssue({
 					code: z.ZodIssueCode.custom,
-					message: 'Testnet ICAN address detected',
+					message: 'CORE testnet address detected',
 					path: ['wallet', 'testnet'],
 					fatal: !isTestnetAllowed
 				});
@@ -56,7 +56,7 @@ export const addressSchema = z.object({
 			} else if (icanResult.network === 'xce') {
 				ctx.addIssue({
 					code: z.ZodIssueCode.custom,
-					message: 'Enterprise ICAN address detected',
+					message: 'CORE enterprise address detected',
 					path: ['wallet', 'enterprise'],
 					fatal: !isEnterpriseAllowed
 				});
@@ -64,10 +64,12 @@ export const addressSchema = z.object({
 					state.networks.ican.network = 'xce';
 					return state;
 				});
-			} else if (icanResult.network === 'xcb') {
-				constructor.update(state => {
-					state.networks.ican.network = 'xcb';
-					return state;
+			} else if (icanResult.network !== data.network) {
+				ctx.addIssue({
+					code: z.ZodIssueCode.custom,
+					message: 'Different CORE network detected',
+					path: ['wallet'],
+					fatal: true
 				});
 			}
 			break;
@@ -89,7 +91,7 @@ export const addressSchema = z.object({
 			} else if (ethResult.metadata?.isTestnet) {
 				ctx.addIssue({
 					code: z.ZodIssueCode.custom,
-					message: 'Testnet ETH address detected',
+					message: 'ETH testnet address detected',
 					path: ['wallet', 'testnet'],
 					fatal: !isTestnetAllowed
 				});
@@ -109,7 +111,7 @@ export const addressSchema = z.object({
 			} else if (btcResult.metadata?.isTestnet) {
 				ctx.addIssue({
 					code: z.ZodIssueCode.custom,
-					message: 'Testnet BTC address detected',
+					message: 'BTC testnet address detected',
 					path: ['wallet', 'testnet'],
 					fatal: !isTestnetAllowed
 				});
@@ -129,7 +131,7 @@ export const addressSchema = z.object({
 			} else if (ltcResult.metadata?.isTestnet) {
 				ctx.addIssue({
 					code: z.ZodIssueCode.custom,
-					message: 'Testnet LTC address detected',
+					message: 'LTC testnet address detected',
 					path: ['wallet', 'testnet'],
 					fatal: !isTestnetAllowed
 				});
@@ -149,7 +151,7 @@ export const addressSchema = z.object({
 			} else if (solResult.metadata?.isTestnet) {
 				ctx.addIssue({
 					code: z.ZodIssueCode.custom,
-					message: 'Testnet SOL address detected',
+					message: 'SOL testnet address detected',
 					path: ['wallet', 'testnet'],
 					fatal: !isTestnetAllowed
 				});
@@ -195,7 +197,7 @@ export const addressSchema = z.object({
 			} else if (dotResult.metadata?.isTestnet) {
 				ctx.addIssue({
 					code: z.ZodIssueCode.custom,
-					message: 'Testnet DOT address detected',
+					message: 'DOT testnet address detected',
 					path: ['wallet', 'testnet'],
 					fatal: !isTestnetAllowed
 				});
@@ -229,7 +231,7 @@ export const addressSchema = z.object({
 			} else if (xmrTestnetResult) {
 				ctx.addIssue({
 					code: z.ZodIssueCode.custom,
-					message: 'Testnet XMR address detected',
+					message: 'XMR testnet address detected',
 					path: ['wallet', 'testnet'],
 					fatal: !isTestnetAllowed
 				});

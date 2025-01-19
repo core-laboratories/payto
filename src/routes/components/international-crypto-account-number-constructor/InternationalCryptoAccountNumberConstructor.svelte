@@ -108,6 +108,7 @@
 				addressEnterprise = false;
 				addressMsg = '';
 				$constructor.networks.ican.destination = value;
+
 			}
 		} catch (error: any) {
 			addressError = true;
@@ -152,7 +153,10 @@
 						class="absolute mli-3 p-2 text-gray-50 bg-gray-700 rounded-full outline-none transition-all"
 						title="Back to network menu options"
 						aria-label="Back to network menu options"
-						on:pointerdown={() => ($constructor.networks.ican.network = 'xcb')}
+						on:pointerdown={() => {
+							$constructor.networks.ican.network = 'xcb';
+							validateCurrentAddress();
+						}}
 					>
 						<svg class="bs-4 is-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
 							<path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
@@ -180,19 +184,17 @@
 				on:input={handleAddressInput}
 				on:change={handleAddressInput}
 				classValue={`font-mono ${
-					addressError
-						? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
-						: addressValue
-							? 'border-2 border-emerald-500 focus:border-emerald-500 focus-visible:border-emerald-500'
-							: ''
+					addressError ? 'border-2 border-rose-500' :
+					addressTestnet ? 'border-2 border-amber-500' :
+					addressEnterprise ? 'border-2 border-amber-500' : ''
 				}`}
 			/>
 			{#if addressError}
-				<div class="text-sm mt-3 text-rose-500">{addressMsg}</div>
+				<div class="text-sm mt-3 text-rose-500">Error: {addressMsg}</div>
 			{:else if addressTestnet}
-				<div class="text-amber-500 text-sm mt-3">{addressMsg}</div>
+				<div class="text-amber-500 text-sm mt-3">Warning: {addressMsg}</div>
 			{:else if addressEnterprise}
-				<div class="text-amber-500 text-sm mt-3">{addressMsg}</div>
+				<div class="text-amber-500 text-sm mt-3">Warning: {addressMsg}</div>
 			{/if}
 		</div>
 	</FieldGroup>

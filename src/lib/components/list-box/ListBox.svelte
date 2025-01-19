@@ -3,7 +3,7 @@
 	import { slide } from 'svelte/transition';
 
 	export let items: ({ value: string | number; label: string; ticker?: string; group?: string } | { group: string; items: { value: string | number; label: string; ticker?: string }[] })[] = [];
-	export let value: string | number;
+	export let value: string | number | undefined;
 	export let id: string = '';
 	export let onChange: (value: string | number) => void = () => {};
 

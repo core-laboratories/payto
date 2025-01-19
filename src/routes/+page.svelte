@@ -7,7 +7,6 @@
 
 	import { TYPES } from '$lib/data/types.data';
 	import { getObjectByType } from '$lib/helpers/get-object-by-type.helper';
-	import { join } from '$lib/helpers/join.helper';
 	import { Icon } from '$lib/icons';
 	import { constructor } from '$lib/store/constructor.store';
 	import { derived, get, writable } from 'svelte/store';
@@ -55,12 +54,7 @@
 			<BoxContent>
 				<Tabs bind:selectedTab={$type} />
 				<button
-					class={join(
-						'[ is-full bs-12 mbs-auto plb-2 pli-3 text-center text-white border border-gray-700 bg-gray-700 rounded-md transition-all duration-200 outline-none ]',
-						'[ focus-visible:ring-4 focus-visible:ring-opacity-75 focus-visible:ring-green-800 focus-visible:ring-offset-green-700 focus-visible:ring-offset-2 ]',
-						'[ active:scale-[.99] ]',
-						'[ sm:text-sm ]'
-					)}
+					class="is-full bs-12 mbs-auto plb-2 pli-3 text-center text-white border border-gray-700 bg-gray-700 rounded-md transition-all duration-200 outline-none focus-visible:ring-4 focus-visible:ring-opacity-75 focus-visible:ring-green-800 focus-visible:ring-offset-green-700 focus-visible:ring-offset-2 active:scale-[.99] sm:text-sm"
 					type="button"
 					on:click={() => constructor.reset($type)}
 				>
@@ -74,33 +68,22 @@
 		<Box>
 			<BoxTitle>Integrations</BoxTitle>
 			<BoxContent>
-				<div class="[ flex flex-col gap-6 ]">
+				<div class="flex flex-col gap-6">
 					{#each $outputs as output, index}
 						<div class="flex flex-col gap-2">
 							<label for={`item_${index}`}>{output.label}</label>
 							<div
-								class={join(
-									'[ flex items-center justify-between ]',
-									'[ relative is-full bs-12 text-start bg-gray-900 rounded-md border-none ]',
-									'[ sm:text-sm ]'
-								)}
+								class="flex items-center justify-between relative is-full bs-12 text-start bg-gray-900 rounded-md border-none sm:text-sm"
 							>
 								<input
-									class={join(
-										'[ appearance-none bg-transparent border-0 is-full pie-14 ]',
-										'[ focus-visible:ring-0 ]'
-									)}
+									class="[ appearance-none bg-transparent border-0 is-full pie-14 ] [ focus-visible:ring-0 ]"
 									type="text"
 									value={output.value}
 									readonly
 									id={`item_${index}`}
 								/>
 								<button
-									class={join(
-										'[ flex items-center justify-between ]',
-										'[ absolute inline-end-0 mli-3 p-2 text-gray-50 bg-gray-700 rounded-full outline-none transition-all duration-200 ]',
-										'[ focus-visible:bg-green-900 focus-visible:text-green-50 active:scale-95 ]'
-									)}
+									class="[ flex items-center justify-between ] [ absolute inline-end-0 mli-3 p-2 text-gray-50 bg-gray-700 rounded-full outline-none transition-all duration-200 ] [ focus-visible:bg-green-900 focus-visible:text-green-50 active:scale-95 ]"
 									type="button"
 									title="Copy to clipboard"
 									aria-label="Copy to clipboard"
@@ -108,7 +91,7 @@
 									on:click={handleOnCopy}
 								>
 									<svg
-										class={join('[ bs-5 is-5 ]')}
+										class="[ bs-5 is-5 ]"
 										fill="none"
 										stroke="currentColor"
 										stroke-width="1.5"
@@ -126,7 +109,7 @@
 							</div>
 
 							{#if output.previewable}
-								<div class="[ flex flex-col items-stretch gap-2 mb-2 ]">
+								<div class="flex flex-col items-stretch gap-2 mb-2">
 									<label class="[ text-gray-300 text-sm ]" for={'previewOf' + index}>
 										Preview
 									</label>
@@ -135,7 +118,7 @@
 							{/if}
 
 							{#if output.note}
-								<div class="[ flex flex-col items-stretch gap-2 mb-2 ]">
+								<div class="flex flex-col items-stretch gap-2 mb-2">
 									<small class="[ text-gray-400 ]" id={'noteOf' + index}>
 										{output.note}
 									</small>
@@ -150,7 +133,7 @@
 	<Row>
 		<Box>
 			<BoxTitle>
-				<label for="designCheckbox" class="mr-2">PayTo:Pass</label>
+				<label for="designCheckbox" class="mr-2">Pass</label>
 				<input
 					type="checkbox"
 					bind:checked={$designEnabled}
@@ -177,7 +160,7 @@
 		<Box>
 			<BoxTitle>Information</BoxTitle>
 			<BoxContent>
-				<div class="[ flex flex-col gap-2 ]">
+				<div class="flex flex-col gap-2">
 					<div>Expanded on the specification
 						<a
 							class="[ transition-all duration-200 ] [ visited:text-gray-200 hover:text-gray-300 ]"

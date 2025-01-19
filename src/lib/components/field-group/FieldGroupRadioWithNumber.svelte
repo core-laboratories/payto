@@ -26,6 +26,7 @@
 	export let numberMax: number = 365;
 	export let disabled: boolean = false;
 	export let outputValue: string | null = '';
+	export let classValue: string = '';
 
 	const internalCheckedValue = writable(defaultChecked || options[0]?.value || '');
 	const checkedValue = derived(internalCheckedValue, $val => $val);
@@ -38,7 +39,7 @@
 	// Subscribe to update the outputValue
 	computedOutput.subscribe(value => outputValue = value);
 
-	const computedClass = 'plb-2 pli-3 text-start bg-gray-900 rounded-md border-none caret-teal-500 focus:outline-none focus-visible:ring-4 focus-visible:ring-opacity-75 focus-visible:ring-green-800 focus-visible:ring-offset-green-700 focus-visible:ring-offset-2 w-1/4 sm:text-sm mr-2'
+	const baseClass = 'plb-2 pli-3 text-start bg-gray-900 rounded-md border-0 caret-teal-500 focus:outline-none focus-visible:ring-4 focus-visible:ring-opacity-75 focus-visible:ring-green-800 focus-visible:ring-offset-green-700 focus-visible:ring-offset-2 w-1/4 sm:text-sm mr-2'
 
 	const ctx = getFieldGroupContext();
 </script>
@@ -64,7 +65,7 @@
 				<label for="input-{option.name}" class="mr-2">{option.name}:</label>
 				<input
 					id="input-{option.name}"
-					class={computedClass}
+					class={`${baseClass} ${classValue}`}
 					type="number"
 					bind:value={numberValue}
 					min={numberMin}

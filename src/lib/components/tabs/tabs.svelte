@@ -29,20 +29,31 @@
 
 	const tabs = writable<string>(selectedTab);
 
-	const listboxItems = Object.keys(paymentTypes).map(key => ({
+	const listboxItems: Array<{ value: string; label: string; ticker: string }> = Object.keys(paymentTypes).map(key => ({
 		value: key,
 		label: paymentTypes[key].label,
 		ticker: paymentTypes[key].ticker
 	}));
 
 	const activeTab = derived(tabs, $tabs => $tabs);
+
+	function handleTabChange(value: string | number) {
+		const tabValue = String(value);
+		selectedTab = tabValue;
+		tabs.set(tabValue);
+	}
 </script>
 
 <div class="flex w-full flex-col gap-2">
 	<label id="payment-type-label" for="payment-type" class="font-bold">Payment Type</label>
 	<div class="flex flex-col items-stretch gap-4">
 		<div in:fade>
-			<ListBox id="payment-type" bind:value={selectedTab} items={listboxItems} />
+			<ListBox
+				id="payment-type"
+				bind:value={selectedTab}
+				items={listboxItems}
+				onChange={handleTabChange}
+			/>
 		</div>
 	</div>
 

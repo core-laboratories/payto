@@ -104,7 +104,7 @@
 		<ListBox
 			id="barcode-list"
 			value={$barcodeValue}
-			on:change={e => updateBarcode(e.detail)}
+			onChange={updateBarcode}
 			items={barcodeTypes}
 		/>
 	</FieldGroup>

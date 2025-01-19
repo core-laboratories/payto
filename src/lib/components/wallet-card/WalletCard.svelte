@@ -15,7 +15,7 @@
 	let locVal: string | undefined;
 
 	function formatAdr(str: string | undefined) {
-		return str ? `/${str.substring(0, 4)}…${str.substring(str.length - 4).toUpperCase()}` : '';
+		return str ? `/${str.substring(0, 4).toUpperCase()}…${str.substring(str.length - 4).toUpperCase()}` : '';
 	}
 
 	const amount = derived(constructor, $constructor => $constructor.networks[type]?.params?.amount?.value ?? undefined);
