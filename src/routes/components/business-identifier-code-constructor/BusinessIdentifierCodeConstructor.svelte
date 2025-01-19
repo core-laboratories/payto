@@ -8,6 +8,44 @@
 	} from '$lib/components';
 	import { constructor } from '$lib/store/constructor.store';
 	import { fly } from 'svelte/transition';
+	import { bicSchema } from '$lib/validators/bic.validator';
+
+	let bicError: boolean = false;
+	let bicMsg: string = '';
+	let bicValue: string | undefined = undefined;
+
+	function validateBic(value: string) {
+		if (value === '') {
+			bicError = false;
+			bicMsg = '';
+			$constructor.networks.bic.bic = undefined;
+			return;
+		}
+
+		try {
+			const result = bicSchema.safeParse({ bic: value });
+
+			if (!result.success) {
+				bicError = true;
+				bicMsg = result.error.errors[0]?.message || 'Invalid BIC format';
+				$constructor.networks.bic.bic = undefined;
+			} else {
+				bicError = false;
+				bicMsg = '';
+				$constructor.networks.bic.bic = value.toUpperCase();
+			}
+		} catch (error: any) {
+			bicError = true;
+			bicMsg = error.message || 'Invalid BIC format';
+			$constructor.networks.bic.bic = undefined;
+		}
+	}
+
+	function handleBicInput(event: Event) {
+		const value = (event.target as HTMLInputElement).value;
+		bicValue = value;
+		validateBic(value);
+	}
 </script>
 
 <div class="[ flex flex-col gap-6 ]" in:fly={{ y: 64 }}>
@@ -16,8 +54,20 @@
 		<FieldGroupLabel>BIC / SWIFT / <abbr title="Organization Registry Identifier Code">ORIC</abbr> *</FieldGroupLabel>
 		<FieldGroupText
 			placeholder="e.g. DABADKKK"
-			bind:value={$constructor.networks.bic.bic}
+			bind:value={bicValue}
+			on:input={handleBicInput}
+			on:change={handleBicInput}
+			classValue={`font-mono uppercase ${
+				bicError
+					? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
+					: bicValue
+						? 'border-2 border-emerald-500 focus:border-emerald-500 focus-visible:border-emerald-500'
+						: ''
+			}`}
 		/>
+		{#if bicError && bicMsg}
+			<span class="text-sm text-rose-500">{bicMsg}</span>
+		{/if}
 	</FieldGroup>
 
 	<FieldGroup>

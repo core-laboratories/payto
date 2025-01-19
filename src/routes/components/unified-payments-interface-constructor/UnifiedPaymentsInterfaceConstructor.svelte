@@ -10,11 +10,49 @@
 
 	import { constructor } from '$lib/store/constructor.store';
 	import { fly } from 'svelte/transition';
+	import { upiSchema } from '$lib/validators/upi.validator';
 
 	function handleRecurringChange() {
 		if (!$constructor.networks.upi.isRc) {
 			$constructor.networks.upi.params.rc.value = undefined;
 		}
+	}
+
+	let aliasError: boolean = false;
+	let aliasMsg: string = '';
+	let aliasValue: string | undefined = undefined;
+
+	function validateUpi(value: string) {
+		if (value === '') {
+			aliasError = false;
+			aliasMsg = '';
+			$constructor.networks.upi.accountAlias = undefined;
+			return;
+		}
+
+		try {
+			const result = upiSchema.safeParse({ accountAlias: value });
+
+			if (!result.success) {
+				aliasError = true;
+				aliasMsg = result.error.errors[0]?.message || 'Invalid email format';
+				$constructor.networks.upi.accountAlias = undefined;
+			} else {
+				aliasError = false;
+				aliasMsg = '';
+				$constructor.networks.upi.accountAlias = value.toLowerCase();
+			}
+		} catch (error: any) {
+			aliasError = true;
+			aliasMsg = error.message || 'Invalid email format';
+			$constructor.networks.upi.accountAlias = undefined;
+		}
+	}
+
+	function handleAliasInput(event: Event) {
+		const value = (event.target as HTMLInputElement).value;
+		aliasValue = value;
+		validateUpi(value);
 	}
 </script>
 
@@ -23,8 +61,20 @@
 		<FieldGroupLabel>Account Alias *</FieldGroupLabel>
 		<FieldGroupText
 			placeholder="e.g. john.doe@gmail.com"
-			bind:value={$constructor.networks.upi.accountAlias}
+			bind:value={aliasValue}
+			on:input={handleAliasInput}
+			on:change={handleAliasInput}
+			classValue={`font-mono ${
+				aliasError
+					? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
+					: aliasValue
+						? 'border-2 border-emerald-500 focus:border-emerald-500 focus-visible:border-emerald-500'
+						: ''
+			}`}
 		/>
+		{#if aliasError && aliasMsg}
+			<span class="text-sm text-rose-500">{aliasMsg}</span>
+		{/if}
 	</FieldGroup>
 
 	<FieldGroup>
