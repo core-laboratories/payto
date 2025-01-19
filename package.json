@@ -36,6 +36,7 @@
 		"vitest": "^3.0.2"
 	},
 	"dependencies": {
+		"@blockchainhub/ican": "^0.4.2",
 		"@fontsource/fira-mono": "^5.1.1",
 		"@neoconfetti/svelte": "^2.2.1",
 		"@sveltejs/adapter-auto": "^4.0.0",

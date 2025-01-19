@@ -9,11 +9,49 @@
 	} from '$lib/components';
 	import { constructor } from '$lib/store/constructor.store';
 	import { fly } from 'svelte/transition';
+	import { ibanSchema } from '$lib/validators/iban.validator';
 
 	function handleRecurringChange() {
 		if (!$constructor.networks.iban.isRc) {
 			$constructor.networks.iban.params!.rc.value = undefined;
 		}
+	}
+
+	let ibanError: boolean = false;
+	let ibanMsg: string = '';
+	let ibanValue: string | undefined = undefined;
+
+	function validateIban(value: string) {
+		if (value === '') {
+			ibanError = false;
+			ibanMsg = '';
+			$constructor.networks.iban.iban = undefined;
+			return;
+		}
+
+		try {
+			const result = ibanSchema.safeParse({ iban: value });
+
+			if (!result.success) {
+				ibanError = true;
+				ibanMsg = result.error.errors[0]?.message || 'Invalid IBAN format';
+				$constructor.networks.iban.iban = undefined;
+			} else {
+				ibanError = false;
+				ibanMsg = '';
+				$constructor.networks.iban.iban = value;
+			}
+		} catch (error: any) {
+			ibanError = true;
+			ibanMsg = error.message || 'Invalid IBAN format';
+			$constructor.networks.iban.iban = undefined;
+		}
+	}
+
+	function handleIbanInput(event: Event) {
+		const value = (event.target as HTMLInputElement).value;
+		ibanValue = value;
+		validateIban(value);
 	}
 </script>
 
@@ -21,9 +59,21 @@
 	<FieldGroup>
 		<FieldGroupLabel>IBAN *</FieldGroupLabel>
 		<FieldGroupText
-			placeholder="e.g. IE12BOFI90000112345678"
-			bind:value={$constructor.networks.iban.iban}
+			placeholder="e.g. BE68539007547034"
+			bind:value={ibanValue}
+			on:input={handleIbanInput}
+			on:change={handleIbanInput}
+			classValue={`font-mono ${
+				ibanError
+					? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
+					: ibanValue
+						? 'border-2 border-emerald-500 focus:border-emerald-500 focus-visible:border-emerald-500'
+						: ''
+			}`}
 		/>
+		{#if ibanError && ibanMsg}
+			<span class="text-sm text-rose-500">{ibanMsg}</span>
+		{/if}
 	</FieldGroup>
 
 	<FieldGroup>
