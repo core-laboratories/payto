@@ -72,7 +72,7 @@
 		}
 	}
 
-	function validateAddress(value: string) {
+	function validateAddress(value: string, network?: string) {
 		if (value === '') {
 			addressError = false;
 			addressTestnet = false;
@@ -83,7 +83,7 @@
 
 		try {
 			const result = addressSchema.safeParse({
-				network: $constructor.networks.ican.network,
+				network: network || $constructor.networks.ican.network,
 				destination: value
 			});
 
@@ -123,6 +123,14 @@
 		addressValue = value;
 		validateAddress(value);
 	}
+
+	function validateCurrentAddress() {
+		if ($constructor.networks.ican.network === 'other' && $constructor.networks.ican.other && addressValue) {
+			validateAddress(addressValue, $constructor.networks.ican.other);
+		} else if (addressValue) {
+			validateAddress(addressValue);
+		}
+	}
 </script>
 
 <div class="flex flex-col gap-6" in:fly={{ y: 64 }}>
@@ -135,11 +143,7 @@
 						id="transport-network"
 						bind:value={$constructor.networks.ican.network}
 						items={TRANSPORT.ican}
-						on:change={() => {
-							if (addressValue) {
-								validateAddress(addressValue);
-							}
-						}}
+						onChange={validateCurrentAddress}
 					/>
 				</div>
 			{:else}
@@ -148,12 +152,7 @@
 						class="absolute mli-3 p-2 text-gray-50 bg-gray-700 rounded-full outline-none transition-all"
 						title="Back to network menu options"
 						aria-label="Back to network menu options"
-						on:pointerdown={() => {
-							$constructor.networks.ican.network = 'xcb';
-							if (addressValue) {
-								validateAddress(addressValue);
-							}
-						}}
+						on:pointerdown={() => ($constructor.networks.ican.network = 'xcb')}
 					>
 						<svg class="bs-4 is-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
 							<path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
@@ -165,6 +164,7 @@
 						id="transport-network"
 						placeholder="Other network"
 						bind:value={$constructor.networks.ican.other}
+						on:input={validateCurrentAddress}
 					/>
 				</div>
 			{/if}

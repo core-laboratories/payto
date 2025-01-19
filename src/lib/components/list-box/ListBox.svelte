@@ -5,6 +5,7 @@
 	export let items: ({ value: string | number; label: string; ticker?: string; group?: string } | { group: string; items: { value: string | number; label: string; ticker?: string }[] })[] = [];
 	export let value: string | number;
 	export let id: string = '';
+	export let onChange: (value: string | number) => void = () => {};
 
 	const expanded = writable(false);
 	let dropdownElement: HTMLDivElement | null = null;
@@ -19,9 +20,8 @@
 			return;
 		}
 		value = item.value;
-		const event = new CustomEvent('change', { detail: item.value });
-		dropdownElement?.dispatchEvent(event);
 		expanded.set(false);
+		onChange(item.value);
 	}
 
 	function handleOutsideClick(event: MouseEvent) {
