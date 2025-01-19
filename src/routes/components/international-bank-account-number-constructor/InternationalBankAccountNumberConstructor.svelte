@@ -10,6 +10,7 @@
 	import { constructor } from '$lib/store/constructor.store';
 	import { fly } from 'svelte/transition';
 	import { ibanSchema } from '$lib/validators/iban.validator';
+	import { bicSchema } from '$lib/validators/bic.validator';
 
 	function handleRecurringChange() {
 		if (!$constructor.networks.iban.isRc) {
@@ -20,6 +21,10 @@
 	let ibanError: boolean = false;
 	let ibanMsg: string = '';
 	let ibanValue: string | undefined = undefined;
+
+	let bicError: boolean = false;
+	let bicMsg: string = '';
+	let bicValue: string | undefined = undefined;
 
 	function validateIban(value: string) {
 		if (value === '') {
@@ -39,7 +44,7 @@
 			} else {
 				ibanError = false;
 				ibanMsg = '';
-				$constructor.networks.iban.iban = value;
+				$constructor.networks.iban.iban = value.toUpperCase();
 			}
 		} catch (error: any) {
 			ibanError = true;
@@ -50,8 +55,41 @@
 
 	function handleIbanInput(event: Event) {
 		const value = (event.target as HTMLInputElement).value;
-		ibanValue = value;
-		validateIban(value);
+		ibanValue = value.toUpperCase();
+		validateIban(value.toUpperCase());
+	}
+
+	function validateBic(value: string) {
+		if (value === '') {
+			bicError = false;
+			bicMsg = '';
+			$constructor.networks.iban.bic = undefined;
+			return;
+		}
+
+		try {
+			const result = bicSchema.safeParse({ bic: value });
+
+			if (!result.success) {
+				bicError = true;
+				bicMsg = result.error.errors[0]?.message || 'Invalid BIC format';
+				$constructor.networks.iban.bic = undefined;
+			} else {
+				bicError = false;
+				bicMsg = '';
+				$constructor.networks.iban.bic = value.toUpperCase();
+			}
+		} catch (error: any) {
+			bicError = true;
+			bicMsg = error.message || 'Invalid BIC format';
+			$constructor.networks.iban.bic = undefined;
+		}
+	}
+
+	function handleBicInput(event: Event) {
+		const value = (event.target as HTMLInputElement).value;
+		bicValue = value;
+		validateBic(value);
 	}
 </script>
 
@@ -80,8 +118,20 @@
 		<FieldGroupLabel>BIC / SWIFT</FieldGroupLabel>
 		<FieldGroupText
 			placeholder="e.g. DABADKKK"
-			bind:value={$constructor.networks.iban.bic}
+			bind:value={bicValue}
+			on:input={handleBicInput}
+			on:change={handleBicInput}
+			classValue={`font-mono uppercase ${
+				bicError
+					? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
+					: bicValue
+						? 'border-2 border-emerald-500 focus:border-emerald-500 focus-visible:border-emerald-500'
+						: ''
+			}`}
 		/>
+		{#if bicError && bicMsg}
+			<span class="text-sm text-rose-500">{bicMsg}</span>
+		{/if}
 	</FieldGroup>
 
 	<FieldGroup>
