@@ -131,7 +131,7 @@
 				bind:value={$constructor.networks.void.params.loc.plus}
 			/>
 			<small class="[ -mbs-1 text-gray-400 ]">
-				Search for the 
+				Search for the{' '}
 				<a
 					class="[ transition-all duration-200 ] [ visited:text-gray-200 hover:text-gray-300 ]"
 					href="https://plus.codes/map"

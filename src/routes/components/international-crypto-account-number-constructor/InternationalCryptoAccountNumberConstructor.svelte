@@ -10,6 +10,8 @@
 		ListBox
 	} from '$lib/components';
 
+	const isDebug = import.meta.env.MODE === 'development';
+
 	import { TRANSPORT } from '$lib/data/transports.data';
 	import { constructor } from '$lib/store/constructor.store';
 	import { fade, fly } from 'svelte/transition';
@@ -18,8 +20,11 @@
 	let timeDateValue = '';
 	let classUpperValue = $constructor.networks.ican.params?.currency?.value?.toLowerCase()?.startsWith('0x') ? '' : 'uppercase';
 	let tokens = TRANSPORT.ican.find(item => item.value === $constructor.networks.ican.network)?.tokens;
-	let addressError = false;
-	let addressValue = '';
+	let addressError: boolean = false;
+	let addressTestnet: boolean = false;
+	let addressEnterprise: boolean = false;
+	let addressMsg: string = '';
+	let addressValue: string | undefined = undefined;
 
 	function getCurrentDateTime() {
 		const now = new Date();
@@ -68,15 +73,47 @@
 	}
 
 	function validateAddress(value: string) {
+		if (value === '') {
+			addressError = false;
+			addressTestnet = false;
+			addressEnterprise = false;
+			addressMsg = '';
+			return;
+		}
+
 		try {
-			addressSchema.parse({
+			const result = addressSchema.safeParse({
 				network: $constructor.networks.ican.network,
 				destination: value
 			});
-			addressError = false;
-			$constructor.networks.ican.destination = value;
-		} catch (error) {
+
+			if (!result.success) {
+				const error = result.error.errors[0];
+				if (!error.fatal) {
+					addressError = false;
+					addressTestnet = error.path.includes('testnet');
+					addressEnterprise = error.path.includes('enterprise');
+					addressMsg = error.message;
+					$constructor.networks.ican.destination = value;
+				} else {
+					addressError = true;
+					addressTestnet = false;
+					addressEnterprise = false;
+					addressMsg = error?.message || 'Invalid address format';
+					$constructor.networks.ican.destination = undefined;
+				}
+			} else {
+				addressError = false;
+				addressTestnet = false;
+				addressEnterprise = false;
+				addressMsg = '';
+				$constructor.networks.ican.destination = value;
+			}
+		} catch (error: any) {
 			addressError = true;
+			addressTestnet = false;
+			addressEnterprise = false;
+			addressMsg = isDebug ? error.message : 'Invalid address format';
 			$constructor.networks.ican.destination = undefined;
 		}
 	}
@@ -94,7 +131,16 @@
 		<div class="flex flex-col items-stretch gap-4">
 			{#if $constructor.networks.ican.network !== 'other'}
 				<div in:fade>
-					<ListBox id="transport-network" bind:value={$constructor.networks.ican.network} items={TRANSPORT.ican} />
+					<ListBox
+						id="transport-network"
+						bind:value={$constructor.networks.ican.network}
+						items={TRANSPORT.ican}
+						on:change={() => {
+							if (addressValue) {
+								validateAddress(addressValue);
+							}
+						}}
+					/>
 				</div>
 			{:else}
 				<div class="flex items-center relative" in:fade>
@@ -102,7 +148,12 @@
 						class="absolute mli-3 p-2 text-gray-50 bg-gray-700 rounded-full outline-none transition-all"
 						title="Back to network menu options"
 						aria-label="Back to network menu options"
-						on:pointerdown={() => ($constructor.networks.ican.network = 'xcb')}
+						on:pointerdown={() => {
+							$constructor.networks.ican.network = 'xcb';
+							if (addressValue) {
+								validateAddress(addressValue);
+							}
+						}}
 					>
 						<svg class="bs-4 is-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
 							<path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
@@ -125,12 +176,23 @@
 		<div class="relative">
 			<FieldGroupText
 				placeholder={getPlaceholder($constructor.networks.ican.network)}
-				value={addressValue}
+				bind:value={addressValue}
 				on:input={handleAddressInput}
-				classValue={`font-mono ${addressError ? 'border-2 border-rose-500' : addressValue ? 'border-2 border-green-500' : ''}`}
+				on:change={handleAddressInput}
+				classValue={`font-mono ${
+					addressError
+						? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
+						: addressValue
+							? 'border-2 border-emerald-500 focus:border-emerald-500 focus-visible:border-emerald-500'
+							: ''
+				}`}
 			/>
 			{#if addressError}
-				<div class="text-red-500 text-sm mt-1">Invalid address format</div>
+				<div class="text-sm mt-3 text-rose-500">{addressMsg}</div>
+			{:else if addressTestnet}
+				<div class="text-amber-500 text-sm mt-3">{addressMsg}</div>
+			{:else if addressEnterprise}
+				<div class="text-amber-500 text-sm mt-3">{addressMsg}</div>
 			{/if}
 		</div>
 	</FieldGroup>

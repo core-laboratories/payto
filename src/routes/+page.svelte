@@ -150,7 +150,7 @@
 	<Row>
 		<Box>
 			<BoxTitle>
-				<label for="designCheckbox" class="mr-2">Pass</label>
+				<label for="designCheckbox" class="mr-2">PayTo:Pass</label>
 				<input
 					type="checkbox"
 					bind:checked={$designEnabled}

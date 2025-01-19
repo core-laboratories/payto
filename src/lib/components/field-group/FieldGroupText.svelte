@@ -15,6 +15,7 @@
 	class={$computedClass}
 	type="text"
 	autocomplete="off"
+	on:input
 	id={ctx.fieldId}
 	aria-labelledby={ctx.labelId}
 	aria-describedby={ctx.descriptionId}

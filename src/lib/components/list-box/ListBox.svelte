@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { writable, derived } from 'svelte/store';
+	import { writable } from 'svelte/store';
 	import { slide } from 'svelte/transition';
 
 	export let items: ({ value: string | number; label: string; ticker?: string; group?: string } | { group: string; items: { value: string | number; label: string; ticker?: string }[] })[] = [];
@@ -34,17 +34,17 @@
 		return item.items && Array.isArray(item.items);
 	}
 
-	const selectedLabel = derived(writable(value), $value => {
+	function findSelectedLabel(): string {
 		for (const item of items) {
 			if (isCategory(item)) {
-				const selectedItem = item.items.find(subItem => String(subItem.value) === String($value));
+				const selectedItem = item.items.find(subItem => String(subItem.value) === String(value));
 				if (selectedItem) return selectedItem.label;
-			} else if (String(item.value) === String($value)) {
+			} else if (String(item.value) === String(value)) {
 				return item.label;
 			}
 		}
 		return 'Select an option';
-	});
+	}
 </script>
 
 <div class="relative w-full dropdown" bind:this={dropdownElement}>
@@ -55,7 +55,7 @@
 		aria-label="Toggle dropdown"
 		class="inline-flex items-center justify-between bg-gray-900 border-2 border-gray-800 w-full px-3 py-2 rounded-md cursor-context-menu focus:outline-none focus-visible:ring-4 focus-visible:ring-opacity-75 focus-visible:ring-green-800"
 	>
-		<span class="truncate">{$selectedLabel}</span>
+		<span class="truncate">{findSelectedLabel()}</span>
 		<span class="ml-2">
 			<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
 				<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15l3.75 3.75L15.75 15m-7.5-6l3.75-3.75L15.75 9" />
