@@ -1,12 +1,27 @@
+import { redirect, error } from '@sveltejs/kit';
 import type { RequestEvent } from '@sveltejs/kit';
 import JSZip from 'jszip';
 import forge from 'node-forge';
 import { PRIVATE_PASS_CERTIFICATE, PRIVATE_PASS_PRIVATE_KEY, PRIVATE_PASS_TEAM_IDENTIFIER } from '$env/static/private';
-import { error } from '@sveltejs/kit';
 
 type Actions = {
 	generatePass: (event: RequestEvent) => Promise<Response>;
 };
+
+export async function load({ url }) {
+	const fullUrl = new URL(url.href);
+
+	if (fullUrl.hostname === 'payto.money') {
+		const hasValidProtocol = fullUrl.protocol === 'payto.money:';
+		const path = fullUrl.pathname.startsWith('/://') ? fullUrl.pathname.slice(3) : fullUrl.pathname;
+
+		if (hasValidProtocol || path) {
+			throw redirect(302, `/show?url=${encodeURIComponent(path)}`);
+		}
+	}
+
+	return {};
+}
 
 export const actions = {
 	generatePass: async ({ request, url }: RequestEvent) => {

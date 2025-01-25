@@ -145,7 +145,7 @@
 					<div class="flex flex-col gap-x-6 gap-y-4 md:flex-row md:flex-nowrap">
 						<div class="w-full md:w-[400px] flex-shrink-0">
 							<WalletCard
-								bind:type={$type}
+								bind:hostname={$type}
 							/>
 						</div>
 						<div class="w-full flex-1 min-w-0">

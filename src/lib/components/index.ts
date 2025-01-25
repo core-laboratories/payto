@@ -12,6 +12,7 @@ export {
 	FieldGroupRadioWithNumber
 } from './field-group';
 export { ListBox } from './list-box';
+export { Qr } from './qr';
 export { Page } from './page';
 export { Row } from './row';
 export { Tabs } from './tabs';
