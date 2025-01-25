@@ -99,6 +99,7 @@ interface IDesignState {
 	colorF?: string;
 	colorB?: string;
 	barcode?: string;
+	rtl?: boolean;
 }
 
 interface ILocValue extends IValue {

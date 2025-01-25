@@ -58,7 +58,7 @@ const generateLink = (payload: IPayload[], props: Record<string, any>, donate: b
 
 		// Design transformer
 		if (design) {
-			const { org, item, colorF, colorB, barcode } = design;
+			const { org, item, colorF, colorB, barcode, rtl } = design;
 			if (org) searchParams.set('org', org);
 			if (item) searchParams.set('item', item);
 			if (colorB && colorF && colorB !== '#77bc65' && colorF !== '#192a14') {
@@ -84,6 +84,9 @@ const generateLink = (payload: IPayload[], props: Record<string, any>, donate: b
 				} else {
 					searchParams.delete('color-b');
 				}
+			}
+			if (rtl) {
+				searchParams.set('rtl', '1');
 			}
 			if (barcode !== 'qr') {
 				if (barcode) searchParams.set('barcode', barcode);
