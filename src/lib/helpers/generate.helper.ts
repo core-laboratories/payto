@@ -8,7 +8,7 @@ import { calculateColorDistance } from '$lib/helpers/euclidean-distance.helper';
  * and placeholder of each field.
  * @param props - The props object that was used to initialized store.
  */
-const generateLink = (payload: IPayload[], props: Record<string, any>, donate: boolean = false) => {
+export const generateLink = (payload: IPayload[] = [], props: Record<string, any>, donate: boolean = false) => {
 	let link = payload
 		.filter((payload) => (payload.value !== undefined || payload.query === true))
 		.reduce((acc, payload) => acc.concat('/', payload.value || (payload.placeholder ? payload.placeholder : '')), 'payto:/');
@@ -322,6 +322,6 @@ export const generate = (type: ITransitionType, props: any, payload: IPayload[])
 			value: generateHtmlDonationButton(generateLink(payload, props, true), props),
 			previewable: true
 		},
-		{ label: 'Meta tag', note: 'Basic payment instructions only.', value: generateMetaTag(type, props) }
+		{ label: 'FinTag (Meta Tag)', note: 'Basic payment instructions only.', value: generateMetaTag(type, props) }
 	];
 };

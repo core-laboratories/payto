@@ -53,7 +53,7 @@
 		type="button"
 		on:click={toggle}
 		aria-label="Toggle dropdown"
-		class="inline-flex items-center justify-between bg-gray-900 border-2 border-gray-800 w-full px-3 py-2 rounded-md cursor-context-menu focus:outline-none focus-visible:ring-4 focus-visible:ring-opacity-75 focus-visible:ring-green-800"
+		class="inline-flex items-center justify-between bg-gray-900 border-0 border-gray-800 w-full p-3 rounded-md cursor-context-menu focus:outline-none focus-visible:ring-4 focus-visible:ring-opacity-75 focus-visible:ring-green-800"
 	>
 		<span class="truncate">{findSelectedLabel()}</span>
 		<span class="ml-2">
@@ -83,7 +83,7 @@
 								class="flex items-center w-full px-3 py-2 hover:bg-gray-800 hover:brightness-150"
 							>
 								{#if String(value) === String(subItem.value)}
-									<span class="w-3 h-3 mr-2 rounded-full bg-[var(--payto-color-green-core)]"></span>
+									<span class="w-3 h-3 mr-2 rounded-full bg-[var(--color-green-core)]"></span>
 								{:else}
 									<span class="w-3 h-3 mr-2"></span>
 								{/if}
@@ -104,7 +104,7 @@
 							class="flex items-center w-full px-3 py-2 hover:bg-gray-800 hover:brightness-150"
 						>
 							{#if String(value) === String(item.value)}
-								<span class="w-3 h-3 mr-2 rounded-full bg-[var(--payto-color-green-core)]"></span>
+								<span class="w-3 h-3 mr-2 rounded-full bg-[var(--color-green-core)]"></span>
 							{:else}
 								<span class="w-3 h-3 mr-2"></span>
 							{/if}

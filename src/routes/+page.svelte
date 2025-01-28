@@ -48,13 +48,13 @@
 <Toast />
 
 <Page>
-	<Row>
-		<Box>
+	<Row classValue="lg:flex-row lg:gap-4">
+		<Box classValue="lg:basis-[calc(50%-2.5rem)]">
 			<BoxTitle>Payment Constructor</BoxTitle>
 			<BoxContent>
 				<Tabs bind:selectedTab={$type} />
 				<button
-					class="is-full bs-12 mbs-auto plb-2 pli-3 text-center text-white border border-gray-700 bg-gray-700 rounded-md transition-all duration-200 outline-none focus-visible:ring-4 focus-visible:ring-opacity-75 focus-visible:ring-green-800 focus-visible:ring-offset-green-700 focus-visible:ring-offset-2 active:scale-[.99] sm:text-sm"
+					class="is-full bs-12 mt-auto py-2 px-3 text-center text-white border border-gray-700 bg-gray-700 rounded-sm transition duration-200 outline-none focus-visible:ring-4 focus-visible:ring-opacity-75 focus-visible:ring-green-800 focus-visible:ring-offset-green-700 focus-visible:ring-offset-2 active:scale-(0.99) text-sm"
 					type="button"
 					on:click={() => constructor.reset($type)}
 				>
@@ -63,9 +63,9 @@
 			</BoxContent>
 		</Box>
 
-		<Icon.Convert classValue="[ bs-10 is-10 self-center text-green-500 rotate-90 ] [ lg:block lg:rotate-0 ]" />
+		<Icon.Convert classValue="w-10 h-10 self-center text-green-500 rotate-90 lg:block lg:rotate-0" />
 
-		<Box>
+		<Box classValue="lg:basis-[calc(50%-2.5rem)]">
 			<BoxTitle>Integrations</BoxTitle>
 			<BoxContent>
 				<div class="flex flex-col gap-6">
@@ -73,17 +73,19 @@
 						<div class="flex flex-col gap-2">
 							<label for={`item_${index}`}>{output.label}</label>
 							<div
-								class="flex items-center justify-between relative is-full bs-12 text-start bg-gray-900 rounded-md border-none sm:text-sm"
+								class="flex items-center justify-between relative w-full bs-12 text-start bg-gray-900 rounded-sm border-none text-sm"
 							>
 								<input
-									class="[ appearance-none bg-transparent border-0 is-full pie-14 ] [ focus-visible:ring-0 ]"
+									class="appearance-none bg-transparent rounded-md border-0 w-full p-3 pe-12 caret-teal-500 focus:outline-none focus-visible:ring-4 focus-visible:ring-opacity-75 focus-visible:ring-green-800 focus-visible:ring-offset-green-700 focus-visible:ring-offset-2"
 									type="text"
 									value={output.value}
 									readonly
 									id={`item_${index}`}
+									aria-labelledby={`item_${index}`}
+									on:click={(e) => e.currentTarget.select()}
 								/>
 								<button
-									class="[ flex items-center justify-between ] [ absolute inline-end-0 mli-3 p-2 text-gray-50 bg-gray-700 rounded-full outline-none transition-all duration-200 ] [ focus-visible:bg-green-900 focus-visible:text-green-50 active:scale-95 ]"
+									class="flex items-center justify-between absolute end-0 me-2 p-2 text-gray-50 bg-gray-700 rounded-full outline-none transition duration-200 focus-visible:bg-green-900 focus-visible:text-green-50 active:scale-(0.95)"
 									type="button"
 									title="Copy to clipboard"
 									aria-label="Copy to clipboard"
@@ -91,7 +93,7 @@
 									on:click={handleOnCopy}
 								>
 									<svg
-										class="[ bs-5 is-5 ]"
+										class="w-5"
 										fill="none"
 										stroke="currentColor"
 										stroke-width="1.5"
@@ -110,7 +112,7 @@
 
 							{#if output.previewable}
 								<div class="flex flex-col items-stretch gap-2 mb-2">
-									<label class="[ text-gray-300 text-sm ]" for={'previewOf' + index}>
+									<label class="text-gray-300 text-sm" for={'previewOf' + index}>
 										Preview
 									</label>
 									<output id={'previewOf' + index}>{@html output.value}</output>
@@ -119,7 +121,7 @@
 
 							{#if output.note}
 								<div class="flex flex-col items-stretch gap-2 mb-2">
-									<small class="[ text-gray-400 ]" id={'noteOf' + index}>
+									<small class="text-gray-400" id={'noteOf' + index}>
 										{output.note}
 									</small>
 								</div>
@@ -149,7 +151,9 @@
 							/>
 						</div>
 						<div class="w-full flex-1 min-w-0">
-							<DesignContent />
+							<DesignContent
+								bind:hostname={$type}
+							/>
 						</div>
 					</div>
 				{/if}
@@ -158,18 +162,18 @@
 	</Row>
 	<Row>
 		<Box>
-			<BoxTitle>Information</BoxTitle>
+			<h1 class="m-0 text-xl font-bold text-white">Information</h1>
 			<BoxContent>
 				<div class="flex flex-col gap-2">
 					<div>Expanded on the specification
 						<a
-							class="[ transition-all duration-200 ] [ visited:text-gray-200 hover:text-gray-300 ]"
+							class="transition duration-200 visited:text-gray-200 hover:text-gray-300"
 							href="https://datatracker.ietf.org/doc/html/rfc8905"
 							target="_blank"
 							rel="noreferrer"
 						>RFC 8905</a>.
 						<a
-							class="[ transition-all duration-200 ] [ visited:text-gray-200 hover:text-gray-300 ]"
+							class="transition duration-200 visited:text-gray-200 hover:text-gray-300"
 							href="https://github.com/bchainhub/payto/blob/master/docs/scheme.md"
 							target="_blank"
 							rel="noreferrer"
@@ -180,7 +184,7 @@
 							<span class="mr-1">{$currentSentence}</span>
 							<span>Read more
 								<a
-									class="[ transition-all duration-200 ] [ visited:text-gray-200 hover:text-gray-300 ]"
+									class="transition duration-200 visited:text-gray-200 hover:text-gray-300"
 									href={$currentLink}
 									target="_blank"
 									rel="noreferrer"
@@ -194,14 +198,14 @@
 					<div>
 						Source code is located at
 						<a
-							class="[ transition-all duration-200 ] [ visited:text-gray-200 hover:text-gray-300 ]"
+							class="transition duration-200 visited:text-gray-200 hover:text-gray-300"
 							href="https://github.com/bchainhub/Payto"
 							target="_blank"
 							rel="noreferrer"
 						>GitHub</a>.
 						Licensed under the
 						<a
-							class="[ transition-all duration-200 ] [ visited:text-gray-200 hover:text-gray-300 ]"
+							class="transition duration-200 visited:text-gray-200 hover:text-gray-300"
 							href="https://github.com/bchainhub/core-license/blob/master/LICENSE"
 							target="_blank"
 							rel="noreferrer"

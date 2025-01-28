@@ -2,9 +2,12 @@
 	import type { Component } from 'svelte';
 
 	export let children: Component | null = null;
+	export let classValue: string = '';
+
+	const baseClass = 'flex flex-col gap-3 grow p-4 text-gray-100 bg-gray-800/75 rounded-md lg:!p-8 lg:gap-4 lg:is-1/2';
 </script>
 
-<section class="flex flex-col gap-6 grow rounded-sm p-4 text-gray-100 bg-gray-800/75 rounded-lg lg:!p-8 lg:gap-8 lg:is-1/2">
+<section class={`${baseClass} ${classValue}`}>
 	{#if children}
 		<svelte:component this={children} />
 	{/if}

@@ -193,7 +193,7 @@
 
 <div>
 	<div class="card rounded-lg shadow-md font-medium" style="background-color: {paytoData.colorBackground}; color: {paytoData.colorForeground};">
-		{#if paytoData.rtl}
+		{#if paytoData.rtl !== undefined && paytoData.rtl === true}
 			<div class="flex items-center p-4">
 				<div class="flex-grow flex justify-between items-center">
 					<div class="text-left">
@@ -247,7 +247,7 @@
 
 		<div class="m-4">
 			<div class="flex justify-between items-center mb-2">
-				<div class={`${paytoData.rtl ? 'text-right' : 'text-left'} w-full`}>
+				<div class={`${paytoData.rtl !== undefined && paytoData.rtl === true ? 'text-right' : 'text-left'} w-full`}>
 					<div class="text-sm">Payment type</div>
 					<div class="text-xl font-semibold">
 						{paytoData.network && paytoData.network === 'void' ? 'CASH' :
@@ -258,7 +258,7 @@
 			</div>
 			{#if paytoData.item}
 				<div class="flex justify-between items-center mb-2">
-					<div class={`${paytoData.rtl ? 'text-right' : 'text-left'} w-full`}>
+					<div class={`${paytoData.rtl !== undefined && paytoData.rtl === true ? 'text-right' : 'text-left'} w-full`}>
 						<div class="text-sm">Item</div>
 						<div class="text-xl font-semibold break-words">
 							{paytoData.item}
@@ -268,11 +268,10 @@
 			{/if}
 			{#if paytoData.network === 'void' && (paytoData.address === 'geo' || paytoData.address === 'plus')}
 				<div class="flex justify-between items-center mb-2">
-					<div class={`${paytoData.rtl ? 'text-right' : 'text-left'} w-full`}>
+					<div class={`${paytoData.rtl !== undefined && paytoData.rtl === true ? 'text-right' : 'text-left'} w-full`}>
 						<div class="text-sm">Navigate</div>
 						<div class="text-xl font-semibold break-words">
-							<a
-								class={`[ transition-all duration-200 ] [ visited:text-gray-200 hover:text-gray-300 ] [ ${paytoData.location ? 'cursor-pointer' : 'cursor-not-allowed' } ]`}
+							<a class="transition duration-200 visited:text-gray-200 hover:text-gray-300 ${paytoData.location ? 'cursor-pointer' : 'cursor-not-allowed'}"
 								style="color: {paytoData.colorForeground};"
 								href={linkLocation(paytoData.location)}
 								target="_blank"
@@ -295,7 +294,7 @@
 			</div>
 		{/if}
 
-		<div class={`flex ${paytoData.rtl ? 'flex-row-reverse justify-between' : 'justify-between'} items-center p-4`}>
+		<div class={`flex ${paytoData.rtl !== undefined && paytoData.rtl === true ? 'flex-row-reverse justify-between' : 'justify-between'} items-center p-4`}>
 			<div class={`${iconLogoSize} h-10 w-10 rounded-lg flex justify-center items-center`} style="background-color: {paytoData.colorForeground}; color: {paytoData.colorBackground}; cursor: not-allowed;">
 				APP
 			</div>

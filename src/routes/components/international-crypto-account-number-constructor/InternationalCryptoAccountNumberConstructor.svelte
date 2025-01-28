@@ -156,7 +156,7 @@
 			{:else}
 				<div class="flex items-center relative" in:fade>
 					<button
-						class="absolute mli-3 p-2 text-gray-50 bg-gray-700 rounded-full outline-none transition-all"
+						class="flex items-center justify-between absolute start-0 ms-2 p-2 text-gray-50 bg-gray-700 rounded-full outline-none transition duration-200 focus-visible:bg-green-900 focus-visible:text-green-50 active:scale-(0.95)"
 						title="Back to network menu options"
 						aria-label="Back to network menu options"
 						on:pointerdown={() => {
@@ -164,12 +164,20 @@
 							validateCurrentAddress();
 						}}
 					>
-						<svg class="bs-4 is-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+						<svg
+							class="w-5"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.5"
+							viewBox="0 0 24 24"
+							xmlns="http://www.w3.org/2000/svg"
+							aria-hidden="true"
+						>
 							<path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
 						</svg>
 					</button>
 					<input
-						class="is-full bs-12 plb-2 pis-14 pie-3 text-start bg-gray-900 rounded-md border-none caret-teal-500"
+						class="w-full h-12 p-3 ps-14 text-start bg-gray-900 rounded-md border-0"
 						type="text"
 						id="transport-network"
 						placeholder="Other network"

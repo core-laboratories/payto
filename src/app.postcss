@@ -1,9 +1,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Arimo:ital,wght@0,400..700;1,400..700&display=swap');
 @import "tailwindcss";
 
-:root {
-	--payto-color-green-core: #77bb65;
-	--payto-color-green-dark: #228D57;
+@theme {
+	--font-family: "Arimo", serif;
+	--color-green-core: #77bb65;
+	--color-green-dark: #059669;
+	--color-green-50: #f5faf3;
+	--color-green-100: #e7f5e3;
+	--color-green-200: #d0eac8;
+	--color-green-300: #aad89d;
+	--color-green-400: #77bb65;
+	--color-green-500: #59a146;
+	--color-green-600: #458435;
+	--color-green-700: #39682d;
+	--color-green-800: #305427;
+	--color-green-900: #284522;
+	--color-green-950: #11250e;
 }
 
 .arimo-600-italic {
@@ -28,7 +40,7 @@
 }
 
 html {
-	font-family: "Arimo", serif;
+	font-family: var(--font-family);
 	font-size: 16px;
 	line-height: 24px;
 	font-weight: 400;
@@ -59,62 +71,88 @@ body {
 }
 
 a {
-	border-bottom: 1px dotted;
+	color: #a4f4cf; /* Emerald 200 */
 }
 
-label {
-	cursor: pointer;
+a:hover {
+	color: #6ee7b7; /* Emerald 300 */
+	text-decoration: underline;
+}
+
+a:active {
+	color: #a4f4cf; /* Emerald 200 */
+}
+
+a:visited {
+	color: #51ae8b; /* Emerald 400 - less saturated, more darker */
+}
+
+a.logo {
+	color: var(--color-green-core);
+}
+
+a.logo:hover {
+	text-decoration: none;
+}
+
+a.button {
+	@apply no-underline text-white;
+}
+
+a.button:hover {
+	@apply bg-gray-600;
 }
 
 input[type="checkbox"] {
 	cursor: pointer;
 	appearance: none;
 	border: 1px solid #9CA3AF;
-	border-radius: 3px;
+	border-radius: 4px;
 	background-color: #3a4659;
 	position: relative;
 	outline: none;
-	width: 20px;
-	height: 20px;
+	width: 1.25rem;
+	height: 1.25rem;
 	vertical-align: middle;
 }
 
-[type='radio'] {
+input[type='radio'] {
 	cursor: pointer;
 	appearance: none;
 	border: 1px solid #9CA3AF;
+	border-radius: 50%;
 	background-color: #3a4659;
+	width: 1.25rem;
+	height: 1.25rem;
+	vertical-align: middle;
 }
 
-input[type="checkbox"]:checked, [type='radio']:checked {
-	color: var(--payto-color-green-core);
+input[type='checkbox']:checked {
+	background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
 }
 
-[type='checkbox']:focus, [type='radio']:focus {
-	--tw-ring-color: var(--payto-color-green-core);
-    --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--payto-color-green-core);
+input[type='radio']:checked {
+	background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3ccircle cx='8' cy='8' r='3'/%3e%3c/svg%3e");
 }
 
-input[type="checkbox"]:checked::before {
-	content: "✓";
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-	color: #fff;
+input[type='checkbox']:checked, input[type='radio']:checked {
+	@apply bg-green-400;
 }
 
-h1 > input[type="checkbox"]:checked::before {
-	content: "";
+input[type='checkbox']:focus, input[type='radio']:focus {
+	@apply focus:ring focus:ring-green-400/70 focus:ring-offset-2;
 }
 
-input[type="checkbox"]:hover, [type='radio']:hover {
-	border-color: var(--payto-color-green-core);
+button, label, input[type='button'], input[type='submit'], input[type='reset'], input[type='file'], input[type='image'], input[type='color'] {
+	@apply cursor-pointer;
 }
 
-input[type="checkbox"]:checked:hover, [type='radio']:checked:hover {
-	background-color: var(--payto-color-green-core);
-	color: #3a4659;
+input[type='checkbox']:hover, input[type='radio']:hover {
+	@apply border-green-400;
+}
+
+input[type='checkbox']:checked:hover, input[type='radio']:checked:hover {
+	@apply bg-green-400;
 }
 
 abbr {
@@ -122,10 +160,5 @@ abbr {
 }
 
 abbr:where([title]) {
-    -webkit-text-decoration: underline rgb(249 250 251 / .5) dotted;
-    text-decoration: underline rgb(249 250 251 / .5) dotted;
-}
-
-input[type="color"] {
-	cursor: pointer;
+	@apply underline underline-offset-2 decoration-gray-500;
 }

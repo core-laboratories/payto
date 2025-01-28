@@ -4,11 +4,11 @@
 	import { page } from '$app/state';
 </script>
 
-<article class="[ flex flex-col ] [ is-full ] [ h-screen ]">
+<article class="flex flex-col w-full h-screen">
 	{#if page.route.id !== '/show'}
 		<Header />
 	{/if}
-	<main class="[ lg:pli-8 ] [ mx-auto ] [ flex-1 ]">
+	<main class="lg:px-8 mx-auto flex-1">
 		<slot />
 	</main>
 	<Footer />

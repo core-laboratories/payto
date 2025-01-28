@@ -39,7 +39,7 @@
 	// Subscribe to update the outputValue
 	computedOutput.subscribe(value => outputValue = value);
 
-	const baseClass = 'plb-2 pli-3 text-start bg-gray-900 rounded-md border-0 caret-teal-500 focus:outline-none focus-visible:ring-4 focus-visible:ring-opacity-75 focus-visible:ring-green-800 focus-visible:ring-offset-green-700 focus-visible:ring-offset-2 w-1/4 sm:text-sm mr-2'
+	const baseClass = 'py-2 px-3 text-start bg-gray-900 rounded-md border-0 caret-teal-500 focus:outline-none focus-visible:ring-4 focus-visible:ring-opacity-75 focus-visible:ring-green-800 focus-visible:ring-offset-green-700 focus-visible:ring-offset-2 is-1/4 text-sm me-2'
 
 	const ctx = getFieldGroupContext();
 </script>

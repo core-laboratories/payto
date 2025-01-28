@@ -16,6 +16,6 @@
 
 
 <div class="flex justify-center items-center">
-    <canvas class="rounded-md" bind:this={canvas}></canvas>
+    <canvas class="rounded-xs" bind:this={canvas}></canvas>
 </div>
 

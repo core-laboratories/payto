@@ -9,7 +9,6 @@
 	} from '$lib/components';
 
 	import { TRANSPORT } from '$lib/data/transports.data';
-	import { join } from '$lib/helpers/join.helper';
 	import { constructor } from '$lib/store/constructor.store';
 	import { fade, fly } from 'svelte/transition';
 	import { coordinatesSchema, plusCodeSchema } from '$lib/validators/location.validator';
@@ -114,30 +113,26 @@
 	}
 </script>
 
-<div class="[ flex flex-col gap-6 ]" in:fly={{ y: 64 }}>
-	<div class={join('[ flex flex-col items-stretch gap-2 ]')}>
+<div class="flex flex-col gap-6" in:fly={{ y: 64 }}>
+	<div class="flex flex-col items-stretch gap-2">
 		<label id="transport-network-label" for="transport-network">Transport Network *</label>
-		<div class="[ flex flex-col items-stretch gap-4 ]">
+		<div class="flex flex-col items-stretch gap-4">
 			{#if $constructor.networks.void.transport !== 'other'}
 				<div in:fade>
 					<ListBox bind:value={$constructor.networks.void.transport} items={TRANSPORT.void} />
 				</div>
 			{/if}
 			{#if $constructor.networks.void.transport === 'other'}
-				<div class={join('[ flex items-center ]', '[ relative ]')} in:fade>
+				<div class="flex items-center relative" in:fade>
 					<button
-						class={join(
-							'[ flex items-center justify-between ]',
-							'[ absolute inline-start-0 mli-3 p-2 text-gray-50 bg-gray-700 rounded-full outline-none transition-all duration-200 ]',
-							'[ focus-within:bg-green-900 focus-within:text-green-50 active:scale-95 ]'
-						)}
+						class="absolute start-0 ms-3 p-2 text-gray-50 bg-gray-700 rounded-full outline-none transition duration-200"
 						type="button"
 						title="Back to network menu options"
 						aria-label="Back to network menu options"
 						on:pointerdown={() => ($constructor.networks.void.transport = 'geo')}
 					>
 						<svg
-							class={join('[ bs-4 is-4 ]')}
+							class="bs-4 is-4"
 							fill="none"
 							stroke="currentColor"
 							stroke-width="1.5"
@@ -154,11 +149,7 @@
 					</button>
 
 					<input
-						class={join(
-							'[ is-full bs-12 plb-2 pis-14 pie-3 text-start bg-gray-900 rounded-md border-none caret-teal-500 ]',
-							'[ focus:outline-none focus-visible:ring-4 focus-visible:ring-opacity-75 focus-visible:ring-green-800 focus-visible:ring-offset-green-700 focus-visible:ring-offset-2 ]',
-							'[ sm:text-sm ]'
-						)}
+						class="w-full h-12 py-2 ps-14 pie-3 text-start bg-gray-900 rounded-sm border-none caret-teal-500"
 						type="text"
 						id="transport-network"
 						placeholder="Other network"
@@ -172,7 +163,7 @@
 		</div>
 	</div>
 
-	<div class={join('[ flex flex-col items-stretch gap-2 ]')}>
+	<div class="flex flex-col items-stretch gap-2">
 		<label id="exchange-point-label" for="exchange-point">Location</label>
 		{#if $constructor.networks.void.transport === 'geo'}
 			<div class="flex gap-4">
@@ -213,15 +204,15 @@
 			{#if lonError && lonMsg}
 				<span class="text-sm text-rose-500">{lonMsg}</span>
 			{/if}
-			<small class="[ -mbs-1 text-gray-400 ]">
+			<small class="-mt-1 text-gray-400">
 				Search for the geocoordinates -
 				<a
-					class="[ transition-all duration-200 ] [ visited:text-gray-200 hover:text-gray-300 ]"
+					class="transition-all duration-200 visited:text-gray-200 hover:text-gray-300"
 					href="https://www.latlong.net/"
 					target="_blank"
 					rel="noreferrer"
 				>
-					Latitude & Longitude (DD - Decimal Degrees)
+					Latitude & Longitude (Decimal Degrees)
 				</a>
 			</small>
 		{/if}
@@ -229,7 +220,7 @@
 		{#if $constructor.networks.void.transport === 'plus'}
 			<FieldGroup>
 				<FieldGroupText
-					placeholder="Plus Code, e.g. 87G8Q2PQ+96"
+					placeholder="Plus Code, e.g. 8FWV26PJ+87"
 					bind:value={plusCodeValue}
 					on:input={handlePlusCodeInput}
 					on:change={handlePlusCodeInput}
@@ -245,26 +236,22 @@
 			{#if plusCodeError && plusCodeMsg}
 				<span class="text-sm text-rose-500">{plusCodeMsg}</span>
 			{/if}
-			<small class="[ -mbs-1 text-gray-400 ]">
+			<small class="-mt-1 text-gray-400">
 				Search for the{' '}
 				<a
-					class="[ transition-all duration-200 ] [ visited:text-gray-200 hover:text-gray-300 ]"
+					class="transition-all duration-200 visited:text-gray-200 hover:text-gray-300"
 					href="https://plus.codes/map"
 					target="_blank"
 					rel="noreferrer"
 				>
-					Plus Code
+					Plus Code (Long Format)
 				</a>
 			</small>
 		{/if}
 
 		{#if $constructor.networks.void.transport === 'other'}
 			<input
-				class={join(
-					'[ is-full bs-12 plb-2 pli-3 text-start bg-gray-900 rounded-md border-none caret-teal-500 ]',
-					'[ focus:outline-none focus-visible:ring-4 focus-visible:ring-opacity-75 focus-visible:ring-green-800 focus-visible:ring-offset-green-700 focus-visible:ring-offset-2 ]',
-					'[ sm:text-sm ]'
-				)}
+				class="w-full h-12 py-2 ps-3 text-start bg-gray-900 rounded-sm border-none caret-teal-500"
 				type="text"
 				id="exchange-point"
 				placeholder="Point"

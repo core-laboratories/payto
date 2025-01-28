@@ -11,6 +11,11 @@
 	import { constructor } from '$lib/store/constructor.store';
 	import { calculateColorDistance } from '$lib/helpers/euclidean-distance.helper';
 	import { enhance } from '$app/forms';
+	import { generateLink } from '$lib/helpers/generate.helper';
+	import { getAddress } from '$lib/helpers/get-address.helper';
+	import { toast } from '$lib/components/toast';
+
+	export let hostname: ITransitionType | undefined = undefined;
 
 	const barcodeTypes = [
 		{ label: 'QR Code', value: 'qr', ticker: 'QR' },
@@ -19,14 +24,21 @@
 		{ label: 'Code 128', value: 'code128', ticker: 'Code 128' }
 	];
 
-	const distance = derived(constructor, $constructor =>
+	const constructorStore = derived(constructor, $c => $c);
+
+	const distance = derived(constructorStore, $constructor =>
 		Math.floor(
 			calculateColorDistance($constructor.design.colorF || '#192a14', $constructor.design.colorB || '#77bc65')
 		)
 	);
 
-	const barcodeValue = derived(constructor, $constructor => $constructor.design.barcode ?? 'qr');
+	const barcodeValue = derived(constructorStore, $constructor => $constructor.design.barcode ?? 'qr');
+	const address = derived(constructorStore, $constructor =>
+		hostname ? getAddress($constructor.networks[hostname], hostname) : undefined
+	);
 	const isGenerating = writable(false);
+
+	const GENERATION_TIMEOUT = 30000; // 30 seconds timeout
 
 	function updateBarcode(value: string | number) {
 		constructor.update(c => ({
@@ -37,25 +49,68 @@
 
 	const formEnhance = () => {
 		isGenerating.set(true);
-		return async ({ result }: { result: any }) => {
+		const timeoutId = setTimeout(() => {
 			isGenerating.set(false);
-			if (result.type === 'success' && result.data instanceof Blob) {
-				const url = URL.createObjectURL(result.data);
-				const a = document.createElement('a');
-				a.href = url;
-				a.download = `payto-${Date.now()}.pkpass`;
-				document.body.appendChild(a);
-				a.click();
-				document.body.removeChild(a);
-				URL.revokeObjectURL(url);
+			toast({ message: 'Generation timed out. Please try again.', type: 'error' });
+		}, GENERATION_TIMEOUT);
+
+		return async ({ result }: { result: any }) => {
+			clearTimeout(timeoutId);
+			try {
+				if (result.type === 'error') {
+					isGenerating.set(false);
+					toast({ message: result.error?.message || 'Failed to generate pass', type: 'error' });
+					return;
+				}
+
+				if (result.type === 'success' && result.data instanceof Blob) {
+					const url = URL.createObjectURL(result.data);
+					const a = document.createElement('a');
+					a.href = url;
+					a.download = `PayTo-${hostname ? hostname.toLowerCase() + '-' : ''}${$address ? $address.toLowerCase() + '-' : ''}${new Date(Date.now()).toISOString().replace(/[-T:]/g, '').slice(0, 12)}.pkpass`;
+					document.body.appendChild(a);
+					a.click();
+					toast({ message: 'Pass downloaded as ' + a.download, type: 'success' });
+					document.body.removeChild(a);
+					URL.revokeObjectURL(url);
+				} else {
+					throw new Error('Invalid response format');
+				}
+			} catch (error) {
+				toast({ message: 'An unexpected error occurred', type: 'error' });
+			} finally {
+				isGenerating.set(false);
 			}
 		};
 	};
+
+	function getWebLink(): string {
+		if (!hostname) return '#';
+		const network = $constructorStore.networks[hostname];
+		const payload = [
+			{
+				value: network.network === 'other'
+					? network.other?.toLowerCase()
+					: network.network
+			},
+			{
+				value: network.destination
+			}
+		];
+		const link = generateLink(payload, {
+			...network,
+			params: {
+				...network.params,
+				design: $constructorStore.design
+			}
+		});
+		return link ? `https://payto.money${link.slice(5)}` : '#';
+	}
 </script>
 
 <div class="flex flex-col gap-6">
 	<FieldGroup>
-		<FieldGroupLabel>Company Name</FieldGroupLabel>
+		<FieldGroupLabel>Organization Name</FieldGroupLabel>
 		<FieldGroupText
 			placeholder="PayTo"
 			bind:value={$constructor.design.org}
@@ -72,11 +127,8 @@
 		/>
 	</FieldGroup>
 
-	<div class="flex flex-col gap-6">Theme setup:</div>
-
-	<div>
-		Current Color Euclidean distance:
-		<span class:text-red-500={$distance < 100}>{$distance}</span>
+	<div class="flex flex-col gap-6">
+		<h2 class="text-lg font-bold">Theme setup</h2>
 	</div>
 
 	<FieldGroup flexType="row" itemPosition="items-center">
@@ -93,11 +145,25 @@
 		/>
 	</FieldGroup>
 
-	<div class="flex flex-col">
+	<div>
+		Current Color Euclidean distance:
+		<span class:text-red-500={$distance < 100}>{$distance}</span>
 		<p class="-mb-1 text-gray-400">
 			Note: Similar Colors will not be accepted - the minimum Euclidean distance is 100.
 		</p>
 	</div>
+
+	<FieldGroup>
+		<FieldGroupLabel>Right-to-Left typing (RTL)</FieldGroupLabel>
+		<div class="flex items-center">
+			<input
+				type="checkbox"
+				bind:checked={$constructor.design.rtl}
+				id="rtlCheckbox"
+			/>
+			<label for="rtlCheckbox" class="ml-2">Enabled</label>
+		</div>
+	</FieldGroup>
 
 	<FieldGroup>
 		<FieldGroupLabel>Default Barcode Type</FieldGroupLabel>
@@ -109,20 +175,50 @@
 		/>
 	</FieldGroup>
 
-	<form
-		method="POST"
-		action="?/generatePass"
-		use:enhance={formEnhance}
-	>
-		<input type="hidden" name="props" value={JSON.stringify($constructor)} />
-		<input type="hidden" name="link" value={JSON.stringify({...$constructor, design: undefined})} />
+	<div class="flex flex-col gap-3">
+		<div class="flex flex-col lg:flex-row gap-3">
+			{#if hostname}
+				<a
+					href={getWebLink()}
+					target="_blank"
+					rel="noreferrer"
+					class="button is-full lg:basis-1/2 bs-12 py-2 px-3 text-center text-white border border-gray-700 bg-gray-700 hover:bg-gray-600 rounded-md transition duration-200 outline-none focus-visible:ring focus-visible:ring-green-800 focus-visible:ring-offset-2 active:scale-(0.99) text-sm"
+				>
+					Open Weblink
+				</a>
+			{:else}
+				<div class="button is-full lg:basis-1/2 bs-12 py-2 px-3 text-center text-white border border-gray-700 bg-gray-700 opacity-50 cursor-not-allowed rounded-md text-sm">
+					Open Weblink
+				</div>
+			{/if}
+
+			<div class="is-full lg:basis-1/2">
+				<form
+					method="POST"
+					action="?/generatePass"
+					use:enhance={formEnhance}
+					class="w-full"
+				>
+					<input type="hidden" name="props" value={JSON.stringify($constructorStore)} />
+					<input type="hidden" name="type" value={hostname} />
+
+					<button
+						class="w-full bs-12 py-2 px-3 text-center text-white border border-gray-700 bg-gray-700 hover:bg-gray-600 rounded-sm transition duration-200 outline-none focus-visible:ring focus-visible:ring-green-800 focus-visible:ring-offset-2 active:scale-(0.99) text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+						type="submit"
+						disabled={!hostname || $isGenerating}
+					>
+						{$isGenerating ? 'Generating...' : 'Download Pass'}
+					</button>
+				</form>
+			</div>
+		</div>
 
 		<button
-			class="is-full bs-12 mbs-3 plb-2 pli-3 text-center text-white border border-gray-700 bg-gray-700 rounded-md transition-all duration-200 outline-none focus-visible:ring-4 focus-visible:ring-opacity-75 focus-visible:ring-green-800 focus-visible:ring-offset-green-700 focus-visible:ring-offset-2 active:scale-[.99] sm:text-sm {$isGenerating ? 'opacity-50 cursor-not-allowed' : ''}"
-			type="submit"
-			disabled={$isGenerating}
+			class="is-full bs-12 py-2 px-3 text-center text-white border border-gray-700 bg-gray-700 hover:bg-gray-600 rounded-sm transition duration-200 outline-none focus-visible:ring focus-visible:ring-green-800 focus-visible:ring-offset-2 active:scale-(0.99) sm:text-sm"
+			type="button"
+			on:click={() => constructor.resetDesign()}
 		>
-			{$isGenerating ? 'Generating...' : 'Download Pass'}
+			Clear Pass Data
 		</button>
-	</form>
+	</div>
 </div>
