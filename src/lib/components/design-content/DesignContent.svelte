@@ -11,7 +11,7 @@
 	import { constructor } from '$lib/store/constructor.store';
 	import { calculateColorDistance } from '$lib/helpers/euclidean-distance.helper';
 	import { enhance } from '$app/forms';
-	import { generateLink } from '$lib/helpers/generate.helper';
+	import { getWebLink } from '$lib/helpers/generate.helper';
 	import { getAddress } from '$lib/helpers/get-address.helper';
 	import { toast } from '$lib/components/toast';
 
@@ -84,27 +84,18 @@
 		};
 	};
 
-	function getWebLink(): string {
+	function getLink(): string {
 		if (!hostname) return '#';
-		const network = $constructorStore.networks[hostname];
-		const payload = [
-			{
-				value: network.network === 'other'
-					? network.other?.toLowerCase()
-					: network.network
-			},
-			{
-				value: network.destination
-			}
-		];
-		const link = generateLink(payload, {
-			...network,
-			params: {
-				...network.params,
-				design: $constructorStore.design
-			}
+		const networkData = {
+			...$constructorStore.networks[hostname],
+			design: $constructorStore.design
+		};
+		return getWebLink({
+			network: hostname,
+			networkData,
+			design: true,
+			transform: true
 		});
-		return link ? `https://payto.money${link.slice(5)}` : '#';
 	}
 </script>
 
@@ -179,7 +170,7 @@
 		<div class="flex flex-col lg:flex-row gap-3">
 			{#if hostname}
 				<a
-					href={getWebLink()}
+					href={getLink()}
 					target="_blank"
 					rel="noreferrer"
 					class="button is-full lg:basis-1/2 bs-12 py-2 px-3 text-center text-white border border-gray-700 bg-gray-700 hover:bg-gray-600 rounded-md transition duration-200 outline-none focus-visible:ring focus-visible:ring-green-800 focus-visible:ring-offset-2 active:scale-(0.99) text-sm"

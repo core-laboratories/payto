@@ -140,12 +140,15 @@ const caseCurrency = (str: string | undefined) => (str && str.startsWith("0x")) 
  */
 const shortenTitle = (str: string | undefined) => (str && str.length > 10) ? `${str.slice(0,4)}…${str.slice(-4)}` : str;
 
+const recurringIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke-width="2"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 004 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>`;
+
 /**
  * It takes a prefix and a props object, and returns a title
  * @param {'Pay' | 'Donate'} prefix - 'pay' | 'donate'
  * @param props - The props object that was used to initialized store.
+ * @param html - Whether to return the title for HTML output
  */
-const getTitle = (prefix: 'pay' | 'donate', props: Record<string, any>) => {
+const getTitle = (prefix: 'pay' | 'donate', props: Record<string, any>, html: boolean = false) => {
 	let network
 	if (props.network === 'void') {
 		network = props.transport !== 'other'
@@ -158,12 +161,22 @@ const getTitle = (prefix: 'pay' | 'donate', props: Record<string, any>) => {
 		? shortenTitle(props.other)
 		: '');
 	}
+
 	let namePrefix;
 	if (typeof props.params !== 'undefined' && typeof props.params.rc !== 'undefined' && typeof props.params.rc.value !== 'undefined') {
-		namePrefix = `Recurring ${prefix}`;
+		if (prefix === 'donate') {
+			namePrefix = html ? `${recurringIcon} <strong>Donate<span>To:</span></strong>` : `Recurring DonateTo:`;
+		} else {
+			namePrefix = html ? `${recurringIcon} <strong>Pay<span>To:</span></strong>` : `Recurring PayTo:`;
+		}
 	} else {
-		namePrefix = prefix[0].toUpperCase() + prefix.slice(1);
+		if (prefix === 'donate') {
+			namePrefix = html ? `<strong>Donate<span>To:</span></strong>` : `DonateTo:`;
+		} else {
+			namePrefix = html ? `<strong>Pay<span>To:</span></strong>` : `PayTo:`;
+		}
 	}
+
 	let title = `${namePrefix} via ${network ? network.toUpperCase() : ''}`;
 	if (props.chain > 0 && (props.network === 'eth' || props.network === 'other')) {
 		title += `@${props.chain}`;
@@ -224,7 +237,17 @@ height:fit-content;
 transition: all .15s cubic-bezier(.4,0,.2,1);
 white-space:nowrap;
 `;
-	return `<a href="${link}" class="ptPay" style="${style}">💸 ${getTitle('pay', props)}</a><style>a.ptPay:hover{border-color:#95e87f !important;color:#95e87f !important}</style>`;
+const stylePayto = `
+<style>
+a.ptPay>strong{font-style:italic;margin-right:2px}
+a.ptPay>strong>span{color:#059669}
+a.ptPay>svg{vertical-align:-3px;margin-right:2px}
+a.ptPay:hover{border-color:#95e87f!important;color:#95e87f!important}
+a.ptPay:hover>strong>span{color:#06c88d!important}
+a.ptPay{display:inline-flex;align-items:center}
+</style>`;
+
+	return `<a href="${link}" class="ptPay" style="${style}">${getTitle('pay', props, true)}</a>${stylePayto}`;
 };
 
 /**
@@ -248,7 +271,17 @@ height:fit-content;
 transition:all .15s cubic-bezier(.4, 0, .2, 1);
 white-space:nowrap;
 `;
-	return `<a href="${link}" class="ptDonate" style="${style}">💠 ${getTitle('donate', props)}</a><style>a.ptDonate:hover{border-color:#b6c2f4 !important;color:#b6c2f4 !important}</style>`;
+const styleDonateto = `
+<style>
+a.ptDonate>strong{font-style:italic;margin-right:2px}
+a.ptDonate>strong>span{color:#5675ff}
+a.ptDonate>svg{vertical-align:-3px;margin-right:2px}
+a.ptDonate:hover{border-color:#b6c2f4!important;color:#b6c2f4!important}
+a.ptDonate:hover>strong>span{color:#89a0ff!important}
+a.ptDonate{display:inline-flex;align-items:center}
+</style>`;
+
+	return `<a href="${link}" class="ptDonate" style="${style}">${getTitle('donate', props, true)}</a>${styleDonateto}`;
 };
 
 /**
@@ -324,4 +357,46 @@ export const generate = (type: ITransitionType, props: any, payload: IPayload[])
 		},
 		{ label: 'FinTag (Meta Tag)', note: 'Basic payment instructions only.', value: generateMetaTag(type, props) }
 	];
+};
+
+interface IWebLinkOptions {
+	payload?: IPayload[];
+	network?: ITransitionType;
+	networkData?: any;
+	design?: boolean;
+	doante?: boolean;
+	transform?: boolean;
+}
+
+export const getWebLink = ({
+	payload,
+	network,
+	networkData,
+	design = false,
+	doante = false,
+	transform = false
+}: IWebLinkOptions): string => {
+	if (!network || !networkData) return '#';
+
+	const finalPayload = payload ?? [
+		{
+			value: networkData.network === 'other'
+				? networkData.other?.toLowerCase()
+				: networkData.network
+		},
+		{
+			value: networkData.destination
+		}
+	];
+
+	const props = {
+		...networkData,
+		params: {
+			...networkData.params,
+			...(design ? { design: networkData.design } : {})
+		}
+	};
+
+	const link = generateLink(finalPayload, props, doante);
+	return link ? (transform ? `https://payto.money:/${link.slice(5)}` : link) : '#';
 };
