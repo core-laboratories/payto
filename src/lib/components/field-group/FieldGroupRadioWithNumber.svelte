@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { writable, derived } from 'svelte/store';
 	import { getFieldGroupContext } from './fieldgroup.context';
 
 	interface Option {
@@ -19,27 +18,35 @@
 		outputValue?: string | null;
 	}
 
-	export let options: Option[] = [];
-	export let defaultChecked: string | null = null;
-	export let numberValue: number = 1;
-	export let numberMin: number = 1;
-	export let numberMax: number = 365;
-	export let disabled: boolean = false;
-	export let outputValue: string | null = '';
-	export let classValue: string = '';
+	// Define props using `$props` and mark `outputValue` as bindable
+	let {
+		options = [],
+		defaultChecked = null,
+		numberValue = 1,
+		numberMin = 1,
+		numberMax = 365,
+		disabled = false,
+		outputValue = $bindable(), // Mark as bindable
+		classValue = ''
+	} = $props();
 
-	const internalCheckedValue = writable(defaultChecked || options[0]?.value || '');
-	const checkedValue = derived(internalCheckedValue, $val => $val);
+	// Define reactive state using `$state`
+	let internalCheckedValue = $state(defaultChecked || options[0]?.value || '');
+	let numberValueStore = $state(numberValue);
 
-	const computedOutput = derived(
-		[checkedValue, writable(numberValue)],
-		([$checked, $number]) => $checked === 'd' && $number > 1 ? `${$number}d` : $checked
+	// Derived state using `$derived`
+	const computedOutput = $derived(
+		internalCheckedValue === 'd' && numberValueStore > 1
+			? `${numberValueStore}d`
+			: internalCheckedValue
 	);
 
-	// Subscribe to update the outputValue
-	computedOutput.subscribe(value => outputValue = value);
+	// Update `outputValue` whenever `computedOutput` changes
+	$effect(() => {
+		outputValue = computedOutput;
+	});
 
-	const baseClass = 'py-2 px-3 text-start bg-gray-900 rounded-md border-0 caret-teal-500 focus:outline-none focus-visible:ring-4 focus-visible:ring-opacity-75 focus-visible:ring-green-800 focus-visible:ring-offset-green-700 focus-visible:ring-offset-2 is-1/4 text-sm me-2'
+	const baseClass = 'py-2 px-3 text-start bg-gray-900 rounded-md border-0 caret-teal-500 focus:outline-none focus-visible:ring-4 focus-visible:ring-opacity-75 focus-visible:ring-green-800 focus-visible:ring-offset-green-700 focus-visible:ring-offset-2 is-1/4 text-sm me-2';
 
 	const ctx = getFieldGroupContext();
 </script>
@@ -52,8 +59,7 @@
 					type="radio"
 					name="recurrencePattern"
 					value={option.value}
-					bind:group={$checkedValue}
-					on:change={() => internalCheckedValue.set(option.value)}
+					bind:group={internalCheckedValue}
 					disabled={option.disabled || disabled} />
 				<span class="ml-1">{option.name}</span>
 			</label>
@@ -61,17 +67,17 @@
 	</div>
 	{#each options as option}
 		<div class="flex items-center">
-			{#if option.hasNumberInput && $checkedValue === option.value}
+			{#if option.hasNumberInput && internalCheckedValue === option.value}
 				<label for="input-{option.name}" class="mr-2">{option.name}:</label>
 				<input
 					id="input-{option.name}"
 					class={`${baseClass} ${classValue}`}
 					type="number"
-					bind:value={numberValue}
+					bind:value={numberValueStore}
 					min={numberMin}
 					max={numberMax}
 					placeholder={option.name}
-					disabled={$checkedValue !== option.value || disabled} />
+					disabled={internalCheckedValue !== option.value || disabled} />
 			{/if}
 		</div>
 	{/each}
