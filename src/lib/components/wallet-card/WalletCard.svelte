@@ -25,6 +25,7 @@
 
 	const iconLogoSize: string = 'h-10 w-10';
 	let noData: boolean = true;
+	let bareUrl: string | null = null;
 
 	interface FlexiblePaytoData {
 		hostname: string;
@@ -40,6 +41,7 @@
 		item: string | Readable<string> | undefined;
 		location: string | Readable<string> | undefined;
 		recurring: string | Readable<string> | undefined;
+		deadline: number | Readable<number> | undefined;
 	}
 
 	let paytoData: FlexiblePaytoData = {
@@ -55,7 +57,8 @@
 		network: undefined,
 		item: undefined,
 		location: undefined,
-		recurring: undefined
+		recurring: undefined,
+		deadline: undefined
 	};
 
 	const constructorStore = derived(constructor, $c => $c);
@@ -77,6 +80,7 @@
 
 	if (url) {
 		noData = false;
+		bareUrl = url;
 		const payto = new Payto(url).toJSONObject();
 		const { colorForeground, colorBackground } = defineColors(payto.colorForeground, payto.colorBackground);
 
@@ -95,7 +99,8 @@
 			item: payto.item || undefined,
 			location: payto.location || undefined,
 			recurring: payto.recurring || undefined,
-			rtl: payto.rtl || false
+			rtl: payto.rtl || false,
+			deadline: payto.deadline || undefined
 		};
 	} else if (hostname) {
 		noData = false;
@@ -107,6 +112,15 @@
 			},
 			design: true,
 			transform: true
+		});
+		bareUrl = getWebLink({
+			network: hostname,
+			networkData: {
+				...$constructorStore.networks[hostname],
+				design: $constructorStore.design
+			},
+			design: true,
+			transform: false
 		});
 		const { colorForeground, colorBackground } = defineColors($constructorStore.design.colorF, $constructorStore.design.colorB);
 
@@ -123,7 +137,8 @@
 			item: $store.design.item,
 			location: $store.networks[hostname]?.params?.loc?.value,
 			recurring: $store.networks[hostname]?.params?.rc?.value ?? '',
-			rtl: $store.design.rtl || false
+			rtl: $store.design.rtl || false,
+			deadline: $store.networks[hostname]?.params?.dl?.value
 		}));
 
 		paytoStore.subscribe((value) => {
@@ -159,6 +174,44 @@
 		const value = paytoData?.value;
 		return value ? $formatter.format(Number(value)) : 'Custom Amount';
 	});
+
+	let dynamicUrl = derived([constructorStore, writable(hostname)], ([$constructor, $hostname]) => {
+		if (!$hostname) return null;
+		return getWebLink({
+			network: $hostname,
+			networkData: {
+				...$constructor.networks[$hostname],
+				design: $constructor.design
+			},
+			design: true,
+			transform: true
+		});
+	});
+
+	let dynamicBareUrl = derived([constructorStore, writable(hostname)], ([$constructor, $hostname]) => {
+		if (!$hostname) return null;
+		return getWebLink({
+			network: $hostname,
+			networkData: {
+				...$constructor.networks[$hostname],
+				design: $constructor.design
+			},
+			design: true,
+			transform: false
+		});
+	});
+
+	const currentUrl = derived(
+		[writable(url), dynamicUrl],
+		([$url, $dynamicUrl]) => $url || $dynamicUrl
+	);
+
+	const currentBareUrl = derived(
+		[writable(bareUrl), dynamicBareUrl],
+		([$url, $dynamicBareUrl]) => $url || $dynamicBareUrl
+	);
+
+	const currentBareUrlString = derived(currentBareUrl, $url => $url || '');
 
 	const barcodeValue = derived(
 		[networkStore, addressStore],
@@ -202,7 +255,7 @@
 	let isStreaming = false;
 
 	async function handleNfcClick() {
-		if (!url) return;
+		if (!currentUrl) return;
 
 		const reader = await $nfcReader;
 		if (!reader) return;
@@ -234,7 +287,20 @@
 					</span>
 				</div>
 				<div class="text-rose-500 font-semibold">
-					Warning: No data provided
+					No data provided
+				</div>
+			</div>
+		</div>
+	{:else if paytoData.deadline && (paytoData.deadline instanceof Object ? Number(paytoData.deadline) : paytoData.deadline) < Math.floor(Date.now() / 1000)}
+		<div class="card rounded-lg shadow-md font-medium" style="background-color: {paytoData.colorBackground}; color: {paytoData.colorForeground};">
+			<div class="flex items-center p-4">
+				<div class="flex-grow flex justify-between items-center">
+					<span class="text-l font-medium font-semibold" style="color: {paytoData.colorForeground};">
+						PayTo
+					</span>
+				</div>
+				<div class="text-rose-500 font-semibold">
+					Request for payment is expired
 				</div>
 			</div>
 		</div>
@@ -329,11 +395,11 @@
 				{/if}
 			</div>
 
-			{#if url}
+			{#if currentUrl}
 				<div class="flex justify-center items-center m-4 mt-5">
-					<div class="p-4 rounded-lg inline-flex justify-center items-center background-white">
+					<div class="p-4 rounded-lg inline-flex justify-center items-center bg-white">
 						<div class="text-center">
-							<Qr param={url} />
+							<Qr param={$currentBareUrlString} />
 							<div class="text-sm mt-2 text-black">{$barcodeValue}</div>
 						</div>
 					</div>
@@ -341,26 +407,41 @@
 			{/if}
 
 			<div class={`flex ${paytoData.rtl !== undefined && paytoData.rtl === true ? 'flex-row-reverse justify-between' : 'justify-between'} items-center p-4`}>
-				<div class={`${iconLogoSize} h-10 w-10 rounded-lg flex justify-center items-center`} style="background-color: {paytoData.colorForeground}; color: {paytoData.colorBackground}; cursor: not-allowed;">
-					APP
-				</div>
-				{#if deviceSherlock.isDesktopOrTablet}
-					<button
-						on:click={handleNfcClick}
-						class="transition-opacity hover:opacity-80"
-						style="cursor: {$nfcSupported ? 'pointer' : 'not-allowed'}; background: none; border: none; padding: 0;"
-						aria-label="Stream NFC data to your device"
-						disabled={!$nfcSupported}
+				<a
+					href={$currentBareUrlString}
+					target="_blank"
+					rel="noreferrer"
+					class="transition-opacity hover:opacity-80"
+					style="cursor: pointer; background: none; border: none; padding: 0;"
+					aria-label="Open in external application"
+					title="Open in external application"
+				>
+					<svg
+						viewBox="0 0 24 24"
+						xmlns="http://www.w3.org/2000/svg"
+						style="width: 30px; height: 30px; fill: none; stroke: {paytoData.colorForeground}; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;"
 					>
-						<svg
-							viewBox="0 0 36 40"
-							xmlns="http://www.w3.org/2000/svg"
-							style="fill-rule:evenodd; clip-rule:evenodd; stroke-linejoin:round; stroke-miterlimit:2; width:38px; height:40px; fill:{paytoData.colorForeground};"
-						>
-							<path d="M29.608,0.832c4.694,9.378 4.407,18.245 4.37,19.181c0.037,0.815 0.324,9.694 -4.37,19.072c-0,0 -1.223,1.407 -3.04,0.563c-1.816,-0.844 -1.188,-3.093 -1.188,-3.093c0,0 3.804,-7.388 3.704,-16.462l0.001,-0.141c0.099,-9.075 -3.705,-16.59 -3.705,-16.59c0,0 -0.628,-2.249 1.188,-3.093c1.817,-0.843 3.04,0.563 3.04,0.563Zm-9.105,4.217c3.829,7.03 3.569,14.028 3.532,14.964c0.037,0.815 0.297,7.531 -3.527,15.129c0,0 -1.222,1.406 -3.039,0.563c-1.817,-0.844 -1.188,-3.093 -1.188,-3.093c0,-0 2.461,-3.522 2.86,-12.519l0.002,-0.141c-0.261,-8.998 -2.867,-12.372 -2.867,-12.372c0,0 -0.629,-2.249 1.188,-3.093c1.816,-0.844 3.039,0.562 3.039,0.562Zm-12.743,9.073c3.202,0 5.802,2.615 5.802,5.837c-0,3.221 -2.6,5.837 -5.802,5.837c-3.202,-0 -5.802,-2.616 -5.802,-5.837c-0,-3.222 2.6,-5.837 5.802,-5.837Z" style="fill-rule:nonzero;"/>
-						</svg>
-					</button>
-				{/if}
+						<path d="M15 3h6v6"/>
+						<path d="M10 14 21 3"/>
+						<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+					</svg>
+				</a>
+				<button
+					on:click={handleNfcClick}
+					class="transition-opacity hover:opacity-80"
+					style="cursor: {$nfcSupported ? 'pointer' : 'not-allowed'}; background: none; border: none; padding: 0;"
+					aria-label="Stream NFC data to your device"
+					title="Stream NFC"
+					disabled={!$nfcSupported}
+				>
+					<svg
+						viewBox="0 0 40 40"
+						xmlns="http://www.w3.org/2000/svg"
+						style="fill-rule:evenodd; clip-rule:evenodd; stroke-linejoin:round; stroke-miterlimit:2; width:40px; height:40px; fill:{paytoData.colorForeground};"
+					>
+						<path d="M29.608,0.832c4.694,9.378 4.407,18.245 4.37,19.181c0.037,0.815 0.324,9.694 -4.37,19.072c-0,0 -1.223,1.407 -3.04,0.563c-1.816,-0.844 -1.188,-3.093 -1.188,-3.093c0,0 3.804,-7.388 3.704,-16.462l0.001,-0.141c0.099,-9.075 -3.705,-16.59 -3.705,-16.59c0,0 -0.628,-2.249 1.188,-3.093c1.817,-0.843 3.04,0.563 3.04,0.563Zm-9.105,4.217c3.829,7.03 3.569,14.028 3.532,14.964c0.037,0.815 0.297,7.531 -3.527,15.129c0,0 -1.222,1.406 -3.039,0.563c-1.817,-0.844 -1.188,-3.093 -1.188,-3.093c0,-0 2.461,-3.522 2.86,-12.519l0.002,-0.141c-0.261,-8.998 -2.867,-12.372 -2.867,-12.372c0,0 -0.629,-2.249 1.188,-3.093c1.816,-0.844 3.039,0.562 3.039,0.562Zm-12.743,9.073c3.202,0 5.802,2.615 5.802,5.837c-0,3.221 -2.6,5.837 -5.802,5.837c-3.202,-0 -5.802,-2.616 -5.802,-5.837c-0,-3.222 2.6,-5.837 5.802,-5.837Z" style="fill-rule:nonzero;"/>
+					</svg>
+				</button>
 			</div>
 		</div>
 	{/if}

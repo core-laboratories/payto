@@ -239,7 +239,7 @@ white-space:nowrap;
 `;
 const stylePayto = `
 <style>
-a.ptPay>strong{font-style:italic;margin-right:2px}
+a.ptPay>strong{font-style:italic;margin-right:4px}
 a.ptPay>strong>span{color:#059669}
 a.ptPay>svg{vertical-align:-3px;margin-right:2px}
 a.ptPay:hover{border-color:#95e87f!important;color:#95e87f!important}
@@ -273,7 +273,7 @@ white-space:nowrap;
 `;
 const styleDonateto = `
 <style>
-a.ptDonate>strong{font-style:italic;margin-right:2px}
+a.ptDonate>strong{font-style:italic;margin-right:4px}
 a.ptDonate>strong>span{color:#5675ff}
 a.ptDonate>svg{vertical-align:-3px;margin-right:2px}
 a.ptDonate:hover{border-color:#b6c2f4!important;color:#b6c2f4!important}
