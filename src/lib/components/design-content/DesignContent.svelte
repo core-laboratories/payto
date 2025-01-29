@@ -157,7 +157,7 @@
 	</FieldGroup>
 
 	<FieldGroup>
-		<FieldGroupLabel>Default Barcode Type</FieldGroupLabel>
+		<FieldGroupLabel>Pass file Barcode Type</FieldGroupLabel>
 		<ListBox
 			id="barcode-list"
 			value={$barcodeValue}

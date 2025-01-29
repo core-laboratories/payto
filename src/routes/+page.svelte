@@ -85,7 +85,7 @@
 									on:click={(e) => e.currentTarget.select()}
 								/>
 								<button
-									class="flex items-center justify-between absolute end-0 me-2 p-2 text-gray-50 bg-gray-700 rounded-full outline-none transition duration-200 focus-visible:bg-green-900 focus-visible:text-green-50 active:scale-(0.95)"
+									class="flex items-center justify-between absolute end-0 me-2 p-2 text-gray-50 bg-gray-700 hover:bg-gray-600 rounded-full outline-none transition duration-200 focus-visible:bg-green-900 focus-visible:text-green-50 active:scale-(0.95)"
 									type="button"
 									title="Copy to clipboard"
 									aria-label="Copy to clipboard"
