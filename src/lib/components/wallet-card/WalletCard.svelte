@@ -26,7 +26,7 @@
 	const iconLogoSize: string = 'h-10 w-10';
 	let noData: boolean = true;
 	let bareUrl: string | null = null;
-
+	let formatter: Readable<ExchNumberFormat> | undefined;
 	interface FlexiblePaytoData {
 		hostname: string;
 		colorBackground: string;
@@ -78,6 +78,19 @@
 		return { colorForeground, colorBackground };
 	}
 
+	const hostnameStore = derived([writable(paytoData), constructorStore], ([$data, $_]) => {
+		if (!$data.hostname) return '';
+		return typeof $data.hostname === 'string' ? $data.hostname.toUpperCase() : String($data.hostname).toUpperCase();
+	});
+	const networkStore = derived([writable(paytoData), constructorStore], ([$data, $_]) => {
+		if (!$data.network) return '';
+		return typeof $data.network === 'string' ? $data.network.toUpperCase() : $data.network.toString().toUpperCase();
+	});
+	const addressStore = derived([writable(paytoData), constructorStore], ([$data, $_]) => {
+		if (!$data.address) return '';
+		return typeof $data.address === 'string' ? $data.address : $data.address.toString();
+	});
+
 	if (url) {
 		noData = false;
 		bareUrl = url;
@@ -102,6 +115,18 @@
 			rtl: payto.rtl || false,
 			deadline: payto.deadline || undefined
 		};
+
+		formatter = derived(
+			[constructorStore, hostnameStore],
+			([$constructor, $hostname]) => {
+				const currency = paytoData?.currency || '';
+				return new ExchNumberFormat(undefined, {
+					style: 'currency',
+					currency,
+					currencyDisplay: 'symbol'
+				});
+			}
+		);
 	} else if (hostname) {
 		noData = false;
 		url = getWebLink({
@@ -128,7 +153,7 @@
 			hostname,
 			colorBackground,
 			colorForeground,
-			currency: 'USD',
+			currency: getCurrency($store.networks[hostname], hostname),
 			value: $store.networks[hostname]?.params?.amount?.value,
 			address: getAddress($store.networks[hostname], hostname),
 			organization: $store.design.org,
@@ -144,36 +169,27 @@
 		paytoStore.subscribe((value) => {
 			paytoData = value;
 		});
+
+		formatter = derived(
+			[constructorStore, hostnameStore],
+			([$constructor, $hostname]) => {
+				const currency = paytoData?.currency || '';
+				return new ExchNumberFormat(undefined, {
+					style: 'currency',
+					currency,
+					currencyDisplay: 'symbol'
+				});
+			}
+		);
 	}
 
-	const hostnameStore = derived([writable(paytoData), constructorStore], ([$data, $_]) => {
-		if (!$data.hostname) return '';
-		return typeof $data.hostname === 'string' ? $data.hostname.toUpperCase() : String($data.hostname).toUpperCase();
-	});
-	const networkStore = derived([writable(paytoData), constructorStore], ([$data, $_]) => {
-		if (!$data.network) return '';
-		return typeof $data.network === 'string' ? $data.network.toUpperCase() : $data.network.toString().toUpperCase();
-	});
-	const addressStore = derived([writable(paytoData), constructorStore], ([$data, $_]) => {
-		if (!$data.address) return '';
-		return typeof $data.address === 'string' ? $data.address : $data.address.toString();
-	});
-
-	const formatter = derived(
-		[constructorStore, hostnameStore],
-		([$constructor, $hostname]) => new ExchNumberFormat(undefined, {
-			style: 'currency',
-			currency: $hostname && $hostname in $constructor.networks
-				? getCurrency($constructor.networks[$hostname as keyof typeof $constructor.networks], $hostname as ITransitionType) || 'USD'
-				: 'USD',
-			currencyDisplay: 'symbol'
-		})
+	const formattedValue = derived(
+		formatter || writable(new ExchNumberFormat()),
+		($formatter) => {
+			const value = paytoData?.value;
+			return value ? $formatter.format(Number(value)) : 'Custom Amount';
+		}
 	);
-
-	const formattedValue = derived(formatter, ($formatter) => {
-		const value = paytoData?.value;
-		return value ? $formatter.format(Number(value)) : 'Custom Amount';
-	});
 
 	let dynamicUrl = derived([constructorStore, writable(hostname)], ([$constructor, $hostname]) => {
 		if (!$hostname) return null;
@@ -363,7 +379,7 @@
 					<div class={`${paytoData.rtl !== undefined && paytoData.rtl === true ? 'text-right' : 'text-left'} w-full`}>
 						<div class="text-sm">Payment type</div>
 						<div class="text-xl font-semibold">
-							{paytoData.network && paytoData.network === 'void' ? 'CASH' :
+							{paytoData.hostname && paytoData.hostname === 'void' ? 'CASH' :
 								$hostnameStore + ($networkStore ? ': ' + $networkStore : '')}
 						</div>
 					</div>
@@ -409,7 +425,6 @@
 			<div class={`flex ${paytoData.rtl !== undefined && paytoData.rtl === true ? 'flex-row-reverse justify-between' : 'justify-between'} items-center p-4`}>
 				<a
 					href={$currentBareUrlString}
-					target="_blank"
 					rel="noreferrer"
 					class="transition-opacity hover:opacity-80"
 					style="cursor: pointer; background: none; border: none; padding: 0;"
