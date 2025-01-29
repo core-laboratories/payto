@@ -10,9 +10,18 @@
 	import { fly } from 'svelte/transition';
 	import { bicSchema } from '$lib/validators/bic.validator';
 
-	let bicError: boolean = false;
-	let bicMsg: string = '';
-	let bicValue: string | undefined = undefined;
+	let bicError = $state(false);
+	let bicMsg = $state('');
+	let bicValue = $state<string | undefined>(undefined);
+
+	// Watch for constructor reset
+	$effect(() => {
+		if (!$constructor.networks.bic.bic) {
+			bicValue = undefined;
+			bicError = false;
+			bicMsg = '';
+		}
+	});
 
 	function validateBic(value: string) {
 		if (value === '') {

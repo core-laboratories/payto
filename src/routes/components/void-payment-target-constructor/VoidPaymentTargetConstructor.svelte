@@ -13,22 +13,34 @@
 	import { fade, fly } from 'svelte/transition';
 	import { coordinatesSchema, plusCodeSchema } from '$lib/validators/location.validator';
 
-	let latError: boolean = false;
-	let latMsg: string = '';
-	let latValue: string | undefined = undefined;
+	let latError = $state(false);
+	let latMsg = $state('');
+	let latValue = $state<string | undefined>(undefined);
 
-	let lonError: boolean = false;
-	let lonMsg: string = '';
-	let lonValue: string | undefined = undefined;
+	let lonError = $state(false);
+	let lonMsg = $state('');
+	let lonValue = $state<string | undefined>(undefined);
 
-	let plusCodeError: boolean = false;
-	let plusCodeMsg: string = '';
-	let plusCodeValue: string | undefined = undefined;
+	let plusCodeError = $state(false);
+	let plusCodeMsg = $state('');
+	let plusCodeValue = $state<string | undefined>(undefined);
+
+	$effect(() => {
+		if (!$constructor.networks.void.params.loc.lat && !$constructor.networks.void.params.loc.lon) {
+			latValue = undefined;
+			lonValue = undefined;
+		}
+		if (!$constructor.networks.void.params.loc.plus) {
+			plusCodeValue = undefined;
+		}
+	});
 
 	function validateCoordinates() {
 		if (!latValue && !lonValue) {
-			latError = lonError = false;
-			latMsg = lonMsg = '';
+			latError = false;
+			lonError = false;
+			latMsg = '';
+			lonMsg = '';
 			$constructor.networks.void.params.loc.lat = undefined;
 			$constructor.networks.void.params.loc.lon = undefined;
 			return;
@@ -46,24 +58,23 @@
 					if (error.path.includes('latitude')) {
 						latError = true;
 						latMsg = error.message;
-						$constructor.networks.void.params.loc.lat = undefined;
 					} else {
 						lonError = true;
 						lonMsg = error.message;
-						$constructor.networks.void.params.loc.lon = undefined;
 					}
 				});
 			} else {
-				latError = lonError = false;
-				latMsg = lonMsg = '';
+				latError = false;
+				lonError = false;
+				latMsg = '';
+				lonMsg = '';
 				$constructor.networks.void.params.loc.lat = latValue;
 				$constructor.networks.void.params.loc.lon = lonValue;
 			}
 		} catch (error: any) {
-			latError = lonError = true;
+			latError = true;
+			lonError = true;
 			latMsg = lonMsg = error.message || 'Invalid coordinate format';
-			$constructor.networks.void.params.loc.lat = undefined;
-			$constructor.networks.void.params.loc.lon = undefined;
 		}
 	}
 
@@ -81,7 +92,6 @@
 			if (!result.success) {
 				plusCodeError = true;
 				plusCodeMsg = result.error.errors[0]?.message || 'Invalid Plus Code format';
-				$constructor.networks.void.params.loc.plus = undefined;
 			} else {
 				plusCodeError = false;
 				plusCodeMsg = '';
@@ -90,7 +100,6 @@
 		} catch (error: any) {
 			plusCodeError = true;
 			plusCodeMsg = error.message || 'Invalid Plus Code format';
-			$constructor.networks.void.params.loc.plus = undefined;
 		}
 	}
 
@@ -129,7 +138,7 @@
 						type="button"
 						title="Back to network menu options"
 						aria-label="Back to network menu options"
-						on:pointerdown={() => ($constructor.networks.void.transport = 'geo')}
+						onpointerdown={() => ($constructor.networks.void.transport = 'geo')}
 					>
 						<svg
 							class="bs-4 is-4"

@@ -12,19 +12,33 @@
 	import { ibanSchema } from '$lib/validators/iban.validator';
 	import { bicSchema } from '$lib/validators/bic.validator';
 
+	let ibanError = $state(false);
+	let ibanMsg = $state('');
+	let ibanValue = $state<string | undefined>(undefined);
+
+	let bicError = $state(false);
+	let bicMsg = $state('');
+	let bicValue = $state<string | undefined>(undefined);
+
+	$effect(() => {
+		// Reset all validation states when constructor is cleared
+		if (!$constructor.networks.iban.iban) {
+			ibanError = false;
+			ibanMsg = '';
+			ibanValue = undefined;
+		}
+		if (!$constructor.networks.iban.bic) {
+			bicError = false;
+			bicMsg = '';
+			bicValue = undefined;
+		}
+	});
+
 	function handleRecurringChange() {
 		if (!$constructor.networks.iban.isRc) {
 			$constructor.networks.iban.params!.rc.value = undefined;
 		}
 	}
-
-	let ibanError: boolean = false;
-	let ibanMsg: string = '';
-	let ibanValue: string | undefined = undefined;
-
-	let bicError: boolean = false;
-	let bicMsg: string = '';
-	let bicValue: string | undefined = undefined;
 
 	function validateIban(value: string) {
 		if (value === '') {
@@ -99,8 +113,8 @@
 		<FieldGroupText
 			placeholder="e.g. BE68539007547034"
 			bind:value={ibanValue}
-			on:input={handleIbanInput}
-			on:change={handleIbanInput}
+			oninput={handleIbanInput}
+			onchange={handleIbanInput}
 			classValue={`font-mono ${
 				ibanError
 					? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
@@ -119,8 +133,8 @@
 		<FieldGroupText
 			placeholder="e.g. DABADKKK"
 			bind:value={bicValue}
-			on:input={handleBicInput}
-			on:change={handleBicInput}
+			oninput={handleBicInput}
+			onchange={handleBicInput}
 			classValue={`font-mono uppercase ${
 				bicError
 					? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
@@ -174,7 +188,7 @@
 				type="checkbox"
 				bind:checked={$constructor.networks.iban.isRc}
 				id="recurringCheckbox"
-				on:change={handleRecurringChange}
+				onchange={handleRecurringChange}
 			/>
 			<label for="recurringCheckbox" class="ml-2">Recurring payments</label>
 		</div>

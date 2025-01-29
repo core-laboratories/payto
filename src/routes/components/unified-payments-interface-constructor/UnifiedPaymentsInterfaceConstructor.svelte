@@ -12,18 +12,24 @@
 	import { fly } from 'svelte/transition';
 	import { upiSchema } from '$lib/validators/upi.validator';
 
+	let aliasError = $state(false);
+	let aliasMsg = $state('');
+	let aliasValue = $state<string | undefined>(undefined);
+
+	$effect(() => {
+		if (!$constructor.networks.upi.accountAlias) {
+			aliasValue = undefined;
+		}
+	});
+
 	function handleRecurringChange() {
 		if (!$constructor.networks.upi.isRc) {
 			$constructor.networks.upi.params.rc.value = undefined;
 		}
 	}
 
-	let aliasError: boolean = false;
-	let aliasMsg: string = '';
-	let aliasValue: string | undefined = undefined;
-
 	function validateUpi(value: string) {
-		if (value === '') {
+		if (!value) {
 			aliasError = false;
 			aliasMsg = '';
 			$constructor.networks.upi.accountAlias = undefined;
@@ -36,7 +42,6 @@
 			if (!result.success) {
 				aliasError = true;
 				aliasMsg = result.error.errors[0]?.message || 'Invalid email format';
-				$constructor.networks.upi.accountAlias = undefined;
 			} else {
 				aliasError = false;
 				aliasMsg = '';
@@ -45,7 +50,6 @@
 		} catch (error: any) {
 			aliasError = true;
 			aliasMsg = error.message || 'Invalid email format';
-			$constructor.networks.upi.accountAlias = undefined;
 		}
 	}
 
@@ -62,8 +66,8 @@
 		<FieldGroupText
 			placeholder="e.g. john.doe@gmail.com"
 			bind:value={aliasValue}
-			on:input={handleAliasInput}
-			on:change={handleAliasInput}
+			oninput={handleAliasInput}
+			onchange={handleAliasInput}
 			classValue={`font-mono ${
 				aliasError
 					? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
@@ -117,7 +121,7 @@
 				type="checkbox"
 				bind:checked={$constructor.networks.upi.isRc}
 				id="recurringCheckbox"
-				on:change={handleRecurringChange}
+				onchange={handleRecurringChange}
 			/>
 			<label for="recurringCheckbox" class="ml-2">Recurring payments</label>
 		</div>

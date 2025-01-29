@@ -12,22 +12,29 @@
 	import { fly } from 'svelte/transition';
 	import { achAccountSchema, achRoutingSchema } from '$lib/validators/ach.validator';
 
+	let accountError = $state(false);
+	let accountMsg = $state('');
+	let accountValue = $state<string | undefined>(undefined);
+
+	let routingError = $state(false);
+	let routingMsg = $state('');
+	let routingValue = $state<string | undefined>(undefined);
+
+	$effect(() => {
+		if (!$constructor.networks.ach.accountNumber && !$constructor.networks.ach.routingNumber) {
+			accountValue = undefined;
+			routingValue = undefined;
+		}
+	});
+
 	function handleRecurringChange() {
 		if (!$constructor.networks.ach.isRc) {
 			$constructor.networks.ach.params.rc.value = undefined;
 		}
 	}
 
-	let accountError: boolean = false;
-	let accountMsg: string = '';
-	let accountValue: string | undefined = undefined;
-
-	let routingError: boolean = false;
-	let routingMsg: string = '';
-	let routingValue: string | undefined = undefined;
-
 	function validateAch(type: 'account' | 'routing', value: string) {
-		if (value === '') {
+		if (!value) {
 			if (type === 'account') {
 				accountError = false;
 				accountMsg = '';
@@ -46,7 +53,6 @@
 				if (!result.success) {
 					accountError = true;
 					accountMsg = result.error.errors[0]?.message || 'Invalid account number format';
-					$constructor.networks.ach.accountNumber = undefined;
 				} else {
 					accountError = false;
 					accountMsg = '';
@@ -57,7 +63,6 @@
 				if (!result.success) {
 					routingError = true;
 					routingMsg = result.error.errors[0]?.message || 'Invalid routing number format';
-					$constructor.networks.ach.routingNumber = undefined;
 				} else {
 					routingError = false;
 					routingMsg = '';
@@ -68,11 +73,9 @@
 			if (type === 'account') {
 				accountError = true;
 				accountMsg = error.message || 'Invalid account number format';
-				$constructor.networks.ach.accountNumber = undefined;
 			} else {
 				routingError = true;
 				routingMsg = error.message || 'Invalid routing number format';
-				$constructor.networks.ach.routingNumber = undefined;
 			}
 		}
 	}
@@ -96,8 +99,8 @@
 		<FieldGroupText
 			placeholder="e.g. 000123456789"
 			bind:value={accountValue}
-			on:input={handleAccountInput}
-			on:change={handleAccountInput}
+			oninput={handleAccountInput}
+			onchange={handleAccountInput}
 			classValue={`font-mono ${
 				accountError
 					? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
@@ -116,8 +119,8 @@
 		<FieldGroupText
 			placeholder="e.g. 110000000"
 			bind:value={routingValue}
-			on:input={handleRoutingInput}
-			on:change={handleRoutingInput}
+			oninput={handleRoutingInput}
+			onchange={handleRoutingInput}
 			classValue={`font-mono ${
 				routingError
 					? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
@@ -164,7 +167,7 @@
 				type="checkbox"
 				bind:checked={$constructor.networks.ach.isRc}
 				id="recurringCheckbox"
-				on:change={handleRecurringChange}
+				onchange={handleRecurringChange}
 			/>
 			<label for="recurringCheckbox" class="ml-2">Recurring payments</label>
 		</div>

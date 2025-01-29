@@ -11,6 +11,16 @@
 	import { fly } from 'svelte/transition';
 	import { pixSchema } from '$lib/validators/pix.validator';
 
+	let aliasError = $state(false);
+	let aliasMsg = $state('');
+	let aliasValue = $state<string | undefined>(undefined);
+
+	$effect(() => {
+		if (!$constructor.networks.pix.accountAlias) {
+			aliasValue = undefined;
+		}
+	});
+
 	function handleIdChange() {
 		if (!$constructor.networks.pix.isId) {
 			$constructor.networks.pix.params.id.value = undefined;
@@ -29,12 +39,8 @@
 		}
 	}
 
-	let aliasError: boolean = false;
-	let aliasMsg: string = '';
-	let aliasValue: string | undefined = undefined;
-
 	function validatePix(value: string) {
-		if (value === '') {
+		if (!value) {
 			aliasError = false;
 			aliasMsg = '';
 			$constructor.networks.pix.accountAlias = undefined;
@@ -47,7 +53,6 @@
 			if (!result.success) {
 				aliasError = true;
 				aliasMsg = result.error.errors[0]?.message || 'Invalid email format';
-				$constructor.networks.pix.accountAlias = undefined;
 			} else {
 				aliasError = false;
 				aliasMsg = '';
@@ -56,7 +61,6 @@
 		} catch (error: any) {
 			aliasError = true;
 			aliasMsg = error.message || 'Invalid email format';
-			$constructor.networks.pix.accountAlias = undefined;
 		}
 	}
 
@@ -73,8 +77,8 @@
 		<FieldGroupText
 			placeholder="e.g. john.doe@gmail.com"
 			bind:value={aliasValue}
-			on:input={handleAliasInput}
-			on:change={handleAliasInput}
+			oninput={handleAliasInput}
+			onchange={handleAliasInput}
 			classValue={`font-mono ${
 				aliasError
 					? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
@@ -118,7 +122,7 @@
 			type="checkbox"
 			bind:checked={$constructor.networks.pix.isId}
 			id="idCheckbox"
-			on:change={handleIdChange}
+			onchange={handleIdChange}
 		/>
 		<label for="idCheckbox" class="ml-2">Transaction ID</label>
 	</div>
@@ -137,7 +141,7 @@
 			type="checkbox"
 			bind:checked={$constructor.networks.pix.isDesc}
 			id="descCheckbox"
-			on:change={handleDescChange}
+			onchange={handleDescChange}
 		/>
 		<label for="descCheckbox" class="ml-2">Description</label>
 	</div>
@@ -157,7 +161,7 @@
 				type="checkbox"
 				bind:checked={$constructor.networks.pix.isRc}
 				id="recurringCheckbox"
-				on:change={handleRecurringChange}
+				onchange={handleRecurringChange}
 			/>
 			<label for="recurringCheckbox" class="ml-2">Recurring payments</label>
 		</div>

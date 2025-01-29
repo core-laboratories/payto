@@ -17,15 +17,29 @@
 	import { fade, fly } from 'svelte/transition';
 	import { addressSchema } from '$lib/validators/address.validator';
 
-	let timeDateValue = '';
+	let timeDateValue = $state('');
 	let classUpperValue = $constructor.networks.ican.params?.currency?.value?.toLowerCase()?.startsWith('0x') ? '' : 'uppercase';
 	let tokens = TRANSPORT.ican.find(item => item.value === $constructor.networks.ican.network)?.tokens;
-	let addressValidated: boolean = false;
-	let addressError: boolean = false;
-	let addressTestnet: boolean = false;
-	let addressEnterprise: boolean = false;
-	let addressMsg: string = '';
-	let addressValue: string | undefined = undefined;
+	let addressValidated = $state(false);
+	let addressError = $state(false);
+	let addressTestnet = $state(false);
+	let addressEnterprise = $state(false);
+	let addressMsg = $state('');
+	let addressValue = $state<string | undefined>(undefined);
+
+	// Add effect to watch for constructor store changes
+	$effect(() => {
+		// Reset all validation states when constructor is cleared
+		if (!$constructor.networks.ican.destination) {
+			addressValidated = false;
+			addressError = false;
+			addressTestnet = false;
+			addressEnterprise = false;
+			addressMsg = '';
+			addressValue = undefined;
+			timeDateValue = '';
+		}
+	});
 
 	function getCurrentDateTime() {
 		const now = new Date();
@@ -74,12 +88,13 @@
 	}
 
 	function validateAddress(value: string, network?: string) {
-		if (value === '') {
+		if (!value) {
 			addressValidated = false;
 			addressError = false;
 			addressTestnet = false;
 			addressEnterprise = false;
 			addressMsg = '';
+			$constructor.networks.ican.destination = undefined;
 			return;
 		}
 
@@ -159,7 +174,7 @@
 						class="flex items-center justify-between absolute start-0 ms-2 p-2 text-gray-50 bg-gray-700 hover:bg-gray-600 rounded-full outline-none transition duration-200 focus-visible:bg-green-900 focus-visible:text-green-50 active:scale-(0.95)"
 						title="Back to network menu options"
 						aria-label="Back to network menu options"
-						on:pointerdown={() => {
+						onpointerdown={() => {
 							$constructor.networks.ican.network = 'xcb';
 							validateCurrentAddress();
 						}}
@@ -182,7 +197,7 @@
 						id="transport-network"
 						placeholder="Other network"
 						bind:value={$constructor.networks.ican.other}
-						on:input={validateCurrentAddress}
+						oninput={validateCurrentAddress}
 					/>
 				</div>
 			{/if}
@@ -195,8 +210,8 @@
 			<FieldGroupText
 				placeholder={getPlaceholder($constructor.networks.ican.network)}
 				bind:value={addressValue}
-				on:input={handleAddressInput}
-				on:change={handleAddressInput}
+				oninput={handleAddressInput}
+				onchange={handleAddressInput}
 				classValue={`font-mono ${
 					addressError ? 'border-2 border-rose-500' :
 					addressTestnet ? 'border-2 border-amber-500' :
@@ -248,7 +263,7 @@
 				type="checkbox"
 				bind:checked={$constructor.networks.ican.isFiat}
 				id="fiatCheckbox"
-				on:change={handleFiatChange}
+				onchange={handleFiatChange}
 			/>
 			<label for="fiatCheckbox" class="ml-2">Convert Fiat to Digital Assets</label>
 		</div>
@@ -271,7 +286,7 @@
 				type="checkbox"
 				bind:checked={$constructor.networks.ican.isSwap}
 				id="swapCheckbox"
-				on:change={handleSwapChange}
+				onchange={handleSwapChange}
 			/>
 			<label for="swapCheckbox" class="ml-2">Swap</label>
 		</div>
@@ -294,7 +309,7 @@
 				type="checkbox"
 				bind:checked={$constructor.networks.ican.isDl}
 				id="expirationCheckbox"
-				on:change={handleExpirationChange}
+				onchange={handleExpirationChange}
 			/>
 			<label for="expirationCheckbox" class="ml-2">Expiration</label>
 		</div>
@@ -318,7 +333,7 @@
 				type="checkbox"
 				bind:checked={$constructor.networks.ican.isRc}
 				id="recurringCheckbox"
-				on:change={handleRecurringChange}
+				onchange={handleRecurringChange}
 			/>
 			<label for="recurringCheckbox" class="ml-2">Recurring Payments</label>
 		</div>
@@ -343,7 +358,7 @@
 				type="checkbox"
 				bind:checked={$constructor.networks.ican.isSplit}
 				id="splitCheckbox"
-				on:change={handleSplitChange}
+				onchange={handleSplitChange}
 			/>
 			<label for="splitCheckbox" class="ml-2">Transaction Split</label>
 		</div>
