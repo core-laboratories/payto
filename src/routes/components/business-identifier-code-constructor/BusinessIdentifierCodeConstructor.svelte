@@ -14,7 +14,6 @@
 	let bicMsg = $state('');
 	let bicValue = $state<string | undefined>(undefined);
 
-	// Watch for constructor reset
 	$effect(() => {
 		if (!$constructor.networks.bic.bic) {
 			bicValue = undefined;
@@ -27,7 +26,7 @@
 		if (value === '') {
 			bicError = false;
 			bicMsg = '';
-			$constructor.networks.bic.bic = undefined;
+			$constructor.networks.bic.bic = value;
 			return;
 		}
 
@@ -37,7 +36,7 @@
 			if (!result.success) {
 				bicError = true;
 				bicMsg = result.error.errors[0]?.message || 'Invalid BIC format';
-				$constructor.networks.bic.bic = undefined;
+				$constructor.networks.bic.bic = value;
 			} else {
 				bicError = false;
 				bicMsg = '';
@@ -46,7 +45,7 @@
 		} catch (error: any) {
 			bicError = true;
 			bicMsg = error.message || 'Invalid BIC format';
-			$constructor.networks.bic.bic = undefined;
+			$constructor.networks.bic.bic = value;
 		}
 	}
 

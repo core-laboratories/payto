@@ -29,7 +29,6 @@
 			on:change={handleInput}
 			{...$$restProps}
 		/>
-		<div class="text-xs mt-1 text-gray-500">{value}</div>
 	</div>
 	<label for={ctx.fieldId}>{label}</label>
 </div>

@@ -13,7 +13,7 @@ The 'payto' URI scheme builder supports Payments as outlined in [RFC 8905](https
 
 Typescript / JavaScript:
 
-- [PayTo resource locator](https://github.com/bchainhub/payto-rl)
+- [PayTo resource locator](https://github.com/core-laboratories/payto-rl)
 
 ## Project Initialization
 
@@ -58,9 +58,9 @@ This project is licensed under the [CORE](LICENSE) License.
 
 If you find this project useful, please consider supporting it:
 
-- [GitHub Sponsors](https://github.com/sponsors/bchainhub)
+- [GitHub Sponsors](https://github.com/sponsors/core-laboratories)
 - [Core](https://blockindex.net/address/cb7147879011ea207df5b35a24ca6f0859dcfb145999)
 - [Bitcoin](https://www.blockchain.com/explorer/addresses/btc/bc1pd8guxjkr2p6n2kl388fdj2trete9w2fr89xlktdezmcctxvtzm8qsymg0d)
 - [Litecoin](https://www.blockchain.com/explorer/addresses/ltc/ltc1ql8dvx0wv0nh2vncpt9j3zqefaehsd25cwp7pfx)
 
-List of sponsors: [![GitHub Sponsors](https://img.shields.io/github/sponsors/bchainhub)](https://github.com/sponsors/bchainhub)
+List of sponsors: [![GitHub Sponsors](https://img.shields.io/github/sponsors/core-laboratories)](https://github.com/sponsors/core-laboratories)

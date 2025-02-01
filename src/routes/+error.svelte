@@ -24,7 +24,7 @@
 					</div>
 					<div>
 						Please
-						<a href="https://github.com/bchainhub/payto/issues" target="_blank" rel="noindex,nofollow">report the problem</a>
+						<a href="https://github.com/core-laboratories/payto/issues" target="_blank" rel="noindex,nofollow">report the problem</a>
 						and try again later.
 					</div>
 				{:else if data.error}

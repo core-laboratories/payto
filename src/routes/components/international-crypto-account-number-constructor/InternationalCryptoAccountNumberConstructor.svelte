@@ -119,7 +119,7 @@
 					addressTestnet = false;
 					addressEnterprise = false;
 					addressMsg = error?.message || 'Invalid address format';
-					$constructor.networks.ican.destination = undefined;
+					$constructor.networks.ican.destination = value;
 				}
 			} else {
 				addressValidated = true;
@@ -128,7 +128,6 @@
 				addressEnterprise = false;
 				addressMsg = '';
 				$constructor.networks.ican.destination = value;
-
 			}
 		} catch (error: any) {
 			addressValidated = false;
@@ -136,7 +135,7 @@
 			addressTestnet = false;
 			addressEnterprise = false;
 			addressMsg = isDebug ? error.message : 'Invalid address format';
-			$constructor.networks.ican.destination = undefined;
+			$constructor.networks.ican.destination = value;
 		}
 	}
 

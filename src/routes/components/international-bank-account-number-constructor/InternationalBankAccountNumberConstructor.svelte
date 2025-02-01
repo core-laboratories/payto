@@ -21,7 +21,6 @@
 	let bicValue = $state<string | undefined>(undefined);
 
 	$effect(() => {
-		// Reset all validation states when constructor is cleared
 		if (!$constructor.networks.iban.iban) {
 			ibanError = false;
 			ibanMsg = '';
@@ -44,7 +43,7 @@
 		if (value === '') {
 			ibanError = false;
 			ibanMsg = '';
-			$constructor.networks.iban.iban = undefined;
+			$constructor.networks.iban.iban = value;
 			return;
 		}
 
@@ -54,7 +53,7 @@
 			if (!result.success) {
 				ibanError = true;
 				ibanMsg = result.error.errors[0]?.message || 'Invalid IBAN format';
-				$constructor.networks.iban.iban = undefined;
+				$constructor.networks.iban.iban = value;
 			} else {
 				ibanError = false;
 				ibanMsg = '';
@@ -63,21 +62,21 @@
 		} catch (error: any) {
 			ibanError = true;
 			ibanMsg = error.message || 'Invalid IBAN format';
-			$constructor.networks.iban.iban = undefined;
+			$constructor.networks.iban.iban = value;
 		}
 	}
 
 	function handleIbanInput(event: Event) {
 		const value = (event.target as HTMLInputElement).value;
-		ibanValue = value.toUpperCase();
-		validateIban(value.toUpperCase());
+		ibanValue = value;
+		validateIban(value);
 	}
 
 	function validateBic(value: string) {
 		if (value === '') {
 			bicError = false;
 			bicMsg = '';
-			$constructor.networks.iban.bic = undefined;
+			$constructor.networks.iban.bic = value;
 			return;
 		}
 
@@ -87,7 +86,7 @@
 			if (!result.success) {
 				bicError = true;
 				bicMsg = result.error.errors[0]?.message || 'Invalid BIC format';
-				$constructor.networks.iban.bic = undefined;
+				$constructor.networks.iban.bic = value;
 			} else {
 				bicError = false;
 				bicMsg = '';
@@ -96,7 +95,7 @@
 		} catch (error: any) {
 			bicError = true;
 			bicMsg = error.message || 'Invalid BIC format';
-			$constructor.networks.iban.bic = undefined;
+			$constructor.networks.iban.bic = value;
 		}
 	}
 

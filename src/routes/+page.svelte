@@ -85,7 +85,7 @@
 									on:click={(e) => e.currentTarget.select()}
 								/>
 								<button
-									class="flex items-center justify-between absolute end-0 me-2 p-2 text-gray-50 bg-gray-700 hover:bg-gray-600 rounded-full outline-none transition duration-200 focus-visible:bg-green-900 focus-visible:text-green-50 active:scale-(0.95) !cursor-copy"
+									class="flex items-center justify-between absolute end-0 me-2 p-2 text-gray-50 bg-gray-700 hover:bg-gray-600 rounded-full outline-none transition duration-200 focus-visible:bg-green-900 focus-visible:text-green-50 active:scale-(0.95)"
 									type="button"
 									title="Copy to clipboard"
 									aria-label="Copy to clipboard"
@@ -174,7 +174,7 @@
 						>RFC 8905</a>.
 						<a
 							class="transition duration-200 visited:text-gray-200 hover:text-gray-300"
-							href="https://github.com/bchainhub/payto/blob/master/docs/scheme.md"
+							href="https://github.com/core-laboratories/payto/blob/master/docs/scheme.md"
 							target="_blank"
 							rel="noreferrer"
 						>Documentation</a>.
@@ -199,14 +199,14 @@
 						Source code is located at
 						<a
 							class="transition duration-200 visited:text-gray-200 hover:text-gray-300"
-							href="https://github.com/bchainhub/Payto"
+							href="https://github.com/core-laboratories/Payto"
 							target="_blank"
 							rel="noreferrer"
 						>GitHub</a>.
 						Licensed under the
 						<a
 							class="transition duration-200 visited:text-gray-200 hover:text-gray-300"
-							href="https://github.com/bchainhub/core-license/blob/master/LICENSE"
+							href="https://github.com/core-laboratories/core-license/blob/master/LICENSE"
 							target="_blank"
 							rel="noreferrer"
 						>CORE License</a>.
