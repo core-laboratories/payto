@@ -25,21 +25,7 @@
 	let addressTestnet = $state(false);
 	let addressEnterprise = $state(false);
 	let addressMsg = $state('');
-	let addressValue = $state<string | undefined>(undefined);
-
-	// Add effect to watch for constructor store changes
-	$effect(() => {
-		// Reset all validation states when constructor is cleared
-		if (!$constructor.networks.ican.destination) {
-			addressValidated = false;
-			addressError = false;
-			addressTestnet = false;
-			addressEnterprise = false;
-			addressMsg = '';
-			addressValue = undefined;
-			timeDateValue = '';
-		}
-	});
+	let addressValue = $state<string>('');
 
 	function getCurrentDateTime() {
 		const now = new Date();
@@ -87,6 +73,12 @@
 		}
 	}
 
+	function handleAddressInput(event: Event) {
+		const value = (event.target as HTMLInputElement).value;
+		addressValue = value;
+		validateAddress(value);
+	}
+
 	function validateAddress(value: string, network?: string) {
 		if (!value) {
 			addressValidated = false;
@@ -112,14 +104,14 @@
 					addressTestnet = error.path.includes('testnet');
 					addressEnterprise = error.path.includes('enterprise');
 					addressMsg = error.message;
-					$constructor.networks.ican.destination = value;
+					$constructor.networks.ican.destination = undefined;
 				} else {
 					addressValidated = false;
 					addressError = true;
 					addressTestnet = false;
 					addressEnterprise = false;
 					addressMsg = error?.message || 'Invalid address format';
-					$constructor.networks.ican.destination = value;
+					$constructor.networks.ican.destination = undefined;
 				}
 			} else {
 				addressValidated = true;
@@ -135,14 +127,8 @@
 			addressTestnet = false;
 			addressEnterprise = false;
 			addressMsg = isDebug ? error.message : 'Invalid address format';
-			$constructor.networks.ican.destination = value;
+			$constructor.networks.ican.destination = undefined;
 		}
-	}
-
-	function handleAddressInput(event: Event) {
-		const value = (event.target as HTMLInputElement).value;
-		addressValue = value;
-		validateAddress(value);
 	}
 
 	function validateCurrentAddress() {
@@ -210,7 +196,6 @@
 				placeholder={getPlaceholder($constructor.networks.ican.network)}
 				bind:value={addressValue}
 				oninput={handleAddressInput}
-				onchange={handleAddressInput}
 				classValue={`font-mono ${
 					addressError ? 'border-2 border-rose-500' :
 					addressTestnet ? 'border-2 border-amber-500' :
