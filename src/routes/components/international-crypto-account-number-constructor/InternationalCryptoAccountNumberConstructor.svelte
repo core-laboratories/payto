@@ -26,6 +26,12 @@
 	let addressEnterprise = $state(false);
 	let addressMsg = $state('');
 	let addressValue = $state<string>('');
+	let splitAddressValue = $state('');
+	let splitAddressValidated = $state(false);
+	let splitAddressError = $state(false);
+	let splitAddressTestnet = $state(false);
+	let splitAddressEnterprise = $state(false);
+	let splitAddressMsg = $state('');
 
 	function getCurrentDateTime() {
 		const now = new Date();
@@ -136,6 +142,63 @@
 			validateAddress(addressValue, $constructor.networks.ican.other);
 		} else if (addressValue) {
 			validateAddress(addressValue);
+		}
+	}
+
+	function handleSplitAddressInput(event: Event) {
+		splitAddressValue = (event.target as HTMLInputElement).value;
+		validateSplitAddress(splitAddressValue);
+	}
+
+	function validateSplitAddress(value: string, network?: string) {
+		if (!value) {
+			splitAddressValidated = false;
+			splitAddressError = false;
+			splitAddressTestnet = false;
+			splitAddressEnterprise = false;
+			splitAddressMsg = '';
+			$constructor.networks.ican.params.split.address = undefined;
+			return;
+		}
+
+		try {
+			const result = addressSchema.safeParse({
+				network: network || $constructor.networks.ican.network,
+				destination: value
+			});
+
+			if (!result.success) {
+				const error = result.error.errors[0];
+				if (!error.fatal) {
+					splitAddressValidated = true;
+					splitAddressError = false;
+					splitAddressTestnet = error.path.includes('testnet');
+					splitAddressEnterprise = error.path.includes('enterprise');
+					splitAddressMsg = error.message;
+					$constructor.networks.ican.params.split.address = undefined;
+				} else {
+					splitAddressValidated = false;
+					splitAddressError = true;
+					splitAddressTestnet = false;
+					splitAddressEnterprise = false;
+					splitAddressMsg = error?.message || 'Invalid address format';
+					$constructor.networks.ican.params.split.address = undefined;
+				}
+			} else {
+				splitAddressValidated = true;
+				splitAddressError = false;
+				splitAddressTestnet = false;
+				splitAddressEnterprise = false;
+				splitAddressMsg = '';
+				$constructor.networks.ican.params.split.address = value;
+			}
+		} catch (error: any) {
+			splitAddressValidated = false;
+			splitAddressError = true;
+			splitAddressTestnet = false;
+			splitAddressEnterprise = false;
+			splitAddressMsg = isDebug ? error.message : 'Invalid address format';
+			$constructor.networks.ican.params.split.address = undefined;
 		}
 	}
 </script>
@@ -351,11 +414,26 @@
 	{#if $constructor.networks.ican.isSplit}
 		<FieldGroup>
 			<FieldGroupLabel>Split Address / <abbr title="Name Service">NS</abbr></FieldGroupLabel>
-			<FieldGroupText
-				placeholder={getPlaceholder($constructor.networks.ican.network)}
-				bind:value={$constructor.networks.ican.params.split.address}
-			/>
-			<FieldGroupAppendix>The amount will be splitted and two transactions will be transmitted.</FieldGroupAppendix>
+			<div class="relative">
+				<FieldGroupText
+					placeholder={getPlaceholder($constructor.networks.ican.network)}
+					value={splitAddressValue}
+					oninput={handleSplitAddressInput}
+					classValue={`font-mono ${
+						splitAddressError ? 'border-2 border-rose-500' :
+						splitAddressTestnet ? 'border-2 border-amber-500' :
+						splitAddressEnterprise ? 'border-2 border-amber-500' :
+						splitAddressValidated ? 'border-2 border-emerald-500' : ''
+					}`}
+				/>
+				{#if splitAddressError}
+					<div class="text-sm mt-3 text-rose-500">Error: {splitAddressMsg}</div>
+				{:else if splitAddressTestnet}
+					<div class="text-amber-500 text-sm mt-3">Warning: {splitAddressMsg}</div>
+				{:else if splitAddressEnterprise}
+					<div class="text-amber-500 text-sm mt-3">Warning: {splitAddressMsg}</div>
+				{/if}
+			</div>
 		</FieldGroup>
 		<FieldGroup>
 			<FieldGroupLabel>
