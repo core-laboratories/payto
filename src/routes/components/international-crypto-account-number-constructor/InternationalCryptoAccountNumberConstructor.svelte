@@ -170,9 +170,20 @@
 			if (!result.success) {
 				const error = result.error.errors[0];
 				if (!error.fatal) {
+					const isTestnet = error.path.includes('testnet');
+					if (isTestnet !== addressTestnet) {
+						splitAddressValidated = false;
+						splitAddressError = true;
+						splitAddressTestnet = false;
+						splitAddressEnterprise = false;
+						splitAddressMsg = `Split address network type (${isTestnet ? 'testnet' : 'mainnet'}) must match the main address (${addressTestnet ? 'testnet' : 'mainnet'})`;
+						$constructor.networks.ican.params.split.address = undefined;
+						return;
+					}
+
 					splitAddressValidated = true;
 					splitAddressError = false;
-					splitAddressTestnet = error.path.includes('testnet');
+					splitAddressTestnet = isTestnet;
 					splitAddressEnterprise = error.path.includes('enterprise');
 					splitAddressMsg = error.message;
 					$constructor.networks.ican.params.split.address = undefined;
@@ -185,6 +196,16 @@
 					$constructor.networks.ican.params.split.address = undefined;
 				}
 			} else {
+				if (addressTestnet) {
+					splitAddressValidated = false;
+					splitAddressError = true;
+					splitAddressTestnet = false;
+					splitAddressEnterprise = false;
+					splitAddressMsg = 'Split address network type (mainnet) must match the main address (testnet)';
+					$constructor.networks.ican.params.split.address = undefined;
+					return;
+				}
+
 				splitAddressValidated = true;
 				splitAddressError = false;
 				splitAddressTestnet = false;
