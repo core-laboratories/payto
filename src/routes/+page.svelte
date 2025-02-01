@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import '../app.postcss';
 	import {
 		Row, Box, BoxContent, BoxTitle, Page, Tabs, Toast, WalletCard, DesignContent
@@ -11,13 +10,14 @@
 	import { constructor } from '$lib/store/constructor.store';
 	import { derived, get, writable } from 'svelte/store';
 	import { toast } from '$lib/components/toast';
+	import { addressValue, splitAddressValue } from '$lib/store/holders.store';
 
 	let type = writable<ITransitionType>('ican');
 	let designEnabled = writable(false);
 	let currentSentence = writable('');
 	let currentLink = writable('');
 	let currentShow = writable(false);
-	let outputs = derived(
+	const outputs = derived(
 		[type, constructor],
 		([$type, $constructor]) => {
 			const result = get(constructor.build($type));
@@ -25,7 +25,7 @@
 		}
 	);
 
-	onMount(() => {
+	$effect(() => {
 		const currentName = getObjectByType(TYPES, $type)?.label;
 		if (currentName) {
 			currentSentence.set(`What is ${currentName}?`);
@@ -43,6 +43,12 @@
 			type: 'success'
 		});
 	};
+
+	const resetConstructor = (type: ITransitionType) => {
+		constructor.reset(type);
+		addressValue.set('');
+		splitAddressValue.set('');
+	};
 </script>
 
 <Toast />
@@ -56,7 +62,7 @@
 				<button
 					class="is-full bs-12 mt-auto py-2 px-3 text-center text-white border border-gray-700 bg-gray-700 rounded-sm transition duration-200 outline-none focus-visible:ring-4 focus-visible:ring-opacity-75 focus-visible:ring-green-800 focus-visible:ring-offset-green-700 focus-visible:ring-offset-2 active:scale-(0.99) text-sm"
 					type="button"
-					on:click={() => constructor.reset($type)}
+					onclick={() => resetConstructor($type)}
 				>
 					Clear
 				</button>
@@ -82,7 +88,7 @@
 									readonly
 									id={`item_${index}`}
 									aria-labelledby={`item_${index}`}
-									on:click={(e) => e.currentTarget.select()}
+									onclick={(e) => e.currentTarget.select()}
 								/>
 								<button
 									class="flex items-center justify-between absolute end-0 me-2 p-2 text-gray-50 bg-gray-700 hover:bg-gray-600 rounded-full outline-none transition duration-200 focus-visible:bg-green-900 focus-visible:text-green-50 active:scale-(0.95) !cursor-copy"
@@ -90,7 +96,7 @@
 									title="Copy to clipboard"
 									aria-label="Copy to clipboard"
 									data-value={output.value}
-									on:click={handleOnCopy}
+									onclick={handleOnCopy}
 								>
 									<svg
 										class="w-5"

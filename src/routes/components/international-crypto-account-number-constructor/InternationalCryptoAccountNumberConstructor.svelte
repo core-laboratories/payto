@@ -16,6 +16,7 @@
 	import { constructor } from '$lib/store/constructor.store';
 	import { fade, fly } from 'svelte/transition';
 	import { addressSchema } from '$lib/validators/address.validator';
+	import { addressValue, splitAddressValue } from '$lib/store/holders.store';
 
 	let timeDateValue = $state('');
 	let classUpperValue = $constructor.networks.ican.params?.currency?.value?.toLowerCase()?.startsWith('0x') ? '' : 'uppercase';
@@ -25,8 +26,6 @@
 	let addressTestnet = $state(false);
 	let addressEnterprise = $state(false);
 	let addressMsg = $state('');
-	let addressValue = $state<string>('');
-	let splitAddressValue = $state('');
 	let splitAddressValidated = $state(false);
 	let splitAddressError = $state(false);
 	let splitAddressTestnet = $state(false);
@@ -81,7 +80,7 @@
 
 	function handleAddressInput(event: Event) {
 		const value = (event.target as HTMLInputElement).value;
-		addressValue = value;
+		$addressValue = value;
 		validateAddress(value);
 	}
 
@@ -138,16 +137,16 @@
 	}
 
 	function validateCurrentAddress() {
-		if ($constructor.networks.ican.network === 'other' && $constructor.networks.ican.other && addressValue) {
-			validateAddress(addressValue, $constructor.networks.ican.other);
-		} else if (addressValue) {
-			validateAddress(addressValue);
+		if ($constructor.networks.ican.network === 'other' && $constructor.networks.ican.other && $addressValue) {
+			validateAddress($addressValue, $constructor.networks.ican.other);
+		} else if ($addressValue) {
+			validateAddress($addressValue);
 		}
 	}
 
 	function handleSplitAddressInput(event: Event) {
-		splitAddressValue = (event.target as HTMLInputElement).value;
-		validateSplitAddress(splitAddressValue);
+		$splitAddressValue = (event.target as HTMLInputElement).value;
+		validateSplitAddress($splitAddressValue);
 	}
 
 	function validateSplitAddress(value: string, network?: string) {
@@ -278,7 +277,7 @@
 		<div class="relative">
 			<FieldGroupText
 				placeholder={getPlaceholder($constructor.networks.ican.network)}
-				bind:value={addressValue}
+				bind:value={$addressValue}
 				oninput={handleAddressInput}
 				classValue={`font-mono ${
 					addressError ? 'border-2 border-rose-500' :
@@ -333,7 +332,7 @@
 				id="fiatCheckbox"
 				onchange={handleFiatChange}
 			/>
-			<label for="fiatCheckbox" class="ml-2">Convert Fiat to Digital Assets</label>
+			<label for="fiatCheckbox" class="ml-2">Fiat quote for Digital Assets</label>
 		</div>
 	</FieldGroup>
 
@@ -438,7 +437,7 @@
 			<div class="relative">
 				<FieldGroupText
 					placeholder={getPlaceholder($constructor.networks.ican.network)}
-					value={splitAddressValue}
+					bind:value={$splitAddressValue}
 					oninput={handleSplitAddressInput}
 					classValue={`font-mono ${
 						splitAddressError ? 'border-2 border-rose-500' :

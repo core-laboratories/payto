@@ -327,7 +327,13 @@
 					<div class="flex-grow flex justify-between items-center">
 						<div class="text-left">
 								<div class="text-sm uppercase">Payment</div>
-								<div class="font-semibold">{paytoData.recurring ? paytoData.recurring + ' / Recurring' : 'One‑time'}</div>
+								<div class="font-semibold">
+									{#if paytoData.recurring}
+										<span class="uppercase">{paytoData.recurring}</span> Recurring
+									{:else}
+										One‑time
+									{/if}
+								</div>
 						</div>
 						<span class="text-l font-medium font-semibold" style="color: {paytoData.colorForeground};">
 							{#if paytoData.organization}
@@ -356,7 +362,13 @@
 						</span>
 						<div class="text-right">
 							<div class="text-sm uppercase">Payment</div>
-							<div class="font-semibold">{paytoData.recurring ? 'Recurring / ' + paytoData.recurring : 'One‑time'}</div>
+							<div class="font-semibold">
+								{#if paytoData.recurring}
+									Recurring <span class="uppercase">{paytoData.recurring}</span>
+								{:else}
+									One‑time
+								{/if}
+							</div>
 						</div>
 					</div>
 				</div>
