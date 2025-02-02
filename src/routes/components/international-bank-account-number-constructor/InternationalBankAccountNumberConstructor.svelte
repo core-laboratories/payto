@@ -12,24 +12,24 @@
 	import { ibanSchema } from '$lib/validators/iban.validator';
 	import { bicSchema } from '$lib/validators/bic.validator';
 
+	let ibanValue = $state<string | undefined>(undefined);
 	let ibanError = $state(false);
 	let ibanMsg = $state('');
-	let ibanValue = $state<string | undefined>(undefined);
 
+	let bicValue = $state<string | undefined>(undefined);
 	let bicError = $state(false);
 	let bicMsg = $state('');
-	let bicValue = $state<string | undefined>(undefined);
 
 	$effect(() => {
 		if (!$constructor.networks.iban.iban) {
+			ibanValue = undefined;
 			ibanError = false;
 			ibanMsg = '';
-			ibanValue = undefined;
 		}
 		if (!$constructor.networks.iban.bic) {
+			bicValue = undefined;
 			bicError = false;
 			bicMsg = '';
-			bicValue = undefined;
 		}
 	});
 
@@ -43,7 +43,7 @@
 		if (value === '') {
 			ibanError = false;
 			ibanMsg = '';
-			$constructor.networks.iban.iban = value;
+			$constructor.networks.iban.iban = undefined;
 			return;
 		}
 
@@ -53,7 +53,7 @@
 			if (!result.success) {
 				ibanError = true;
 				ibanMsg = result.error.errors[0]?.message || 'Invalid IBAN format';
-				$constructor.networks.iban.iban = value;
+				$constructor.networks.iban.iban = undefined;
 			} else {
 				ibanError = false;
 				ibanMsg = '';
@@ -62,7 +62,7 @@
 		} catch (error: any) {
 			ibanError = true;
 			ibanMsg = error.message || 'Invalid IBAN format';
-			$constructor.networks.iban.iban = value;
+			$constructor.networks.iban.iban = undefined;
 		}
 	}
 
@@ -76,7 +76,7 @@
 		if (value === '') {
 			bicError = false;
 			bicMsg = '';
-			$constructor.networks.iban.bic = value;
+			$constructor.networks.iban.bic = undefined;
 			return;
 		}
 
@@ -86,7 +86,7 @@
 			if (!result.success) {
 				bicError = true;
 				bicMsg = result.error.errors[0]?.message || 'Invalid BIC format';
-				$constructor.networks.iban.bic = value;
+				$constructor.networks.iban.bic = undefined;
 			} else {
 				bicError = false;
 				bicMsg = '';
@@ -95,7 +95,7 @@
 		} catch (error: any) {
 			bicError = true;
 			bicMsg = error.message || 'Invalid BIC format';
-			$constructor.networks.iban.bic = value;
+			$constructor.networks.iban.bic = undefined;
 		}
 	}
 
@@ -113,7 +113,6 @@
 			placeholder="e.g. BE68539007547034"
 			bind:value={ibanValue}
 			oninput={handleIbanInput}
-			onchange={handleIbanInput}
 			classValue={`font-mono ${
 				ibanError
 					? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
@@ -133,7 +132,6 @@
 			placeholder="e.g. DABADKKK"
 			bind:value={bicValue}
 			oninput={handleBicInput}
-			onchange={handleBicInput}
 			classValue={`font-mono uppercase ${
 				bicError
 					? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'

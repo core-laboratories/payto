@@ -24,6 +24,10 @@
 		if (!$constructor.networks.ach.accountNumber && !$constructor.networks.ach.routingNumber) {
 			accountValue = undefined;
 			routingValue = undefined;
+			accountError = false;
+			routingError = false;
+			accountMsg = '';
+			routingMsg = '';
 		}
 	});
 
@@ -38,11 +42,11 @@
 			if (type === 'account') {
 				accountError = false;
 				accountMsg = '';
-				$constructor.networks.ach.accountNumber = value;
-			} else {
+				$constructor.networks.ach.accountNumber = undefined;
+			} else if (type === 'routing') {
 				routingError = false;
 				routingMsg = '';
-				$constructor.networks.ach.routingNumber = value;
+				$constructor.networks.ach.routingNumber = undefined;
 			}
 			return;
 		}
@@ -57,9 +61,9 @@
 				} else {
 					accountError = false;
 					accountMsg = '';
-					$constructor.networks.ach.accountNumber = value;
+					$constructor.networks.ach.accountNumber = undefined;
 				}
-			} else {
+			} else if (type === 'routing') {
 				const result = achRoutingSchema.safeParse({ routingNumber: value });
 				if (!result.success) {
 					routingError = true;
@@ -68,18 +72,18 @@
 				} else {
 					routingError = false;
 					routingMsg = '';
-					$constructor.networks.ach.routingNumber = value;
+					$constructor.networks.ach.routingNumber = undefined;
 				}
 			}
 		} catch (error: any) {
 			if (type === 'account') {
 				accountError = true;
 				accountMsg = error.message || 'Invalid account number format';
-				$constructor.networks.ach.accountNumber = value;
-			} else {
+				$constructor.networks.ach.accountNumber = undefined;
+			} else if (type === 'routing') {
 				routingError = true;
 				routingMsg = error.message || 'Invalid routing number format';
-				$constructor.networks.ach.routingNumber = value;
+				$constructor.networks.ach.routingNumber = undefined;
 			}
 		}
 	}

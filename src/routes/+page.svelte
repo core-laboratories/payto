@@ -10,7 +10,6 @@
 	import { constructor } from '$lib/store/constructor.store';
 	import { derived, get, writable } from 'svelte/store';
 	import { toast } from '$lib/components/toast';
-	import { addressValue, splitAddressValue } from '$lib/store/holders.store';
 
 	let type = writable<ITransitionType>('ican');
 	let designEnabled = writable(false);
@@ -46,8 +45,6 @@
 
 	const resetConstructor = (type: ITransitionType) => {
 		constructor.reset(type);
-		addressValue.set('');
-		splitAddressValue.set('');
 	};
 </script>
 

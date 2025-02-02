@@ -29,9 +29,15 @@
 		if (!$constructor.networks.void.params.loc.lat && !$constructor.networks.void.params.loc.lon) {
 			latValue = undefined;
 			lonValue = undefined;
+			latError = false;
+			lonError = false;
+			latMsg = '';
+			lonMsg = '';
 		}
 		if (!$constructor.networks.void.params.loc.plus) {
 			plusCodeValue = undefined;
+			plusCodeError = false;
+			plusCodeMsg = '';
 		}
 	});
 
@@ -180,8 +186,7 @@
 					<FieldGroupText
 						placeholder="Latitude"
 						bind:value={latValue}
-						on:input={handleLatInput}
-						on:change={handleLatInput}
+						oninput={handleLatInput}
 						classValue={`font-mono ${
 							latError
 								? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
@@ -195,8 +200,7 @@
 					<FieldGroupText
 						placeholder="Longitude"
 						bind:value={lonValue}
-						on:input={handleLonInput}
-						on:change={handleLonInput}
+						oninput={handleLonInput}
 						classValue={`font-mono ${
 							lonError
 								? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
@@ -231,8 +235,7 @@
 				<FieldGroupText
 					placeholder="Plus Code, e.g. 8FWV26PJ+87"
 					bind:value={plusCodeValue}
-					on:input={handlePlusCodeInput}
-					on:change={handlePlusCodeInput}
+					oninput={handlePlusCodeInput}
 					classValue={`font-mono uppercase ${
 						plusCodeError
 							? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
