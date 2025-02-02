@@ -4,6 +4,7 @@
 	import { fade } from 'svelte/transition';
 	import { getObjectByType } from '$lib/helpers/get-object-by-type.helper';
 	import { TYPES } from '$lib/data/types.data';
+	import { onMount } from 'svelte';
 
 	import {
 		AutomatedClearingHouseConstructor,
@@ -42,6 +43,14 @@
 		selectedTab = tabValue;
 		tabs.set(tabValue);
 	}
+
+	onMount(() => {
+		const hash = window.location.hash.substring(1);
+		if (hash && Object.keys(paymentTypes).includes(hash)) {
+			selectedTab = hash;
+			tabs.set(hash);
+		}
+	});
 </script>
 
 <div class="flex w-full flex-col gap-2">
