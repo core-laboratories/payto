@@ -36,7 +36,7 @@
 		address: string | Readable<string> | undefined;
 		organization: string | Readable<string> | undefined;
 		organizationImage: string | undefined;
-		currency: string | undefined;
+		currency: string | null | undefined;
 		network: string | Readable<string> | undefined;
 		item: string | Readable<string> | undefined;
 		location: string | Readable<string> | undefined;
@@ -105,9 +105,11 @@
 			colorForeground,
 			organization: payto.organization || undefined,
 			organizationImage: undefined,
-			currency: payto.currency
-				? (payto.currency[1] ? payto.currency[1] : payto.currency[0]) || undefined
-				: undefined,
+			currency: payto.currency ?
+				payto.currency[1] ?
+					payto.currency[1] :
+						payto.currency[0] :
+				getCurrency((payto.network || 'ican') as unknown as ITransactionState, payto.hostname as ITransitionType),
 			network: payto.network || undefined,
 			item: payto.item || undefined,
 			location: payto.location || undefined,

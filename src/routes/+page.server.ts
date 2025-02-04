@@ -1,12 +1,47 @@
 import { redirect, error } from '@sveltejs/kit';
 import type { RequestEvent } from '@sveltejs/kit';
+import { calculateColorDistance } from '$lib/helpers/euclidean-distance.helper';
+import { getWebLink } from '$lib/helpers/generate.helper';
+import { getCurrency } from '$lib/helpers/get-currency.helper';
+import ExchNumberFormat from 'exchange-rounding';
 import JSZip from 'jszip';
 import forge from 'node-forge';
 import { PRIVATE_PASS_CERTIFICATE, PRIVATE_PASS_PRIVATE_KEY, PRIVATE_PASS_TEAM_IDENTIFIER } from '$env/static/private';
 
+// @ts-expect-error: Module is untyped
+import pkg from 'open-location-code/js/src/openlocationcode';
+const {decode} = pkg;
+
 type Actions = {
 	generatePass: (event: RequestEvent) => Promise<Response>;
 };
+
+function validColors(colorF: string, colorB: string) {
+	const distance = calculateColorDistance(colorF, colorB);
+	return distance >= 100;
+}
+
+function getLink(hostname: string, props: any) {
+	return getWebLink({
+		network: hostname as ITransitionType,
+		networkData: props,
+		design: false,
+		transform: false
+	});
+}
+
+function getLocationCode(plusCode: string): [number, number] {
+	const codeArea = decode(plusCode);
+	return [codeArea.latitudeCenter, codeArea.longitudeCenter];
+}
+
+const formatter = (currency: string | undefined) => {
+	return new ExchNumberFormat(undefined, {
+		style: 'currency',
+		currency: currency || '',
+		currencyDisplay: 'symbol'
+	});
+}
 
 export async function load({ url }) {
 	const fullUrl = new URL(url.href);
@@ -15,7 +50,7 @@ export async function load({ url }) {
 		const hasValidProtocol = fullUrl.protocol === 'payto.money:';
 		const path = fullUrl.pathname.startsWith('/://') ? fullUrl.pathname.slice(3) : fullUrl.pathname;
 
-		if (hasValidProtocol || path) {
+		if (hasValidProtocol && path) {
 			throw redirect(302, `/show?url=${encodeURIComponent(path)}`);
 		}
 	}
@@ -37,10 +72,10 @@ export const actions = {
 		try {
 			const formData = await request.formData();
 			const props = JSON.parse(formData.get('props') as string);
-			const link = formData.get('link') as string;
+			const hostname = formData.get('hostname') as string;
 
 			// Required fields
-			const requiredFields = ['props', 'link'];
+			const requiredFields = ['props', 'hostname'];
 			for (const field of requiredFields) {
 				if (!formData.has(field)) {
 					throw error(400, `Missing required field: ${field}`);
@@ -48,7 +83,7 @@ export const actions = {
 			}
 
 			// Required fields in props
-			const requiredFieldsInProps = ['design', 'network', 'params'];
+			const requiredFieldsInProps = ['network', 'params', 'destination'];
 			for (const field of requiredFieldsInProps) {
 				if (!props[field]) {
 					throw error(400, `Missing required field in props: ${field}`);
@@ -56,21 +91,39 @@ export const actions = {
 			}
 
 			// Basic pass data structure
+			const bareLink = getLink(hostname, props);
+			const org = props.design.org || 'PayTo';
+			if (hostname === 'void' && props.network === 'plus') {
+				const plusCoordinates = getLocationCode(props.params.loc?.value || '');
+				props.params.lat = { value: plusCoordinates[0] };
+				props.params.lon = { value: plusCoordinates[1] };
+			}
 			const passData = {
-				serialNumber: `PT${Date.now()}`,
+				serialNumber: `PayTo-${props.destination}-${hostname.toLowerCase()}-${new Date(Date.now()).toISOString().replace(/[-T:]/g, '').slice(0, 12)}`,
 				formatVersion: 1,
 				passTypeIdentifier: 'pass.money.payto',
 				teamIdentifier: PRIVATE_PASS_TEAM_IDENTIFIER,
-				organizationName: props.design.org || 'PayTo',
-				description: 'PayTo: Money - Direct Asset Transfers',
-				expirationDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year
-				backgroundColor: props.design.colorB || '#77bc65',
-				foregroundColor: props.design.colorF || '#192a14',
-				labelColor: props.design.colorF || '#192a14',
+				organizationName: org,
+				logoText: org,
+				description: `PayTo: ${hostname ? hostname.toUpperCase() + ' / ' : ''} ${props.design.item ? props.design.item : 'Direct Asset Transfers'}`,
+				expirationDate: new Date((props.params.dl.value || (Date.now() + 365 * 24 * 60 * 60)) * 1000).toISOString(),
+				backgroundColor: validColors(props.design.colorB, props.design.colorF) ? props.design.colorB : '#77bc65',
+				foregroundColor: validColors(props.design.colorF, props.design.colorB) ? props.design.colorF : '#192a14',
+				labelColor: validColors(props.design.colorF, props.design.colorB) ? props.design.colorF : '#192a14',
+				url: bareLink,
+				...(hostname === 'void' && (props.network === 'geo' || props.network === 'plus') ? {
+					locations: [
+						{
+							latitude: props.params.lat?.value,
+							longitude: props.params.lon?.value,
+							relevantText: props.params.message?.value ? props.params.message.value : 'Payment location'
+						}
+					]
+				} : {}),
 
 				// NFC configuration
 				nfc: {
-					message: link
+					message: bareLink
 				},
 
 				// Primary barcode (selected type)
@@ -80,7 +133,7 @@ export const actions = {
 						: props.design.barcode === 'code128'
 							? 'PKBarcodeFormatCode128'
 							: `PKBarcodeFormat${props.design.barcode.toUpperCase()}`,
-					message: link,
+					message: bareLink,
 					messageEncoding: 'iso-8859-1'
 				},
 
@@ -88,22 +141,22 @@ export const actions = {
 				barcodes: [
 					{
 						format: 'PKBarcodeFormatQR',
-						message: link,
+						message: bareLink,
 						messageEncoding: 'iso-8859-1'
 					},
 					{
 						format: 'PKBarcodeFormatPDF417',
-						message: link,
+						message: bareLink,
 						messageEncoding: 'iso-8859-1'
 					},
 					{
 						format: 'PKBarcodeFormatAztec',
-						message: link,
+						message: bareLink,
 						messageEncoding: 'iso-8859-1'
 					},
 					{
 						format: 'PKBarcodeFormatCode128',
-						message: link,
+						message: bareLink,
 						messageEncoding: 'iso-8859-1'
 					}
 				],
@@ -111,38 +164,73 @@ export const actions = {
 				// Pass fields
 				headerFields: [
 					{
-						key: 'payment-type',
-						label: 'Network',
-						value: props.network ? props.network.toUpperCase() : 'PAYTO'
+						key: 'payment',
+						label: 'Payment',
+						value: hostname && hostname === 'void' ? 'CASH' : hostname.toUpperCase() + (props.network ? ': ' + props.network.toUpperCase() : '')
 					}
 				],
 				primaryFields: [
 					{
-						key: 'payment',
-						label: 'Pay',
-						value: props.params?.amount?.value ? `${props.params.amount.value}${props.params?.currency?.value ? ' ' + props.params.currency.value.toUpperCase() : ''}` : 'Custom Amount'
+						key: 'amount',
+						label: 'Amount',
+						value:
+							props.params.amount.value && Number(props.params.amount.value) > 0 ?
+								formatter(getCurrency(props.network, hostname as ITransitionType)).format(Number(props.params.amount.value)) :
+								`Custom Amount`
 					}
 				],
 				secondaryFields: [
-					{
-						key: 'recurring',
-						label: 'Payment',
-						value: props.params?.rc?.value ? `Recurring / ${props.params.rc.value}` : 'One-time'
-					}
-				],
-				auxiliaryFields: props.design.item ? [
-					{
+					...(props.design.item ? [{
 						key: 'item',
 						label: 'Item',
 						value: props.design.item
-					}
-				] : [],
+					}] : []),
+					{
+						key: 'type',
+						label: 'Type',
+						value: props.params.rc?.value ? `Recurring ${props.params.rc.value.toUpperCase()}` : 'One-time'
+					},
+					...(false ? [{
+						key: 'receiving',
+						label: 'Received',
+						value: 'PRO version only'
+					}] : [])
+				],
+				auxiliaryFields: [
+					...(props.params.amount.value && Number(props.params.amount.value) > 0 && props.split?.value ? [{
+						key: 'split',
+						label: 'Split',
+						value: props.split.isPercent ?
+							`${Number(props.split.value)}%` :
+							formatter(getCurrency(props.network, hostname as ITransitionType)).format(Number(props.split.value))
+					}] : []),
+					...(props.params.message?.value ? [{
+						key: 'message',
+						label: 'Message',
+						value: props.params.message.value
+					}] : []),
+				],
 				backFields: [
+					...(false ? [{
+						key: 'balance',
+						label: 'Balance',
+						value: 'PRO version only'
+					}] : []),
+					...(props.params.amount.value && Number(props.params.amount.value) > 0 && props.split?.value && props.split?.address ? [{
+						key: 'split-address',
+						label: 'Split Receiving Address',
+						value: props.split.address
+					}] : []),
 					{
 						key: 'notes',
-						label: 'Important Note',
-						value: 'Transfer of funds are done w/o 3rd parties.'
-					}
+						label: 'Note',
+						value: 'Transfer of funds is initiated by the sender utilizing the PayTo: protocol.'
+					},
+					...(false ? [{
+						key: 'pro',
+						label: 'PRO version',
+						value: 'To activate the PRO version, please send XCB to the address: xxx<br/>Price: 50 XCB per month'
+					}] : [])
 				]
 			};
 
@@ -151,21 +239,21 @@ export const actions = {
 
 			// Add default images (should be loaded from assets)
 			const defaultImages = {
-				'icon.png': await fetch('http://localhost:5173/assets/icon.png')
-					.then(res => res.ok ? res.arrayBuffer() : fetch('/fallback/icon.png').then(r => r.arrayBuffer()))
-					.catch(() => fetch('/fallback/icon.png').then(r => r.arrayBuffer())),
-				'icon@2x.png': await fetch('http://localhost:5173/assets/icon@2x.png')
-					.then(res => res.ok ? res.arrayBuffer() : fetch('/fallback/icon@2x.png').then(r => r.arrayBuffer()))
-					.catch(() => fetch('/fallback/icon@2x.png').then(r => r.arrayBuffer())),
-				'icon@3x.png': await fetch('http://localhost:5173/assets/icon@3x.png')
-					.then(res => res.ok ? res.arrayBuffer() : fetch('/fallback/icon@3x.png').then(r => r.arrayBuffer()))
-					.catch(() => fetch('/fallback/icon@3x.png').then(r => r.arrayBuffer())),
-				'logo.png': await fetch('http://localhost:5173/assets/logo.png')
-					.then(res => res.ok ? res.arrayBuffer() : fetch('/fallback/logo.png').then(r => r.arrayBuffer()))
-					.catch(() => fetch('/fallback/logo.png').then(r => r.arrayBuffer())),
-				'logo@2x.png': await fetch('http://localhost:5173/assets/logo@2x.png')
-					.then(res => res.ok ? res.arrayBuffer() : fetch('/fallback/logo@2x.png').then(r => r.arrayBuffer()))
-					.catch(() => fetch('/fallback/logo@2x.png').then(r => r.arrayBuffer()))
+				'icon.png': await fetch('https://payto.money/icons/icon.png')
+					.then(res => res.ok ? res.arrayBuffer() : fetch('/icons/icon.png').then(r => r.arrayBuffer()))
+					.catch(() => fetch('/icons/icon.png').then(r => r.arrayBuffer())),
+				'icon@2x.png': await fetch('https://payto.money/icons/icon@2x.png')
+					.then(res => res.ok ? res.arrayBuffer() : fetch('/icons/icon@2x.png').then(r => r.arrayBuffer()))
+					.catch(() => fetch('/icons/icon@2x.png').then(r => r.arrayBuffer())),
+				'icon@3x.png': await fetch('https://payto.money/icons/icon@3x.png')
+					.then(res => res.ok ? res.arrayBuffer() : fetch('/icons/icon@3x.png').then(r => r.arrayBuffer()))
+					.catch(() => fetch('/icons/icon@3x.png').then(r => r.arrayBuffer())),
+				'logo.png': await fetch('https://payto.money/icons/logo.png')
+					.then(res => res.ok ? res.arrayBuffer() : fetch('/icons/logo.png').then(r => r.arrayBuffer()))
+					.catch(() => fetch('/icons/logo.png').then(r => r.arrayBuffer())),
+				'logo@2x.png': await fetch('https://payto.money/icons/logo@2x.png')
+					.then(res => res.ok ? res.arrayBuffer() : fetch('/icons/logo@2x.png').then(r => r.arrayBuffer()))
+					.catch(() => fetch('/icons/logo@2x.png').then(r => r.arrayBuffer()))
 			};
 
 			// Add images to zip
@@ -187,9 +275,8 @@ export const actions = {
 			// Create signature
 			const privateKeyObj = forge.pki.privateKeyFromPem(PRIVATE_PASS_PRIVATE_KEY);
 			const manifestText = JSON.stringify(manifest, null, 2);
-			const manifestBytes = new TextEncoder().encode(manifestText);
 			const signature = forge.util.encode64(
-				privateKeyObj.sign(forge.md.sha1.create().update(manifestBytes.toString()).digest())
+				privateKeyObj.sign(forge.md.sha1.create().update(manifestText))
 			);
 			zip.file('signature', new Uint8Array(forge.util.binary.base64.decode(signature)));
 

@@ -9,7 +9,6 @@ export const getCurrency = (state: ITransactionState, type: ITransitionType | un
 	switch (type) {
 		case 'ican':
 			return state.params.fiat.value !== undefined ? String(state.params.fiat.value) : // Fiat value
-				state.params.swap.value !== undefined ? String(state.params.swap.value) : // Swap value
 				state.params.currency.value !== undefined ? String(state.params.currency.value) : // Token value
 				state.other !== undefined ? String(state.other) : // Other value - custom currency
 				(state.network !== undefined && state.network !== 'other') ? String(state.network) : // Network value
