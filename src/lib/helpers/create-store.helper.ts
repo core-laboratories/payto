@@ -19,8 +19,15 @@ export const createStore = (
 			const deepClone = JSON.parse(JSON.stringify(initial.networks[network]));
 			currentState.networks[network] = deepClone;
 			currentState._reactivityTrigger = !currentState._reactivityTrigger;
-			return {...currentState};
+			currentState.isCleared = true;
+
+			return { ...currentState };
 		});
+
+
+		queueMicrotask(() => {
+			store.update(state => ({ ...state, isCleared: false }));
+		})
 	};
 
 	// Reset design state

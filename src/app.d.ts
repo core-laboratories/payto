@@ -120,6 +120,7 @@ interface IComplexState {
 		[K in ITransitionType]: ITransactionState;
 	};
 	design: IDesignState;
+	isCleared: boolean;
 }
 
 /*interface IStateParams {

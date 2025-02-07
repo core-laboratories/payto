@@ -36,21 +36,9 @@
 	let tokens = TRANSPORT.ican.find(item => item.value === $constructor.networks.ican.network)?.tokens;
 
 	$effect(() => {
-		if (!$constructor.networks.ican.destination) {
-			addressValue = undefined;
-			addressValidated = false;
-			addressError = false;
-			addressTestnet = false;
-			addressEnterprise = false;
-			addressMsg = '';
-		}
-		if (!$constructor.networks.ican.params.split.value) {
-			splitAddressValue = undefined;
-			splitAddressValidated = false;
-			splitAddressError = false;
-			splitAddressTestnet = false;
-			splitAddressEnterprise = false;
-			splitAddressMsg = '';
+		if ($constructor.isCleared) {
+			resetAddress();
+			resetSplitAddress();
 		}
 	});
 
@@ -106,14 +94,19 @@
 		validateAddress(value);
 	}
 
+	function resetAddress() {
+		addressValidated = false;
+		addressError = false;
+		addressTestnet = false;
+		addressEnterprise = false;
+		addressMsg = '';
+		addressValue  = '';
+		$constructor.networks.ican.destination = undefined;
+	}
+
 	function validateAddress(value: string, network?: string) {
 		if (!value) {
-			addressValidated = false;
-			addressError = false;
-			addressTestnet = false;
-			addressEnterprise = false;
-			addressMsg = '';
-			$constructor.networks.ican.destination = undefined;
+			resetAddress();
 			return;
 		}
 
@@ -172,14 +165,19 @@
 		validateSplitAddress(value);
 	}
 
+	function resetSplitAddress() {
+		splitAddressValidated = false;
+		splitAddressError = false;
+		splitAddressTestnet = false;
+		splitAddressEnterprise = false;
+		splitAddressMsg = '';
+		splitAddressValue = '';
+		$constructor.networks.ican.params.split.address = undefined;
+	}
+
 	function validateSplitAddress(value: string, network?: string) {
 		if (!value) {
-			splitAddressValidated = false;
-			splitAddressError = false;
-			splitAddressTestnet = false;
-			splitAddressEnterprise = false;
-			splitAddressMsg = '';
-			$constructor.networks.ican.params.split.address = undefined;
+			resetSplitAddress()
 			return;
 		}
 

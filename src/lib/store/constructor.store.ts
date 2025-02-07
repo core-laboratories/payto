@@ -117,7 +117,8 @@ const INITIAL_STATE: IComplexState = {
 		colorB: '#77bc65',
 		barcode: 'qr',
 		rtl: false
-	}
+	},
+	isCleared: false,
 };
 
 const BUILDER = {
