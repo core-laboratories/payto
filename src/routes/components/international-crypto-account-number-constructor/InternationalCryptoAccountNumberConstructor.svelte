@@ -124,7 +124,12 @@
 					addressTestnet = error.path.includes('testnet');
 					addressEnterprise = error.path.includes('enterprise');
 					addressMsg = error.message;
-					$constructor.networks.ican.destination = undefined;
+					$constructor.networks.ican.destination = value;
+
+					if (error.path.includes('testnet')) {
+						$constructor.networks.ican.other = $constructor.networks.ican.network;
+						$constructor.networks.ican.network = 'other';
+					}
 				} else {
 					addressValidated = false;
 					addressError = true;
@@ -265,7 +270,7 @@
 						aria-label="Back to network menu options"
 						onpointerdown={() => {
 							$constructor.networks.ican.network = 'xcb';
-							validateCurrentAddress();
+							resetAddress();
 						}}
 					>
 						<svg
