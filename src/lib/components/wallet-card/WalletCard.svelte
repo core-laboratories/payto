@@ -149,24 +149,27 @@
 			design: true,
 			transform: false
 		});
-		const { colorForeground, colorBackground } = defineColors($constructorStore.design.colorF, $constructorStore.design.colorB);
 
-		const paytoStore = derived(constructorStore, ($store) => ({
-			hostname,
-			colorBackground,
-			colorForeground,
-			currency: getCurrency($store.networks[hostname], hostname),
-			value: $store.networks[hostname]?.params?.amount?.value,
-			address: getAddress($store.networks[hostname], hostname),
-			organization: $store.design.org,
-			organizationImage: undefined,
-			network: getNetwork($store.networks[hostname], hostname, true),
-			item: $store.design.item,
-			location: $store.networks[hostname]?.params?.loc?.value,
-			recurring: $store.networks[hostname]?.params?.rc?.value ?? '',
-			rtl: $store.design.rtl || false,
-			deadline: $store.networks[hostname]?.params?.dl?.value
-		}));
+		const paytoStore = derived(constructorStore, ($store) => {
+			const { colorForeground, colorBackground } = defineColors($store.design.colorF, $store.design.colorB);
+
+			return {
+				hostname,
+				colorBackground,
+				colorForeground,
+				currency: getCurrency($store.networks[hostname], hostname),
+				value: $store.networks[hostname]?.params?.amount?.value,
+				address: getAddress($store.networks[hostname], hostname),
+				organization: $store.design.org,
+				organizationImage: undefined,
+				network: getNetwork($store.networks[hostname], hostname, true),
+				item: $store.design.item,
+				location: $store.networks[hostname]?.params?.loc?.value,
+				recurring: $store.networks[hostname]?.params?.rc?.value ?? '',
+				rtl: $store.design.rtl || false,
+				deadline: $store.networks[hostname]?.params?.dl?.value
+			};
+		});
 
 		paytoStore.subscribe((value) => {
 			paytoData = value;
