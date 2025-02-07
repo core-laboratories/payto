@@ -20,18 +20,14 @@
 	let bicError = $state(false);
 	let bicMsg = $state('');
 
+
 	$effect(() => {
-		if (!$constructor.networks.iban.iban) {
-			ibanValue = undefined;
-			ibanError = false;
-			ibanMsg = '';
-		}
-		if (!$constructor.networks.iban.bic) {
-			bicValue = undefined;
-			bicError = false;
-			bicMsg = '';
+		if ($constructor.isCleared) {
+			resetIban();
+			resetBic();
 		}
 	});
+
 
 	function handleRecurringChange() {
 		if (!$constructor.networks.iban.isRc) {
@@ -39,11 +35,16 @@
 		}
 	}
 
+	function resetIban() {
+		ibanValue = undefined;
+		ibanError = false;
+		ibanMsg = '';
+		$constructor.networks.iban.iban = undefined;
+	}
+
 	function validateIban(value: string) {
 		if (value === '') {
-			ibanError = false;
-			ibanMsg = '';
-			$constructor.networks.iban.iban = undefined;
+			resetIban()
 			return;
 		}
 
@@ -72,11 +73,16 @@
 		validateIban(value);
 	}
 
+	function resetBic() {
+		bicValue = undefined;
+		bicError = false;
+		bicMsg = '';
+		$constructor.networks.iban.bic = undefined;
+	}
+
 	function validateBic(value: string) {
 		if (value === '') {
-			bicError = false;
-			bicMsg = '';
-			$constructor.networks.iban.bic = undefined;
+			resetBic();
 			return;
 		}
 
