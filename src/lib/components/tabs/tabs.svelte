@@ -3,6 +3,7 @@
 	import { ListBox } from '$lib/components';
 	import { fade } from 'svelte/transition';
 	import { getObjectByType } from '$lib/helpers/get-object-by-type.helper';
+	import { constructor } from '$lib/store/constructor.store';
 	import { TYPES } from '$lib/data/types.data';
 	import { onMount } from 'svelte';
 
@@ -42,6 +43,7 @@
 		const tabValue = String(value);
 		selectedTab = tabValue;
 		tabs.set(tabValue);
+		$constructor.paymentType = tabValue;
 	}
 
 	onMount(() => {

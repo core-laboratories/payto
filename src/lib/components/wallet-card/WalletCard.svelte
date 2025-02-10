@@ -19,6 +19,7 @@
 	import Payto from 'payto-rl';
 	import { deviceSherlock } from 'device-sherlock';
 	import { writable } from 'svelte/store';
+	import { ASSETS_NAMES } from '$lib/constants/asset-names';
 
 	export let hostname: ITransitionType | undefined = undefined;
 	export let url: string | null = null;
@@ -29,6 +30,7 @@
 	let formatter: Readable<ExchNumberFormat> | undefined;
 	interface FlexiblePaytoData {
 		hostname: string;
+		paymentType: string;
 		colorBackground: string;
 		colorForeground: string;
 		rtl: boolean | Readable<boolean>;
@@ -46,6 +48,7 @@
 
 	let paytoData: FlexiblePaytoData = {
 		hostname: hostname || 'ican',
+		paymentType: $constructor.paymentType,
 		colorBackground: '#77bc65',
 		colorForeground: '#192a14',
 		rtl: false,
@@ -82,10 +85,12 @@
 		if (!$data.hostname) return '';
 		return typeof $data.hostname === 'string' ? $data.hostname.toUpperCase() : String($data.hostname).toUpperCase();
 	});
+
 	const networkStore = derived([writable(paytoData), constructorStore], ([$data, $_]) => {
 		if (!$data.network) return '';
 		return typeof $data.network === 'string' ? $data.network.toUpperCase() : $data.network.toString().toUpperCase();
 	});
+
 	const addressStore = derived([writable(paytoData), constructorStore], ([$data, $_]) => {
 		if (!$data.address) return '';
 		return typeof $data.address === 'string' ? $data.address : $data.address.toString();
@@ -99,6 +104,7 @@
 
 		paytoData = {
 			hostname: payto.hostname || 'ican',
+			paymentType: $constructor.paymentType,
 			value: payto.value ? Number(payto.value) : undefined,
 			address: payto.address || undefined,
 			colorBackground,
@@ -155,6 +161,7 @@
 
 			return {
 				hostname,
+				paymentType: $store.paymentType,
 				colorBackground,
 				colorForeground,
 				currency: getCurrency($store.networks[hostname], hostname),
@@ -396,8 +403,8 @@
 					<div class={`${paytoData.rtl !== undefined && paytoData.rtl === true ? 'text-right' : 'text-left'} w-full`}>
 						<div class="text-sm">Payment type</div>
 						<div class="text-xl font-semibold">
-							{paytoData.hostname && paytoData.hostname === 'void' ? 'CASH' :
-								$hostnameStore + ($networkStore ? ': ' + $networkStore : '')}
+							{paytoData.paymentType && paytoData.paymentType === 'void' ? 'CASH' : paytoData.paymentType?.toUpperCase()}
+							{paytoData.network && `: ${ASSETS_NAMES[String(paytoData.network).toUpperCase()] ?? String(paytoData.network).toUpperCase()}`}
 						</div>
 					</div>
 				</div>

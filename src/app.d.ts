@@ -121,6 +121,7 @@ interface IComplexState {
 	};
 	design: IDesignState;
 	isCleared: boolean;
+	paymentType: string
 }
 
 /*interface IStateParams {

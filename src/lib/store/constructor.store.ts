@@ -119,6 +119,7 @@ const INITIAL_STATE: IComplexState = {
 		rtl: false
 	},
 	isCleared: false,
+	paymentType: 'ican',
 };
 
 const BUILDER = {
