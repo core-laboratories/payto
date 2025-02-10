@@ -58,10 +58,10 @@
 		<a href="/" class="logo no-underline">
 			<h1 class="flex flex-col items-start mb-3 text-5xl tracking-wide lg:text-6xl lg:flex-row pt-logo">
 				<span class="flex items-center">
-					<span class="text-(--color-green-core)">Pay</span>
-					<span class="text-(--color-green-dark)">To:</span>
+					<span class="text-core">Pay</span>
+					<span class="text-seagreen">To:</span>
 					{#if currentText}
-						<span class="text-green-200/70 ms-2 text-4xl lg:text-5xl flex items-center">
+						<span class="text-green-200/60 ms-2 text-4xl lg:text-5xl flex items-center">
 							{#each currentText.split('') as letter, i (i)}
 								<span
 									class="inline-block relative"
@@ -82,6 +82,6 @@
 				</span>
 			</h1>
 		</a>
-		<span class="text-(--color-green-core) arimo-400 text-lg">Direct Asset Transfers</span>
+		<span class="text-core arimo-400 text-lg">Direct Asset Transfers</span>
 	</div>
 </header>

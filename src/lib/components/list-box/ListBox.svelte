@@ -83,7 +83,7 @@
 								class="flex items-center w-full px-3 py-2 hover:bg-gray-800 hover:brightness-150"
 							>
 								{#if String(value) === String(subItem.value)}
-									<span class="w-3 h-3 mr-2 rounded-full bg-[var(--color-green-core)]"></span>
+									<span class="w-3 h-3 mr-2 rounded-full bg-core"></span>
 								{:else}
 									<span class="w-3 h-3 mr-2"></span>
 								{/if}
@@ -104,7 +104,7 @@
 							class="flex items-center w-full px-3 py-2 hover:bg-gray-800 hover:brightness-150"
 						>
 							{#if String(value) === String(item.value)}
-								<span class="w-3 h-3 mr-2 rounded-full bg-[var(--color-green-core)]"></span>
+								<span class="w-3 h-3 mr-2 rounded-full bg-core"></span>
 							{:else}
 								<span class="w-3 h-3 mr-2"></span>
 							{/if}

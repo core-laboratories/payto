@@ -1,5 +1,5 @@
 <script lang="ts">
-	import '../app.postcss';
+	import "../css/app.css";
 	import {
 		Row, Box, BoxContent, BoxTitle, Page, Tabs, Toast, WalletCard, DesignContent
 	} from '$lib/components';

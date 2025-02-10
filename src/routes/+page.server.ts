@@ -93,13 +93,14 @@ export const actions = {
 			// Basic pass data structure
 			const bareLink = getLink(hostname, props);
 			const org = props.design.org || 'PayTo';
+			const subscriptionAddress = props.destination;
 			if (hostname === 'void' && props.network === 'plus') {
 				const plusCoordinates = getLocationCode(props.params.loc?.value || '');
 				props.params.lat = { value: plusCoordinates[0] };
 				props.params.lon = { value: plusCoordinates[1] };
 			}
 			const passData = {
-				serialNumber: `PayTo-${props.destination}-${hostname.toLowerCase()}-${new Date(Date.now()).toISOString().replace(/[-T:]/g, '').slice(0, 12)}`,
+				serialNumber: `PayTo-${subscriptionAddress}-${props.destination}-${new Date(Date.now()).toISOString().replace(/[-T:]/g, '').slice(0, 12)}`,
 				formatVersion: 1,
 				passTypeIdentifier: 'pass.money.payto',
 				teamIdentifier: PRIVATE_PASS_TEAM_IDENTIFIER,
@@ -209,6 +210,11 @@ export const actions = {
 						label: 'Message',
 						value: props.params.message.value
 					}] : []),
+					...(props.params.amount.value && Number(props.params.amount.value) > 0 && props.split?.value && props.split?.address ? [{
+						key: 'split-address',
+						label: 'Split Receiving Address',
+						value: props.split.address
+					}] : [])
 				],
 				backFields: [
 					...(false ? [{
@@ -216,20 +222,17 @@ export const actions = {
 						label: 'Balance',
 						value: 'PRO version only'
 					}] : []),
-					...(props.params.amount.value && Number(props.params.amount.value) > 0 && props.split?.value && props.split?.address ? [{
-						key: 'split-address',
-						label: 'Split Receiving Address',
-						value: props.split.address
+					...(hostname === 'ican' && props.network === 'xcb' ? [{
+						key: 'refill-address',
+						label: 'Refill Address',
+						value: 'https://payto.money/refill/usdx/' + props.destination,
+						dataDetectorTypes: ["PKDataDetectorTypeLink"]
 					}] : []),
-					{
-						key: 'notes',
-						label: 'Note',
-						value: 'Transfer of funds is initiated by the sender utilizing the PayTo: protocol.'
-					},
 					...(false ? [{
 						key: 'pro',
-						label: 'PRO version',
-						value: 'To activate the PRO version, please send XCB to the address: xxx<br/>Price: 50 XCB per month'
+						label: 'Activate PRO version',
+						value: 'https://payto.money/pro/' + subscriptionAddress,
+						dataDetectorTypes: ["PKDataDetectorTypeLink"]
 					}] : [])
 				]
 			};

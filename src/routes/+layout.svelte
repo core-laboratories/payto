@@ -1,5 +1,5 @@
 <script lang="ts">
-	import '../app.postcss';
+	import "../css/app.css";
 	import { Header, Footer } from './components';
 	import { page } from '$app/state';
 </script>
