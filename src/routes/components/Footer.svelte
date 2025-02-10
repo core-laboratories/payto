@@ -9,7 +9,7 @@
 				href="https://payto.onl"
 				target="_blank"
 				rel="noreferrer"
-			>PayTo:Consortium</a>
+			>PayTo:Alliance</a>
 			Initiative.
 		</p>
 	</div>
