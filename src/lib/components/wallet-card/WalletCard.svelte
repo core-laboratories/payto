@@ -72,8 +72,8 @@
 		let colorBackground = '#77bc65';
 		if (colorF && colorB) {
 			const colorDistance = Math.floor(calculateColorDistance(colorF, colorB));
-			colorForeground = colorDistance < 100 ? colorF : '#192a14';
-			colorBackground = colorDistance < 100 ? colorB : '#77bc65';
+			colorForeground = colorDistance > 100 ? colorF : '#192a14';
+			colorBackground = colorDistance > 100 ? colorB : '#77bc65';
 		}
 		return { colorForeground, colorBackground };
 	}
