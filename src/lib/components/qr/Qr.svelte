@@ -6,16 +6,23 @@
 
 	let canvas: HTMLCanvasElement;
 
-	onMount(async () => {
-		const qrText = param;
-		QRCode.toCanvas(canvas, qrText, { errorCorrectionLevel: 'H' }, function (error: Error | null | undefined) {
-			if (error) console.error(error);
-		});
+	$: {
+		if (canvas && param) {
+			QRCode.toCanvas(canvas, param, { errorCorrectionLevel: 'H' }, function (error: Error | null | undefined) {
+				if (error) console.error(error);
+			});
+		}
+	}
+
+	onMount(() => {
+		if (canvas && param) {
+			QRCode.toCanvas(canvas, param, { errorCorrectionLevel: 'H' }, function (error: Error | null | undefined) {
+				if (error) console.error(error);
+			});
+		}
 	});
 </script>
 
-
 <div class="flex justify-center items-center">
-    <canvas class="rounded-xs" bind:this={canvas}></canvas>
+	<canvas class="rounded-xs" bind:this={canvas}></canvas>
 </div>
-

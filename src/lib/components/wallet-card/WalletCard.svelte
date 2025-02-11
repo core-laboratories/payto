@@ -21,7 +21,7 @@
 	import { writable } from 'svelte/store';
 	import { ASSETS_NAMES } from '$lib/constants/asset-names';
 
-	export let hostname: ITransitionType | undefined = undefined;
+	export let hostname: ITransitionType | undefined = $constructor.paymentType as ITransitionType;
 	export let url: string | null = null;
 
 	const iconLogoSize: string = 'h-10 w-10';
@@ -218,10 +218,12 @@
 
 	let dynamicBareUrl = derived([constructorStore, writable(hostname)], ([$constructor, $hostname]) => {
 		if (!$hostname) return null;
+		const network = $constructor.paymentType as ITransitionType;
+
 		return getWebLink({
-			network: $hostname,
+			network,
 			networkData: {
-				...$constructor.networks[$hostname],
+				...$constructor.networks[network],
 				design: $constructor.design
 			},
 			design: true,
@@ -231,12 +233,12 @@
 
 	const currentUrl = derived(
 		[writable(url), dynamicUrl],
-		([$url, $dynamicUrl]) => $url || $dynamicUrl
+		([$url, $dynamicUrl]) => $dynamicUrl || $url
 	);
 
 	const currentBareUrl = derived(
 		[writable(bareUrl), dynamicBareUrl],
-		([$url, $dynamicBareUrl]) => $url || $dynamicBareUrl
+		([$url, $dynamicBareUrl]) => $dynamicBareUrl || $url
 	);
 
 	const currentBareUrlString = derived(currentBareUrl, $url => $url || '');
