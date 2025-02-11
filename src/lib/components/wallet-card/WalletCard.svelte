@@ -21,12 +21,14 @@
 	import { writable } from 'svelte/store';
 	import { ASSETS_NAMES } from '$lib/constants/asset-names';
 
-	export let hostname: ITransitionType | undefined = $constructor.paymentType as ITransitionType;
+	export let hostname: ITransitionType | undefined = undefined;
 	export let url: string | null = null;
+
+	let hasUrl: boolean = false;
 
 	const iconLogoSize: string = 'h-10 w-10';
 	let noData: boolean = true;
-	let bareUrl: string | null = null;
+	const bareUrl = writable<string | null>(null);
 	let formatter: Readable<ExchNumberFormat> | undefined;
 	interface FlexiblePaytoData {
 		hostname: string;
@@ -96,103 +98,109 @@
 		return typeof $data.address === 'string' ? $data.address : $data.address.toString();
 	});
 
-	if (url) {
-		noData = false;
-		bareUrl = url;
-		const payto = new Payto(url).toJSONObject();
-		const { colorForeground, colorBackground } = defineColors(payto.colorForeground, payto.colorBackground);
+	$: {
+		if (url && !hasUrl) {
+			noData = false;
+			hasUrl = true;
+			bareUrl.set(url);
 
-		paytoData = {
-			hostname: payto.hostname || 'ican',
-			paymentType: $constructor.paymentType,
-			value: payto.value ? Number(payto.value) : undefined,
-			address: payto.address || undefined,
-			colorBackground,
-			colorForeground,
-			organization: payto.organization || undefined,
-			organizationImage: undefined,
-			currency: payto.currency ?
-				payto.currency[1] ?
-					payto.currency[1] :
-						payto.currency[0] :
-				getCurrency((payto.network || 'ican') as unknown as ITransactionState, payto.hostname as ITransitionType),
-			network: payto.network || undefined,
-			item: payto.item || undefined,
-			location: payto.location || undefined,
-			recurring: payto.recurring || undefined,
-			rtl: payto.rtl || false,
-			deadline: payto.deadline || undefined
-		};
+			const payto = new Payto(url).toJSONObject();
+			const { colorForeground, colorBackground } = defineColors(payto.colorForeground, payto.colorBackground);
 
-		formatter = derived(
-			[constructorStore, hostnameStore],
-			([$constructor, $hostname]) => {
-				const currency = paytoData?.currency || '';
-				return new ExchNumberFormat(undefined, {
-					style: 'currency',
-					currency,
-					currencyDisplay: 'symbol'
-				});
-			}
-		);
-	} else if (hostname) {
-		noData = false;
-		url = getWebLink({
-			network: hostname,
-			networkData: {
-				...$constructorStore.networks[hostname],
-				design: $constructorStore.design
-			},
-			design: true,
-			transform: true
-		});
-		bareUrl = getWebLink({
-			network: hostname,
-			networkData: {
-				...$constructorStore.networks[hostname],
-				design: $constructorStore.design
-			},
-			design: true,
-			transform: false
-		});
-
-		const paytoStore = derived(constructorStore, ($store) => {
-			const { colorForeground, colorBackground } = defineColors($store.design.colorF, $store.design.colorB);
-
-			return {
-				hostname,
-				paymentType: $store.paymentType,
+			paytoData = {
+				hostname: payto.hostname || 'ican',
+				paymentType: payto.hostname || 'ican',
+				value: payto.value ? Number(payto.value) : undefined,
+				address: payto.address || undefined,
 				colorBackground,
 				colorForeground,
-				currency: getCurrency($store.networks[hostname], hostname),
-				value: $store.networks[hostname]?.params?.amount?.value,
-				address: getAddress($store.networks[hostname], hostname),
-				organization: $store.design.org,
+				organization: payto.organization || undefined,
 				organizationImage: undefined,
-				network: getNetwork($store.networks[hostname], hostname, true),
-				item: $store.design.item,
-				location: $store.networks[hostname]?.params?.loc?.value,
-				recurring: $store.networks[hostname]?.params?.rc?.value ?? '',
-				rtl: $store.design.rtl || false,
-				deadline: $store.networks[hostname]?.params?.dl?.value
+				currency: payto.currency ?
+					payto.currency[1] ?
+						payto.currency[1] :
+						payto.currency[0] :
+					getCurrency((payto.network || 'ican') as unknown as ITransactionState, payto.hostname as ITransitionType),
+				network: (payto.network !== payto.hostname ? payto.network : undefined),
+				item: payto.item || undefined,
+				location: payto.location || undefined,
+				recurring: payto.recurring || undefined,
+				rtl: payto.rtl || false,
+				deadline: payto.deadline || undefined
 			};
-		});
 
-		paytoStore.subscribe((value) => {
-			paytoData = value;
-		});
+			formatter = derived(
+				[constructorStore, hostnameStore],
+				([$constructor, $hostname]) => {
+					const currency = paytoData?.currency || '';
+					return new ExchNumberFormat(undefined, {
+						style: 'currency',
+						currency,
+						currencyDisplay: 'symbol'
+					});
+				}
+			);
+		} else if (hostname) {
+			noData = false;
+			hasUrl = true;
+			url = getWebLink({
+				network: hostname,
+				networkData: {
+					...$constructorStore.networks[hostname],
+					design: $constructorStore.design
+				},
+				design: true,
+				transform: true
+			});
 
-		formatter = derived(
-			[constructorStore, hostnameStore],
-			([$constructor, $hostname]) => {
-				const currency = paytoData?.currency || '';
-				return new ExchNumberFormat(undefined, {
-					style: 'currency',
-					currency,
-					currencyDisplay: 'symbol'
-				});
-			}
-		);
+			bareUrl.set(getWebLink({
+				network: hostname,
+				networkData: {
+					...$constructorStore.networks[hostname],
+					design: $constructorStore.design
+				},
+				design: true,
+				transform: false
+			}));
+
+			const paytoStore = derived(constructorStore, ($store) => {
+				const { colorForeground, colorBackground } = defineColors($store.design.colorF, $store.design.colorB);
+
+				return {
+					hostname,
+					paymentType: $store.paymentType,
+					colorBackground,
+					colorForeground,
+					currency: getCurrency($store.networks[hostname], hostname),
+					value: $store.networks[hostname]?.params?.amount?.value,
+					address: getAddress($store.networks[hostname], hostname),
+					organization: $store.design.org,
+					organizationImage: undefined,
+					network: getNetwork($store.networks[hostname], hostname, true),
+					item: $store.design.item,
+					location: $store.networks[hostname]?.params?.loc?.value,
+					recurring: $store.networks[hostname]?.params?.rc?.value ?? '',
+					rtl: $store.design.rtl || false,
+					deadline: $store.networks[hostname]?.params?.dl?.value
+				};
+			});
+
+			paytoStore.subscribe((value) => {
+				paytoData = value;
+			});
+
+			formatter = derived(
+				[constructorStore, hostnameStore],
+				([$constructor, $hostname]) => {
+					const currency = paytoData?.currency || '';
+					return new ExchNumberFormat(undefined, {
+						style: 'currency',
+						currency,
+						currencyDisplay: 'symbol'
+					});
+				}
+			);
+		}
 	}
 
 	const formattedValue = derived(
@@ -233,12 +241,12 @@
 
 	const currentUrl = derived(
 		[writable(url), dynamicUrl],
-		([$url, $dynamicUrl]) => $dynamicUrl || $url
+		([$url, $dynamicUrl]) => $url || $dynamicUrl
 	);
 
 	const currentBareUrl = derived(
-		[writable(bareUrl), dynamicBareUrl],
-		([$url, $dynamicBareUrl]) => $dynamicBareUrl || $url
+		[bareUrl, dynamicBareUrl],
+		([$url, $dynamicBareUrl]) => $url || $dynamicBareUrl
 	);
 
 	const currentBareUrlString = derived(currentBareUrl, $url => $url || '');
