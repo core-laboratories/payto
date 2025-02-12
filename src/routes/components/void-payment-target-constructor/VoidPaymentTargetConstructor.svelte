@@ -26,15 +26,13 @@
 	let plusCodeValue = $state<string | undefined>(undefined);
 
 	$effect(() => {
-		if (!$constructor.networks.void.params.loc.lat && !$constructor.networks.void.params.loc.lon) {
+		if ($constructor.isCleared) {
 			latValue = undefined;
 			lonValue = undefined;
 			latError = false;
 			lonError = false;
 			latMsg = '';
 			lonMsg = '';
-		}
-		if (!$constructor.networks.void.params.loc.plus) {
 			plusCodeValue = undefined;
 			plusCodeError = false;
 			plusCodeMsg = '';
@@ -64,9 +62,11 @@
 					if (error.path.includes('latitude')) {
 						latError = true;
 						latMsg = error.message;
+						$constructor.networks.void.params.loc.lat = undefined;
 					} else {
 						lonError = true;
 						lonMsg = error.message;
+						$constructor.networks.void.params.loc.lon = undefined;
 					}
 				});
 			} else {
@@ -98,6 +98,7 @@
 			if (!result.success) {
 				plusCodeError = true;
 				plusCodeMsg = result.error.errors[0]?.message || 'Invalid Plus Code format';
+				$constructor.networks.void.params.loc.plus = undefined;
 			} else {
 				plusCodeError = false;
 				plusCodeMsg = '';
