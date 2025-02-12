@@ -204,11 +204,11 @@
 	}
 
 	const formattedValue = derived(
-		[formatter || writable(new ExchNumberFormat()), paytoData],
-		([$formatter, $data]) => {
+		[paytoData],
+		([$data]) => {
 			const value = $data?.value;
 
-			return value ? $formatter.format(Number(value)) : 'Custom Amount';
+			return value ? $formatter?.format(Number(value)) : 'Custom Amount';
 		}
 	);
 
@@ -314,6 +314,11 @@
 			reader.removeAllListeners();
 		}
 	}
+
+	$: {
+		console.log($paytoData);
+	}
+
 </script>
 
 <div>
