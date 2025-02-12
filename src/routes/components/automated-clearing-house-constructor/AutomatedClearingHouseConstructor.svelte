@@ -57,20 +57,20 @@
 				if (!result.success) {
 					accountError = true;
 					accountMsg = result.error.errors[0]?.message || 'Invalid account number format';
-					$constructor.networks.ach.accountNumber = value;
 				} else {
 					accountError = false;
 					accountMsg = '';
+					$constructor.networks.ach.accountNumber = value;
 				}
 			} else if (type === 'routing') {
 				const result = achRoutingSchema.safeParse({ routingNumber: value });
 				if (!result.success) {
 					routingError = true;
 					routingMsg = result.error.errors[0]?.message || 'Invalid routing number format';
-					$constructor.networks.ach.routingNumber = value;
 				} else {
 					routingError = false;
 					routingMsg = '';
+					$constructor.networks.ach.routingNumber = value;
 				}
 			}
 		} catch (error: any) {
