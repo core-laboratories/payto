@@ -48,7 +48,7 @@
 		deadline: number | Readable<number> | undefined;
 	}
 
-	let paytoData: FlexiblePaytoData = {
+	const paytoData = writable<FlexiblePaytoData>({
 		hostname: hostname || 'ican',
 		paymentType: $constructor.paymentType,
 		colorBackground: '#77bc65',
@@ -64,7 +64,7 @@
 		location: undefined,
 		recurring: undefined,
 		deadline: undefined
-	};
+	});
 
 	const constructorStore = derived(constructor, $c => $c);
 
@@ -83,17 +83,17 @@
 		return { colorForeground, colorBackground };
 	}
 
-	const hostnameStore = derived([writable(paytoData), constructorStore], ([$data, $_]) => {
+	const hostnameStore = derived([paytoData, constructorStore], ([$data, $_]) => {
 		if (!$data.hostname) return '';
 		return typeof $data.hostname === 'string' ? $data.hostname.toUpperCase() : String($data.hostname).toUpperCase();
 	});
 
-	const networkStore = derived([writable(paytoData), constructorStore], ([$data, $_]) => {
+	const networkStore = derived([paytoData, constructorStore], ([$data, $_]) => {
 		if (!$data.network) return '';
 		return typeof $data.network === 'string' ? $data.network.toUpperCase() : $data.network.toString().toUpperCase();
 	});
 
-	const addressStore = derived([writable(paytoData), constructorStore], ([$data, $_]) => {
+	const addressStore = derived([paytoData, constructorStore], ([$data, $_]) => {
 		if (!$data.address) return '';
 		return typeof $data.address === 'string' ? $data.address : $data.address.toString();
 	});
@@ -107,7 +107,7 @@
 			const payto = new Payto(url).toJSONObject();
 			const { colorForeground, colorBackground } = defineColors(payto.colorForeground, payto.colorBackground);
 
-			paytoData = {
+			paytoData.set({
 				hostname: payto.hostname || 'ican',
 				paymentType: payto.hostname || 'ican',
 				value: payto.value ? Number(payto.value) : undefined,
@@ -127,12 +127,12 @@
 				recurring: payto.recurring || undefined,
 				rtl: payto.rtl || false,
 				deadline: payto.deadline || undefined
-			};
+			});
 
 			formatter = derived(
 				[constructorStore, hostnameStore],
 				([$constructor, $hostname]) => {
-					const currency = paytoData?.currency || '';
+					const currency = $paytoData?.currency || '';
 					return new ExchNumberFormat(undefined, {
 						style: 'currency',
 						currency,
@@ -186,13 +186,13 @@
 			});
 
 			paytoStore.subscribe((value) => {
-				paytoData = value;
+				paytoData.set(value);
 			});
 
 			formatter = derived(
 				[constructorStore, hostnameStore],
 				([$constructor, $hostname]) => {
-					const currency = paytoData?.currency || '';
+					const currency = $paytoData?.currency || '';
 					return new ExchNumberFormat(undefined, {
 						style: 'currency',
 						currency,
@@ -204,9 +204,10 @@
 	}
 
 	const formattedValue = derived(
-		formatter || writable(new ExchNumberFormat()),
-		($formatter) => {
-			const value = paytoData?.value;
+		[formatter || writable(new ExchNumberFormat()), paytoData],
+		([$formatter, $data]) => {
+			const value = $data?.value;
+
 			return value ? $formatter.format(Number(value)) : 'Custom Amount';
 		}
 	);
@@ -259,11 +260,11 @@
 	function linkLocation(location: string | Readable<string> | null | undefined): string {
 		if (!location) return '';
 		const loc = location instanceof Object ? location.toString() : location;
-		if (paytoData.network === 'geo') {
+		if ($paytoData.network === 'geo') {
 			return deviceSherlock.isDesktop
 				? `https://www.google.com/maps/dir/?api=1&origin=Current+Location&destination=${loc}`
 				: `geo:${loc}`;
-		} else if (paytoData.network === 'plus') {
+		} else if ($paytoData.network === 'plus') {
 			return deviceSherlock.isDesktop
 				? `https://www.google.com/maps/place/${loc}`
 				: `comgooglemaps://?q=${loc}`;
@@ -317,10 +318,10 @@
 
 <div>
 	{#if noData}
-		<div class="card rounded-lg shadow-md font-medium" style="background-color: {paytoData.colorBackground}; color: {paytoData.colorForeground};">
+		<div class="card rounded-lg shadow-md font-medium" style="background-color: {$paytoData.colorBackground}; color: {$paytoData.colorForeground};">
 			<div class="flex items-center p-4">
 				<div class="flex-grow flex justify-between items-center">
-					<span class="text-l font-medium font-semibold" style="color: {paytoData.colorForeground};">
+					<span class="text-l font-medium font-semibold" style="color: {$paytoData.colorForeground};">
 						PayTo
 					</span>
 				</div>
@@ -329,11 +330,11 @@
 				</div>
 			</div>
 		</div>
-	{:else if paytoData.deadline && (paytoData.deadline instanceof Object ? Number(paytoData.deadline) : paytoData.deadline) < Math.floor(Date.now() / 1000)}
-		<div class="card rounded-lg shadow-md font-medium" style="background-color: {paytoData.colorBackground}; color: {paytoData.colorForeground};">
+	{:else if $paytoData.deadline && ($paytoData.deadline instanceof Object ? Number($paytoData.deadline) : $paytoData.deadline) < Math.floor(Date.now() / 1000)}
+		<div class="card rounded-lg shadow-md font-medium" style="background-color: {$paytoData.colorBackground}; color: {$paytoData.colorForeground};">
 			<div class="flex items-center p-4">
 				<div class="flex-grow flex justify-between items-center">
-					<span class="text-l font-medium font-semibold" style="color: {paytoData.colorForeground};">
+					<span class="text-l font-medium font-semibold" style="color: {$paytoData.colorForeground};">
 						PayTo
 					</span>
 				</div>
@@ -343,41 +344,41 @@
 			</div>
 		</div>
 	{:else}
-		<div class="card rounded-lg shadow-md font-medium" style="background-color: {paytoData.colorBackground}; color: {paytoData.colorForeground};">
-			{#if paytoData.rtl !== undefined && paytoData.rtl === true}
+		<div class="card rounded-lg shadow-md font-medium" style="background-color: {$paytoData.colorBackground}; color: {$paytoData.colorForeground};">
+			{#if $paytoData.rtl !== undefined && $paytoData.rtl === true}
 				<div class="flex items-center p-4">
 					<div class="flex-grow flex justify-between items-center">
 						<div class="text-left">
-								<div class="text-sm uppercase">Payment</div>
-								<div class="font-semibold">
-									{#if paytoData.recurring}
-										<span class="uppercase">{paytoData.recurring}</span> Recurring
-									{:else}
-										One‑time
-									{/if}
-								</div>
+							<div class="text-sm uppercase">Payment</div>
+							<div class="font-semibold">
+								{#if $paytoData.recurring}
+									<span class="uppercase">{$paytoData.recurring}</span> Recurring
+								{:else}
+									One‑time
+								{/if}
+							</div>
 						</div>
-						<span class="text-l font-medium font-semibold" style="color: {paytoData.colorForeground};">
-							{#if paytoData.organization}
-								{paytoData.organization}
+						<span class="text-l font-medium font-semibold" style="color: {$paytoData.colorForeground};">
+							{#if $paytoData.organization}
+								{$paytoData.organization}
 							{:else}
 								PayTo
 							{/if}
 						</span>
 					</div>
-					{#if paytoData.organizationImage}
-						<img src={paytoData.organizationImage} alt="Organization" class="ml-4 max-w-10 max-h-10" />
+					{#if $paytoData.organizationImage}
+						<img src={$paytoData.organizationImage} alt="Organization" class="ml-4 max-w-10 max-h-10" />
 					{/if}
 				</div>
 			{:else}
 				<div class="flex items-center p-4">
-					{#if paytoData.organizationImage}
-						<img src={paytoData.organizationImage} alt="Organization" class="ml-4 max-w-10 max-h-10" />
+					{#if $paytoData.organizationImage}
+						<img src={$paytoData.organizationImage} alt="Organization" class="ml-4 max-w-10 max-h-10" />
 					{/if}
 					<div class="flex-grow flex justify-between items-center">
-						<span class="text-l font-medium font-semibold" style="color: {paytoData.colorForeground};">
-							{#if paytoData.organization}
-								{paytoData.organization}
+						<span class="text-l font-medium font-semibold" style="color: {$paytoData.colorForeground};">
+							{#if $paytoData.organization}
+								{$paytoData.organization}
 							{:else}
 								PayTo
 							{/if}
@@ -385,8 +386,8 @@
 						<div class="text-right">
 							<div class="text-sm uppercase">Payment</div>
 							<div class="font-semibold">
-								{#if paytoData.recurring}
-									Recurring <span class="uppercase">{paytoData.recurring}</span>
+								{#if $paytoData.recurring}
+									Recurring <span class="uppercase">{$paytoData.recurring}</span>
 								{:else}
 									One‑time
 								{/if}
@@ -396,10 +397,10 @@
 				</div>
 			{/if}
 
-			<div class="flex items-center mb-7 pt-12 pb-12 justify-center" style="background-color: {paytoData.colorForeground}; color: {paytoData.colorBackground}; width: 100%;">
+			<div class="flex items-center mb-7 pt-12 pb-12 justify-center" style="background-color: {$paytoData.colorForeground}; color: {$paytoData.colorBackground}; width: 100%;">
 				<div class="flex items-center ml-12 mr-12">
-					<div class="text-2xl font-medium text-wrap" style="color: {paytoData.colorBackground};">
-						{#if paytoData.value && Number(paytoData.value)>0}
+					<div class="text-2xl font-medium text-wrap" style="color: {$paytoData.colorBackground};">
+						{#if $paytoData.value && Number($paytoData.value)>0}
 							{$formattedValue}
 						{:else}
 							Custom Amount
@@ -410,34 +411,34 @@
 
 			<div class="m-4">
 				<div class="flex justify-between items-center mb-2">
-					<div class={`${paytoData.rtl !== undefined && paytoData.rtl === true ? 'text-right' : 'text-left'} w-full`}>
+					<div class={`${$paytoData.rtl !== undefined && $paytoData.rtl === true ? 'text-right' : 'text-left'} w-full`}>
 						<div class="text-sm">Payment type</div>
 						<div class="text-xl font-semibold">
-							{paytoData.paymentType && paytoData.paymentType === 'void' ? 'CASH' : paytoData.paymentType?.toUpperCase()}
-							{paytoData.network && `: ${ASSETS_NAMES[String(paytoData.network).toUpperCase()] ?? String(paytoData.network).toUpperCase()}`}
+							{$paytoData.paymentType && $paytoData.paymentType === 'void' ? 'CASH' : $paytoData.paymentType?.toUpperCase()}
+							{$paytoData.network && `: ${ASSETS_NAMES[String($paytoData.network).toUpperCase()] ?? String($paytoData.network).toUpperCase()}`}
 						</div>
 					</div>
 				</div>
-				{#if paytoData.item}
+				{#if $paytoData.item}
 					<div class="flex justify-between items-center mb-2">
-						<div class={`${paytoData.rtl !== undefined && paytoData.rtl === true ? 'text-right' : 'text-left'} w-full`}>
+						<div class={`${$paytoData.rtl !== undefined && $paytoData.rtl === true ? 'text-right' : 'text-left'} w-full`}>
 							<div class="text-sm">Item</div>
 							<div class="text-xl font-semibold break-words">
-								{paytoData.item}
+								{$paytoData.item}
 							</div>
 						</div>
 					</div>
 				{/if}
-				{#if paytoData.network === 'void' && (paytoData.address === 'geo' || paytoData.address === 'plus')}
+				{#if $paytoData.network === 'void' && ($paytoData.address === 'geo' || $paytoData.address === 'plus')}
 					<div class="flex justify-between items-center mb-2">
-						<div class={`${paytoData.rtl !== undefined && paytoData.rtl === true ? 'text-right' : 'text-left'} w-full`}>
+						<div class={`${$paytoData.rtl !== undefined && $paytoData.rtl === true ? 'text-right' : 'text-left'} w-full`}>
 							<div class="text-sm">Navigate</div>
 							<div class="text-xl font-semibold break-words">
-								<a class="transition duration-200 visited:text-gray-200 hover:text-gray-300 ${paytoData.location ? 'cursor-pointer' : 'cursor-not-allowed'}"
-									style="color: {paytoData.colorForeground};"
-									href={linkLocation(paytoData.location)}
-									target="_blank"
-									rel="noreferrer"
+								<a class="transition duration-200 visited:text-gray-200 hover:text-gray-300 ${$paytoData.location ? 'cursor-pointer' : 'cursor-not-allowed'}"
+									 style="color: {$paytoData.colorForeground};"
+									 href={linkLocation($paytoData.location)}
+									 target="_blank"
+									 rel="noreferrer"
 								>Open the navigation</a>
 							</div>
 						</div>
@@ -456,7 +457,7 @@
 				</div>
 			{/if}
 
-			<div class={`flex ${paytoData.rtl !== undefined && paytoData.rtl === true ? 'flex-row-reverse justify-between' : 'justify-between'} items-center p-4`}>
+			<div class={`flex ${$paytoData.rtl !== undefined && $paytoData.rtl === true ? 'flex-row-reverse justify-between' : 'justify-between'} items-center p-4`}>
 				<a
 					href={$currentBareUrlString}
 					rel="noreferrer"
@@ -468,7 +469,7 @@
 					<svg
 						viewBox="0 0 24 24"
 						xmlns="http://www.w3.org/2000/svg"
-						style="width: 30px; height: 30px; fill: none; stroke: {paytoData.colorForeground}; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;"
+						style="width: 30px; height: 30px; fill: none; stroke: {$paytoData.colorForeground}; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;"
 					>
 						<path d="M15 3h6v6"/>
 						<path d="M10 14 21 3"/>
