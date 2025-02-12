@@ -314,11 +314,6 @@
 			reader.removeAllListeners();
 		}
 	}
-
-	$: {
-		console.log($paytoData);
-	}
-
 </script>
 
 <div>
