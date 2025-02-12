@@ -16,6 +16,7 @@
 	import { constructor } from '$lib/store/constructor.store';
 	import { fade, fly } from 'svelte/transition';
 	import { addressSchema } from '$lib/validators/address.validator';
+	import * as net from 'node:net';
 
 	let addressValue = $state<string | undefined>(undefined);
 	let addressValidated = $state<boolean>(false);
@@ -157,8 +158,19 @@
 	}
 
 	function validateCurrentAddress() {
-		if ($constructor.networks.ican.network === 'other' && $constructor.networks.ican.other && addressValue) {
-			validateAddress(addressValue, $constructor.networks.ican.other);
+		const otherNetworkValue = $constructor.networks.ican.other;
+
+		if ($constructor.networks.ican.network === 'other') {
+			const isOtherMatchToNetworks = TRANSPORT.ican.find((network) => network.value.toLowerCase() === otherNetworkValue?.toLowerCase() || network.label.toLowerCase() === otherNetworkValue?.toLowerCase());
+
+			if (isOtherMatchToNetworks) {
+				$constructor.networks.ican.network = isOtherMatchToNetworks.value;
+				$constructor.networks.ican.other = undefined;
+			}
+		}
+
+		if ($constructor.networks.ican.network === 'other' && otherNetworkValue && addressValue) {
+			validateAddress(addressValue, otherNetworkValue);
 		} else if (addressValue) {
 			validateAddress(addressValue);
 		}
