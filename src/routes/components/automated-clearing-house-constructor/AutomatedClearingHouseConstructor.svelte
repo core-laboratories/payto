@@ -21,7 +21,7 @@
 	let routingValue = $state<string | undefined>(undefined);
 
 	$effect(() => {
-		if (!$constructor.networks.ach.accountNumber && !$constructor.networks.ach.routingNumber) {
+		if ($constructor.isCleared) {
 			accountValue = undefined;
 			routingValue = undefined;
 			accountError = false;
@@ -57,6 +57,7 @@
 				if (!result.success) {
 					accountError = true;
 					accountMsg = result.error.errors[0]?.message || 'Invalid account number format';
+					$constructor.networks.ach.accountNumber = undefined;
 				} else {
 					accountError = false;
 					accountMsg = '';
@@ -67,6 +68,7 @@
 				if (!result.success) {
 					routingError = true;
 					routingMsg = result.error.errors[0]?.message || 'Invalid routing number format';
+					$constructor.networks.ach.routingNumber = undefined;
 				} else {
 					routingError = false;
 					routingMsg = '';
