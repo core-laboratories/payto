@@ -15,7 +15,7 @@
 	let bicValue = $state<string | undefined>(undefined);
 
 	$effect(() => {
-		if (!$constructor.networks.bic.bic) {
+		if ($constructor.isCleared) {
 			bicValue = undefined;
 			bicError = false;
 			bicMsg = '';
@@ -36,7 +36,7 @@
 			if (!result.success) {
 				bicError = true;
 				bicMsg = result.error.errors[0]?.message || 'Invalid BIC format';
-				$constructor.networks.bic.bic = value;
+				$constructor.networks.bic.bic = undefined;
 			} else {
 				bicError = false;
 				bicMsg = '';
