@@ -127,6 +127,19 @@
 		plusCodeValue = value;
 		validatePlusCode(value);
 	}
+
+	function handleOtherNetworkInput(event: Event) {
+		const otherNetworkValue = $constructor.networks.void.other;
+
+		if ($constructor.networks.void.transport === 'other') {
+			const isOtherMatchToNetworks = TRANSPORT.void.find((network) => network.value.toLowerCase() === otherNetworkValue?.toLowerCase() || network.label.toLowerCase() === otherNetworkValue?.toLowerCase());
+
+			if (isOtherMatchToNetworks) {
+				$constructor.networks.void.transport = isOtherMatchToNetworks.value;
+				$constructor.networks.void.other = undefined;
+			}
+		}
+	}
 </script>
 
 <div class="flex flex-col gap-6" in:fly={{ y: 64 }}>
@@ -169,6 +182,7 @@
 						aria-labelledby="transport-network-label"
 						style="text-transform: uppercase"
 						bind:value={$constructor.networks.void.other}
+						oninput={handleOtherNetworkInput}
 					/>
 				</div>
 			{/if}
