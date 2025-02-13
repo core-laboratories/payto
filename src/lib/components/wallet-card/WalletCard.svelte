@@ -459,7 +459,7 @@
 					<div class="p-4 rounded-lg inline-flex justify-center items-center bg-white">
 						<div class="text-center">
 							<Qr param={$currentBareUrlString} />
-							<div class="text-sm mt-2 text-black">{$paytoData.paymentType.toUpperCase()} / {shortenAddress($paytoData.address)}</div>
+							<div class="text-sm mt-2 text-black">{$paytoData.network ? $paytoData.network.toString().toUpperCase() : $paytoData.paymentType.toUpperCase()}{$paytoData.address ? ` / ${shortenAddress($paytoData.address)}` : ''}</div>
 						</div>
 					</div>
 				</div>
