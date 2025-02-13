@@ -7,7 +7,7 @@
 </script>
 
 <script lang="ts">
-	import { derived, type Readable } from 'svelte/store';
+	import { derived, get, type Readable } from 'svelte/store';
 	import { constructor } from '$lib/store/constructor.store';
 	import { getAddress } from '$lib/helpers/get-address.helper';
 	import { getCurrency } from '$lib/helpers/get-currency.helper';
@@ -229,15 +229,10 @@
 		if (!$hostname) return null;
 		const network = $constructor.paymentType as ITransitionType;
 
-		return getWebLink({
-			network,
-			networkData: {
-				...$constructor.networks[network],
-				design: $constructor.design
-			},
-			design: true,
-			transform: false
-		});
+		const links = get(constructor.build(network));
+		const webLink = links.find((link) => link.label === 'Link');
+
+		return webLink?.value;
 	});
 
 	const currentUrl = derived(
@@ -247,7 +242,12 @@
 
 	const currentBareUrl = derived(
 		[bareUrl, dynamicBareUrl],
-		([$url, $dynamicBareUrl]) => $url || $dynamicBareUrl
+		([$url, $dynamicBareUrl]) => {
+			const safeUrl = $url ?? '';
+			const safeDynamicBareUrl = $dynamicBareUrl ?? '';
+
+			return safeDynamicBareUrl.length > safeUrl.length ? safeDynamicBareUrl : safeUrl;
+		}
 	);
 
 	const currentBareUrlString = derived(currentBareUrl, $url => $url || '');
@@ -313,6 +313,14 @@
 		} else {
 			reader.removeAllListeners();
 		}
+	}
+
+	function shortenAddress(address: string | Readable<string> | undefined): string {
+		if (!address) return '';
+
+		const extractedAddress = typeof address === 'string' ? address : get(address);
+
+		return extractedAddress.length <= 9 ? extractedAddress : `${extractedAddress.slice(0, 4)}...${extractedAddress.slice(-4)}`;
 	}
 </script>
 
@@ -451,7 +459,7 @@
 					<div class="p-4 rounded-lg inline-flex justify-center items-center bg-white">
 						<div class="text-center">
 							<Qr param={$currentBareUrlString} />
-							<div class="text-sm mt-2 text-black">{$barcodeValue}</div>
+							<div class="text-sm mt-2 text-black">{$paytoData.paymentType.toUpperCase()} / {shortenAddress($paytoData.address)}</div>
 						</div>
 					</div>
 				</div>
@@ -487,7 +495,7 @@
 					<svg
 						viewBox="0 0 40 40"
 						xmlns="http://www.w3.org/2000/svg"
-						style="fill-rule:evenodd; clip-rule:evenodd; stroke-linejoin:round; stroke-miterlimit:2; width:40px; height:40px; fill:{paytoData.colorForeground};"
+						style="fill-rule:evenodd; clip-rule:evenodd; stroke-linejoin:round; stroke-miterlimit:2; width:40px; height:40px; fill:{$paytoData.colorForeground};"
 					>
 						<path d="M29.608,0.832c4.694,9.378 4.407,18.245 4.37,19.181c0.037,0.815 0.324,9.694 -4.37,19.072c-0,0 -1.223,1.407 -3.04,0.563c-1.816,-0.844 -1.188,-3.093 -1.188,-3.093c0,0 3.804,-7.388 3.704,-16.462l0.001,-0.141c0.099,-9.075 -3.705,-16.59 -3.705,-16.59c0,0 -0.628,-2.249 1.188,-3.093c1.817,-0.843 3.04,0.563 3.04,0.563Zm-9.105,4.217c3.829,7.03 3.569,14.028 3.532,14.964c0.037,0.815 0.297,7.531 -3.527,15.129c0,0 -1.222,1.406 -3.039,0.563c-1.817,-0.844 -1.188,-3.093 -1.188,-3.093c0,-0 2.461,-3.522 2.86,-12.519l0.002,-0.141c-0.261,-8.998 -2.867,-12.372 -2.867,-12.372c0,0 -0.629,-2.249 1.188,-3.093c1.816,-0.844 3.039,0.562 3.039,0.562Zm-12.743,9.073c3.202,0 5.802,2.615 5.802,5.837c-0,3.221 -2.6,5.837 -5.802,5.837c-3.202,-0 -5.802,-2.616 -5.802,-5.837c-0,-3.222 2.6,-5.837 5.802,-5.837Z" style="fill-rule:nonzero;"/>
 					</svg>
