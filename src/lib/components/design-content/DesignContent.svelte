@@ -16,6 +16,7 @@
 	import { toast } from '$lib/components/toast';
 
 	export let hostname: ITransitionType | undefined = undefined;
+	export let authority: string = 'payto';
 
 	const barcodeTypes = [
 		{ label: 'QR Code', value: 'qr', ticker: 'QR' },
@@ -67,10 +68,9 @@
 					const url = URL.createObjectURL(result.data);
 					const a = document.createElement('a');
 					a.href = url;
-					a.download = `PayTo-${hostname ? hostname.toLowerCase() + '-' : ''}${$address ? $address.toLowerCase() + '-' : ''}${new Date(Date.now()).toISOString().replace(/[-T:]/g, '').slice(0, 12)}.pkpass`;
 					document.body.appendChild(a);
 					a.click();
-					toast({ message: 'Pass downloaded as ' + a.download, type: 'success' });
+					toast({ message: 'Pass downloaded successfully', type: 'success' });
 					document.body.removeChild(a);
 					URL.revokeObjectURL(url);
 				} else {
@@ -192,7 +192,7 @@
 				>
 					<input type="hidden" name="props" value={JSON.stringify($constructorStore.networks[hostname || 'ican'])} />
 					<input type="hidden" name="hostname" value={hostname} />
-
+					<input type="hidden" name="authority" value={authority} />
 					<button
 						class="w-full bs-12 py-2 px-3 text-center text-white border border-gray-700 bg-gray-700 hover:bg-gray-600 rounded-sm transition duration-200 outline-none focus-visible:ring focus-visible:ring-green-800 focus-visible:ring-offset-2 active:scale-(0.99) text-sm disabled:opacity-50 disabled:cursor-not-allowed"
 						type="submit"

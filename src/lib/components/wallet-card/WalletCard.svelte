@@ -422,8 +422,7 @@
 					<div class={`${$paytoData.rtl !== undefined && $paytoData.rtl === true ? 'text-right' : 'text-left'} w-full`}>
 						<div class="text-sm">Payment type</div>
 						<div class="text-xl font-semibold">
-							{$paytoData.paymentType && $paytoData.paymentType === 'void' ? 'CASH' : $paytoData.paymentType?.toUpperCase()}
-							{$paytoData.network && `: ${ASSETS_NAMES[String($paytoData.network).toUpperCase()] ?? String($paytoData.network).toUpperCase()}`}
+							{$paytoData.paymentType && $paytoData.paymentType === 'void' ? 'CASH' : $paytoData.paymentType?.toUpperCase()}{$paytoData.network && `: ${ASSETS_NAMES[String($paytoData.network).toUpperCase()] ?? String($paytoData.network).toUpperCase()}`}
 						</div>
 					</div>
 				</div>

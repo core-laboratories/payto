@@ -3,7 +3,7 @@
 	import { fly } from 'svelte/transition';
 	import { deviceSherlock } from 'device-sherlock';
 
-	const words = ['ICAN', 'IBAN', 'ACH', 'UPI', 'PIX', 'BIC', 'CASH', '$€¥₹₽'];
+	const words = ['ICAN', 'IBAN', 'ACH', 'UPI', 'PIX', 'CASH', '$€¥₹₽', 'Money'];
 	let currentText = '';
 	let isAnimating = false;
 	let isAddingLetters = true;
@@ -61,7 +61,7 @@
 					<span class="text-core">Pay</span>
 					<span class="text-seagreen">To:</span>
 					{#if currentText}
-						<span class="text-green-200/60 ms-2 text-4xl lg:text-5xl flex items-center">
+						<span class="text-zinc-400/60 ms-2 text-4xl lg:text-5xl flex items-center">
 							{#each currentText.split('') as letter, i (i)}
 								<span
 									class="inline-block relative"
@@ -82,6 +82,6 @@
 				</span>
 			</h1>
 		</a>
-		<span class="text-core arimo-400 text-lg">Direct Asset Transfers</span>
+		<span class="text-core arimo-400 text-lg italic">Direct Asset Transfers</span>
 	</div>
 </header>
