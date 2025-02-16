@@ -3,6 +3,7 @@ import type { RequestEvent } from '@sveltejs/kit';
 import { calculateColorDistance } from '$lib/helpers/euclidean-distance.helper';
 import { getWebLink } from '$lib/helpers/generate.helper';
 import { getCurrency } from '$lib/helpers/get-currency.helper';
+import { getExplorerUrl } from '$lib/helpers/tx-explorer.helper';
 import { KV } from '$lib/helpers/kv.helper';
 import ExchNumberFormat from 'exchange-rounding';
 import JSZip from 'jszip';
@@ -131,6 +132,7 @@ export const actions = {
 			const org = props.design.org || (kvConfig.name || authority.toUpperCase());
 			const subscriptionAddress = props.destination;
 			const fileid = `${authority.toLowerCase()}-${subscriptionAddress}-${props.destination}-${hostname}-${props.network}-${new Date(Date.now()).toISOString().replace(/[-T:]/g, '').slice(0, 12)}`;
+			const explorerUrl = getExplorerUrl(props.network, { address: props.destination });
 			const customCurrencyData = kvConfig.customCurrency || {};
 
 			if (hostname === 'void' && props.network === 'plus') {
@@ -259,20 +261,26 @@ export const actions = {
 					...(false ? [{
 						key: 'balance',
 						label: 'Balance',
-						value: 'PRO version only'
+						value: explorerUrl ? `Balance: %balance% View on ${props.network.toUpperCase()}: ${explorerUrl}` : `Balance: %balance%`,
+						dataDetectorTypes: ["PKDataDetectorTypeLink"]
 					}] : []),
 					{
 						key: 'refill-address',
-						label: 'Refill Address',
-						value: 'https://coreport.net/form?address=' + props.destination,
+						label: 'Refill',
+						value: `Refill this address: https://coreport.net/form?address=${props.destination}`,
 						dataDetectorTypes: ["PKDataDetectorTypeLink"]
 					},
 					...(false ? [{
 						key: 'pro',
-						label: 'Activate PRO version',
-						value: 'https://payto.money/pro/',
+						label: 'PRO version',
+						value: 'Open the offer: https://payto.money/pro/',
 						dataDetectorTypes: ["PKDataDetectorTypeLink"]
-					}] : [])
+					}] : []),
+					{
+						key: 'issuer',
+						label: 'Issuer',
+						value: `This pass is issued by: ${props.design.org}`
+					}
 				]
 			};
 
