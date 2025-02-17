@@ -252,6 +252,19 @@
 
 	const currentBareUrlString = derived(currentBareUrl, $url => $url || '');
 
+	const qrcodeValue = derived(currentBareUrlString, $url => {
+		const searchParams = new URLSearchParams($url);
+
+		searchParams.delete('org');
+		searchParams.delete('item');
+		searchParams.delete('color-f');
+		searchParams.delete('color-b');
+		searchParams.delete('barcode');
+		searchParams.delete('rtl');
+
+		return decodeURIComponent(searchParams.toString());
+	});
+
 	const barcodeValue = derived(
 		[networkStore, addressStore],
 		([$network, $address]) => `${$network}${formatAdr($address)}`
@@ -458,7 +471,7 @@
 				<div class="flex justify-center items-center m-4 mt-5">
 					<div class="p-4 rounded-lg inline-flex justify-center items-center bg-white">
 						<div class="text-center">
-							<Qr param={$currentBareUrlString} />
+							<Qr param={$qrcodeValue} />
 							<div class="text-sm mt-2 text-black">{$paytoData.network ? $paytoData.network.toString().toUpperCase() : $paytoData.paymentType.toUpperCase()}{$paytoData.address ? ` / ${shortenAddress($paytoData.address)}` : ''}</div>
 						</div>
 					</div>
