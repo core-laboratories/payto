@@ -11,6 +11,7 @@
 	import { derived, get, writable } from 'svelte/store';
 	import { toast } from '$lib/components/toast';
 	import { page } from '$app/state';
+	import { onMount } from 'svelte';
 
 	let type = writable<ITransitionType>('ican');
 	let designEnabled = writable(false);
@@ -19,9 +20,19 @@
 	let currentShow = writable(false);
 	let authority = writable('payto');
 	const urlAuthority: string | undefined = page.data.authority;
+
 	if (urlAuthority && urlAuthority.length < 10 && /^[a-z0-9]{3,}$/.test(urlAuthority)) {
 		authority.set(urlAuthority);
 	}
+
+	onMount(() => {
+		const pageHash = page.url.hash.replace('#', '');
+		const hasPass = pageHash.includes('pass=1') || page.data.hasPass;
+
+		if (hasPass) {
+			designEnabled.set(true)
+		}
+	})
 
 	const outputs = derived(
 		[type, constructor],

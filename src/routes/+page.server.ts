@@ -75,6 +75,7 @@ const formatter = (currency: string | undefined, customCurrencyData = {}) => {
 export async function load({ url }) {
 	const fullUrl = new URL(url.href);
 	const authority = url.searchParams.get('authority') ?? undefined;
+	const hasPass = url.searchParams.get('pass') === '1';
 
 	if (fullUrl.hostname === 'payto.money') {
 		const hasValidProtocol = fullUrl.protocol === 'payto.money:';
@@ -87,6 +88,7 @@ export async function load({ url }) {
 
 	return {
 		authority,
+		hasPass,
 	};
 }
 

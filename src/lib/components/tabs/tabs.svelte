@@ -16,8 +16,18 @@
 		PixConstructor,
 		VoidPaymentTargetConstructor
 	} from '../../../routes/components';
+	import { page } from '$app/state';
+
 
 	export let selectedTab: string = 'ican';
+
+	onMount(() => {
+		const preSelectedTab = page.url.hash.replace('#', '').split('?')[0] || undefined;
+
+		if (preSelectedTab) {
+			handleTabChange(preSelectedTab);
+		}
+	})
 
 	const paymentTypes: Record<string, { label: string; ticker: string; component: any }> = {
 		ican: { label: getObjectByType(TYPES, 'ican')?.label, ticker: getObjectByType(TYPES, 'ican')?.description, component: InternationalCryptoAccountNumberConstructor },
