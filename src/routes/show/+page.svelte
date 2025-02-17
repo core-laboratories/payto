@@ -14,7 +14,7 @@
 
 <Page>
 	<Row>
-		<div class="max-w-full md:max-w-lg">
+		<div class="max-w-full w-[400px] max-[480px]:w-full">
 			{#if $isClient}
 				<WalletCard url={data.urlParam} />
 			{/if}
