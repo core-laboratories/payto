@@ -50,6 +50,87 @@ The production build can be previewed using `npm run preview`.
 
 > For deploying your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) suited to your target environment.
 
+## Pro features
+
+You can see the [Pro plans](https://payto.money/pro) for more information.
+
+To customize the app, you can use the `kvConfig` object in the `src/routes/+page.server.ts` file.
+
+Uploading the custom authority requires teamId, certificate, and private key obtained from Apple. We are encrypting the private key with AES-256-GCM to avoid exposing it in extreme cases.
+
+Encryption function:
+
+```ts
+import forge from 'node-forge';
+
+function encrypt(plaintext: string, key: string): { iv: string; encrypted: string } {
+    const iv = forge.random.getBytesSync(12); // 96-bit IV for AES-GCM
+    const cipher = forge.cipher.createCipher('AES-GCM', key);
+    cipher.start({ iv });
+    cipher.update(forge.util.createBuffer(plaintext));
+    cipher.finish();
+
+    const encrypted = cipher.output.toHex();
+    const tag = cipher.mode.tag.toHex(); // Authentication tag for GCM mode
+
+    return { iv: forge.util.bytesToHex(iv), encrypted: encrypted + tag };
+}
+
+// Example usage: forge.random.getBytesSync(32); (256-bit key)
+const key = '…'; // We will define this
+const plaintext = 'Sensitive data';
+const { iv, encrypted } = encrypt(plaintext, key);
+
+console.log('IV:', iv);
+console.log('Encrypted:', encrypted);
+```
+
+We require the `encryptedKey` object to be uploaded to the server.
+
+Issuing authorities[^authority] are delivering object as this example:
+
+```json
+{
+    "name": "PayTo",
+    "certificate": "…",
+    "privateKey": {
+        "encrypted": "…",
+        "iv": "…"
+    },
+    "teamId": "…",
+    "identifier": "pass.money.payto",
+    "icons": {
+        "icon": "https://payto.money/icons/icon.png",
+        "icon2x": "https://payto.money/icons/icon@2x.png",
+        "icon3x": "https://payto.money/icons/icon@3x.png",
+        "logo": "https://payto.money/icons/logo.png",
+        "logo2x": "https://payto.money/icons/logo@2x.png"
+    },
+    "theme": {
+        "colorB": "#77bc65",
+        "colorF": "#192a14",
+        "colorTxt": "#192a14"
+    },
+    "customCurrencyData": {
+        "XCB": {
+            "symbol": "₡",
+            "narrowSymbol": "₡",
+            "code": "XCB",
+            "name": "CoreCoin",
+            "defaultDecimals": 2
+        }
+    }
+}
+```
+
+[^authority] are available for the [Business plan](https://payto.money/pro).
+
+After successful registering the authority, you need to append to the url the `authority` parameter.
+
+```txt
+https://payto.money?authority=…
+```
+
 ## License
 
 This project is licensed under the [CORE](LICENSE) License.

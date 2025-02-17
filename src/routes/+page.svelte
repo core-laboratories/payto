@@ -10,12 +10,19 @@
 	import { constructor } from '$lib/store/constructor.store';
 	import { derived, get, writable } from 'svelte/store';
 	import { toast } from '$lib/components/toast';
+	import { page } from '$app/state';
 
 	let type = writable<ITransitionType>('ican');
 	let designEnabled = writable(false);
 	let currentSentence = writable('');
 	let currentLink = writable('');
 	let currentShow = writable(false);
+	let authority = writable('payto');
+	const urlAuthority: string | undefined = page.data.authority;
+	if (urlAuthority && urlAuthority.length < 10 && /^[a-z0-9]{3,}$/.test(urlAuthority)) {
+		authority.set(urlAuthority);
+	}
+
 	const outputs = derived(
 		[type, constructor],
 		([$type, $constructor]) => {
@@ -152,10 +159,20 @@
 							<WalletCard
 								bind:hostname={$type}
 							/>
+							<div class="flex flex-col mt-4 gap-4">
+								<div class="w-full px-4 py-3 text-sm border rounded border-gray-700 bg-gray-800 text-gray-300" role="alert">
+									<h3 class="mb-1 font-semibold">Issuer</h3>
+									<p>Current issuing authority is <span class="font-bold">{$authority.toUpperCase()}</span>.</p>
+								</div>
+								<a href="/pro" target="_blank" rel="noreferrer" class="button is-full bs-12 py-2 px-3 text-center !text-white border border-gray-700 bg-gray-700 opacity-50 rounded-md text-sm hover:opacity-100 transition duration-200 font-bold">
+									Get <span class="text-green-300 italic">Pay</span><span class="text-emerald-500 italic">To</span><span class="text-green-300 italic">:Pro</span>
+								</a>
+							</div>
 						</div>
 						<div class="w-full flex-1 min-w-0">
 							<DesignContent
 								bind:hostname={$type}
+								authority={$authority.toLowerCase()}
 							/>
 						</div>
 					</div>

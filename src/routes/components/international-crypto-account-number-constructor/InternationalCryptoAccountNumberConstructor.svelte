@@ -311,7 +311,10 @@
 	</div>
 
 	<FieldGroup>
-		<FieldGroupLabel>Address / <abbr title="Name Service">NS</abbr> *</FieldGroupLabel>
+		<FieldGroupLabel>Address / <span class="relative overflow-hidden cursor-help group hover:overflow-visible focus-visible:outline-none border-b border-dotted border-gray-400" aria-describedby="tooltip-ns">
+			NS
+			<span role="tooltip" id="tooltip-ns" class="invisible absolute bottom-full left-1/2 z-10 mb-2 w-48 -translate-x-1/2 rounded bg-slate-700 p-2 text-xs text-white opacity-0 transition-all before:invisible before:absolute before:left-1/2 before:top-full before:z-10 before:mb-2 before:-ml-1 before:border-x-4 before:border-t-4 before:border-x-transparent before:border-t-slate-700 before:opacity-0 before:transition-all before:content-[''] group-hover:visible group-hover:block group-hover:opacity-100 group-hover:before:visible group-hover:before:opacity-100">Name Service</span>
+		</span> *</FieldGroupLabel>
 		<div class="relative">
 			<FieldGroupText
 				placeholder={getPlaceholder($constructor.networks.ican.network)}

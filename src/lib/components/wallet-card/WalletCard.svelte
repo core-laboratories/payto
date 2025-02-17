@@ -435,11 +435,27 @@
 					<div class={`${$paytoData.rtl !== undefined && $paytoData.rtl === true ? 'text-right' : 'text-left'} w-full`}>
 						<div class="text-sm">Payment type</div>
 						<div class="text-xl font-semibold">
-							{$paytoData.paymentType && $paytoData.paymentType === 'void' ? 'CASH' : $paytoData.paymentType?.toUpperCase()}
-							{$paytoData.network && `: ${ASSETS_NAMES[String($paytoData.network).toUpperCase()] ?? String($paytoData.network).toUpperCase()}`}
+							{$paytoData.paymentType && $paytoData.paymentType === 'void' ? 'CASH' : $paytoData.paymentType?.toUpperCase()}{$paytoData.network && `: ${ASSETS_NAMES[String($paytoData.network).toUpperCase()] ?? String($paytoData.network).toUpperCase()}`}
 						</div>
 					</div>
 				</div>
+				{#if $paytoData.currency}
+				<div class="flex justify-between items-center mb-2">
+					<div class={`${$paytoData.rtl !== undefined && $paytoData.rtl === true ? 'text-right' : 'text-left'} w-full`}>
+						<div class="text-sm">Asset</div>
+						<div class="text-xl font-semibold">
+							{$paytoData.currency &&
+								`${ASSETS_NAMES[String($paytoData.currency).toUpperCase()] ??
+									(String($paytoData.currency).length > 8
+										? `${String($paytoData.currency).substring(0, 4).toUpperCase()}…${String($paytoData.currency).substring(String($paytoData.currency).length - 4).toUpperCase()}`
+										: String($paytoData.currency).toUpperCase()
+									)
+								}`
+							}
+						</div>
+					</div>
+				</div>
+				{/if}
 				{#if $paytoData.item}
 					<div class="flex justify-between items-center mb-2">
 						<div class={`${$paytoData.rtl !== undefined && $paytoData.rtl === true ? 'text-right' : 'text-left'} w-full`}>

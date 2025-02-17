@@ -3,10 +3,14 @@ import type { RequestEvent } from '@sveltejs/kit';
 import { calculateColorDistance } from '$lib/helpers/euclidean-distance.helper';
 import { getWebLink } from '$lib/helpers/generate.helper';
 import { getCurrency } from '$lib/helpers/get-currency.helper';
+import { getExplorerUrl } from '$lib/helpers/tx-explorer.helper';
+import { KV } from '$lib/helpers/kv.helper';
 import ExchNumberFormat from 'exchange-rounding';
 import JSZip from 'jszip';
 import forge from 'node-forge';
-import { PRIVATE_PASS_CERTIFICATE, PRIVATE_PASS_PRIVATE_KEY, PRIVATE_PASS_TEAM_IDENTIFIER } from '$env/static/private';
+
+// @ts-expect-error: Module '"$env/static/private"' has no exported member 'PRIVATE_DECRYPTION_KEY'.
+import { PRIVATE_DECRYPTION_KEY } from '$env/static/private';
 
 // @ts-expect-error: Module is untyped
 import pkg from 'open-location-code/js/src/openlocationcode';
@@ -15,6 +19,30 @@ const {decode} = pkg;
 type Actions = {
 	generatePass: (event: RequestEvent) => Promise<Response>;
 };
+
+function decrypt(encrypted: string, iv: string): string {
+	const encryptedData = encrypted.slice(0, -32); // Extract encrypted data (excluding tag)
+	const tag = encrypted.slice(-32); // Extract authentication tag
+
+	// Convert hex strings to ByteStringBuffer
+	const ivBytes = forge.util.hexToBytes(iv);
+	const tagBytes = forge.util.hexToBytes(tag);
+
+	const decipher = forge.cipher.createDecipher('AES-GCM', PRIVATE_DECRYPTION_KEY);
+	decipher.start({
+		iv: forge.util.createBuffer(ivBytes), // Convert IV to ByteStringBuffer
+		tag: forge.util.createBuffer(tagBytes), // Convert tag to ByteStringBuffer
+	});
+
+	decipher.update(forge.util.createBuffer(forge.util.hexToBytes(encryptedData)));
+	const result = decipher.finish();
+
+	if (!result) {
+		throw new Error('Decryption failed: Authentication tag mismatch');
+	}
+
+	return decipher.output.toString();
+}
 
 function validColors(colorF: string, colorB: string) {
 	const distance = calculateColorDistance(colorF, colorB);
@@ -35,11 +63,12 @@ function getLocationCode(plusCode: string): [number, number] {
 	return [codeArea.latitudeCenter, codeArea.longitudeCenter];
 }
 
-const formatter = (currency: string | undefined) => {
+const formatter = (currency: string | undefined, customCurrencyData = {}) => {
 	return new ExchNumberFormat(undefined, {
 		style: 'currency',
 		currency: currency || '',
-		currencyDisplay: 'symbol'
+		currencyDisplay: 'symbol',
+		customCurrency: customCurrencyData,
 	});
 }
 
@@ -65,14 +94,22 @@ export const actions = {
 			throw error(403, 'Unauthorized request origin');
 		}
 
-		if (!PRIVATE_PASS_CERTIFICATE || !PRIVATE_PASS_PRIVATE_KEY || !PRIVATE_PASS_TEAM_IDENTIFIER) {
-			throw error(500, 'Missing Pass configuration');
-		}
-
 		try {
 			const formData = await request.formData();
 			const props = JSON.parse(formData.get('props') as string);
 			const hostname = formData.get('hostname') as string;
+			const authority = (formData.get('authority') as string).toLowerCase() || 'payto';
+
+			// Load KV values
+			const kvConfig = await KV.get(authority);
+			if (!kvConfig || !kvConfig.certificate || !kvConfig.privateKey || !kvConfig.teamId) {
+				throw error(400, `Invalid or missing configuration for authority: ${authority}`);
+			}
+			const privateKey = decrypt(kvConfig.privateKey.encrypted, kvConfig.privateKey.iv);
+			if (!privateKey) {
+				throw error(400, `Invalid or missing private key for authority: ${authority}`);
+			}
+
 
 			// Required fields
 			const requiredFields = ['props', 'hostname'];
@@ -92,25 +129,29 @@ export const actions = {
 
 			// Basic pass data structure
 			const bareLink = getLink(hostname, props);
-			const org = props.design.org || 'PayTo';
+			const org = props.design.org || (kvConfig.name || authority.toUpperCase());
 			const subscriptionAddress = props.destination;
+			const fileid = `${authority.toLowerCase()}-${subscriptionAddress}-${props.destination}-${hostname}-${props.network}-${new Date(Date.now()).toISOString().replace(/[-T:]/g, '').slice(0, 12)}`;
+			const explorerUrl = getExplorerUrl(props.network, { address: props.destination });
+			const customCurrencyData = kvConfig.customCurrency || {};
+
 			if (hostname === 'void' && props.network === 'plus') {
 				const plusCoordinates = getLocationCode(props.params.loc?.value || '');
 				props.params.lat = { value: plusCoordinates[0] };
 				props.params.lon = { value: plusCoordinates[1] };
 			}
 			const passData = {
-				serialNumber: `PayTo-${subscriptionAddress}-${props.destination}-${new Date(Date.now()).toISOString().replace(/[-T:]/g, '').slice(0, 12)}`,
+				serialNumber: fileid,
 				formatVersion: 1,
-				passTypeIdentifier: 'pass.money.payto',
-				teamIdentifier: PRIVATE_PASS_TEAM_IDENTIFIER,
+				passTypeIdentifier: kvConfig.identifier || 'pass.money.payto',
+				teamIdentifier: kvConfig.teamId,
 				organizationName: org,
 				logoText: org,
-				description: `PayTo: ${hostname ? hostname.toUpperCase() + ' / ' : ''} ${props.design.item ? props.design.item : 'Direct Asset Transfers'}`,
+				description: `${org} ${hostname ? hostname.toUpperCase() + ' / ' : ''} ${props.design.item ? props.design.item : 'Direct Asset Transfers'}`,
 				expirationDate: new Date((props.params.dl.value || (Date.now() + 365 * 24 * 60 * 60)) * 1000).toISOString(),
-				backgroundColor: validColors(props.design.colorB, props.design.colorF) ? props.design.colorB : '#77bc65',
-				foregroundColor: validColors(props.design.colorF, props.design.colorB) ? props.design.colorF : '#192a14',
-				labelColor: validColors(props.design.colorF, props.design.colorB) ? props.design.colorF : '#192a14',
+				backgroundColor: validColors(props.design.colorB, props.design.colorF) ? props.design.colorB : (kvConfig.theme.colorB || '#77bc65'),
+				foregroundColor: validColors(props.design.colorF, props.design.colorB) ? props.design.colorF : (kvConfig.theme.colorF || '#192a14'),
+				labelColor: validColors(props.design.colorF, props.design.colorB) ? props.design.colorF : (kvConfig.theme.colorTxt || '#192a14'),
 				url: bareLink,
 				...(hostname === 'void' && (props.network === 'geo' || props.network === 'plus') ? {
 					locations: [
@@ -176,7 +217,7 @@ export const actions = {
 						label: 'Amount',
 						value:
 							props.params.amount.value && Number(props.params.amount.value) > 0 ?
-								formatter(getCurrency(props.network, hostname as ITransitionType)).format(Number(props.params.amount.value)) :
+								formatter(getCurrency(props.network, hostname as ITransitionType), customCurrencyData).format(Number(props.params.amount.value)) :
 								`Custom Amount`
 					}
 				],
@@ -203,7 +244,7 @@ export const actions = {
 						label: 'Split',
 						value: props.split.isPercent ?
 							`${Number(props.split.value)}%` :
-							formatter(getCurrency(props.network, hostname as ITransitionType)).format(Number(props.split.value))
+							formatter(getCurrency(props.network, hostname as ITransitionType), customCurrencyData).format(Number(props.split.value))
 					}] : []),
 					...(props.params.message?.value ? [{
 						key: 'message',
@@ -220,20 +261,26 @@ export const actions = {
 					...(false ? [{
 						key: 'balance',
 						label: 'Balance',
-						value: 'PRO version only'
-					}] : []),
-					...(hostname === 'ican' && props.network === 'xcb' ? [{
-						key: 'refill-address',
-						label: 'Refill Address',
-						value: 'https://payto.money/refill/usdx/' + props.destination,
+						value: explorerUrl ? `Balance: %balance% View on ${props.network.toUpperCase()}: ${explorerUrl}` : `Balance: %balance%`,
 						dataDetectorTypes: ["PKDataDetectorTypeLink"]
 					}] : []),
+					{
+						key: 'refill-address',
+						label: 'Refill',
+						value: `Refill this address: https://coreport.net/form?address=${props.destination}`,
+						dataDetectorTypes: ["PKDataDetectorTypeLink"]
+					},
 					...(false ? [{
 						key: 'pro',
-						label: 'Activate PRO version',
-						value: 'https://payto.money/pro/' + subscriptionAddress,
+						label: 'PRO version',
+						value: 'Open the offer: https://payto.money/pro/',
 						dataDetectorTypes: ["PKDataDetectorTypeLink"]
-					}] : [])
+					}] : []),
+					{
+						key: 'issuer',
+						label: 'Issuer',
+						value: `This pass is issued by: ${props.design.org}`
+					}
 				]
 			};
 
@@ -241,23 +288,30 @@ export const actions = {
 			zip.file('pass.json', JSON.stringify(passData, null, 2));
 
 			// Add default images (should be loaded from assets)
-			const defaultImages = {
-				'icon.png': await fetch('https://payto.money/icons/icon.png')
-					.then(res => res.ok ? res.arrayBuffer() : fetch('/icons/icon.png').then(r => r.arrayBuffer()))
-					.catch(() => fetch('/icons/icon.png').then(r => r.arrayBuffer())),
-				'icon@2x.png': await fetch('https://payto.money/icons/icon@2x.png')
-					.then(res => res.ok ? res.arrayBuffer() : fetch('/icons/icon@2x.png').then(r => r.arrayBuffer()))
-					.catch(() => fetch('/icons/icon@2x.png').then(r => r.arrayBuffer())),
-				'icon@3x.png': await fetch('https://payto.money/icons/icon@3x.png')
-					.then(res => res.ok ? res.arrayBuffer() : fetch('/icons/icon@3x.png').then(r => r.arrayBuffer()))
-					.catch(() => fetch('/icons/icon@3x.png').then(r => r.arrayBuffer())),
-				'logo.png': await fetch('https://payto.money/icons/logo.png')
-					.then(res => res.ok ? res.arrayBuffer() : fetch('/icons/logo.png').then(r => r.arrayBuffer()))
-					.catch(() => fetch('/icons/logo.png').then(r => r.arrayBuffer())),
-				'logo@2x.png': await fetch('https://payto.money/icons/logo@2x.png')
-					.then(res => res.ok ? res.arrayBuffer() : fetch('/icons/logo@2x.png').then(r => r.arrayBuffer()))
-					.catch(() => fetch('/icons/logo@2x.png').then(r => r.arrayBuffer()))
-			};
+			const defaultImages: Record<string, ArrayBuffer> = {};
+
+			await Promise.all([
+				fetch(kvConfig.icons.icon)
+					.then(res => res.ok ? res.arrayBuffer() : null)
+					.then(buffer => { if (buffer) defaultImages['icon.png'] = buffer; })
+					.catch(() => {}),
+				fetch(kvConfig.icons.icon2x)
+					.then(res => res.ok ? res.arrayBuffer() : null)
+					.then(buffer => { if (buffer) defaultImages['icon@2x.png'] = buffer; })
+					.catch(() => {}),
+				fetch(kvConfig.icons.icon3x)
+					.then(res => res.ok ? res.arrayBuffer() : null)
+					.then(buffer => { if (buffer) defaultImages['icon@3x.png'] = buffer; })
+					.catch(() => {}),
+				fetch(kvConfig.icons.logo)
+					.then(res => res.ok ? res.arrayBuffer() : null)
+					.then(buffer => { if (buffer) defaultImages['logo.png'] = buffer; })
+					.catch(() => {}),
+				fetch(kvConfig.icons.logo2x)
+					.then(res => res.ok ? res.arrayBuffer() : null)
+					.then(buffer => { if (buffer) defaultImages['logo@2x.png'] = buffer; })
+					.catch(() => {})
+			]);
 
 			// Add images to zip
 			for (const [fileName, fileContent] of Object.entries(defaultImages)) {
@@ -275,8 +329,8 @@ export const actions = {
 			}
 			zip.file('manifest.json', JSON.stringify(manifest, null, 2));
 
-			// Create signature
-			const privateKeyObj = forge.pki.privateKeyFromPem(PRIVATE_PASS_PRIVATE_KEY);
+			// Create signature using KV private key
+			const privateKeyObj = forge.pki.privateKeyFromPem(kvConfig.privateKey);
 			const manifestText = JSON.stringify(manifest, null, 2);
 			const signature = forge.util.encode64(
 				privateKeyObj.sign(forge.md.sha1.create().update(manifestText))
@@ -289,7 +343,7 @@ export const actions = {
 			return new Response(pkpassBlob, {
 				headers: {
 					'Content-Type': 'application/vnd.apple.pkpass',
-					'Content-Disposition': `attachment; filename="payto-${Date.now()}.pkpass"`
+					'Content-Disposition': `attachment; filename="${fileid}.pkpass"`
 				}
 			});
 		} catch (err) {
