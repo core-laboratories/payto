@@ -479,7 +479,7 @@
 						</div>
 					</div>
 				{/if}
-				{#if $paytoData.network === 'void' && ($paytoData.address === 'geo' || $paytoData.address === 'plus')}
+				{#if ($paytoData.network === 'geo' || $paytoData.network === 'plus')}
 					<div class="flex justify-between items-center mb-2">
 						<div class={`${$paytoData.rtl !== undefined && $paytoData.rtl === true ? 'text-right' : 'text-left'} w-full`}>
 							<div class="text-sm">Navigate</div>
