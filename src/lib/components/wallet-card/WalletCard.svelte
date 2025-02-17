@@ -328,12 +328,25 @@
 		}
 	}
 
+	function truncateToTwoDecimals(num: number) {
+		return parseFloat(num.toFixed(3).slice(0, -1));
+	}
+
 	function shortenAddress(address: string | Readable<string> | undefined): string {
 		if (!address) return '';
+		let finalAddress = '';
 
-		const extractedAddress = typeof address === 'string' ? address : get(address);
+		if ($paytoData.network === 'geo') {
+			const [lat, lon] = address.toString().split(',');
+			finalAddress = `${truncateToTwoDecimals(Number(lat))}, ${truncateToTwoDecimals(Number(lon))}`;
+		} else if ($paytoData.network === 'plus') {
+			finalAddress = address.toString().slice(0, 8);
+		} else {
+			const extractedAddress = typeof address === 'string' ? address : get(address);
+			finalAddress = extractedAddress.length <= 9 ? extractedAddress : `${extractedAddress.slice(0, 4)}...${extractedAddress.slice(-4)}`
+		}
 
-		return extractedAddress.length <= 9 ? extractedAddress : `${extractedAddress.slice(0, 4)}...${extractedAddress.slice(-4)}`;
+		return finalAddress;
 	}
 </script>
 
