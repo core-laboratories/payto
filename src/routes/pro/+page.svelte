@@ -68,7 +68,7 @@
 				</h3>
 				<h4>
 					<span class="text-2xl">CTN</span>
-					<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500 lg:text-5xl">Ƈ 30,000</span>
+					<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500 lg:text-5xl">Ƈ 40,000</span>
 					<span class="text-sm">/month</span>
 				</h4>
 				<a href="mailto:sales@payto.money" class="inline-flex items-center justify-center w-full h-12 gap-2 px-6 text-sm font-bold tracking-wide !text-white transition duration-300 rounded shadow-sm whitespace-nowrap bg-emerald-500 shadow-emerald-400 hover:bg-emerald-600 hover:shadow-md hover:shadow-emerald-400 focus:bg-emerald-700 focus:shadow-md focus:shadow-emerald-400 focus-visible:outline-none !no-underline">

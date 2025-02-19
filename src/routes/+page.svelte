@@ -237,7 +237,7 @@
 						Licensed under the
 						<a
 							class="transition duration-200 visited:text-gray-200 hover:text-gray-300"
-							href="https://github.com/core-laboratories/core-license/blob/master/LICENSE"
+							href="https://github.com/bchanhub/core-license/blob/master/LICENSE"
 							target="_blank"
 							rel="noreferrer"
 						>CORE License</a>.

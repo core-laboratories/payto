@@ -158,6 +158,8 @@ export const actions = {
 				foregroundColor: validColors(props.design.colorF, props.design.colorB) ? props.design.colorF : (kvConfig.theme.colorF || '#192a14'),
 				labelColor: validColors(props.design.colorF, props.design.colorB) ? props.design.colorF : (kvConfig.theme.colorTxt || '#192a14'),
 				url: bareLink,
+				webServiceURL: 'https://passapi.payto.money',
+				authenticationToken: 'your-auth-token',
 				...(hostname === 'void' && (props.network === 'geo' || props.network === 'plus') ? {
 					locations: [
 						{

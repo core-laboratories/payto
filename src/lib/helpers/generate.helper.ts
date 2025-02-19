@@ -378,6 +378,10 @@ export const getWebLink = ({
 }: IWebLinkOptions): string => {
 	if (!network || !networkData) return '#';
 
+	const domain = import.meta.env.DEV
+		? `http://localhost:${import.meta.env.VITE_DEV_SERVER_PORT || 5173}`
+		: 'https://payto.money';
+
 	const finalPayload = payload ?? [
 		{
 			value: networkData.network === 'other'
@@ -398,5 +402,5 @@ export const getWebLink = ({
 	};
 
 	const link = generateLink(finalPayload, props, doante);
-	return link ? (transform ? `https://payto.money:/${link.slice(5)}` : link) : '#';
+	return link ? (transform ? `${domain}/${link.slice(5)}` : link) : '#';
 };
