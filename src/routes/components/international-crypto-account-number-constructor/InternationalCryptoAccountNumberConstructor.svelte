@@ -17,6 +17,7 @@
 	import { fade, fly } from 'svelte/transition';
 	import { addressSchema } from '$lib/validators/address.validator';
 	import * as net from 'node:net';
+	import { onMount } from 'svelte';
 
 	let addressValue = $state<string | undefined>(undefined);
 	let addressValidated = $state<boolean>(false);
@@ -37,6 +38,10 @@
 	let timeDateValue = $state('');
 	let classUpperValue = $constructor.networks.ican.params?.currency?.value?.toLowerCase()?.startsWith('0x') ? '' : 'uppercase';
 	let tokens = TRANSPORT.ican.find(item => item.value === $constructor.networks.ican.network)?.tokens;
+
+	onMount(() => {
+		$constructor.networks.ican.params.currency.value = 'xcb'
+	})
 
 	$effect(() => {
 		if ($constructor.isCleared) {
