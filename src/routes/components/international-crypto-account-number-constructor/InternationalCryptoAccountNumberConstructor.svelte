@@ -32,6 +32,8 @@
 	let splitAddressEnterprise = $state<boolean>(false);
 	let splitAddressMsg = $state<string>('');
 
+	let currencyValue = $state<string | undefined>(undefined);
+
 	let timeDateValue = $state('');
 	let classUpperValue = $constructor.networks.ican.params?.currency?.value?.toLowerCase()?.startsWith('0x') ? '' : 'uppercase';
 	let tokens = TRANSPORT.ican.find(item => item.value === $constructor.networks.ican.network)?.tokens;
@@ -40,6 +42,7 @@
 		if ($constructor.isCleared) {
 			resetAddress();
 			resetSplitAddress();
+			currencyValue = undefined;
 		}
 	});
 
@@ -89,6 +92,13 @@
 		}
 	}
 
+	function handleCurrencyInput(event: Event) {
+		const value = (event.target as HTMLInputElement).value;
+
+		currencyValue = value;
+		$constructor.networks.ican.params.currency.value = value;
+	}
+
 	function handleAddressInput(event: Event) {
 		const value = (event.target as HTMLInputElement).value;
 		addressValue = value;
@@ -129,6 +139,7 @@
 
 					if (error.path.includes('testnet')) {
 						$constructor.networks.ican.other = $constructor.networks.ican.network;
+						$constructor.networks.ican.params.currency.value = $constructor.networks.ican.other;
 						$constructor.networks.ican.network = 'other';
 					}
 				} else {
@@ -170,8 +181,10 @@
 		}
 
 		if ($constructor.networks.ican.network === 'other' && otherNetworkValue && addressValue) {
+			$constructor.networks.ican.params.currency.value = otherNetworkValue;
 			validateAddress(addressValue, otherNetworkValue);
 		} else if (addressValue) {
+			$constructor.networks.ican.params.currency.value = $constructor.networks.ican.network;
 			validateAddress(addressValue);
 		}
 	}
@@ -342,7 +355,8 @@
 			<FieldGroupLabel>Token code / Token address</FieldGroupLabel>
 			<FieldGroupText
 				placeholder="e.g. CTN; 0x1ab…"
-				bind:value={$constructor.networks.ican.params.currency.value}
+				bind:value={currencyValue}
+				oninput={handleCurrencyInput}
 				classValue={classUpperValue}
 			/>
 			<FieldGroupAppendix>If left empty, the default is the network currency or local fiat.</FieldGroupAppendix>
