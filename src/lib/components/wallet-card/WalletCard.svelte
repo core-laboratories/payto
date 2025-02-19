@@ -509,7 +509,7 @@
 
 			<div class={`flex ${$paytoData.rtl !== undefined && $paytoData.rtl === true ? 'flex-row-reverse justify-between' : 'justify-between'} items-center p-4`}>
 				<a
-					href={$currentBareUrlString}
+					href={$qrcodeValue}
 					rel="noreferrer"
 					class="transition-opacity hover:opacity-80"
 					style="cursor: pointer; background: none; border: none; padding: 0;"
