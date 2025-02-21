@@ -48,6 +48,7 @@
 			resetAddress();
 			resetSplitAddress();
 			currencyValue = undefined;
+			$constructor.networks.ican.params.currency.value = 'xcb';
 		}
 	});
 
