@@ -14,7 +14,7 @@ import { PRIVATE_DECRYPTION_KEY } from '$env/static/private';
 
 // @ts-expect-error: Module is untyped
 import pkg from 'open-location-code/js/src/openlocationcode';
-const {decode} = pkg;
+const { decode } = pkg;
 
 type Actions = {
 	generatePass: (event: RequestEvent) => Promise<Response>;

@@ -22,6 +22,10 @@
 	import { ASSETS_NAMES } from '$lib/constants/asset-names';
 	import { getCategoryByValue } from '$lib/helpers/get-category-by-value.helper';
 
+	// @ts-expect-error: Module is untyped
+	import pkg from 'open-location-code/js/src/openlocationcode';
+	const { decode } = pkg;
+
 	export let hostname: ITransitionType | undefined = undefined;
 	export let url: string | null = null;
 
@@ -82,6 +86,11 @@
 			colorBackground = colorDistance > 100 ? colorB.startsWith('#') ? colorB : `#${colorB}` : '#77bc65';
 		}
 		return { colorForeground, colorBackground };
+	}
+
+	function getLocationCode(plusCode: string): [number, number] {
+		const codeArea = decode(plusCode);
+		return [codeArea.latitudeCenter, codeArea.longitudeCenter];
 	}
 
 	const hostnameStore = derived([paytoData, constructorStore], ([$data, $_]) => {
@@ -279,9 +288,12 @@
 				? `https://www.google.com/maps/dir/?api=1&origin=Current+Location&destination=${loc}`
 				: `geo:${loc}`;
 		} else if ($paytoData.network === 'plus') {
-			return deviceSherlock.isDesktop
-				? `https://www.google.com/maps/place/${loc}`
-				: `comgooglemaps://?q=${loc}`;
+			const plusCoordinates = getLocationCode(loc);
+			if (deviceSherlock.isDesktop) {
+				return `https://www.google.com/maps/dir/?api=1&origin=Current+Location&destination=${plusCoordinates[0]},${plusCoordinates[1]}`;
+			} else {
+				return `geo:${plusCoordinates[0]},${plusCoordinates[1]}`;
+			}
 		}
 		return loc || '';
 	}
