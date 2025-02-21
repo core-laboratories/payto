@@ -404,3 +404,13 @@ export const getWebLink = ({
 	const link = generateLink(finalPayload, props, doante);
 	return link ? (transform ? `${domain}/${link.slice(5)}` : link) : '#';
 };
+
+export const generateWebLink = (link: string) => {
+	if (!link) return '#';
+
+	const domain = import.meta.env.DEV
+		? `http://localhost:${import.meta.env.VITE_DEV_SERVER_PORT || 5173}`
+		: 'https://payto.money';
+
+	return `${domain}/${link.slice(5)}`;
+}

@@ -111,7 +111,7 @@
 				hostname: payto.hostname || 'ican',
 				paymentType: payto.hostname || 'ican',
 				value: payto.value ? Number(payto.value) : undefined,
-				address: payto.address || undefined,
+				address: payto.hostname === 'void' ? payto.location! : (payto.address || undefined),
 				colorBackground,
 				colorForeground,
 				organization: payto.organization || undefined,
@@ -121,7 +121,7 @@
 						payto.currency[1] :
 						payto.currency[0] :
 					getCurrency((payto.network || 'ican') as unknown as ITransactionState, payto.hostname as ITransitionType),
-				network: (payto.network !== payto.hostname ? payto.network : undefined),
+				network: payto.hostname === 'void' ? payto.void! : (payto.network !== payto.hostname ? payto.network : undefined),
 				item: payto.item || undefined,
 				location: payto.location || undefined,
 				recurring: payto.recurring || undefined,
@@ -497,25 +497,23 @@
 						</div>
 					</div>
 				{/if}
-				{#if ($paytoData.network === 'geo' || $paytoData.network === 'plus')}
-					<div class="flex justify-between items-center mb-2">
-						<div class={`${$paytoData.rtl !== undefined && $paytoData.rtl === true ? 'text-right' : 'text-left'} w-full`}>
-							<div class="text-sm">Navigate</div>
-							<div class="text-xl font-semibold break-words">
-								<a class="transition duration-200 visited:text-gray-200 hover:text-gray-300 ${$paytoData.location ? 'cursor-pointer' : 'cursor-not-allowed'}"
-									 style="color: {$paytoData.colorForeground};"
-									 href={linkLocation($paytoData.location)}
-									 target="_blank"
-									 rel="noreferrer"
-								>Open the navigation</a>
-							</div>
-						</div>
-					</div>
-				{/if}
 			</div>
 
 			{#if currentUrl}
-				<div class="flex justify-center items-center m-4 mt-5">
+				<div class="flex justify-center items-center m-4 mt-5 flex-col">
+					{#if (($paytoData.network === 'geo' || $paytoData.network === 'plus') && $paytoData.location)}
+						<div class="flex justify-between items-center mb-4">
+							<div class={`${$paytoData.rtl !== undefined && $paytoData.rtl === true ? 'text-right' : 'text-left'} w-full`}>
+								<div class="text-xl font-semibold break-words">
+									<a class="button is-full lg:basis-1/2 bs-12 py-2 px-3 text-center text-white border border-gray-700 bg-gray-700 hover:bg-gray-600 rounded-md transition duration-200 outline-none focus-visible:ring focus-visible:ring-green-800 focus-visible:ring-offset-2 active:scale-(0.99) text-sm ${$paytoData.location ? 'cursor-pointer' : 'cursor-not-allowed'}"
+										 href={linkLocation($paytoData.location)}
+										 target="_blank"
+										 rel="noreferrer"
+									>Navigate</a>
+								</div>
+							</div>
+						</div>
+					{/if}
 					<div class="p-4 rounded-lg inline-flex justify-center items-center bg-white">
 						<div class="text-center">
 							<Qr param={$qrcodeValue} />

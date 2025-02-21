@@ -7,11 +7,11 @@
 		ListBox
 	} from '$lib/components';
 
-	import { derived, writable } from 'svelte/store';
+	import { derived, get, writable } from 'svelte/store';
 	import { constructor } from '$lib/store/constructor.store';
 	import { calculateColorDistance } from '$lib/helpers/euclidean-distance.helper';
 	import { enhance } from '$app/forms';
-	import { getWebLink } from '$lib/helpers/generate.helper';
+	import { generateWebLink, getWebLink } from '$lib/helpers/generate.helper';
 	import { getAddress } from '$lib/helpers/get-address.helper';
 	import { toast } from '$lib/components/toast';
 
@@ -83,6 +83,18 @@
 			}
 		};
 	};
+
+	const link = derived(
+		[constructor],
+		([$constructor]) => {
+			if (!hostname) return '#';
+
+			const links = get(constructor.build(hostname));
+			const webLink = links.find((link) => link.label === 'Link');
+
+			return generateWebLink(webLink?.value!);
+		}
+	);
 
 	function getLink(): string {
 		if (!hostname) return '#';
@@ -170,7 +182,7 @@
 		<div class="flex flex-col lg:flex-row gap-3">
 			{#if hostname}
 				<a
-					href={getLink()}
+					href={$link}
 					target="_blank"
 					rel="noreferrer"
 					class="button is-full lg:basis-1/2 bs-12 py-2 px-3 text-center text-white border border-gray-700 bg-gray-700 hover:bg-gray-600 rounded-md transition duration-200 outline-none focus-visible:ring focus-visible:ring-green-800 focus-visible:ring-offset-2 active:scale-(0.99) text-sm"
