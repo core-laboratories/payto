@@ -22,6 +22,10 @@
 	import { ASSETS_NAMES } from '$lib/constants/asset-names';
 	import { getCategoryByValue } from '$lib/helpers/get-category-by-value.helper';
 
+	// @ts-expect-error: Module is untyped
+	import pkg from 'open-location-code/js/src/openlocationcode';
+	const { decode } = pkg;
+
 	export let hostname: ITransitionType | undefined = undefined;
 	export let url: string | null = null;
 
@@ -87,6 +91,11 @@
 		}
 
 		return { colorForeground, colorBackground };
+	}
+
+	function getLocationCode(plusCode: string): [number, number] {
+		const codeArea = decode(plusCode);
+		return [codeArea.latitudeCenter, codeArea.longitudeCenter];
 	}
 
 	const hostnameStore = derived([paytoData, constructorStore], ([$data, $_]) => {
@@ -286,9 +295,12 @@
 				? `https://www.google.com/maps/dir/?api=1&origin=Current+Location&destination=${loc}`
 				: `geo:${loc}`;
 		} else if ($paytoData.network === 'plus') {
-			return deviceSherlock.isDesktop
-				? `https://www.google.com/maps/place/${loc}`
-				: `comgooglemaps://?q=${loc}`;
+			const plusCoordinates = getLocationCode(loc);
+			if (deviceSherlock.isDesktop) {
+				return `https://www.google.com/maps/dir/?api=1&origin=Current+Location&destination=${plusCoordinates[0]},${plusCoordinates[1]}`;
+			} else {
+				return `geo:${plusCoordinates[0]},${plusCoordinates[1]}`;
+			}
 		}
 		return loc || '';
 	}
@@ -368,7 +380,7 @@
 				finalAddress = shortenEmail(address.toString());
 			} else {
 				const extractedAddress = typeof address === 'string' ? address : get(address);
-				finalAddress = extractedAddress.length <= 9 ? extractedAddress : `${extractedAddress.slice(0, 4)}...${extractedAddress.slice(-4)}`
+				finalAddress = extractedAddress.length <= 9 ? extractedAddress : `${extractedAddress.slice(0, 4).toUpperCase()}…${extractedAddress.slice(-4).toUpperCase()}`
 			}
 		}
 
@@ -378,7 +390,7 @@
 
 <div>
 	{#if noData}
-		<div class="card rounded-lg shadow-md font-medium" style="background-color: {$paytoData.colorBackground}; color: {$paytoData.colorForeground};">
+		<div class={`card rounded-lg shadow-md font-medium print:border-2 print:border-black`} style="background-color: {$paytoData.colorBackground}; color: {$paytoData.colorForeground};">
 			<div class="flex items-center p-4">
 				<div class="flex-grow flex justify-between items-center">
 					<span class="text-l font-medium font-semibold" style="color: {$paytoData.colorForeground};">
@@ -391,7 +403,7 @@
 			</div>
 		</div>
 	{:else if $paytoData.deadline && ($paytoData.deadline instanceof Object ? Number($paytoData.deadline) : $paytoData.deadline) < Math.floor(Date.now() / 1000)}
-		<div class="card rounded-lg shadow-md font-medium" style="background-color: {$paytoData.colorBackground}; color: {$paytoData.colorForeground};">
+		<div class={`card rounded-lg shadow-md font-medium print:border-2 print:border-black`} style="background-color: {$paytoData.colorBackground}; color: {$paytoData.colorForeground};">
 			<div class="flex items-center p-4">
 				<div class="flex-grow flex justify-between items-center">
 					<span class="text-l font-medium font-semibold" style="color: {$paytoData.colorForeground};">
@@ -404,7 +416,7 @@
 			</div>
 		</div>
 	{:else}
-		<div class="card rounded-lg shadow-md font-medium" style="background-color: {$paytoData.colorBackground}; color: {$paytoData.colorForeground};">
+		<div class={`card rounded-lg shadow-md font-medium print:border-2 print:border-black`} style="background-color: {$paytoData.colorBackground}; color: {$paytoData.colorForeground};">
 			{#if $paytoData.rtl !== undefined && $paytoData.rtl === true}
 				<div class="flex items-center p-4">
 					<div class="flex-grow flex justify-between items-center">
@@ -457,9 +469,9 @@
 				</div>
 			{/if}
 
-			<div class="flex items-center mb-7 pt-12 pb-12 justify-center" style="background-color: {$paytoData.colorForeground}; color: {$paytoData.colorBackground}; width: 100%;">
-				<div class="flex items-center ml-12 mr-12">
-					<div class="text-2xl font-medium text-wrap" style="color: {$paytoData.colorBackground};">
+			<div class="flex items-center pt-12 pb-12 justify-center w-full print:border-t-2 print:border-b-2 print:border-zinc-500" style="background-color: {$paytoData.colorForeground}; color: {$paytoData.colorBackground};">
+				<div class="flex items-center mx-12 print:mx-0">
+					<div class="amount-text text-2xl font-medium text-wrap" style="color: {$paytoData.colorBackground};">
 						{#if $paytoData.value && Number($paytoData.value)>0}
 							{$formattedValue}
 						{:else}
@@ -510,7 +522,7 @@
 			{#if currentUrl}
 				<div class="flex justify-center items-center m-4 mt-5 flex-col">
 					{#if (($paytoData.network === 'geo' || $paytoData.network === 'plus') && $paytoData.location)}
-						<div class="flex justify-between items-center mb-4">
+						<div class="flex justify-between items-center mb-4 print:hidden">
 							<div class={`${$paytoData.rtl !== undefined && $paytoData.rtl === true ? 'text-right' : 'text-left'} w-full`}>
 								<div class="text-xl font-semibold break-words">
 									<a class="button is-full lg:basis-1/2 bs-12 py-2 px-3 text-center text-white border border-gray-700 bg-gray-700 hover:bg-gray-600 rounded-md transition duration-200 outline-none focus-visible:ring focus-visible:ring-green-800 focus-visible:ring-offset-2 active:scale-(0.99) text-sm ${$paytoData.location ? 'cursor-pointer' : 'cursor-not-allowed'}"
@@ -531,7 +543,7 @@
 				</div>
 			{/if}
 
-			<div class={`flex ${$paytoData.rtl !== undefined && $paytoData.rtl === true ? 'flex-row-reverse justify-between' : 'justify-between'} items-center p-4`}>
+			<div class={`flex ${$paytoData.rtl !== undefined && $paytoData.rtl === true ? 'flex-row-reverse justify-between' : 'justify-between'} items-center p-4 print:hidden`}>
 				<a
 					href={$qrcodeValue}
 					rel="noreferrer"
