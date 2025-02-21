@@ -109,3 +109,9 @@ abbr {
 abbr:where([title]) {
 	@apply underline underline-offset-2 decoration-gray-500;
 }
+
+@media print {
+	.amount-text {
+		@apply !text-black;
+	}
+}

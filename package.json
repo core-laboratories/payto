@@ -25,7 +25,7 @@
 		"@cloudflare/workers-types": "^4.20250214.0",
 		"@playwright/test": "^1.50.1",
 		"@sveltejs/vite-plugin-svelte": "^4.0.0-next.1",
-		"@tailwindcss/vite": "^4.0.6",
+		"@tailwindcss/vite": "^4.0.8",
 		"@types/cookie": "^1.0.0",
 		"@types/open-location-code": "^1.0.1",
 		"eslint": "^9.20.1",
@@ -35,7 +35,7 @@
 		"tslib": "^2.8.1",
 		"typescript": "^5.7.3",
 		"vite": "^5.4.11",
-		"vitest": "^3.0.5"
+		"vitest": "^3.0.6"
 	},
 	"dependencies": {
 		"@blockchainhub/ican": "^0.4.2",
@@ -53,11 +53,11 @@
 		"open-location-code": "github:google/open-location-code#main:js",
 		"payto-rl": "^1.0.9",
 		"qrcode": "^1.5.4",
-		"svelte": "^5.20.1",
+		"svelte": "^5.20.2",
 		"svelte-check": "^4.1.4",
 		"svelte-preprocess": "^6.0.3",
 		"svelte-transition": "^0.0.17",
-		"tailwindcss": "^4.0.6",
+		"tailwindcss": "^4.0.8",
 		"tailwindcss-logical": "^3.0.1",
 		"zod": "^3.24.2"
 	},
