@@ -352,7 +352,7 @@
 
 		if ($paytoData.network === 'geo') {
 			const [lat, lon] = address.toString().split(',');
-			finalAddress = `${truncateToTwoDecimals(Number(lat))}, ${truncateToTwoDecimals(Number(lon))}`;
+			finalAddress = `${truncateToTwoDecimals(Number(lat))},${truncateToTwoDecimals(Number(lon))}`;
 		} else if ($paytoData.network === 'plus') {
 			finalAddress = address.toString().slice(0, 8);
 		} else {
@@ -517,7 +517,7 @@
 					<div class="p-4 rounded-lg inline-flex justify-center items-center bg-white">
 						<div class="text-center">
 							<Qr param={$qrcodeValue} />
-							<div class="text-sm mt-2 text-black">{$paytoData.network ? $paytoData.network.toString().toUpperCase() : $paytoData.paymentType.toUpperCase()}{$paytoData.address ? ` / ${shortenAddress($paytoData.address)}` : ''}</div>
+							<div class="text-sm mt-2 text-black">{$paytoData.network ? $paytoData.network.toString().toUpperCase() : $paytoData.paymentType.toUpperCase()}{$paytoData.address ? `/${shortenAddress($paytoData.address)}` : ''}</div>
 						</div>
 					</div>
 				</div>
