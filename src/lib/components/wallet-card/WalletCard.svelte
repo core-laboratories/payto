@@ -76,11 +76,16 @@
 	function defineColors(colorF: string | null | undefined, colorB: string | null | undefined) {
 		let colorForeground = '#192a14';
 		let colorBackground = '#77bc65';
-		if (colorF && colorB) {
-			const colorDistance = Math.floor(calculateColorDistance(colorF, colorB));
+		if (colorF) {
+			const colorDistance = Math.floor(calculateColorDistance(colorF, colorB || colorBackground));
 			colorForeground = colorDistance > 100 ? colorF.startsWith('#') ? colorF : `#${colorF}` : '#192a14';
+		}
+
+		if (colorB) {
+			const colorDistance = Math.floor(calculateColorDistance(colorF || colorForeground, colorB));
 			colorBackground = colorDistance > 100 ? colorB.startsWith('#') ? colorB : `#${colorB}` : '#77bc65';
 		}
+
 		return { colorForeground, colorBackground };
 	}
 
@@ -107,6 +112,8 @@
 
 			const payto = new Payto(url).toJSONObject();
 			const { colorForeground, colorBackground } = defineColors(payto.colorForeground, payto.colorBackground);
+
+			console.log(payto);
 
 			paytoData.set({
 				hostname: payto.hostname || 'ican',
