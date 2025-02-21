@@ -332,6 +332,20 @@
 		return parseFloat(num.toFixed(3).slice(0, -1));
 	}
 
+	function shortenEmail(email: string) {
+		const [localPart, domain] = email.split("@");
+		if (!domain) return email;
+
+		const domainParts = domain.split(".");
+		const mainDomain = domainParts.slice(-2).join(".");
+
+		if (localPart.length <= 4) {
+			return `${localPart}@${mainDomain}`;
+		}
+
+		return `${localPart.slice(0, 2)}...${localPart.slice(-1)}@${mainDomain}`;
+	}
+
 	function shortenAddress(address: string | Readable<string> | undefined): string {
 		if (!address) return '';
 		let finalAddress = '';
@@ -342,8 +356,12 @@
 		} else if ($paytoData.network === 'plus') {
 			finalAddress = address.toString().slice(0, 8);
 		} else {
-			const extractedAddress = typeof address === 'string' ? address : get(address);
-			finalAddress = extractedAddress.length <= 9 ? extractedAddress : `${extractedAddress.slice(0, 4)}...${extractedAddress.slice(-4)}`
+			if ($paytoData.paymentType === 'upi') {
+				finalAddress = shortenEmail(address.toString());
+			} else {
+				const extractedAddress = typeof address === 'string' ? address : get(address);
+				finalAddress = extractedAddress.length <= 9 ? extractedAddress : `${extractedAddress.slice(0, 4)}...${extractedAddress.slice(-4)}`
+			}
 		}
 
 		return finalAddress;
