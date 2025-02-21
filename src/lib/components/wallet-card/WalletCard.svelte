@@ -122,8 +122,6 @@
 			const payto = new Payto(url).toJSONObject();
 			const { colorForeground, colorBackground } = defineColors(payto.colorForeground, payto.colorBackground);
 
-			console.log(payto);
-
 			paytoData.set({
 				hostname: payto.hostname || 'ican',
 				paymentType: getCategoryByValue(payto.hostname!) || 'ican',
