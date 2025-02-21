@@ -361,7 +361,7 @@
 				finalAddress = shortenEmail(address.toString());
 			} else {
 				const extractedAddress = typeof address === 'string' ? address : get(address);
-				finalAddress = extractedAddress.length <= 9 ? extractedAddress : `${extractedAddress.slice(0, 4)}...${extractedAddress.slice(-4)}`
+				finalAddress = extractedAddress.length <= 9 ? extractedAddress : `${extractedAddress.slice(0, 4).toUpperCase()}…${extractedAddress.slice(-4).toUpperCase()}`
 			}
 		}
 
