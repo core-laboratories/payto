@@ -20,6 +20,7 @@
 	import { deviceSherlock } from 'device-sherlock';
 	import { writable } from 'svelte/store';
 	import { ASSETS_NAMES } from '$lib/constants/asset-names';
+	import { getCategoryByValue } from '$lib/helpers/get-category-by-value.helper';
 
 	export let hostname: ITransitionType | undefined = undefined;
 	export let url: string | null = null;
@@ -109,7 +110,7 @@
 
 			paytoData.set({
 				hostname: payto.hostname || 'ican',
-				paymentType: payto.hostname || 'ican',
+				paymentType: getCategoryByValue(payto.hostname!) || 'ican',
 				value: payto.value ? Number(payto.value) : undefined,
 				address: payto.hostname === 'void' ? payto.location! : (payto.address || undefined),
 				colorBackground,
@@ -121,7 +122,7 @@
 						payto.currency[1] :
 						payto.currency[0] :
 					getCurrency((payto.network || 'ican') as unknown as ITransactionState, payto.hostname as ITransitionType),
-				network: payto.hostname === 'void' ? payto.void! : (payto.network !== payto.hostname ? payto.network : undefined),
+				network: payto.hostname === 'void' ? payto.void! : payto.network,
 				item: payto.item || undefined,
 				location: payto.location || undefined,
 				recurring: payto.recurring || undefined,
