@@ -51,6 +51,7 @@
 
 	function handleTabChange(value: string | number) {
 		const tabValue = String(value);
+		constructor.reset(selectedTab as ITransitionType);
 		selectedTab = tabValue;
 		tabs.set(tabValue);
 		$constructor.paymentType = tabValue;
