@@ -24,6 +24,7 @@
 
 	// @ts-expect-error: Module is untyped
 	import pkg from 'open-location-code/js/src/openlocationcode';
+	import ICAN from '@blockchainhub/ican';
 	const { decode } = pkg;
 
 	export let hostname: ITransitionType | undefined = undefined;
@@ -494,6 +495,16 @@
 						</div>
 					</div>
 				</div>
+				{#if ($paytoData.hostname === 'iban' || $paytoData.hostname === 'ach') && $paytoData.address}
+					<div class="flex justify-between items-center mb-2">
+						<div class={`${$paytoData.rtl !== undefined && $paytoData.rtl === true ? 'text-right' : 'text-left'} w-full`}>
+							<div class="text-sm">Account Number</div>
+							<div class="{$paytoData.hostname === 'iban' ? 'text-md' : 'text-xl'} font-semibold">
+								{$paytoData.hostname === 'iban' ? ICAN.printFormat($paytoData.address.toString() ?? '') : $paytoData.address}
+							</div>
+						</div>
+					</div>
+				{/if}
 				{#if $paytoData.currency}
 				<div class="flex justify-between items-center mb-2">
 					<div class={`${$paytoData.rtl !== undefined && $paytoData.rtl === true ? 'text-right' : 'text-left'} w-full`}>
