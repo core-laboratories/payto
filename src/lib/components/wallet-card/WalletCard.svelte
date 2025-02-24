@@ -474,7 +474,7 @@
 				</div>
 			{/if}
 
-			<div class="flex items-center pt-12 pb-12 justify-center w-full print:border-t-2 print:border-b-2 print:border-zinc-500" style="background-color: {$paytoData.colorForeground}; color: {$paytoData.colorBackground};">
+			<div class="flex items-center pt-12 pb-12 justify-center w-full print:outline-2 print:outline-black" style="background-color: {$paytoData.colorForeground}; color: {$paytoData.colorBackground};">
 				<div class="flex items-center mx-12 print:mx-0">
 					<div class="amount-text text-2xl font-medium text-wrap" style="color: {$paytoData.colorBackground};">
 						{#if $paytoData.value && Number($paytoData.value)>0}
