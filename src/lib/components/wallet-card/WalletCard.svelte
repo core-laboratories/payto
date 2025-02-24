@@ -380,7 +380,7 @@
 		} else if ($paytoData.network === 'plus') {
 			finalAddress = address.toString().slice(0, 8);
 		} else {
-			if ($paytoData.paymentType === 'upi') {
+			if ($paytoData.paymentType === 'upi' || $paytoData.paymentType === 'pix') {
 				finalAddress = shortenEmail(address.toString());
 			} else {
 				const extractedAddress = typeof address === 'string' ? address : get(address);
@@ -526,10 +526,11 @@
 			{#if currentUrl}
 				<div class="flex justify-center items-center m-4 mt-5 flex-col">
 					{#if (($paytoData.network === 'geo' || $paytoData.network === 'plus') && $paytoData.location)}
-						<div class="flex justify-between items-center mb-4 print:hidden">
+						<div class="flex justify-between items-center mb-6 print:hidden">
 							<div class={`${$paytoData.rtl !== undefined && $paytoData.rtl === true ? 'text-right' : 'text-left'} w-full`}>
-								<div class="text-xl font-semibold break-words">
-									<a class="button is-full lg:basis-1/2 bs-12 py-2 px-3 text-center text-white border border-gray-700 bg-gray-700 hover:bg-gray-600 rounded-md transition duration-200 outline-none focus-visible:ring focus-visible:ring-green-800 focus-visible:ring-offset-2 active:scale-(0.99) text-sm ${$paytoData.location ? 'cursor-pointer' : 'cursor-not-allowed'}"
+								<div class="flex text-xl font-semibold break-words">
+									<a class="button is-full lg:basis-1/2 bs-12 py-2 px-3 text-center border rounded-md transition duration-200 outline-none focus-visible:ring focus-visible:ring-green-800 focus-visible:ring-offset-2 active:scale-(0.99) text-sm ${$paytoData.location ? 'cursor-pointer' : 'cursor-not-allowed'}"
+										 style="border-color: {$paytoData.colorForeground}; background-color: {$paytoData.colorForeground}; color: {$paytoData.colorBackground};"
 										 href={linkLocation($paytoData.location)}
 										 target="_blank"
 										 rel="noreferrer"
