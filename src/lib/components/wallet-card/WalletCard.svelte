@@ -186,8 +186,6 @@
 			const paytoStore = derived(constructorStore, ($store) => {
 				const { colorForeground, colorBackground } = defineColors($store.design.colorF, $store.design.colorB);
 
-				console.log('currency => ', getCurrency($store.networks[hostname], hostname), $store.networks[hostname], hostname, $store.networks);
-
 				return {
 					hostname,
 					paymentType: $store.paymentType,
@@ -427,7 +425,7 @@
 				<div class="flex items-center p-4">
 					<div class="flex-grow flex justify-between items-center">
 						<div class="text-left">
-							<div class="text-sm uppercase">Payment</div>
+							<div class="text-sm uppercase">{$paytoData.purpose}</div>
 							<div class="font-semibold">
 								{#if $paytoData.recurring}
 									<span class="uppercase">{$paytoData.recurring}</span> Recurring
@@ -462,7 +460,7 @@
 							{/if}
 						</span>
 						<div class="text-right">
-							<div class="text-sm uppercase">Payment</div>
+							<div class="text-sm uppercase">{$paytoData.purpose}</div>
 							<div class="font-semibold">
 								{#if $paytoData.recurring}
 									Recurring <span class="uppercase">{$paytoData.recurring}</span>
@@ -519,16 +517,6 @@
 							<div class="text-sm">Item</div>
 							<div class="text-xl font-semibold break-words">
 								{$paytoData.item}
-							</div>
-						</div>
-					</div>
-				{/if}
-				{#if $paytoData.purpose}
-					<div class="flex justify-between items-center mb-2">
-						<div class={`${$paytoData.rtl !== undefined && $paytoData.rtl === true ? 'text-right' : 'text-left'} w-full`}>
-							<div class="text-sm">Purpose</div>
-							<div class="text-xl font-semibold break-words">
-								{$paytoData.purpose}
 							</div>
 						</div>
 					</div>
