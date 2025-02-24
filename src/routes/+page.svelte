@@ -55,14 +55,11 @@
 	$effect(() => {
 		const currentName = getObjectByType(TYPES, $type)?.label;
 
-		if ($purpose === 'donation') {
-			$constructor.networks['ican'].params.donation = {
-				value: 1,
-			};
-		} else {
-			$constructor.networks['ican'].params.donation = {
-				value: undefined,
-			};
+		const currentDonationValue = $constructor.networks[$type].params.donation?.value;
+		const newDonationValue = $purpose === 'donation' ? 1 : undefined;
+
+		if (currentDonationValue !== newDonationValue) {
+			$constructor.networks[$type].params.donation = { value: newDonationValue };
 		}
 
 		if (currentName) {
