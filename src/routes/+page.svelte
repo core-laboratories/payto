@@ -19,6 +19,7 @@
 	let currentLink = writable('');
 	let currentShow = writable(false);
 	let authority = writable('payto');
+	const purpose = writable("payment");
 	const urlAuthority: string | undefined = page.data.authority;
 
 	if (urlAuthority && urlAuthority.length < 10 && /^[a-z0-9]{3,}$/.test(urlAuthority)) {
@@ -35,15 +36,35 @@
 	})
 
 	const outputs = derived(
-		[type, constructor],
-		([$type, $constructor]) => {
+		[type, constructor, purpose],
+		([$type, $constructor, $purpose]) => {
 			const result = get(constructor.build($type));
-			return Array.isArray(result) ? result : [];
+
+			const outputLinks = result.filter(link => {
+				if ($purpose === 'donation') {
+					return !link.label.includes('payment');
+				}
+
+				return !link.label.includes('donation');
+			});
+
+			return Array.isArray(outputLinks) ? outputLinks : [];
 		}
 	);
 
 	$effect(() => {
 		const currentName = getObjectByType(TYPES, $type)?.label;
+
+		if ($purpose === 'donation') {
+			$constructor.networks['ican'].params.donation = {
+				value: 1,
+			};
+		} else {
+			$constructor.networks['ican'].params.donation = {
+				value: undefined,
+			};
+		}
+
 		if (currentName) {
 			currentSentence.set(`What is ${currentName}?`);
 			currentLink.set(getObjectByType(TYPES, $type)?.link || '');
@@ -89,6 +110,29 @@
 		<Box classValue="lg:basis-[calc(50%-2.5rem)]">
 			<BoxTitle>Integrations</BoxTitle>
 			<BoxContent>
+				<div class="flex flex-row gap-3">
+					<span class="font-bold">Purpose:</span>
+					<div class="flex items-center gap-2">
+						<input
+							type="radio"
+							name="purpose"
+							value="payment"
+							id="payment_purpose"
+							bind:group={$purpose}
+						/>
+						<label for="payment_purpose">Payment</label>
+					</div>
+					<div class="flex items-center gap-2">
+						<input
+							type="radio"
+							name="purpose"
+							value="donation"
+							id="donation_purpose"
+							bind:group={$purpose}
+						/>
+						<label for="donation_purpose">Donation</label>
+					</div>
+				</div>
 				<div class="flex flex-col gap-6">
 					{#each $outputs as output, index}
 						<div class="flex flex-col gap-2">

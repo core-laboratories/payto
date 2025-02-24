@@ -51,6 +51,7 @@
 		location: string | Readable<string> | undefined;
 		recurring: string | Readable<string> | undefined;
 		deadline: number | Readable<number> | undefined;
+		purpose: string | Readable<string> | undefined;
 	}
 
 	const paytoData = writable<FlexiblePaytoData>({
@@ -68,7 +69,8 @@
 		item: undefined,
 		location: undefined,
 		recurring: undefined,
-		deadline: undefined
+		deadline: undefined,
+		purpose: 'Payment',
 	});
 
 	const constructorStore = derived(constructor, $c => $c);
@@ -121,6 +123,9 @@
 
 			const payto = new Payto(url).toJSONObject();
 			const { colorForeground, colorBackground } = defineColors(payto.colorForeground, payto.colorBackground);
+			const paytoParams = new URLSearchParams(payto.search);
+
+			console.log(payto);
 
 			paytoData.set({
 				hostname: payto.hostname || 'ican',
@@ -141,7 +146,8 @@
 				location: payto.location || undefined,
 				recurring: payto.recurring || undefined,
 				rtl: payto.rtl || false,
-				deadline: payto.deadline || undefined
+				deadline: payto.deadline || undefined,
+				purpose: paytoParams.get('donation') === '1' ? 'Donation' : 'Payment',
 			});
 
 			formatter = derived(
@@ -167,6 +173,7 @@
 				design: true,
 				transform: true
 			});
+			const paytoParams = new URLSearchParams(url);
 
 			bareUrl.set(getWebLink({
 				network: hostname,
@@ -196,7 +203,8 @@
 					location: $store.networks[hostname]?.params?.loc?.value,
 					recurring: $store.networks[hostname]?.params?.rc?.value ?? '',
 					rtl: $store.design.rtl || false,
-					deadline: $store.networks[hostname]?.params?.dl?.value
+					deadline: $store.networks[hostname]?.params?.dl?.value,
+					purpose: paytoParams.get('donation') === '1' ? 'Donation' : 'Payment',
 				};
 			});
 
@@ -511,6 +519,16 @@
 							<div class="text-sm">Item</div>
 							<div class="text-xl font-semibold break-words">
 								{$paytoData.item}
+							</div>
+						</div>
+					</div>
+				{/if}
+				{#if $paytoData.purpose}
+					<div class="flex justify-between items-center mb-2">
+						<div class={`${$paytoData.rtl !== undefined && $paytoData.rtl === true ? 'text-right' : 'text-left'} w-full`}>
+							<div class="text-sm">Purpose</div>
+							<div class="text-xl font-semibold break-words">
+								{$paytoData.purpose}
 							</div>
 						</div>
 					</div>
