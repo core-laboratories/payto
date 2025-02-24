@@ -71,7 +71,7 @@
 		location: undefined,
 		recurring: undefined,
 		deadline: undefined,
-		purpose: 'Payment',
+		purpose: 'Pay',
 	});
 
 	const constructorStore = derived(constructor, $c => $c);
@@ -146,7 +146,7 @@
 				recurring: payto.recurring || undefined,
 				rtl: payto.rtl || false,
 				deadline: payto.deadline || undefined,
-				purpose: paytoParams.get('donation') === '1' ? 'Donation' : 'Payment',
+				purpose: paytoParams.get('donation') === '1' ? 'Donate' : 'Pay',
 			});
 
 			formatter = derived(
@@ -203,7 +203,7 @@
 					recurring: $store.networks[hostname]?.params?.rc?.value ?? '',
 					rtl: $store.design.rtl || false,
 					deadline: $store.networks[hostname]?.params?.dl?.value,
-					purpose: paytoParams.get('donation') === '1' ? 'Donation' : 'Payment',
+					purpose: paytoParams.get('donation') === '1' ? 'Donate' : 'Pay',
 				};
 			});
 
