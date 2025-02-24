@@ -19,7 +19,7 @@
 	let currentLink = writable('');
 	let currentShow = writable(false);
 	let authority = writable('payto');
-	const purpose = writable("payment");
+	const purpose = writable("pay");
 	const urlAuthority: string | undefined = page.data.authority;
 
 	if (urlAuthority && urlAuthority.length < 10 && /^[a-z0-9]{3,}$/.test(urlAuthority)) {
@@ -41,7 +41,7 @@
 			const result = get(constructor.build($type));
 
 			const outputLinks = result.filter(link => {
-				if ($purpose === 'donation') {
+				if ($purpose === 'donate') {
 					return !link.label.includes('payment');
 				}
 
@@ -55,11 +55,11 @@
 	$effect(() => {
 		const currentName = getObjectByType(TYPES, $type)?.label;
 
-		const currentDonationValue = $constructor.networks[$type].params.donation?.value;
-		const newDonationValue = $purpose === 'donation' ? 1 : undefined;
+		const currentDonationValue = $constructor.networks[$type].params.donate?.value;
+		const newDonationValue = $purpose === 'donate' ? 1 : undefined;
 
 		if (currentDonationValue !== newDonationValue) {
-			$constructor.networks[$type].params.donation = { value: newDonationValue };
+			$constructor.networks[$type].params.donate = { value: newDonationValue };
 		}
 
 		if (currentName) {
@@ -113,7 +113,7 @@
 						<input
 							type="radio"
 							name="purpose"
-							value="payment"
+							value="pay"
 							id="payment_purpose"
 							bind:group={$purpose}
 						/>
@@ -123,7 +123,7 @@
 						<input
 							type="radio"
 							name="purpose"
-							value="donation"
+							value="donate"
 							id="donation_purpose"
 							bind:group={$purpose}
 						/>

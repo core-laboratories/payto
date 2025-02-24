@@ -146,7 +146,7 @@
 				recurring: payto.recurring || undefined,
 				rtl: payto.rtl || false,
 				deadline: payto.deadline || undefined,
-				purpose: paytoParams.get('donation') === '1' ? 'Donate' : 'Pay',
+				purpose: paytoParams.get('donate') === '1' ? 'Donate' : 'Pay',
 			});
 
 			formatter = derived(
@@ -203,7 +203,7 @@
 					recurring: $store.networks[hostname]?.params?.rc?.value ?? '',
 					rtl: $store.design.rtl || false,
 					deadline: $store.networks[hostname]?.params?.dl?.value,
-					purpose: paytoParams.get('donation') === '1' ? 'Donate' : 'Pay',
+					purpose: paytoParams.get('donate') === '1' ? 'Donate' : 'Pay',
 				};
 			});
 
