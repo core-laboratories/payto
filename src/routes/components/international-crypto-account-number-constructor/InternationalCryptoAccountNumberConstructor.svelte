@@ -16,8 +16,6 @@
 	import { constructor } from '$lib/store/constructor.store';
 	import { fade, fly } from 'svelte/transition';
 	import { addressSchema } from '$lib/validators/address.validator';
-	import * as net from 'node:net';
-	import { onMount } from 'svelte';
 
 	let addressValue = $state<string | undefined>(undefined);
 	let addressValidated = $state<boolean>(false);
@@ -33,22 +31,14 @@
 	let splitAddressEnterprise = $state<boolean>(false);
 	let splitAddressMsg = $state<string>('');
 
-	let currencyValue = $state<string | undefined>(undefined);
-
 	let timeDateValue = $state('');
 	let classUpperValue = $constructor.networks.ican.params?.currency?.value?.toLowerCase()?.startsWith('0x') ? '' : 'uppercase';
 	let tokens = TRANSPORT.ican.find(item => item.value === $constructor.networks.ican.network)?.tokens;
-
-	onMount(() => {
-		$constructor.networks.ican.params.currency.value = 'xcb'
-	})
 
 	$effect(() => {
 		if ($constructor.isCleared) {
 			resetAddress();
 			resetSplitAddress();
-			currencyValue = undefined;
-			$constructor.networks.ican.params.currency.value = 'xcb';
 		}
 	});
 
@@ -98,13 +88,6 @@
 		}
 	}
 
-	function handleCurrencyInput(event: Event) {
-		const value = (event.target as HTMLInputElement).value;
-
-		currencyValue = value;
-		$constructor.networks.ican.params.currency.value = value;
-	}
-
 	function handleAddressInput(event: Event) {
 		const value = (event.target as HTMLInputElement).value;
 		addressValue = value;
@@ -145,7 +128,6 @@
 
 					if (error.path.includes('testnet')) {
 						$constructor.networks.ican.other = $constructor.networks.ican.network;
-						$constructor.networks.ican.params.currency.value = $constructor.networks.ican.other;
 						$constructor.networks.ican.network = 'other';
 					}
 				} else {
@@ -187,10 +169,8 @@
 		}
 
 		if ($constructor.networks.ican.network === 'other' && otherNetworkValue && addressValue) {
-			$constructor.networks.ican.params.currency.value = otherNetworkValue;
 			validateAddress(addressValue, otherNetworkValue);
 		} else if (addressValue) {
-			$constructor.networks.ican.params.currency.value = $constructor.networks.ican.network;
 			validateAddress(addressValue);
 		}
 	}
@@ -361,8 +341,7 @@
 			<FieldGroupLabel>Token code / Token address</FieldGroupLabel>
 			<FieldGroupText
 				placeholder="e.g. CTN; 0x1ab…"
-				bind:value={currencyValue}
-				oninput={handleCurrencyInput}
+				bind:value={$constructor.networks.ican.params.currency.value}
 				classValue={classUpperValue}
 			/>
 			<FieldGroupAppendix>If left empty, the default is the network currency or local fiat.</FieldGroupAppendix>

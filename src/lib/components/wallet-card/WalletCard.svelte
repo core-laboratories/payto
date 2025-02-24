@@ -125,8 +125,6 @@
 			const { colorForeground, colorBackground } = defineColors(payto.colorForeground, payto.colorBackground);
 			const paytoParams = new URLSearchParams(payto.search);
 
-			console.log(payto);
-
 			paytoData.set({
 				hostname: payto.hostname || 'ican',
 				paymentType: getCategoryByValue(payto.hostname!) || 'ican',
@@ -140,7 +138,7 @@
 					payto.currency[1] ?
 						payto.currency[1] :
 						payto.currency[0] :
-					getCurrency((payto.network || 'ican') as unknown as ITransactionState, payto.hostname as ITransitionType),
+					getCurrency($constructorStore.networks[getCategoryByValue(payto.hostname!) as ITransitionType], getCategoryByValue(payto.hostname!) as ITransitionType),
 				network: payto.hostname === 'void' ? payto.void! : payto.network,
 				item: payto.item || undefined,
 				location: payto.location || undefined,
@@ -188,6 +186,8 @@
 			const paytoStore = derived(constructorStore, ($store) => {
 				const { colorForeground, colorBackground } = defineColors($store.design.colorF, $store.design.colorB);
 
+				console.log('currency => ', getCurrency($store.networks[hostname], hostname), $store.networks[hostname], hostname, $store.networks);
+
 				return {
 					hostname,
 					paymentType: $store.paymentType,
@@ -209,7 +209,6 @@
 			});
 
 			paytoStore.subscribe((value) => {
-				console.log(value);
 				paytoData.set(value);
 			});
 
