@@ -173,7 +173,7 @@
 				design: true,
 				transform: true
 			});
-			const paytoParams = new URLSearchParams(url);
+			const paytoParams = new URLSearchParams(url?.split('?')?.[1]);
 
 			bareUrl.set(getWebLink({
 				network: hostname,
@@ -209,6 +209,7 @@
 			});
 
 			paytoStore.subscribe((value) => {
+				console.log(value);
 				paytoData.set(value);
 			});
 
