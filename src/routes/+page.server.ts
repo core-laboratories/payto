@@ -273,10 +273,10 @@ export const actions = {
 					}] : [])
 				],
 				backFields: [
-					{ // TODO: Balance value only for pro version, otherwise no info
+					{
 						key: 'balance',
 						label: 'Balance',
-						value: explorerUrl ? `Balance: %balance% View on ${props.network.toUpperCase()}: ${explorerUrl}` : `Balance: %balance%`,
+						value: explorerUrl ? `View on ${props.network.toUpperCase()}: ${explorerUrl}` : `Balance`,
 						dataDetectorTypes: ["PKDataDetectorTypeLink"]
 					},
 					{
@@ -288,7 +288,7 @@ export const actions = {
 					{
 						key: 'pro',
 						label: 'PRO version',
-						value: `Open the offer: https://payto.money/pro?rc=${props.destination}`,
+						value: `Open the offer: https://payto.money/pro?rc=${props.memberAddress}`,
 						dataDetectorTypes: ["PKDataDetectorTypeLink"]
 					},
 					{
