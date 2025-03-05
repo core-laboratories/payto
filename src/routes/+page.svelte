@@ -27,9 +27,15 @@
 	}
 
 	onMount(() => {
-		const pageHash = page.url.searchParams.get('pass');
-		if (pageHash === '1') {
+		const passEnabled = page.url.searchParams.get('pass');
+		if (passEnabled === '1') {
 			designEnabled.set(true)
+		}
+		const purposeType = page.url.searchParams.get('purpose');
+		if (purposeType && purposeType === 'donate') {
+			purpose.set('donate');
+		} else if (purposeType && purposeType === 'pay') {
+			purpose.set('pay');
 		}
 	})
 
