@@ -222,7 +222,7 @@ export const actions = {
 				headerFields: [
 					{
 						key: 'payment',
-						label: 'Payment',
+						label: props.params.donate?.value !== 0 ? 'Donation' : 'Payment',
 						value: hostname && hostname === 'void' ? 'CASH' : hostname.toUpperCase() + (props.network ? ': ' + props.network.toUpperCase() : '')
 					}
 				],
