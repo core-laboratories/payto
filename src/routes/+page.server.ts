@@ -64,8 +64,8 @@ async function registerPass(fields: Record<string, string | number | Record<stri
 	}
 }
 
-const formatter = (currency: string | undefined, customCurrencyData = {}) => {
-	return new ExchNumberFormat(undefined, {
+const formatter = (currency: string | undefined, format: string | undefined, customCurrencyData = {}) => {
+	return new ExchNumberFormat(format, {
 		style: 'currency',
 		currency: currency || '',
 		currencyDisplay: 'symbol',
@@ -232,7 +232,7 @@ export const actions = {
 						label: 'Amount',
 						value:
 							props.params.amount.value && Number(props.params.amount.value) > 0 ?
-								formatter(getCurrency(props.network, hostname as ITransitionType), customCurrencyData).format(Number(props.params.amount.value)) :
+								formatter(getCurrency(props.network, hostname as ITransitionType), (kvConfig.currencyLocale || undefined), customCurrencyData).format(Number(props.params.amount.value)) :
 								`Custom Amount`
 					}
 				],
@@ -259,7 +259,7 @@ export const actions = {
 						label: 'Split',
 						value: props.split.isPercent ?
 							`${Number(props.split.value)}%` :
-							formatter(getCurrency(props.network, hostname as ITransitionType), customCurrencyData).format(Number(props.split.value))
+							formatter(getCurrency(props.network, hostname as ITransitionType), (kvConfig.currencyLocale || undefined), customCurrencyData).format(Number(props.split.value))
 					}] : []),
 					...(props.params.message?.value ? [{
 						key: 'message',

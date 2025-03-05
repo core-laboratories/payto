@@ -85,7 +85,8 @@ Issuing authorities[^authority] are delivering object as this example to e-mail:
             "name": "CoreCoin",
             "defaultDecimals": 2
         }
-    }
+    },
+    "currencyLocale": "en-US"
 }
 ```
 
@@ -99,13 +100,14 @@ Where:
 - `theme` is the theme of the Pass. (Default: PayTo theme)
 - `forceTheme` do you want to force the theme if the user has set it's own? (Default: false)
 - `customCurrencyData` is the custom currency data of the Pass. (Default: none)
+- `currencyLocale` is the currency locale of the Pass. (Default: undefined - autodetect)
 
 [^authority] are available for the [Business plan](https://payto.money/pro).
 
 After successful registering the authority, you need to append to the url the `authority` parameter.
 
 ```txt
-https://payto.money?authority=…
+https://payto.money?authority={id}
 ```
 
 ## License
