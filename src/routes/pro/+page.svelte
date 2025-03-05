@@ -11,8 +11,8 @@
 					<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500 lg:text-5xl">Ƈ 300</span>
 					<span class="text-sm">/month</span>
 				</h4>
-				<a href="payto.money://xcb/xxx?rc=m&amount=ctn:300&item=PayTo+Pro+Membership" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center w-full h-12 gap-2 px-6 text-sm font-bold tracking-wide !text-white transition duration-300 rounded shadow-sm whitespace-nowrap bg-emerald-500 shadow-emerald-400 hover:bg-emerald-600 hover:shadow-md hover:shadow-emerald-400 focus:bg-emerald-700 focus:shadow-md focus:shadow-emerald-400 focus-visible:outline-none !no-underline">
-					<span>Activate by transferring CTN</span>
+				<a href="/?pass=1#pass" class="inline-flex items-center justify-center w-full h-12 gap-2 px-6 text-sm font-bold tracking-wide !text-white transition duration-300 rounded shadow-sm whitespace-nowrap bg-emerald-500 shadow-emerald-400 hover:bg-emerald-600 hover:shadow-md hover:shadow-emerald-400 focus:bg-emerald-700 focus:shadow-md focus:shadow-emerald-400 focus-visible:outline-none !no-underline">
+					<span>Create and Activate inside Pass</span>
 				</a>
 			</header>
 			<div class="p-6">
@@ -71,7 +71,7 @@
 					<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500 lg:text-5xl">Ƈ 40,000</span>
 					<span class="text-sm">/month</span>
 				</h4>
-				<a href="mailto:sales@payto.money" class="inline-flex items-center justify-center w-full h-12 gap-2 px-6 text-sm font-bold tracking-wide !text-white transition duration-300 rounded shadow-sm whitespace-nowrap bg-emerald-500 shadow-emerald-400 hover:bg-emerald-600 hover:shadow-md hover:shadow-emerald-400 focus:bg-emerald-700 focus:shadow-md focus:shadow-emerald-400 focus-visible:outline-none !no-underline">
+				<a href="mailto:sales@payto.money?subject=Pro%20Plus" class="inline-flex items-center justify-center w-full h-12 gap-2 px-6 text-sm font-bold tracking-wide !text-white transition duration-300 rounded shadow-sm whitespace-nowrap bg-emerald-500 shadow-emerald-400 hover:bg-emerald-600 hover:shadow-md hover:shadow-emerald-400 focus:bg-emerald-700 focus:shadow-md focus:shadow-emerald-400 focus-visible:outline-none !no-underline">
 					<span>Activate by contacting us</span>
 				</a>
 			</header>
@@ -126,7 +126,7 @@
 					<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500 lg:text-5xl">Ƈ 500,000</span>
 					<span class="text-sm">/month</span>
 				</h4>
-				<a href="mailto:sales@payto.money" class="inline-flex items-center justify-center w-full h-12 gap-2 px-6 text-sm font-bold tracking-wide !text-white transition duration-300 rounded shadow-sm whitespace-nowrap bg-emerald-500 shadow-emerald-400 hover:bg-emerald-600 hover:shadow-md hover:shadow-emerald-400 focus:bg-emerald-700 focus:shadow-md focus:shadow-emerald-400 focus-visible:outline-none !no-underline">
+				<a href="mailto:sales@payto.money?subject=Pro%20Business" class="inline-flex items-center justify-center w-full h-12 gap-2 px-6 text-sm font-bold tracking-wide !text-white transition duration-300 rounded shadow-sm whitespace-nowrap bg-emerald-500 shadow-emerald-400 hover:bg-emerald-600 hover:shadow-md hover:shadow-emerald-400 focus:bg-emerald-700 focus:shadow-md focus:shadow-emerald-400 focus-visible:outline-none !no-underline">
 					<span>Activate by contacting us</span>
 				</a>
 			</header>
@@ -160,6 +160,18 @@
 						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
 							<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
 						</svg>
+						<div>Company URL included in Passes</div>
+					</li>
+					<li class="flex items-start gap-2">
+						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
+							<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
+						</svg>
+						<div>Maximum validity of Passes up to 3 years</div>
+					</li>
+					<li class="flex items-start gap-2">
+						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
+							<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
+						</svg>
 						<div>Dedicated Core Blockchain Node</div>
 					</li>
 					<li class="flex items-start gap-2">
@@ -178,25 +190,13 @@
 						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
 							<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
 						</svg>
-						<div>TIER 3 Data Center</div>
-					</li>
-					<li class="flex items-start gap-2">
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
-							<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
-						</svg>
-						<div>24/7/365 DC Monitoring</div>
-					</li>
-					<li class="flex items-start gap-2">
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
-							<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
-						</svg>
 						<div><a href="mailto:support@payto.money">SLA Support</a></div>
 					</li>
 					<li class="flex items-start gap-2">
 						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
 							<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
 						</svg>
-						<div>+ Everything in Pro+ version, Node is hosted in DC</div>
+						<div>+ Everything in Pro+ version</div>
 					</li>
 				</ul>
 			</div>

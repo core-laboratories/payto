@@ -27,10 +27,8 @@
 	}
 
 	onMount(() => {
-		const pageHash = page.url.hash.replace('#', '');
-		const hasPass = pageHash.includes('pass=1') || page.data.hasPass;
-
-		if (hasPass) {
+		const pageHash = page.url.searchParams.get('pass');
+		if (pageHash === '1') {
 			designEnabled.set(true)
 		}
 	})
@@ -88,6 +86,7 @@
 
 <Page>
 	<Row classValue="lg:flex-row lg:gap-4">
+		<a id="constructor" aria-hidden="true" aria-label="Constructor"></a>
 		<Box classValue="lg:basis-[calc(50%-2.5rem)]">
 			<BoxTitle>Payment Constructor</BoxTitle>
 			<BoxContent>
@@ -105,6 +104,7 @@
 		<Icon.Convert classValue="w-10 h-10 self-center text-green-500 rotate-90 lg:block lg:rotate-0" />
 
 		<Box classValue="lg:basis-[calc(50%-2.5rem)]">
+			<a id="integrations" aria-hidden="true" aria-label="Integrations"></a>
 			<BoxTitle>Integrations</BoxTitle>
 			<BoxContent>
 				<div class="flex flex-row gap-3">
@@ -195,6 +195,7 @@
 		</Box>
 	</Row>
 	<Row>
+		<a id="pass" aria-hidden="true" aria-label="Pass"></a>
 		<Box>
 			<BoxTitle>
 				<label for="designCheckbox" class="mr-2">Pass</label>
@@ -215,7 +216,7 @@
 							<div class="flex flex-col mt-4 gap-4">
 								<div class="w-full px-4 py-3 text-sm border rounded border-gray-700 bg-gray-800 text-gray-300" role="alert">
 									<h3 class="mb-1 font-semibold">Issuer</h3>
-									<p>Current issuing authority is <span class="font-bold">{$authority.toUpperCase()}</span>.</p>
+									<p>Current issuing authority is <span class="font-bold">{$authority ? $authority.toUpperCase() : 'PAYTO'}</span>.</p>
 								</div>
 								<a href="/pro" target="_blank" rel="noreferrer" class="button is-full bs-12 py-2 px-3 text-center !text-white border border-gray-700 bg-gray-700 opacity-50 rounded-md text-sm hover:opacity-100 transition duration-200 font-bold">
 									Get <span class="text-green-300 italic">Pay</span><span class="text-emerald-500 italic">To</span><span class="text-green-300 italic">:Pro</span>
@@ -234,6 +235,7 @@
 		</Box>
 	</Row>
 	<Row>
+		<a id="information" aria-hidden="true" aria-label="Information"></a>
 		<Box>
 			<h1 class="m-0 text-xl font-bold text-white">Information</h1>
 			<BoxContent>

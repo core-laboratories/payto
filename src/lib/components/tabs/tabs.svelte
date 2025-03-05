@@ -21,14 +21,6 @@
 
 	export let selectedTab: string = 'ican';
 
-	onMount(() => {
-		const preSelectedTab = page.url.hash.replace('#', '').split('?')[0] || undefined;
-
-		if (preSelectedTab) {
-			handleTabChange(preSelectedTab);
-		}
-	})
-
 	const paymentTypes: Record<string, { label: string; ticker: string; component: any }> = {
 		ican: { label: getObjectByType(TYPES, 'ican')?.label, ticker: getObjectByType(TYPES, 'ican')?.description, component: InternationalCryptoAccountNumberConstructor },
 		iban: { label: getObjectByType(TYPES, 'iban')?.label, ticker: getObjectByType(TYPES, 'iban')?.description, component: InternationalBankAccountNumberConstructor },
@@ -58,12 +50,11 @@
 	}
 
 	onMount(() => {
-		const hash = window.location.hash.substring(1);
-		if (hash && Object.keys(paymentTypes).includes(hash)) {
-			selectedTab = hash;
-			tabs.set(hash);
+		const preSelectedTab = page.url.searchParams.get('tab') || undefined;
+		if (preSelectedTab) {
+			handleTabChange(preSelectedTab);
 		}
-	});
+	})
 </script>
 
 <div class="flex w-full flex-col gap-2">
