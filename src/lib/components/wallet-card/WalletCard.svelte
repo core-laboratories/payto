@@ -29,6 +29,7 @@
 
 	export let hostname: ITransitionType | undefined = undefined;
 	export let url: string | null = null;
+	export let authority: string | undefined = undefined;
 
 	let hasUrl: boolean = false;
 
@@ -195,7 +196,7 @@
 					currency: getCurrency($store.networks[hostname], hostname),
 					value: $store.networks[hostname]?.params?.amount?.value,
 					address: getAddress($store.networks[hostname], hostname),
-					organization: $store.design.org,
+					organization: authority ? authority.toUpperCase() : $store.design.org,
 					organizationImage: undefined,
 					network: getNetwork($store.networks[hostname], hostname, true),
 					item: $store.design.item,
@@ -399,7 +400,11 @@
 			<div class="flex items-center p-4">
 				<div class="flex-grow flex justify-between items-center">
 					<span class="text-l font-medium font-semibold" style="color: {$paytoData.colorForeground};">
-						PayTo
+						{#if $paytoData.organization}
+							{$paytoData.organization}
+						{:else}
+							PayTo
+						{/if}
 					</span>
 				</div>
 				<div class="text-rose-500 font-semibold">
@@ -412,7 +417,11 @@
 			<div class="flex items-center p-4">
 				<div class="flex-grow flex justify-between items-center">
 					<span class="text-l font-medium font-semibold" style="color: {$paytoData.colorForeground};">
-						PayTo
+						{#if $paytoData.organization}
+							{$paytoData.organization}
+						{:else}
+							PayTo
+						{/if}
 					</span>
 				</div>
 				<div class="text-rose-500 font-semibold">

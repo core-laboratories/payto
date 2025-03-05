@@ -16,7 +16,7 @@
 	import { toast } from '$lib/components/toast';
 
 	export let hostname: ITransitionType | undefined = undefined;
-	export let authority: string = 'payto';
+	export let authority: string | undefined = undefined;
 
 	const barcodeTypes = [
 		{ label: 'QR Code', value: 'qr', ticker: 'QR' },
@@ -112,14 +112,16 @@
 </script>
 
 <div class="flex flex-col gap-6">
-	<FieldGroup>
-		<FieldGroupLabel>Organization Name</FieldGroupLabel>
-		<FieldGroupText
-			placeholder="PayTo"
-			bind:value={$constructor.design.org}
-			maxlength="25"
-		/>
-	</FieldGroup>
+	{#if !authority}
+		<FieldGroup>
+			<FieldGroupLabel>Organization Name</FieldGroupLabel>
+			<FieldGroupText
+				placeholder="PayTo"
+				bind:value={$constructor.design.org}
+				maxlength="25"
+			/>
+		</FieldGroup>
+	{/if}
 
 	<FieldGroup>
 		<FieldGroupLabel>Item Name</FieldGroupLabel>

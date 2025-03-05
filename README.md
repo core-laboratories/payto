@@ -54,51 +54,16 @@ The production build can be previewed using `npm run preview`.
 
 You can see the [Pro plans](https://payto.money/pro) for more information.
 
-To customize the app, you can use the `kvConfig` object in the `src/routes/+page.server.ts` file.
+To customize the Pass, you can become the authority of your own Pass. Each authority has maximum validity of pass 3 years instead of 1 year.
 
-Uploading the custom authority requires teamId, certificate, and private key obtained from Apple. We are encrypting the private key with AES-256-GCM to avoid exposing it in extreme cases.
-
-Encryption function:
-
-```ts
-import forge from 'node-forge';
-
-function encrypt(plaintext: string, key: string): { iv: string; encrypted: string } {
-    const iv = forge.random.getBytesSync(12); // 96-bit IV for AES-GCM
-    const cipher = forge.cipher.createCipher('AES-GCM', key);
-    cipher.start({ iv });
-    cipher.update(forge.util.createBuffer(plaintext));
-    cipher.finish();
-
-    const encrypted = cipher.output.toHex();
-    const tag = cipher.mode.tag.toHex(); // Authentication tag for GCM mode
-
-    return { iv: forge.util.bytesToHex(iv), encrypted: encrypted + tag };
-}
-
-// Example usage: forge.random.getBytesSync(32); (256-bit key)
-const key = '…'; // We will define this
-const plaintext = 'Sensitive data';
-const { iv, encrypted } = encrypt(plaintext, key);
-
-console.log('IV:', iv);
-console.log('Encrypted:', encrypted);
-```
-
-We require the `encryptedKey` object to be uploaded to the server.
-
-Issuing authorities[^authority] are delivering object as this example:
+Issuing authorities[^authority] are delivering object as this example to e-mail: [sales@payto.money](mailto:sales@payto.money?subject=PayTo%20Authority%20Request)
 
 ```json
 {
+    "id": "payto",
     "name": "PayTo",
-    "certificate": "…",
-    "privateKey": {
-        "encrypted": "…",
-        "iv": "…"
-    },
-    "teamId": "…",
     "identifier": "pass.money.payto",
+    "url": "https://payto.money",
     "icons": {
         "icon": "https://payto.money/icons/icon.png",
         "icon2x": "https://payto.money/icons/icon@2x.png",
@@ -111,6 +76,7 @@ Issuing authorities[^authority] are delivering object as this example:
         "colorF": "#192a14",
         "colorTxt": "#192a14"
     },
+    "forceTheme": false,
     "customCurrencyData": {
         "XCB": {
             "symbol": "₡",
@@ -122,6 +88,17 @@ Issuing authorities[^authority] are delivering object as this example:
     }
 }
 ```
+
+Where:
+
+- `id` is the authority id of the Pass. (Required, Unique, Lowercase no spaces)
+- `name` is the organization name of the Pass. If set it is forced to the Pass. (Default: PayTo)
+- `identifier` is the identifier of the Pass. (Required, Unique, Lowercase - Reverse DNS example: `pass.money.payto`)
+- `url` is the url of the Pass. (Default: none)
+- `icons` is the icons of the Pass. (Default: PayTo logo)
+- `theme` is the theme of the Pass. (Default: PayTo theme)
+- `forceTheme` do you want to force the theme if the user has set it's own? (Default: false)
+- `customCurrencyData` is the custom currency data of the Pass. (Default: none)
 
 [^authority] are available for the [Business plan](https://payto.money/pro).
 

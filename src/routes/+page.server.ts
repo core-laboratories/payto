@@ -10,7 +10,7 @@ import JSZip from 'jszip';
 import forge from 'node-forge';
 
 // @ts-expect-error: Module '"$env/static/private"' has no exported member 'PRIVATE_DECRYPTION_KEY'.
-import { PRIVATE_DECRYPTION_KEY } from '$env/static/private';
+import { PRIVATE_WEB_SERVICE_URL, PRIVATE_AUTH_SECRET } from '$env/static/private';
 
 // @ts-expect-error: Module is untyped
 import pkg from 'open-location-code/js/src/openlocationcode';
@@ -19,30 +19,6 @@ const { decode } = pkg;
 type Actions = {
 	generatePass: (event: RequestEvent) => Promise<Response>;
 };
-
-function decrypt(encrypted: string, iv: string): string {
-	const encryptedData = encrypted.slice(0, -32); // Extract encrypted data (excluding tag)
-	const tag = encrypted.slice(-32); // Extract authentication tag
-
-	// Convert hex strings to ByteStringBuffer
-	const ivBytes = forge.util.hexToBytes(iv);
-	const tagBytes = forge.util.hexToBytes(tag);
-
-	const decipher = forge.cipher.createDecipher('AES-GCM', PRIVATE_DECRYPTION_KEY);
-	decipher.start({
-		iv: forge.util.createBuffer(ivBytes), // Convert IV to ByteStringBuffer
-		tag: forge.util.createBuffer(tagBytes), // Convert tag to ByteStringBuffer
-	});
-
-	decipher.update(forge.util.createBuffer(forge.util.hexToBytes(encryptedData)));
-	const result = decipher.finish();
-
-	if (!result) {
-		throw new Error('Decryption failed: Authentication tag mismatch');
-	}
-
-	return decipher.output.toString();
-}
 
 function validColors(colorF: string, colorB: string) {
 	const distance = calculateColorDistance(colorF, colorB);
@@ -61,6 +37,31 @@ function getLink(hostname: string, props: any) {
 function getLocationCode(plusCode: string): [number, number] {
 	const codeArea = decode(plusCode);
 	return [codeArea.latitudeCenter, codeArea.longitudeCenter];
+}
+
+async function registerPass(fields: Record<string, string | number | Record<string, any> | undefined>, props: Record<string, string | number | Record<string, any> | undefined>) {
+	const timestamp = Date.now();
+	const payload = JSON.stringify({ ...fields, ...props, timestamp });
+
+	const hmac = forge.hmac.create();
+	hmac.start('sha256', PRIVATE_AUTH_SECRET);
+	hmac.update(payload);
+	const token = hmac.digest().toHex();
+
+	const pass = await fetch(PRIVATE_WEB_SERVICE_URL + '/register', {
+		headers: {
+			'Content-Type': 'application/json',
+			'Authorization': `Bearer ${token}`
+		},
+		method: 'POST',
+		body: payload,
+	});
+
+	if (!pass.ok) {
+		throw error(500, 'Failed to register pass');
+	} else {
+		return true;
+	}
 }
 
 const formatter = (currency: string | undefined, customCurrencyData = {}) => {
@@ -103,18 +104,18 @@ export const actions = {
 			const formData = await request.formData();
 			const props = JSON.parse(formData.get('props') as string);
 			const hostname = formData.get('hostname') as string;
-			const authority = (formData.get('authority') as string).toLowerCase() || 'payto';
+			const membership = formData.get('membership') as string;
+			const authorityField = (formData.get('authority') as string);
+			const authority = authorityField ? authorityField.toLowerCase() : 'payto';
+			let kvConfig = null;
 
-			// Load KV values
-			const kvConfig = await KV.get(authority);
-			if (!kvConfig || !kvConfig.certificate || !kvConfig.privateKey || !kvConfig.teamId) {
-				throw error(400, `Invalid or missing configuration for authority: ${authority}`);
+			if (authorityField) {
+				// Load KV values
+				kvConfig = await KV.get(authority);
+				if (kvConfig && (!kvConfig.id || !kvConfig.identifier)) {
+					throw error(400, `Invalid or missing configuration for authority: ${authority}`);
+				}
 			}
-			const privateKey = decrypt(kvConfig.privateKey.encrypted, kvConfig.privateKey.iv);
-			if (!privateKey) {
-				throw error(400, `Invalid or missing private key for authority: ${authority}`);
-			}
-
 
 			// Required fields
 			const requiredFields = ['props', 'hostname'];
@@ -134,9 +135,10 @@ export const actions = {
 
 			// Basic pass data structure
 			const bareLink = getLink(hostname, props);
-			const org = props.design.org || (kvConfig.name || authority.toUpperCase());
-			const subscriptionAddress = props.destination;
-			const fileid = `${authority.toLowerCase()}-${subscriptionAddress}-${props.destination}-${hostname}-${props.network}-${new Date(Date.now()).toISOString().replace(/[-T:]/g, '').slice(0, 12)}`;
+			const org = kvConfig.name || (props.design.org || (authorityField.toUpperCase()) || 'PayTo');
+			const originator = kvConfig.id || 'payto';
+			const memberAddress = membership || props.destination;
+			const fileid = `${originator}-${memberAddress}-${props.destination}-${hostname}-${props.network}-${new Date(Date.now()).toISOString().replace(/[-T:]/g, '').slice(0, 12)}`;
 			const explorerUrl = getExplorerUrl(props.network, { address: props.destination });
 			const customCurrencyData = kvConfig.customCurrency || {};
 
@@ -145,21 +147,18 @@ export const actions = {
 				props.params.lat = { value: plusCoordinates[0] };
 				props.params.lon = { value: plusCoordinates[1] };
 			}
-			const passData = {
+
+			const basicData = {
 				serialNumber: fileid,
-				formatVersion: 1,
 				passTypeIdentifier: kvConfig.identifier || 'pass.money.payto',
-				teamIdentifier: kvConfig.teamId,
 				organizationName: org,
 				logoText: org,
 				description: `${org} ${hostname ? hostname.toUpperCase() + ' / ' : ''} ${props.design.item ? props.design.item : 'Direct Asset Transfers'}`,
-				expirationDate: new Date((props.params.dl.value || (Date.now() + 365 * 24 * 60 * 60)) * 1000).toISOString(),
+				expirationDate: new Date((props.params.dl.value || (kvConfig.id ? (Date.now() + 3 * 365 * 24 * 60 * 60 * 1000) : (Date.now() + 365 * 24 * 60 * 60 * 1000)))).toISOString(),
 				backgroundColor: validColors(props.design.colorB, props.design.colorF) ? props.design.colorB : (kvConfig.theme.colorB || '#77bc65'),
 				foregroundColor: validColors(props.design.colorF, props.design.colorB) ? props.design.colorF : (kvConfig.theme.colorF || '#192a14'),
 				labelColor: validColors(props.design.colorF, props.design.colorB) ? props.design.colorF : (kvConfig.theme.colorTxt || '#192a14'),
 				url: bareLink,
-				webServiceURL: 'https://passapi.payto.money',
-				authenticationToken: 'your-auth-token',
 				...(hostname === 'void' && (props.network === 'geo' || props.network === 'plus') ? {
 					locations: [
 						{
@@ -169,6 +168,15 @@ export const actions = {
 						}
 					]
 				} : {}),
+				...(kvConfig.url ? {
+					orgUrl: kvConfig.url
+				} : {})
+			};
+
+			const passData = {
+				...basicData,
+				formatVersion: 1,
+				teamIdentifier: kvConfig.teamId,
 
 				// NFC configuration
 				nfc: {
@@ -265,28 +273,28 @@ export const actions = {
 					}] : [])
 				],
 				backFields: [
-					...(false ? [{
+					{ // TODO: Balance value only for pro version, otherwise no info
 						key: 'balance',
 						label: 'Balance',
 						value: explorerUrl ? `Balance: %balance% View on ${props.network.toUpperCase()}: ${explorerUrl}` : `Balance: %balance%`,
 						dataDetectorTypes: ["PKDataDetectorTypeLink"]
-					}] : []),
+					},
 					{
 						key: 'refill-address',
 						label: 'Refill',
 						value: `Refill this address: https://coreport.net/form?address=${props.destination}`,
 						dataDetectorTypes: ["PKDataDetectorTypeLink"]
 					},
-					...(false ? [{
+					{
 						key: 'pro',
 						label: 'PRO version',
-						value: 'Open the offer: https://payto.money/pro/',
+						value: `Open the offer: https://payto.money/pro?rc=${props.destination}`,
 						dataDetectorTypes: ["PKDataDetectorTypeLink"]
-					}] : []),
+					},
 					{
 						key: 'issuer',
 						label: 'Issuer',
-						value: `This pass is issued by: ${props.design.org}`
+						value: `This Pass is issued by: ${basicData.organizationName}${basicData.orgUrl ? ` https://${basicData.orgUrl}` : ''}`
 					}
 				]
 			};
@@ -346,6 +354,9 @@ export const actions = {
 
 			// Generate the .pkpass file
 			const pkpassBlob = await zip.generateAsync({ type: 'blob' });
+
+			// Register pass
+			await registerPass(basicData, props);
 
 			return new Response(pkpassBlob, {
 				headers: {

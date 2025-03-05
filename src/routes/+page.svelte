@@ -18,7 +18,7 @@
 	let currentSentence = writable('');
 	let currentLink = writable('');
 	let currentShow = writable(false);
-	let authority = writable('payto');
+	let authority = writable('');
 	const purpose = writable("pay");
 	const urlAuthority: string | undefined = page.data.authority;
 
@@ -210,6 +210,7 @@
 						<div class="w-full md:w-[400px] flex-shrink-0">
 							<WalletCard
 								bind:hostname={$type}
+								authority={$authority}
 							/>
 							<div class="flex flex-col mt-4 gap-4">
 								<div class="w-full px-4 py-3 text-sm border rounded border-gray-700 bg-gray-800 text-gray-300" role="alert">
@@ -266,22 +267,6 @@
 					{/if}
 					<div>
 						Compatibility: Desktop - Chromium from version 121 & enabled flags (Experimental Web Platform Features); Opera; Safari. Mobile - All major browsers.
-					</div>
-					<div>
-						Source code is located at
-						<a
-							class="transition duration-200 visited:text-gray-200 hover:text-gray-300"
-							href="https://github.com/core-laboratories/Payto"
-							target="_blank"
-							rel="noreferrer"
-						>GitHub</a>.
-						Licensed under the
-						<a
-							class="transition duration-200 visited:text-gray-200 hover:text-gray-300"
-							href="https://github.com/bchanhub/core-license/blob/master/LICENSE"
-							target="_blank"
-							rel="noreferrer"
-						>CORE License</a>.
 					</div>
 				</div>
 			</BoxContent>
