@@ -212,7 +212,7 @@
 						type="submit"
 						disabled={!hostname || $isGenerating}
 					>
-						{$isGenerating ? 'Generating...' : 'Download Pass'}
+						{$isGenerating ? 'Generating…' : 'Download Pass'}
 					</button>
 				</form>
 			</div>

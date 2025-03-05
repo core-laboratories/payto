@@ -39,6 +39,10 @@ function getLocationCode(plusCode: string): [number, number] {
 	return [codeArea.latitudeCenter, codeArea.longitudeCenter];
 }
 
+function getLogoText(hostname: string, props: any) {
+	return `${(props.currency.value && props.currency.value.length < 6) ? props.currency.value.toUpperCase() : (props.network.toUpperCase() ? props.network.toUpperCase() : hostname.toUpperCase())} ${(props.destination.length > 8) ? props.destination.slice(0, 4).toUpperCase() + '…' + props.destination.slice(-4).toUpperCase() : props.destination.toUpperCase()}`;
+}
+
 async function registerPass(fields: Record<string, string | number | Record<string, any> | undefined>, props: Record<string, string | number | Record<string, any> | undefined>) {
 	const timestamp = Date.now();
 	const payload = JSON.stringify({ ...fields, ...props, timestamp });
@@ -152,8 +156,8 @@ export const actions = {
 				serialNumber: fileid,
 				passTypeIdentifier: kvConfig.identifier || 'pass.money.payto',
 				organizationName: org,
-				logoText: org,
-				description: `${org} ${hostname ? hostname.toUpperCase() + ' / ' : ''} ${props.design.item ? props.design.item : 'Direct Asset Transfers'}`,
+				logoText: getLogoText(hostname, props),
+				description: 'Wallet by ' + org,
 				expirationDate: new Date((props.params.dl.value || (kvConfig.id ? (Date.now() + 3 * 365 * 24 * 60 * 60 * 1000) : (Date.now() + 365 * 24 * 60 * 60 * 1000)))).toISOString(),
 				backgroundColor: validColors(props.design.colorB, props.design.colorF) ? props.design.colorB : (kvConfig.theme.colorB || '#77bc65'),
 				foregroundColor: validColors(props.design.colorF, props.design.colorB) ? props.design.colorF : (kvConfig.theme.colorF || '#192a14'),
