@@ -8,9 +8,11 @@ import { KV } from '$lib/helpers/kv.helper';
 import ExchNumberFormat from 'exchange-rounding';
 import JSZip from 'jszip';
 import forge from 'node-forge';
-
-// @ts-expect-error: Module '"$env/static/private"' has no exported member 'PRIVATE_DECRYPTION_KEY'.
-import { PRIVATE_WEB_SERVICE_URL, PRIVATE_AUTH_SECRET } from '$env/static/private';
+import { createClient } from '@supabase/supabase-js';
+// @ts-expect-error: Module '"$env/static/private"' has no exported member.
+import { PRIVATE_PASS_TEAM_IDENTIFIER, PRIVATE_PASS_PRIVATE_KEY, PRIVATE_AUTH_SECRET, PRIVATE_WEB_SERVICE_URL, PRIVATE_SUPABASE_URL, PRIVATE_SUPABASE_KEY } from '$env/static/private';
+// @ts-expect-error: Module '"$env/static/public"' has no exported member.
+import { PUBLIC_ENABLE_STATS } from '$env/static/public';
 
 // @ts-expect-error: Module is untyped
 import pkg from 'open-location-code/js/src/openlocationcode';
@@ -43,29 +45,15 @@ function getLogoText(hostname: string, props: any) {
 	return `${(props.currency.value && props.currency.value.length < 6) ? props.currency.value.toUpperCase() : (props.network.toUpperCase() ? props.network.toUpperCase() : hostname.toUpperCase())} ${(props.destination.length > 8) ? props.destination.slice(0, 4).toUpperCase() + '…' + props.destination.slice(-4).toUpperCase() : props.destination.toUpperCase()}`;
 }
 
-async function registerPass(fields: Record<string, string | number | Record<string, any> | undefined>, props: Record<string, string | number | Record<string, any> | undefined>) {
-	const timestamp = Date.now();
-	const payload = JSON.stringify({ ...fields, ...props, timestamp });
-
+function generateToken(json: string) {
+	const payload = JSON.stringify({
+		...JSON.parse(json),
+		timestamp: Date.now()
+	});
 	const hmac = forge.hmac.create();
 	hmac.start('sha256', PRIVATE_AUTH_SECRET);
 	hmac.update(payload);
-	const token = hmac.digest().toHex();
-
-	const pass = await fetch(PRIVATE_WEB_SERVICE_URL + '/register', {
-		headers: {
-			'Content-Type': 'application/json',
-			'Authorization': `Bearer ${token}`
-		},
-		method: 'POST',
-		body: payload,
-	});
-
-	if (!pass.ok) {
-		throw error(500, 'Failed to register pass');
-	} else {
-		return true;
-	}
+	return hmac.digest().toHex();
 }
 
 const formatter = (currency: string | undefined, format: string | undefined, customCurrencyData = {}) => {
@@ -75,6 +63,11 @@ const formatter = (currency: string | undefined, format: string | undefined, cus
 		currencyDisplay: 'symbol',
 		customCurrency: customCurrencyData,
 	});
+}
+
+let supabase = null;
+if (PUBLIC_ENABLE_STATS) {
+	supabase = createClient(PRIVATE_SUPABASE_URL, PRIVATE_SUPABASE_KEY);
 }
 
 export async function load({ url }) {
@@ -110,15 +103,17 @@ export const actions = {
 			const hostname = formData.get('hostname') as string;
 			const membership = formData.get('membership') as string;
 			const authorityField = (formData.get('authority') as string);
-			const authority = authorityField ? authorityField.toLowerCase() : 'payto';
-			let kvConfig = null;
+			const authorityItem = authorityField ? authorityField.toLowerCase() : 'payto';
+			let kvData = null;
+			let authority = null;
 
 			if (authorityField) {
 				// Load KV values
-				kvConfig = await KV.get(authority);
-				if (kvConfig && (!kvConfig.id || !kvConfig.identifier)) {
-					throw error(400, `Invalid or missing configuration for authority: ${authority}`);
+				kvData = await KV.get(authorityItem);
+				if (kvData && (!kvData.id || !kvData.identifier)) {
+					throw error(400, `Invalid or missing configuration for authority: ${authorityItem}`);
 				}
+				authority = kvData.id;
 			}
 
 			// Required fields
@@ -139,12 +134,14 @@ export const actions = {
 
 			// Basic pass data structure
 			const bareLink = getLink(hostname, props);
-			const org = kvConfig.name || (props.design.org || (authorityField.toUpperCase()) || 'PayTo');
-			const originator = kvConfig.id || 'payto';
+			const org = kvData.name || (props.design.org || (authorityField.toUpperCase()) || 'PayTo');
+			const originator = kvData.id || 'payto';
+			const originatorName = kvData.name || 'PayTo';
 			const memberAddress = membership || props.destination;
 			const fileid = `${originator}-${memberAddress}-${props.destination}-${hostname}-${props.network}-${new Date(Date.now()).toISOString().replace(/[-T:]/g, '').slice(0, 12)}`;
 			const explorerUrl = getExplorerUrl(props.network, { address: props.destination });
-			const customCurrencyData = kvConfig.customCurrency || {};
+			const customCurrencyData = kvData.customCurrency || {};
+			const currency = getCurrency(props.network, hostname as ITransitionType);
 
 			if (hostname === 'void' && props.network === 'plus') {
 				const plusCoordinates = getLocationCode(props.params.loc?.value || '');
@@ -154,14 +151,14 @@ export const actions = {
 
 			const basicData = {
 				serialNumber: fileid,
-				passTypeIdentifier: kvConfig.identifier || 'pass.money.payto',
+				passTypeIdentifier: kvData.identifier || 'pass.money.payto',
 				organizationName: org,
 				logoText: getLogoText(hostname, props),
 				description: 'Wallet by ' + org,
-				expirationDate: new Date((props.params.dl.value || (kvConfig.id ? (Date.now() + 3 * 365 * 24 * 60 * 60 * 1000) : (Date.now() + 365 * 24 * 60 * 60 * 1000)))).toISOString(),
-				backgroundColor: validColors(props.design.colorB, props.design.colorF) ? props.design.colorB : (kvConfig.theme.colorB || '#77bc65'),
-				foregroundColor: validColors(props.design.colorF, props.design.colorB) ? props.design.colorF : (kvConfig.theme.colorF || '#192a14'),
-				labelColor: validColors(props.design.colorF, props.design.colorB) ? props.design.colorF : (kvConfig.theme.colorTxt || '#192a14'),
+				expirationDate: new Date((props.params.dl.value || (kvData.id ? (Date.now() + 3 * 365 * 24 * 60 * 60 * 1000) : (Date.now() + 365 * 24 * 60 * 60 * 1000)))).toISOString(),
+				backgroundColor: validColors(props.design.colorB, props.design.colorF) ? props.design.colorB : (kvData.theme.colorB || '#77bc65'),
+				foregroundColor: validColors(props.design.colorF, props.design.colorB) ? props.design.colorF : (kvData.theme.colorF || '#192a14'),
+				labelColor: validColors(props.design.colorF, props.design.colorB) ? props.design.colorF : (kvData.theme.colorTxt || '#192a14'),
 				url: bareLink,
 				...(hostname === 'void' && (props.network === 'geo' || props.network === 'plus') ? {
 					locations: [
@@ -172,15 +169,15 @@ export const actions = {
 						}
 					]
 				} : {}),
-				...(kvConfig.url ? {
-					orgUrl: kvConfig.url
+				...(kvData.url ? {
+					orgUrl: kvData.url
 				} : {})
 			};
 
 			const passData = {
 				...basicData,
 				formatVersion: 1,
-				teamIdentifier: kvConfig.teamId,
+				teamIdentifier: PRIVATE_PASS_TEAM_IDENTIFIER,
 
 				// NFC configuration
 				nfc: {
@@ -236,7 +233,7 @@ export const actions = {
 						label: 'Amount',
 						value:
 							props.params.amount.value && Number(props.params.amount.value) > 0 ?
-								formatter(getCurrency(props.network, hostname as ITransitionType), (kvConfig.currencyLocale || undefined), customCurrencyData).format(Number(props.params.amount.value)) :
+								formatter(currency, (kvData.currencyLocale || undefined), customCurrencyData).format(Number(props.params.amount.value)) :
 								`Custom Amount`
 					}
 				],
@@ -251,11 +248,13 @@ export const actions = {
 						label: 'Type',
 						value: props.params.rc?.value ? `Recurring ${props.params.rc.value.toUpperCase()}` : 'One-time'
 					},
-					...(false ? [{
-						key: 'receiving',
+					...(hostname === 'ican' ? [{
+						key: 'received',
 						label: 'Received',
-						value: 'PRO version only'
-					}] : [])
+						value: 'Click to view transactions',
+						attributedValue: explorerUrl || '',
+						dataDetectorTypes: ["PKDataDetectorTypeLink"]
+					}] : []),
 				],
 				auxiliaryFields: [
 					...(props.params.amount.value && Number(props.params.amount.value) > 0 && props.split?.value ? [{
@@ -263,7 +262,7 @@ export const actions = {
 						label: 'Split',
 						value: props.split.isPercent ?
 							`${Number(props.split.value)}%` :
-							formatter(getCurrency(props.network, hostname as ITransitionType), (kvConfig.currencyLocale || undefined), customCurrencyData).format(Number(props.split.value))
+							formatter(currency, (kvData.currencyLocale || undefined), customCurrencyData).format(Number(props.split.value))
 					}] : []),
 					...(props.params.message?.value ? [{
 						key: 'message',
@@ -274,31 +273,38 @@ export const actions = {
 						key: 'split-address',
 						label: 'Split Receiving Address',
 						value: props.split.address
-					}] : [])
+					}] : []),
+					{
+						key: 'subscription',
+						label: 'Subscription',
+						value: `Current subscription: <i>Basic</i><br>Valid till: Unlimited<br>Click to Pay/Extend`,
+						attributedValue: `${PRIVATE_WEB_SERVICE_URL}/subscribe?pass=${basicData.serialNumber}&tk=${generateToken(JSON.stringify({
+							pass: basicData.serialNumber
+						}))}`,
+						dataDetectorTypes: ["PKDataDetectorTypeLink"]
+					},
 				],
 				backFields: [
-					{
+					...(hostname === 'ican' ? [{
 						key: 'balance',
-						label: 'Balance',
-						value: explorerUrl ? `View on ${props.network.toUpperCase()}: ${explorerUrl}` : `Balance`,
+						label: `Balances`,
+						value: 'Click to view',
+						attributedValue: explorerUrl || '',
 						dataDetectorTypes: ["PKDataDetectorTypeLink"]
-					},
-					{
-						key: 'refill-address',
-						label: 'Refill',
-						value: `Refill this address: https://coreport.net/form?address=${props.destination}`,
+					}] : []),
+					...(hostname === 'ican' ? [{
+						key: 'onramp',
+						label: 'On-ramp',
+						value: `Buy assets 📥`,
+						attributedValue: `https://coreport.net/form?address=${props.destination}`,
 						dataDetectorTypes: ["PKDataDetectorTypeLink"]
-					},
-					{
-						key: 'pro',
-						label: 'PRO version',
-						value: `Open the offer: https://payto.money/pro?rc=${props.memberAddress}`,
-						dataDetectorTypes: ["PKDataDetectorTypeLink"]
-					},
+					}] : []),
 					{
 						key: 'issuer',
 						label: 'Issuer',
-						value: `This Pass is issued by: ${basicData.organizationName}${basicData.orgUrl ? ` https://${basicData.orgUrl}` : ''}`
+						value: `This Pass is issued by: ${originatorName}`,
+						attributedValue: `${basicData.orgUrl ? basicData.orgUrl : (kvData.name ? '' : 'https://payto.money')}`,
+						dataDetectorTypes: ["PKDataDetectorTypeLink"]
 					}
 				]
 			};
@@ -310,23 +316,23 @@ export const actions = {
 			const defaultImages: Record<string, ArrayBuffer> = {};
 
 			await Promise.all([
-				fetch(kvConfig.icons.icon)
+				fetch(kvData.icons.icon)
 					.then(res => res.ok ? res.arrayBuffer() : null)
 					.then(buffer => { if (buffer) defaultImages['icon.png'] = buffer; })
 					.catch(() => {}),
-				fetch(kvConfig.icons.icon2x)
+				fetch(kvData.icons.icon2x)
 					.then(res => res.ok ? res.arrayBuffer() : null)
 					.then(buffer => { if (buffer) defaultImages['icon@2x.png'] = buffer; })
 					.catch(() => {}),
-				fetch(kvConfig.icons.icon3x)
+				fetch(kvData.icons.icon3x)
 					.then(res => res.ok ? res.arrayBuffer() : null)
 					.then(buffer => { if (buffer) defaultImages['icon@3x.png'] = buffer; })
 					.catch(() => {}),
-				fetch(kvConfig.icons.logo)
+				fetch(kvData.icons.logo)
 					.then(res => res.ok ? res.arrayBuffer() : null)
 					.then(buffer => { if (buffer) defaultImages['logo.png'] = buffer; })
 					.catch(() => {}),
-				fetch(kvConfig.icons.logo2x)
+				fetch(kvData.icons.logo2x)
 					.then(res => res.ok ? res.arrayBuffer() : null)
 					.then(buffer => { if (buffer) defaultImages['logo@2x.png'] = buffer; })
 					.catch(() => {})
@@ -349,7 +355,7 @@ export const actions = {
 			zip.file('manifest.json', JSON.stringify(manifest, null, 2));
 
 			// Create signature using KV private key
-			const privateKeyObj = forge.pki.privateKeyFromPem(kvConfig.privateKey);
+			const privateKeyObj = forge.pki.privateKeyFromPem(PRIVATE_PASS_PRIVATE_KEY);
 			const manifestText = JSON.stringify(manifest, null, 2);
 			const signature = forge.util.encode64(
 				privateKeyObj.sign(forge.md.sha1.create().update(manifestText))
@@ -359,8 +365,29 @@ export const actions = {
 			// Generate the .pkpass file
 			const pkpassBlob = await zip.generateAsync({ type: 'blob' });
 
-			// Register pass
-			await registerPass(basicData, props);
+			if (pkpassBlob && PUBLIC_ENABLE_STATS) {
+				// Send anonymized stats to Supabase
+				// @ts-expect-error: Supabase client is not initialized
+				await supabase
+					.from('stats')
+					.insert([
+						{
+							hostname, // Type of payment (string)
+							network: props.network, // Network used (string)
+							currency: currency, // Currency used (string)
+							...(props.params.amount.value ? { amount: props.params.amount.value } : {}), // Amount of payment (number)
+							...(props.design.org ? { customOrg: true } : {}), // Custom organization name (boolean)
+							...(props.params.donate?.value ? { donate: true } : {}), // Donation (boolean)
+							...(props.params.rc?.value ? { recurring: true } : {}), // Recurring (boolean)
+							...(props.design.colorF ? { colorF: props.design.colorF } : {}), // Foreground color (string)
+							...(props.design.colorB ? { colorB: props.design.colorB } : {}), // Background color (string)
+							...(props.params.split?.value ? { split: true } : {}), // Split (boolean)
+							...(authority ? { authority } : {}), // Authority used (string)
+							createdAt: new Date().toISOString() // Timestamp of issuance (datetime)
+						}
+					])
+					.select();
+			}
 
 			return new Response(pkpassBlob, {
 				headers: {
