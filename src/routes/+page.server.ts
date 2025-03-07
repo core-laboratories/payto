@@ -56,6 +56,23 @@ function generateToken(json: string) {
 	return hmac.digest().toHex();
 }
 
+function getFormattedDateTimeWithTimezone() {
+	const now = new Date();
+
+	// Format date and time as YYYYMMDDHHmm
+	const formattedDateTime = now.toISOString().replace(/[-T:]/g, '').slice(2, 12);
+
+	// Get timezone offset in ±hhmm format
+	const offsetMinutes = now.getTimezoneOffset();
+	const hours = String(Math.abs(Math.floor(offsetMinutes / 60))).padStart(2, '0');
+	const minutes = String(Math.abs(offsetMinutes % 60)).padStart(2, '0');
+	const sign = offsetMinutes > 0 ? '-' : '+'; // JavaScript offset is opposite (- for ahead, + for behind UTC)
+
+	const timezoneOffset = `${sign}${hours}${minutes}`;
+
+	return `${formattedDateTime}${timezoneOffset}`;
+}
+
 const formatter = (currency: string | undefined, format: string | undefined, customCurrencyData = {}) => {
 	return new ExchNumberFormat(format, {
 		style: 'currency',
@@ -138,7 +155,7 @@ export const actions = {
 			const originator = kvData.id || 'payto';
 			const originatorName = kvData.name || 'PayTo';
 			const memberAddress = membership || props.destination;
-			const fileid = `${originator}-${memberAddress}-${props.destination}-${hostname}-${props.network}-${new Date(Date.now()).toISOString().replace(/[-T:]/g, '').slice(0, 12)}`;
+			const fileid = `${originator}_${memberAddress}_${props.destination}_${hostname}_${props.network}_${getFormattedDateTimeWithTimezone()}`;
 			const explorerUrl = getExplorerUrl(props.network, { address: props.destination });
 			const customCurrencyData = kvData.customCurrency || {};
 			const currency = getCurrency(props.network, hostname as ITransitionType);
@@ -155,7 +172,7 @@ export const actions = {
 				organizationName: org,
 				logoText: getLogoText(hostname, props),
 				description: 'Wallet by ' + org,
-				expirationDate: new Date((props.params.dl.value || (kvData.id ? (Date.now() + 3 * 365 * 24 * 60 * 60 * 1000) : (Date.now() + 365 * 24 * 60 * 60 * 1000)))).toISOString(),
+				expirationDate: new Date((props.params.dl.value || (kvData.id ? (Date.now() + 2 * 365 * 24 * 60 * 60 * 1000) : (Date.now() + 365 * 24 * 60 * 60 * 1000)))).toISOString(),
 				backgroundColor: validColors(props.design.colorB, props.design.colorF) ? props.design.colorB : (kvData.theme.colorB || '#77bc65'),
 				foregroundColor: validColors(props.design.colorF, props.design.colorB) ? props.design.colorF : (kvData.theme.colorF || '#192a14'),
 				labelColor: validColors(props.design.colorF, props.design.colorB) ? props.design.colorF : (kvData.theme.colorTxt || '#192a14'),
@@ -369,7 +386,7 @@ export const actions = {
 				// Send anonymized stats to Supabase
 				// @ts-expect-error: Supabase client is not initialized
 				await supabase
-					.from('stats')
+					.from('passes_stats')
 					.insert([
 						{
 							hostname, // Type of payment (string)
