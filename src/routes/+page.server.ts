@@ -56,21 +56,29 @@ function generateToken(json: string) {
 	return hmac.digest().toHex();
 }
 
-function getFormattedDateTimeWithTimezone() {
+function getFormattedDateTime(includeTimezone: boolean = true) {
 	const now = new Date();
 
 	// Format date and time as YYYYMMDDHHmm
 	const formattedDateTime = now.toISOString().replace(/[-T:]/g, '').slice(2, 12);
 
 	// Get timezone offset in ±hhmm format
-	const offsetMinutes = now.getTimezoneOffset();
-	const hours = String(Math.abs(Math.floor(offsetMinutes / 60))).padStart(2, '0');
-	const minutes = String(Math.abs(offsetMinutes % 60)).padStart(2, '0');
-	const sign = offsetMinutes > 0 ? '-' : '+'; // JavaScript offset is opposite (- for ahead, + for behind UTC)
+	if (includeTimezone) {
+		const offsetMinutes = now.getTimezoneOffset();
+		const hours = String(Math.abs(Math.floor(offsetMinutes / 60))).padStart(2, '0');
+		const minutes = String(Math.abs(offsetMinutes % 60)).padStart(2, '0');
+		const sign = offsetMinutes > 0 ? '-' : '+'; // JavaScript offset is opposite (- for ahead, + for behind UTC)
 
-	const timezoneOffset = `${sign}${hours}${minutes}`;
+		const timezoneOffset = `${sign}${hours}${minutes}`;
 
-	return `${formattedDateTime}${timezoneOffset}`;
+		return `${formattedDateTime}${timezoneOffset}`;
+	}
+
+	return formattedDateTime;
+}
+
+function getFileId(arr: string[], delimiter: string = '_', includeDate: boolean = true, includeTimezone: boolean = true) {
+	return arr.join(delimiter) + (includeDate ? (includeTimezone ? `${delimiter}${getFormattedDateTime()}` : `${delimiter}${getFormattedDateTime(false)}`) : '');
 }
 
 const formatter = (currency: string | undefined, format: string | undefined, customCurrencyData = {}) => {
@@ -155,7 +163,8 @@ export const actions = {
 			const originator = kvData.id || 'payto';
 			const originatorName = kvData.name || 'PayTo';
 			const memberAddress = membership || props.destination;
-			const fileid = `${originator}_${memberAddress}_${props.destination}_${hostname}_${props.network}_${getFormattedDateTimeWithTimezone()}`;
+			const serialId = getFileId([originator, memberAddress, props.destination, hostname, props.network]);
+			const fileId = getFileId([originator, memberAddress, props.destination, hostname, props.network], '-', true, false);
 			const explorerUrl = getExplorerUrl(props.network, { address: props.destination });
 			const customCurrencyData = kvData.customCurrency || {};
 			const currency = getCurrency(props.network, hostname as ITransitionType);
@@ -167,7 +176,7 @@ export const actions = {
 			}
 
 			const basicData = {
-				serialNumber: fileid,
+				serialNumber: serialId,
 				passTypeIdentifier: kvData.identifier || 'pass.money.payto',
 				organizationName: org,
 				logoText: getLogoText(hostname, props),
@@ -409,7 +418,7 @@ export const actions = {
 			return new Response(pkpassBlob, {
 				headers: {
 					'Content-Type': 'application/vnd.apple.pkpass',
-					'Content-Disposition': `attachment; filename="${fileid}.pkpass"`
+					'Content-Disposition': `attachment; filename="${fileId}.pkpass"`
 				}
 			});
 		} catch (err) {
