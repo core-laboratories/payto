@@ -67,8 +67,8 @@
 					<span class="block text-sm font-normal text-slate-400">Ideal for PayTo:Merchants.</span>
 				</h3>
 				<h4>
-					<span class="text-2xl">CTN</span>
-					<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500 lg:text-5xl">Ƈ 40,000</span>
+					<span class="text-2xl">USDX</span>
+					<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500 lg:text-5xl">$ 400</span>
 					<span class="text-sm">/month</span>
 				</h4>
 				<a href="mailto:sales@payto.money?subject=Pro%20Plus" class="inline-flex items-center justify-center w-full h-12 gap-2 px-6 text-sm font-bold tracking-wide !text-white transition duration-300 rounded shadow-sm whitespace-nowrap bg-emerald-500 shadow-emerald-400 hover:bg-emerald-600 hover:shadow-md hover:shadow-emerald-400 focus:bg-emerald-700 focus:shadow-md focus:shadow-emerald-400 focus-visible:outline-none !no-underline">
@@ -110,7 +110,7 @@
 				</ul>
 			</div>
 			<footer class="p-6 text-sm text-center border-t border-emerald-800 bg-gray-700/75">
-				<a class="transition-colors duration-300 text-emerald-500 hover:text-emerald-600 focus:text-emerald-700" target="_blank" rel="noopener noreferrer" href="https://coreport.net/form?asset=ctn&action=enter">On-Ramp CTN</a>
+				<a class="transition-colors duration-300 text-emerald-500 hover:text-emerald-600 focus:text-emerald-700" target="_blank" rel="noopener noreferrer" href="https://coreport.net/form?asset=usdx&action=enter">On-Ramp USDX</a>
 			</footer>
 		</div>
 	</div>
@@ -122,8 +122,8 @@
 					<span class="block text-sm font-normal text-slate-400">Ideal for PayTo:Businesses.</span>
 				</h3>
 				<h4>
-					<span class="text-2xl">CTN</span>
-					<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500 lg:text-5xl">Ƈ 500,000</span>
+					<span class="text-2xl">USDX</span>
+					<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500 lg:text-5xl">$ 4,000</span>
 					<span class="text-sm">/month</span>
 				</h4>
 				<a href="mailto:sales@payto.money?subject=Pro%20Business" class="inline-flex items-center justify-center w-full h-12 gap-2 px-6 text-sm font-bold tracking-wide !text-white transition duration-300 rounded shadow-sm whitespace-nowrap bg-emerald-500 shadow-emerald-400 hover:bg-emerald-600 hover:shadow-md hover:shadow-emerald-400 focus:bg-emerald-700 focus:shadow-md focus:shadow-emerald-400 focus-visible:outline-none !no-underline">
@@ -201,7 +201,7 @@
 				</ul>
 			</div>
 			<footer class="p-6 text-sm text-center border-t border-emerald-800 bg-gray-700/75">
-				<a class="transition-colors duration-300 text-emerald-500 hover:text-emerald-600 focus:text-emerald-700" target="_blank" rel="noopener noreferrer" href="https://coreport.net/form?asset=ctn&action=enter">On-Ramp CTN</a>
+				<a class="transition-colors duration-300 text-emerald-500 hover:text-emerald-600 focus:text-emerald-700" target="_blank" rel="noopener noreferrer" href="https://coreport.net/form?asset=usdx&action=enter">On-Ramp USDX</a>
 			</footer>
 		</div>
 	</div>

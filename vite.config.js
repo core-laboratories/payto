@@ -4,8 +4,8 @@ import tailwindcss from "@tailwindcss/vite";
 /** @type {import('vite').UserConfig} */
 const config = {
 	plugins: [
-		sveltekit(),
-		tailwindcss()
+		tailwindcss(),
+		sveltekit()
 	]
 };
 

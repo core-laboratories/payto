@@ -148,7 +148,7 @@ const recurringIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="cur
  * @param props - The props object that was used to initialized store.
  * @param html - Whether to return the title for HTML output
  */
-const getTitle = (prefix: 'pay' | 'donate', props: Record<string, any>, html: boolean = false) => {
+const getTitle = (prefix: 'pay' | 'donate', props: Record<string, any>, code: string | boolean = false) => {
 	let network
 	if (props.network === 'void') {
 		network = props.transport !== 'other'
@@ -165,15 +165,39 @@ const getTitle = (prefix: 'pay' | 'donate', props: Record<string, any>, html: bo
 	let namePrefix;
 	if (typeof props.params !== 'undefined' && typeof props.params.rc !== 'undefined' && typeof props.params.rc.value !== 'undefined') {
 		if (prefix === 'donate') {
-			namePrefix = html ? `${recurringIcon} <strong>Donate<span>To:</span></strong>` : `Recurring DonateTo:`;
+			if (code === 'html') {
+				namePrefix = `${recurringIcon}&nbsp;<strong>Donate<span>To:</span></strong>`;
+			} else if (code === 'tailwind') {
+				namePrefix = `${recurringIcon}&nbsp;<strong class="italic mr-1">Donate<span class="text-[#5675ff]">To:</span></strong>`;
+			} else {
+				namePrefix = `Recurring DonateTo:`;
+			}
 		} else {
-			namePrefix = html ? `${recurringIcon} <strong>Pay<span>To:</span></strong>` : `Recurring PayTo:`;
+			if (code === 'html') {
+				namePrefix = `${recurringIcon}&nbsp;<strong>Pay<span>To:</span></strong>`;
+			} else if (code === 'tailwind') {
+				namePrefix = `${recurringIcon}&nbsp;<strong class="italic mr-1">Pay<span class="text-[#059669]">To:</span></strong>`;
+			} else {
+				namePrefix = `Recurring PayTo:`;
+			}
 		}
 	} else {
 		if (prefix === 'donate') {
-			namePrefix = html ? `<strong>Donate<span>To:</span></strong>` : `DonateTo:`;
+			if (code === 'html') {
+				namePrefix = `<strong>Donate<span>To:</span></strong>`;
+			} else if (code === 'tailwind') {
+				namePrefix = `<strong class="italic mr-1">Donate<span class="text-[#5675ff]">To:</span></strong>`;
+			} else {
+				namePrefix = `DonateTo:`;
+			}
 		} else {
-			namePrefix = html ? `<strong>Pay<span>To:</span></strong>` : `PayTo:`;
+			if (code === 'html') {
+				namePrefix = `<strong>Pay<span>To:</span></strong>`;
+			} else if (code === 'tailwind') {
+				namePrefix = `<strong class="italic mr-1">Pay<span class="text-[#059669]">To:</span></strong>`;
+			} else {
+				namePrefix = `PayTo:`;
+			}
 		}
 	}
 
@@ -229,7 +253,7 @@ cursor:pointer;
 color:#72bd5e;
 padding:6px 12px;
 background:#72bd5e20;
-font:15px/20px BlinkMacSystemFont, -apple-system, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+font:16px/20px BlinkMacSystemFont, -apple-system, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
 border:1px solid #639953;
 border-radius:16px;
 text-decoration:none;
@@ -242,12 +266,11 @@ const stylePayto = `
 a.ptPay>strong{font-style:italic;margin-right:4px}
 a.ptPay>strong>span{color:#059669}
 a.ptPay>svg{vertical-align:-3px;margin-right:2px}
-a.ptPay:hover{border-color:#95e87f!important;color:#95e87f!important}
-a.ptPay:hover>strong>span{color:#06c88d!important}
+a.ptPay:hover{border-color:#95e87f!important;background-color: #72bd5e38!important}
 a.ptPay{display:inline-flex;align-items:center}
 </style>`;
 
-	return `<a href="${link}" class="ptPay" style="${style}">${getTitle('pay', props, true)}</a>${stylePayto}`;
+	return `<a href="${link}" class="ptPay" style="${style}">${getTitle('pay', props, 'html')}</a>${stylePayto}`;
 };
 
 /**
@@ -263,7 +286,7 @@ cursor:pointer;
 color:#849dfc;
 padding:6px 12px;
 background:#849dfc20;
-font:15px/20px BlinkMacSystemFont, -apple-system, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+font:16px/20px BlinkMacSystemFont, -apple-system, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
 border:1px solid #878fc5;
 border-radius:16px;
 text-decoration:none;
@@ -276,12 +299,33 @@ const styleDonateto = `
 a.ptDonate>strong{font-style:italic;margin-right:4px}
 a.ptDonate>strong>span{color:#5675ff}
 a.ptDonate>svg{vertical-align:-3px;margin-right:2px}
-a.ptDonate:hover{border-color:#b6c2f4!important;color:#b6c2f4!important}
-a.ptDonate:hover>strong>span{color:#89a0ff!important}
+a.ptDonate:hover{border-color:#b6c2f4!important;background-color: #849dfc38!important}
 a.ptDonate{display:inline-flex;align-items:center}
 </style>`;
 
-	return `<a href="${link}" class="ptDonate" style="${style}">${getTitle('donate', props, true)}</a>${styleDonateto}`;
+	return `<a href="${link}" class="ptDonate" style="${style}">${getTitle('donate', props, 'html')}</a>${styleDonateto}`;
+};
+
+/**
+ * It takes a link and a props object and returns a string of HTML that can be used to render a
+ * payment button
+ * @param {string} link - The link to the payment page.
+ * @param props - The props object that was used to initialized store.
+ * @returns A string of HTML code that will be used to create a payment button.
+ */
+const generateTailwindPaymentButton = (link: string, props: Record<string, any>) => {
+	return `<a href="${link}" class="inline-flex items-center cursor-pointer px-3 py-1.5 bg-[#72bd5e20] hover:bg-[#72bd5e38] !text-[#72bd5e] font-sans leading-5 border border-[#639953] rounded-full !no-underline h-fit whitespace-nowrap transition-all duration-150 ease-in-out hover:border-[#95e87f] hover:text-[#95e87f] font-sans group">${getTitle('pay', props, 'tailwind')}</a>`;
+};
+
+/**
+ * It takes a link and a props object and returns a string of HTML that can be used to render a
+ * donation button
+ * @param {string} link - The link to the donation page.
+ * @param props - The props object that was used to initialized store.
+ * @returns A string of HTML code that will be used to create a donation button.
+ */
+const generateTailwindDonationButton = (link: string, props: Record<string, any>) => {
+	return `<a href="${link}" class="inline-flex items-center cursor-pointer px-3 py-1.5 bg-[#849dfc20] hover:bg-[#849dfc38] !text-[#849dfc] font-sans leading-5 border border-[#878fc5] rounded-full !no-underline h-fit whitespace-nowrap transition-all duration-150 ease-in-out hover:border-[#b6c2f4] hover:text-[#b6c2f4] font-sans group">${getTitle('donate', props, 'tailwind')}</a>`;
 };
 
 /**
@@ -344,17 +388,21 @@ export const generate = (type: ITransitionType, props: any, payload: IPayload[])
 	return [
 		{ label: 'Link', value: link },
 		{ label: 'Markdown', value: generateMarkDown(link, props) },
-		{ label: 'Html link', value: generateHtmlLink(link, props) },
+		{ label: 'HTML Link', value: generateHtmlLink(link, props) },
 		{
-			label: 'Html payment button',
+			label: 'HTML Payment Button',
 			value: generateHtmlPaymentButton(link, props),
-			previewable: true
+			previewable: true,
+			type: 'payment'
 		},
 		{
-			label: 'Html donation button',
+			label: 'HTML Donation Button',
 			value: generateHtmlDonationButton(generateLink(payload, props, true), props),
-			previewable: true
+			previewable: true,
+			type: 'donation'
 		},
+		{ label: 'Tailwind Payment Button', value: generateTailwindPaymentButton(link, props), type: 'payment' },
+		{ label: 'Tailwind Donation Button', value: generateTailwindDonationButton(generateLink(payload, props, true), props), type: 'donation' },
 		{ label: 'FinTag (Meta Tag)', note: 'Basic payment instructions only.', value: generateMetaTag(type, props) }
 	];
 };

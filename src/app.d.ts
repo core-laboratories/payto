@@ -54,6 +54,7 @@ interface IOutput {
 	value: string;
 	note?: string;
 	previewable?: boolean;
+	type?: string;
 }
 
 interface IState {

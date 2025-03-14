@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "../css/app.css";
+	import "../../css/app.css";
 	import {
 		Row, Box, BoxContent, BoxTitle, Page, Tabs, Toast, WalletCard, DesignContent
 	} from '$lib/components';
@@ -46,10 +46,10 @@
 
 			const outputLinks = result.filter(link => {
 				if ($purpose === 'donate') {
-					return !link.label.includes('payment');
+					return !link.type?.includes('payment');
 				}
 
-				return !link.label.includes('donation');
+				return !link.type?.includes('donation');
 			});
 
 			return Array.isArray(outputLinks) ? outputLinks : [];
