@@ -119,7 +119,7 @@
 			placeholder="e.g. BE68539007547034"
 			bind:value={ibanValue}
 			oninput={handleIbanInput}
-			classValue={`font-mono ${
+			classValue={`font-code tracking-widest placeholder:tracking-normal ${
 				ibanError
 					? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
 					: ibanValue
@@ -138,7 +138,7 @@
 			placeholder="e.g. DABADKKK"
 			bind:value={bicValue}
 			oninput={handleBicInput}
-			classValue={`font-mono uppercase ${
+			classValue={`font-code tracking-widest placeholder:tracking-normal uppercase ${
 				bicError
 					? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
 					: bicValue
@@ -179,7 +179,7 @@
 		<FieldGroupLabel>Fiat currency</FieldGroupLabel>
 		<FieldGroupText
 			placeholder="e.g. CHF; EUR; USD"
-			classValue="uppercase"
+			classValue="uppercase placeholder:normal-case"
 			bind:value={$constructor.networks.iban.params.currency.value}
 		/>
 		<FieldGroupAppendix>Empty value uses the default network currency.</FieldGroupAppendix>

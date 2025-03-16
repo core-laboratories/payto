@@ -31,7 +31,7 @@
 		value = newValue;
 	});
 
-	const baseClass = 'w-full bs-12 p-3 text-start bg-gray-900 rounded-xs border-0 caret-teal-500 focus:outline-none focus-visible:ring-4 focus-visible:ring-opacity-75 focus-visible:ring-green-800 focus-visible:ring-offset-green-700 focus-visible:ring-offset-2 text-sm';
+	const baseClass = 'w-full bs-12 p-3 text-start bg-gray-900 rounded-xs border-0 caret-teal-500 focus:outline-none focus-visible:ring-4 focus-visible:ring-opacity-75 focus-visible:ring-green-800 focus-visible:ring-offset-green-700 focus-visible:ring-offset-2 text-sm placeholder:normal-case';
 </script>
 
 <input

@@ -112,7 +112,7 @@
 		<FieldGroupLabel>Fiat currency (BRL default)</FieldGroupLabel>
 		<FieldGroupText
 			placeholder="e.g. CHF; EUR; USD; …"
-			classValue="uppercase"
+			classValue="uppercase placeholder:normal-case"
 			bind:value={$constructor.networks.pix.params.currency.value}
 		/>
 	</FieldGroup>

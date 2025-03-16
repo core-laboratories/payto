@@ -58,7 +58,7 @@
 
 			if (!result.success) {
 				const errors = result.error.errors;
-				errors.forEach(error => {
+				errors.forEach((error: { path: string[]; message: string }) => {
 					if (error.path.includes('latitude')) {
 						latError = true;
 						latMsg = error.message;
@@ -198,7 +198,7 @@
 						placeholder="Latitude"
 						bind:value={latValue}
 						oninput={handleLatInput}
-						classValue={`font-mono ${
+						classValue={`font-code tracking-widest placeholder:tracking-normal ${
 							latError
 								? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
 								: latValue
@@ -212,7 +212,7 @@
 						placeholder="Longitude"
 						bind:value={lonValue}
 						oninput={handleLonInput}
-						classValue={`font-mono ${
+						classValue={`font-code tracking-widest placeholder:tracking-normal ${
 							lonError
 								? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
 								: lonValue
@@ -247,7 +247,7 @@
 					placeholder="Plus Code, e.g. 8FWV26PJ+87"
 					bind:value={plusCodeValue}
 					oninput={handlePlusCodeInput}
-					classValue={`font-mono uppercase ${
+					classValue={`font-code tracking-widest placeholder:tracking-normal uppercase ${
 						plusCodeError
 							? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
 							: plusCodeValue
@@ -274,7 +274,7 @@
 
 		{#if $constructor.networks.void.transport === 'other'}
 			<input
-				class="w-full h-12 py-2 ps-3 text-start bg-gray-900 rounded-sm border-none caret-teal-500"
+				class="w-full h-12 py-2 ps-3 text-start bg-gray-900 rounded-sm border-none caret-teal-500 font-code tracking-widest placeholder:tracking-normal"
 				type="text"
 				id="exchange-point"
 				placeholder="Point"
@@ -314,7 +314,7 @@
 		<FieldGroupText
 			placeholder="e.g. XCB; USD"
 			bind:value={$constructor.networks.void.params.currency.value}
-			classValue="uppercase"
+			classValue="uppercase placeholder:normal-case"
 		/>
 		<FieldGroupAppendix>Empty value uses the default network currency.</FieldGroupAppendix>
 	</FieldGroup>

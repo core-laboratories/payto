@@ -109,7 +109,7 @@
 		<FieldGroupLabel>Fiat currency</FieldGroupLabel>
 		<FieldGroupText
 			placeholder="e.g. CHF; EUR; USD"
-			classValue="uppercase"
+			classValue="uppercase placeholder:normal-case"
 			bind:value={$constructor.networks.upi.params.currency.value}
 		/>
 		<FieldGroupAppendix>Empty value uses the default network currency.</FieldGroupAppendix>

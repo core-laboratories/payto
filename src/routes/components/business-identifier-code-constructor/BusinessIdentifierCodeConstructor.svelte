@@ -68,7 +68,7 @@
 			bind:value={bicValue}
 			on:input={handleBicInput}
 			on:change={handleBicInput}
-			classValue={`font-mono uppercase ${
+			classValue={`font-code tracking-widest placeholder:tracking-normal uppercase ${
 				bicError
 					? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
 					: bicValue
@@ -93,7 +93,7 @@
 		<FieldGroupLabel>Fiat currency *</FieldGroupLabel>
 		<FieldGroupText
 			placeholder="e.g. CHF; EUR; USD"
-			classValue="uppercase"
+			classValue="uppercase placeholder:normal-case"
 			bind:value={$constructor.networks.bic.params.currency.value}
 		/>
 		<FieldGroupAppendix>Empty value uses the default network currency.</FieldGroupAppendix>

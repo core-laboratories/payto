@@ -319,7 +319,7 @@
 				placeholder={getPlaceholder($constructor.networks.ican.network)}
 				bind:value={addressValue}
 				oninput={handleAddressInput}
-				classValue={`font-mono ${
+				classValue={`font-code tracking-widest placeholder:tracking-normal ${
 					addressError ? 'border-2 border-rose-500' :
 					addressTestnet ? 'border-2 border-amber-500' :
 					addressEnterprise ? 'border-2 border-amber-500' :
@@ -342,7 +342,7 @@
 			<FieldGroupText
 				placeholder="e.g. CTN; 0x1ab…"
 				bind:value={$constructor.networks.ican.params.currency.value}
-				classValue={classUpperValue}
+				classValue={`font-code tracking-widest placeholder:tracking-normal ${classUpperValue}`}
 			/>
 			<FieldGroupAppendix>If left empty, the default is the network currency or local fiat.</FieldGroupAppendix>
 		</FieldGroup>
@@ -381,7 +381,7 @@
 			<FieldGroupLabel>Fiat Currency</FieldGroupLabel>
 			<FieldGroupText
 				placeholder="e.g. USD"
-				classValue="uppercase"
+				classValue="uppercase placeholder:normal-case"
 				bind:value={$constructor.networks.ican.params.fiat.value}
 			/>
 		</FieldGroup>
@@ -404,7 +404,7 @@
 			<FieldGroupLabel>Asset to receive</FieldGroupLabel>
 			<FieldGroupText
 				placeholder="e.g. USDC"
-				classValue="uppercase"
+				classValue="uppercase placeholder:normal-case"
 				bind:value={$constructor.networks.ican.params.swap.value}
 			/>
 		</FieldGroup>
@@ -479,7 +479,7 @@
 					placeholder={getPlaceholder($constructor.networks.ican.network)}
 					bind:value={splitAddressValue}
 					oninput={handleSplitAddressInput}
-					classValue={`font-mono ${
+					classValue={`font-code tracking-widest placeholder:tracking-normal ${
 						splitAddressError ? 'border-2 border-rose-500' :
 						splitAddressTestnet ? 'border-2 border-amber-500' :
 						splitAddressEnterprise ? 'border-2 border-amber-500' :

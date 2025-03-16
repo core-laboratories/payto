@@ -2,6 +2,8 @@
     --font-family: "Arimo", serif;
     --font-family-arimo: "Arimo", serif;
 
+	--font-code: Zephirum, monospace;
+
 	--color-core: oklch(0.73 0.14 140);
 	--color-seagreen: oklch(0.6 0.13 163);
 	--color-green-100: oklch(0.95 0.1 140);

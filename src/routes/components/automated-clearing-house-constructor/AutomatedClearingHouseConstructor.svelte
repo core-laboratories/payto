@@ -107,7 +107,7 @@
 			bind:value={accountValue}
 			oninput={handleAccountInput}
 			onchange={handleAccountInput}
-			classValue={`font-mono ${
+			classValue={`font-code tracking-widest placeholder:tracking-normal ${
 				accountError
 					? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
 					: accountValue
@@ -127,7 +127,7 @@
 			bind:value={routingValue}
 			oninput={handleRoutingInput}
 			onchange={handleRoutingInput}
-			classValue={`font-mono ${
+			classValue={`font-code tracking-widest placeholder:tracking-normal ${
 				routingError
 					? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
 					: routingValue
@@ -161,7 +161,7 @@
 		<FieldGroupLabel>Fiat currency</FieldGroupLabel>
 		<FieldGroupText
 			placeholder="e.g. USD"
-			classValue="uppercase"
+			classValue="uppercase placeholder:normal-case"
 			bind:value={$constructor.networks.ach.params.currency.value}
 		/>
 		<FieldGroupAppendix>Empty value uses the default network currency.</FieldGroupAppendix>
