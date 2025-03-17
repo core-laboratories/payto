@@ -195,6 +195,7 @@
 			<div class="flex gap-4">
 				<FieldGroup>
 					<FieldGroupText
+						id="latitude"
 						placeholder="Latitude"
 						bind:value={latValue}
 						oninput={handleLatInput}
@@ -209,6 +210,7 @@
 				</FieldGroup>
 				<FieldGroup>
 					<FieldGroupText
+						id="longitude"
 						placeholder="Longitude"
 						bind:value={lonValue}
 						oninput={handleLonInput}
@@ -244,6 +246,7 @@
 		{#if $constructor.networks.void.transport === 'plus'}
 			<FieldGroup>
 				<FieldGroupText
+					id="plus-code"
 					placeholder="Plus Code, e.g. 8FWV26PJ+87"
 					bind:value={plusCodeValue}
 					oninput={handlePlusCodeInput}

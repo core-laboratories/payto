@@ -20,11 +20,14 @@
 	let bicError = $state(false);
 	let bicMsg = $state('');
 
+	let previousClearedState = false;
+
 	$effect(() => {
-		if ($constructor.isCleared) {
+		if ($constructor.isCleared && !previousClearedState) {
 			resetIban();
 			resetBic();
 		}
+		previousClearedState = $constructor.isCleared;
 	});
 
 	function handleRecurringChange() {

@@ -35,12 +35,15 @@
 	let classUpperValue = $state('uppercase');
 	let tokens = TRANSPORT.ican.find(item => item.value === $constructor.networks.ican.network)?.tokens;
 
+	let previousClearedState = false;
+
 	$effect(() => {
 		classUpperValue = $constructor.networks.ican.params?.currency?.value?.toLowerCase()?.startsWith('0x') ? '' : 'uppercase';
-		if ($constructor.isCleared) {
+		if ($constructor.isCleared && !previousClearedState) {
 			resetAddress();
 			resetSplitAddress();
 		}
+		previousClearedState = $constructor.isCleared;
 	});
 
 	function getCurrentDateTime() {
