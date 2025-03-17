@@ -68,7 +68,7 @@
 			bind:value={aliasValue}
 			oninput={handleAliasInput}
 			onchange={handleAliasInput}
-			classValue={`font-mono ${
+			classValue={`${
 				aliasError
 					? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
 					: aliasValue

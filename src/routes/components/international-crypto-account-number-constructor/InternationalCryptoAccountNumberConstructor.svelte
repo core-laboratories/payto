@@ -32,10 +32,11 @@
 	let splitAddressMsg = $state<string>('');
 
 	let timeDateValue = $state('');
-	let classUpperValue = $constructor.networks.ican.params?.currency?.value?.toLowerCase()?.startsWith('0x') ? '' : 'uppercase';
+	let classUpperValue = $state('uppercase');
 	let tokens = TRANSPORT.ican.find(item => item.value === $constructor.networks.ican.network)?.tokens;
 
 	$effect(() => {
+		classUpperValue = $constructor.networks.ican.params?.currency?.value?.toLowerCase()?.startsWith('0x') ? '' : 'uppercase';
 		if ($constructor.isCleared) {
 			resetAddress();
 			resetSplitAddress();

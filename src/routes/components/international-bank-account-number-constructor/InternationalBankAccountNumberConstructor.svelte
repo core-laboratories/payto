@@ -20,14 +20,12 @@
 	let bicError = $state(false);
 	let bicMsg = $state('');
 
-
 	$effect(() => {
 		if ($constructor.isCleared) {
 			resetIban();
 			resetBic();
 		}
 	});
-
 
 	function handleRecurringChange() {
 		if (!$constructor.networks.iban.isRc) {

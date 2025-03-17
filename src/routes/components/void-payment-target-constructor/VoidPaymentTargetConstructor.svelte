@@ -58,7 +58,7 @@
 
 			if (!result.success) {
 				const errors = result.error.errors;
-				errors.forEach((error: { path: string[]; message: string }) => {
+				errors.forEach((error) => {
 					if (error.path.includes('latitude')) {
 						latError = true;
 						latMsg = error.message;
@@ -274,7 +274,7 @@
 
 		{#if $constructor.networks.void.transport === 'other'}
 			<input
-				class="w-full h-12 py-2 ps-3 text-start bg-gray-900 rounded-sm border-none caret-teal-500 font-code tracking-widest placeholder:tracking-normal"
+				class="w-full h-12 py-2 ps-3 text-start bg-gray-900 rounded-sm border-none caret-teal-500 text-sm font-code tracking-widest placeholder:tracking-normal"
 				type="text"
 				id="exchange-point"
 				placeholder="Point"
