@@ -92,9 +92,11 @@
 
 <Page>
 	<Row classValue="lg:flex-row lg:gap-4">
-		<a id="constructor" aria-hidden="true" aria-label="Constructor"></a>
 		<Box classValue="lg:basis-[calc(50%-2.5rem)]">
-			<BoxTitle>Payment Constructor</BoxTitle>
+			<a id="constructor" aria-hidden="true" aria-label="Constructor"></a>
+			<BoxTitle>
+				Payment Constructor
+			</BoxTitle>
 			<BoxContent>
 				<Tabs bind:selectedTab={$type} />
 				<button
