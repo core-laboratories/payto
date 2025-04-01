@@ -140,6 +140,12 @@
 				</div>
 				<div class="flex flex-col gap-6">
 					{#each $outputs as output, index}
+						{#if output.length && output.length > 2000}
+							<div class="w-full px-4 py-3 my-3 text-sm border rounded border-amber-700 bg-amber-900/50 text-amber-200" role="alert">
+								<h3 class="mb-1 font-semibold">Warning: URL Length</h3>
+								<p>PayTo URL exceed 2000 characters. Some browsers and servers may not support these lengthy URLs. Consider shortening your parameters.</p>
+							</div>
+						{/if}
 						<div class="flex flex-col gap-2">
 							<label for={`item_${index}`}>{output.label}</label>
 							<div

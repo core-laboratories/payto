@@ -52,6 +52,7 @@ interface IPayload {
 interface IOutput {
 	label: string;
 	value: string;
+	length?: number;
 	note?: string;
 	previewable?: boolean;
 	type?: string;

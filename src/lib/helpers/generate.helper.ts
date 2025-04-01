@@ -386,7 +386,7 @@ export const generate = (type: ITransitionType, props: any, payload: IPayload[])
 	const link = generateLink(payload, props);
 
 	return [
-		{ label: 'Link', value: link },
+		{ label: 'Link', value: link, length: link.length },
 		{ label: 'Markdown', value: generateMarkDown(link, props) },
 		{ label: 'HTML Link', value: generateHtmlLink(link, props) },
 		{
