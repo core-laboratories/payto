@@ -1,13 +1,14 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { writable, derived } from 'svelte/store';
+	import { page } from '$app/state';
 	import { Page, Row } from '$lib/components';
 	import { formatRecurringPeriod } from '$lib/helpers/format-recurring-period.helper';
 	import { ASSETS_NAMES } from '$lib/constants/asset-names';
 	import Payto from 'payto-rl';
 	import ExchNumberFormat from 'exchange-rounding';
 
-	export let data;
+	const urlParam = page.url.searchParams.get('url');
 
 	/**
 	 * Checks if a timestamp is expired
@@ -46,8 +47,8 @@
 	let valueStore;
 
 	onMount(() => {
-		if (data.urlParam) {
-			const payto = new Payto(data.urlParam).toJSONObject();
+		if (urlParam) {
+			const payto = new Payto(urlParam).toJSONObject();
 			const paytoParams = new URLSearchParams(payto.search);
 
 			if (payto.hostname && payto.address) {
@@ -116,14 +117,14 @@
 				</div>
 				<div class="mt-8">
 					{#if $isDonation}
-						<a href={data.urlParam} class="inline-flex items-center cursor-pointer px-4 py-3 bg-[#849dfc20] hover:bg-[#849dfc38] !text-[#849dfc] font-sans text-lg leading-5 border border-[#878fc5] rounded-full !no-underline h-fit whitespace-nowrap transition-all duration-150 ease-in-out hover:border-[#b6c2f4] hover:text-[#b6c2f4] group">
+						<a href={urlParam} class="inline-flex items-center cursor-pointer px-4 py-3 bg-[#849dfc20] hover:bg-[#849dfc38] !text-[#849dfc] font-sans text-lg leading-5 border border-[#878fc5] rounded-full !no-underline h-fit whitespace-nowrap transition-all duration-150 ease-in-out hover:border-[#b6c2f4] hover:text-[#b6c2f4] group">
 							{#if $reccuring}
 								<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke-width="2"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 004 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>&nbsp;
 							{/if}
 							<strong class="italic mr-1">Donate<span class="text-[#5675ff]">To:</span></strong> via {$paymentType ? $paymentType.toUpperCase() : ''}{$currency ? ` with ${$currency.toUpperCase()}` : ''}
 						</a>
 					{:else}
-						<a href={data.urlParam} class="inline-flex items-center cursor-pointer px-4 py-3 bg-[#72bd5e20] hover:bg-[#72bd5e38] !text-[#72bd5e] font-sans text-lg leading-5 border border-[#639953] rounded-full !no-underline h-fit whitespace-nowrap transition-all duration-150 ease-in-out hover:border-[#95e87f] hover:text-[#95e87f] font-sans group">
+						<a href={urlParam} class="inline-flex items-center cursor-pointer px-4 py-3 bg-[#72bd5e20] hover:bg-[#72bd5e38] !text-[#72bd5e] font-sans text-lg leading-5 border border-[#639953] rounded-full !no-underline h-fit whitespace-nowrap transition-all duration-150 ease-in-out hover:border-[#95e87f] hover:text-[#95e87f] font-sans group">
 							{#if $reccuring}
 								<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke-width="2"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 004 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>&nbsp;
 							{/if}
@@ -133,7 +134,7 @@
 				</div>
 			{:else}
 				<div class="text-2xl text-zinc-400/80 font-bold">
-					Invalid PayTo: link
+					Invalid PayTo link
 				</div>
 				<div>
 					<a href="/" class="flex items-center gap-2 w-fit">

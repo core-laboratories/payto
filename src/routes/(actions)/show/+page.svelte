@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { page } from '$app/state';
 	import { writable } from 'svelte/store';
 	import { Page, Row, WalletCard } from '$lib/components';
 
-	export let data;
-
+	const urlParam = page.url.searchParams.get('url');
 	const isClient = writable(false);
 
 	onMount(() => {
@@ -16,7 +16,7 @@
 	<Row>
 		<div class="max-w-full w-[400px] max-[480px]:w-full">
 			{#if $isClient}
-				<WalletCard url={data.urlParam} />
+				<WalletCard url={urlParam} />
 			{/if}
 		</div>
 	</Row>

@@ -11,7 +11,7 @@
 					<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500 lg:text-5xl">Ƈ 300</span>
 					<span class="text-sm">/month</span>
 				</h4>
-				<a href="/?pass=1#pass" class="inline-flex items-center justify-center w-full h-12 gap-2 px-6 text-sm font-bold tracking-wide !text-white transition duration-300 rounded shadow-sm whitespace-nowrap bg-emerald-500 shadow-emerald-400 hover:bg-emerald-600 hover:shadow-md hover:shadow-emerald-400 focus:bg-emerald-700 focus:shadow-md focus:shadow-emerald-400 focus-visible:outline-none !no-underline">
+				<a href="/?pass=1#pass" class="inline-flex items-center justify-center w-full h-12 gap-2 px-6 text-sm font-bold tracking-wide !text-white transition duration-300 rounded shadow-sm whitespace-nowrap bg-emerald-500 shadow-emerald-400 hover:bg-emerald-600 hover:shadow-md hover:shadow-emerald-400 focus:bg-emerald-700 focus:shadow-md focus:shadow-emerald-400 focus-visible:outline-none no-underline!">
 					<span>Create and Activate inside Pass</span>
 				</a>
 			</header>
@@ -44,7 +44,7 @@
 						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
 							<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
 						</svg>
-						<div><a href="https://discord.gg/…" target="_blank" rel="noopener noreferrer">Discord community support</a></div>
+						<div><a href="https://discord.gg/…" target="_blank" rel="noopener">Discord community support</a></div>
 					</li>
 					<li class="flex items-start gap-2">
 						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
@@ -55,7 +55,7 @@
 				</ul>
 			</div>
 			<footer class="p-6 text-sm text-center border-t border-emerald-800 bg-gray-700/75">
-				<a class="transition-colors duration-300 text-emerald-500 hover:text-emerald-600 focus:text-emerald-700" target="_blank" rel="noopener noreferrer" href="https://coreport.net/form?asset=ctn&action=enter">On-Ramp CTN</a>
+				<a class="transition-colors duration-300 text-emerald-500 hover:text-emerald-600 focus:text-emerald-700" target="_blank" rel="noopener" href="https://app.ping.exchange/trade?market=ctn_usdc">On-Ramp CTN</a>
 			</footer>
 		</div>
 	</div>
@@ -81,7 +81,7 @@
 						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
 							<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
 						</svg>
-						<div>Dedicated SMS gateway for offline payments — <a href="https://txms.info" target="_blank" rel="noopener noreferrer">TxMS service</a> for Testnet and Mainnet</div>
+						<div>Dedicated SMS gateway for offline payments — <a href="https://txms.info" target="_blank" rel="noopener">TxMS service</a> for Testnet and Mainnet</div>
 					</li>
 					<li class="flex items-start gap-2">
 						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
@@ -110,7 +110,7 @@
 				</ul>
 			</div>
 			<footer class="p-6 text-sm text-center border-t border-emerald-800 bg-gray-700/75">
-				<a class="transition-colors duration-300 text-emerald-500 hover:text-emerald-600 focus:text-emerald-700" target="_blank" rel="noopener noreferrer" href="https://coreport.net/form?asset=usdx&action=enter">On-Ramp USDX</a>
+				<a class="transition-colors duration-300 text-emerald-500 hover:text-emerald-600 focus:text-emerald-700" target="_blank" rel="noopener" href="https://app.ping.exchange/trade?market=usdx_usdc">On-Ramp USDX</a>
 			</footer>
 		</div>
 	</div>
@@ -201,7 +201,7 @@
 				</ul>
 			</div>
 			<footer class="p-6 text-sm text-center border-t border-emerald-800 bg-gray-700/75">
-				<a class="transition-colors duration-300 text-emerald-500 hover:text-emerald-600 focus:text-emerald-700" target="_blank" rel="noopener noreferrer" href="https://coreport.net/form?asset=usdx&action=enter">On-Ramp USDX</a>
+				<a class="transition-colors duration-300 text-emerald-500 hover:text-emerald-600 focus:text-emerald-700" target="_blank" rel="noopener" href="https://app.ping.exchange/trade?market=usdx_usdc">On-Ramp USDX</a>
 			</footer>
 		</div>
 	</div>

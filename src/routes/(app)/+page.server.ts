@@ -402,14 +402,13 @@ export const actions = {
 							network: props.network, // Network used (string)
 							currency: currency, // Currency used (string)
 							...(props.params.amount.value ? { amount: props.params.amount.value } : {}), // Amount of payment (number)
-							...(props.design.org ? { customOrg: true } : {}), // Custom organization name (boolean)
+							...(props.design.org ? { custom_org: true } : {}), // Custom organization name (boolean)
 							...(props.params.donate?.value ? { donate: true } : {}), // Donation (boolean)
 							...(props.params.rc?.value ? { recurring: true } : {}), // Recurring (boolean)
-							...(props.design.colorF ? { colorF: props.design.colorF } : {}), // Foreground color (string)
-							...(props.design.colorB ? { colorB: props.design.colorB } : {}), // Background color (string)
+							...(props.design.colorF ? { color_f: props.design.colorF } : {}), // Foreground color (string)
+							...(props.design.colorB ? { color_b: props.design.colorB } : {}), // Background color (string)
 							...(props.params.split?.value ? { split: true } : {}), // Split (boolean)
 							...(authority ? { authority } : {}), // Authority used (string)
-							createdAt: new Date().toISOString() // Timestamp of issuance (datetime)
 						}
 					])
 					.select();
