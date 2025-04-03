@@ -107,7 +107,7 @@
 			bind:value={accountValue}
 			oninput={handleAccountInput}
 			onchange={handleAccountInput}
-			classValue={`font-code tracking-widest placeholder:tracking-normal ${
+			classValue={`tracking-widest placeholder:tracking-normal [&:not(:placeholder-shown)]:font-code ${
 				accountError
 					? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
 					: accountValue
@@ -127,7 +127,7 @@
 			bind:value={routingValue}
 			oninput={handleRoutingInput}
 			onchange={handleRoutingInput}
-			classValue={`font-code tracking-widest placeholder:tracking-normal ${
+			classValue={`tracking-widest placeholder:tracking-normal [&:not(:placeholder-shown)]:font-code ${
 				routingError
 					? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
 					: routingValue

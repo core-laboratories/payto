@@ -199,7 +199,7 @@
 						placeholder="Latitude"
 						bind:value={latValue}
 						oninput={handleLatInput}
-						classValue={`font-code tracking-widest placeholder:tracking-normal ${
+						classValue={`tracking-widest placeholder:tracking-normal [&:not(:placeholder-shown)]:font-code ${
 							latError
 								? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
 								: latValue
@@ -214,7 +214,7 @@
 						placeholder="Longitude"
 						bind:value={lonValue}
 						oninput={handleLonInput}
-						classValue={`font-code tracking-widest placeholder:tracking-normal ${
+						classValue={`tracking-widest placeholder:tracking-normal [&:not(:placeholder-shown)]:font-code ${
 							lonError
 								? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
 								: lonValue
@@ -250,7 +250,7 @@
 					placeholder="Plus Code, e.g. 8FWV26PJ+87"
 					bind:value={plusCodeValue}
 					oninput={handlePlusCodeInput}
-					classValue={`font-code tracking-widest placeholder:tracking-normal uppercase ${
+					classValue={`tracking-widest placeholder:tracking-normal uppercase [&:not(:placeholder-shown)]:font-code ${
 						plusCodeError
 							? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
 							: plusCodeValue
@@ -277,7 +277,7 @@
 
 		{#if $constructor.networks.void.transport === 'other'}
 			<input
-				class="w-full h-12 py-2 ps-3 text-start bg-gray-900 rounded-sm border-none caret-teal-500 text-sm font-code tracking-widest placeholder:tracking-normal"
+				class="w-full h-12 py-2 ps-3 text-start bg-gray-900 rounded-sm border-none caret-teal-500 text-sm tracking-widest placeholder:tracking-normal [&:not(:placeholder-shown)]:font-code"
 				type="text"
 				id="exchange-point"
 				placeholder="Point"

@@ -68,7 +68,7 @@
 			bind:value={bicValue}
 			on:input={handleBicInput}
 			on:change={handleBicInput}
-			classValue={`font-code tracking-widest placeholder:tracking-normal uppercase ${
+			classValue={`tracking-widest placeholder:tracking-normal uppercase [&:not(:placeholder-shown)]:font-code ${
 				bicError
 					? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
 					: bicValue

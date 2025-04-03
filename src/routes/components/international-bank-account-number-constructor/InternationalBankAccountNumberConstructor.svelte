@@ -120,7 +120,7 @@
 			placeholder="e.g. BE68539007547034"
 			bind:value={ibanValue}
 			oninput={handleIbanInput}
-			classValue={`font-code tracking-widest placeholder:tracking-normal ${
+			classValue={`tracking-widest placeholder:tracking-normal [&:not(:placeholder-shown)]:font-code ${
 				ibanError
 					? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
 					: ibanValue
@@ -139,7 +139,7 @@
 			placeholder="e.g. DABADKKK"
 			bind:value={bicValue}
 			oninput={handleBicInput}
-			classValue={`font-code tracking-widest placeholder:tracking-normal uppercase ${
+			classValue={`tracking-widest placeholder:tracking-normal uppercase [&:not(:placeholder-shown)]:font-code ${
 				bicError
 					? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
 					: bicValue
