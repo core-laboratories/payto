@@ -428,13 +428,34 @@
 
 	{#if $constructor.networks.ican.isDl}
 		<FieldGroup>
-			<FieldGroupLabel>Expiration Date</FieldGroupLabel>
-			<FieldGroupDateTime
-				id="expirationInput"
-				min={getCurrentDateTime()}
-				bind:value={timeDateValue}
-				bind:unixTimestamp={$constructor.networks.ican.params.dl.value}
-			/>
+			<FieldGroupLabel>
+				<div class="flex items-center">
+					<span class="mr-3">Expiration {$constructor.networks.ican.params.dl.isMinutes ? 'Minutes' : 'Date'}</span>
+					<input
+						type="checkbox"
+						bind:checked={$constructor.networks.ican.params.dl.isMinutes}
+						id="expirationTypeCheckbox"
+					/>
+					<label for="expirationTypeCheckbox" class="ml-2">Use Minutes</label>
+				</div>
+			</FieldGroupLabel>
+
+			{#if $constructor.networks.ican.params.dl.isMinutes}
+				<FieldGroupNumber
+					placeholder="e.g. 30 (minutes from execution)"
+					bind:value={$constructor.networks.ican.params.dl.value}
+					min={1}
+					max={60}
+				/>
+				<FieldGroupAppendix>Enter a value between 1-60 minutes from execution.</FieldGroupAppendix>
+			{:else}
+				<FieldGroupDateTime
+					id="expirationInput"
+					min={getCurrentDateTime()}
+					bind:value={timeDateValue}
+					bind:unixTimestamp={$constructor.networks.ican.params.dl.value}
+				/>
+			{/if}
 		</FieldGroup>
 	{/if}
 
