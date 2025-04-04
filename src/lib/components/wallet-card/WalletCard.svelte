@@ -102,6 +102,9 @@
 	// Add a new store to track expiration state
 	const isExpired = writable<boolean>(false);
 
+	// Store the calculated deadline timestamp in a persistent store
+	const calculatedDeadlineMs = writable<number | null>(null);
+
 	function startExpirationTimer() {
 		if (!$expirationTimeMs) return;
 
@@ -111,14 +114,9 @@
 		}
 
 		// Update immediately before starting the interval
-		const now = Date.now();
-		const remaining = Math.max(0, $expirationTimeMs - now);
-		timeRemaining.set(remaining);
-
-		timerInterval = setInterval(() => {
+		const updateTimer = () => {
 			const now = Date.now();
 			const remaining = Math.max(0, $expirationTimeMs - now);
-
 			timeRemaining.set(remaining);
 
 			if (remaining <= 0) {
@@ -130,7 +128,22 @@
 					timerInterval = null;
 				}
 			}
-		}, 1000);
+		};
+
+		// Initial update
+		updateTimer();
+
+		// Calculate the time until the next full second
+		const msToNextSecond = 1000 - (Date.now() % 1000);
+
+		// First set a timeout to align with the next second boundary
+		setTimeout(() => {
+			// Update once at the second boundary
+			updateTimer();
+
+			// Then start the interval aligned with second boundaries
+			timerInterval = setInterval(updateTimer, 1000);
+		}, msToNextSecond);
 	}
 
 	function formatAdr(str: string | undefined) {
@@ -471,13 +484,20 @@
 			? Number($paytoData.deadline)
 			: Number($paytoData.deadline);
 
-		// Check if deadline is a one or two-digit number (1-60)
-		if (deadlineValue >= 1 && deadlineValue <= 60) {
-			// Treat as minutes from current time
-			deadlineTimestamp = Date.now() + (deadlineValue * 60 * 1000);
+		// Only recalculate the deadline if it hasn't been set yet or if the deadline value changed
+		if ($calculatedDeadlineMs === null) {
+			// Check if deadline is a one or two-digit number (1-60)
+			if (deadlineValue >= 1 && deadlineValue <= 60) {
+				// Treat as minutes from current time
+				deadlineTimestamp = Date.now() + (deadlineValue * 60 * 1000);
+				calculatedDeadlineMs.set(deadlineTimestamp);
+			} else {
+				// Treat as Unix timestamp in seconds
+				deadlineTimestamp = deadlineValue * 1000;
+				calculatedDeadlineMs.set(deadlineTimestamp);
+			}
 		} else {
-			// Treat as Unix timestamp in seconds
-			deadlineTimestamp = deadlineValue * 1000;
+			deadlineTimestamp = $calculatedDeadlineMs;
 		}
 
 		const now = Date.now();
@@ -533,6 +553,7 @@
 		initialTimeMs.set(null);
 		timeRemaining.set(0);
 		isExpired.set(false);
+		calculatedDeadlineMs.set(null); // Reset the calculated deadline
 	}
 
 	onMount(() => {
