@@ -88,7 +88,7 @@ export const ASSETS_NAMES: Record<string, string> = {
 	"USDC": "USD Coin",
 	"USDT": "Tether USD",
 	"USDe": "Ethena USDe",
-	"USDX": "US X Dollar",
+	"USDX": "US Dollar X",
 	"VET": "VeChain",
 	"WAVES": "Waves",
 	"XAB": "Core Testnet",

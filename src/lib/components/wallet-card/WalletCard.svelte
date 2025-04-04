@@ -21,7 +21,7 @@
 	import { writable } from 'svelte/store';
 	import { ASSETS_NAMES } from '$lib/constants/asset-names';
 	import { getCategoryByValue } from '$lib/helpers/get-category-by-value.helper';
-	import { onMount, onDestroy } from 'svelte';
+	import { onDestroy } from 'svelte';
 
 	// @ts-expect-error: Module is untyped
 	import pkg from 'open-location-code/js/src/openlocationcode';
@@ -345,16 +345,27 @@
 	const currentBareUrlString = derived(currentBareUrl, $url => $url || '');
 
 	const qrcodeValue = derived(currentBareUrlString, $url => {
-		const searchParams = new URLSearchParams($url);
+		if (!$url) return '';
+
+		const hasQueryParams = $url.includes('?');
+
+		if (!hasQueryParams) {
+			return $url;
+		}
+
+		const [baseUrl, queryString] = $url.split('?');
+		const searchParams = new URLSearchParams(queryString);
 
 		searchParams.delete('org');
-		searchParams.delete('item');
-		searchParams.delete('color-f');
-		searchParams.delete('color-b');
-		searchParams.delete('barcode');
-		searchParams.delete('rtl');
+        searchParams.delete('item');
+        searchParams.delete('color-f');
+        searchParams.delete('color-b');
+        searchParams.delete('barcode');
+        searchParams.delete('rtl');
 
-		return decodeURIComponent(searchParams.toString());
+		const formattedParams = searchParams.toString();
+
+		return formattedParams ? `${baseUrl}?${formattedParams}` : baseUrl;
 	});
 
 	const barcodeValue = derived(
@@ -555,10 +566,6 @@
 		isExpired.set(false);
 		calculatedDeadlineMs.set(null); // Reset the calculated deadline
 	}
-
-	onMount(() => {
-		// No need to start the timer here as our reactive statement will handle it
-	});
 
 	onDestroy(() => {
 		if (timerInterval) {
@@ -795,7 +802,7 @@
 
 			<div class={`flex ${$paytoData.rtl !== undefined && $paytoData.rtl === true ? 'flex-row-reverse justify-between' : 'justify-between'} items-center p-4 print:hidden`}>
 				<a
-					href={$qrcodeValue}
+					href={$currentBareUrl}
 					rel="noreferrer"
 					class="transition-opacity hover:opacity-80"
 					style="cursor: pointer; background: none; border: none; padding: 0;"
@@ -815,7 +822,7 @@
 					on:click={handleNfcClick}
 					class="transition-opacity hover:opacity-80"
 					style="cursor: {$nfcSupported ? 'pointer' : 'not-allowed'}; background: none; border: none; padding: 0;"
-					aria-label="Stream NFC data to your device"
+					aria-label="Stream NFC"
 					title="Stream NFC"
 					disabled={!$nfcSupported}
 				>
