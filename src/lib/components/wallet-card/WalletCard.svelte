@@ -21,6 +21,7 @@
 	import { writable } from 'svelte/store';
 	import { ASSETS_NAMES } from '$lib/constants/asset-names';
 	import { getCategoryByValue } from '$lib/helpers/get-category-by-value.helper';
+	import { onMount, onDestroy } from 'svelte';
 
 	// @ts-expect-error: Module is untyped
 	import pkg from 'open-location-code/js/src/openlocationcode';
@@ -32,8 +33,6 @@
 	export let authority: string | undefined = undefined;
 
 	let hasUrl: boolean = false;
-
-	const iconLogoSize: string = 'h-10 w-10';
 	let noData: boolean = true;
 	const bareUrl = writable<string | null>(null);
 	let formatter: Readable<ExchNumberFormat> | undefined;
@@ -76,6 +75,50 @@
 	});
 
 	const constructorStore = derived(constructor, $c => $c);
+
+	// Timer state for expiration countdown
+	const expirationTimeMs = writable<number | null>(null);
+	const timeRemaining = writable<number>(0);
+	const timePercentage = derived(timeRemaining, $timeRemaining => 
+		$expirationTimeMs ? Math.min(100, Math.max(0, ($timeRemaining / (30 * 60 * 1000)) * 100)) : 0
+	);
+	const formattedTimeRemaining = derived(timeRemaining, $timeRemaining => {
+		if ($timeRemaining <= 0) return '00:00';
+		const minutes = Math.floor($timeRemaining / 60000);
+		const seconds = Math.floor(($timeRemaining % 60000) / 1000);
+		return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+	});
+
+	let timerInterval: ReturnType<typeof setInterval> | null = null;
+
+	// Add a new store to track expiration state
+	const isExpired = writable<boolean>(false);
+
+	function startExpirationTimer() {
+		if (!$expirationTimeMs) return;
+
+		// Clear any existing interval first to prevent duplicates
+		if (timerInterval) {
+			clearInterval(timerInterval);
+		}
+
+		timerInterval = setInterval(() => {
+			const now = Date.now();
+			const remaining = Math.max(0, $expirationTimeMs - now);
+
+			timeRemaining.set(remaining);
+
+			if (remaining <= 0) {
+				// Set expired state to true when timer reaches zero
+				isExpired.set(true);
+
+				if (timerInterval) {
+					clearInterval(timerInterval);
+					timerInterval = null;
+				}
+			}
+		}, 1000);
+	}
 
 	function formatAdr(str: string | undefined) {
 		return str ? `/${str.substring(0, 4).toUpperCase()}…${str.substring(str.length - 4).toUpperCase()}` : '';
@@ -369,7 +412,7 @@
 			return `${localPart}@${mainDomain}`;
 		}
 
-		return `${localPart.slice(0, 2)}...${localPart.slice(-1)}@${mainDomain}`;
+		return `${localPart.slice(0, 2)}…${localPart.slice(-1)}@${mainDomain}`;
 	}
 
 	function shortenAddress(address: string | Readable<string> | undefined): string {
@@ -392,6 +435,66 @@
 
 		return finalAddress;
 	}
+
+	// Check if already expired on initialization
+	$: if ($paytoData.deadline) {
+		const deadlineTimestamp = $paytoData.deadline instanceof Object
+			? Number($paytoData.deadline) * 1000
+			: Number($paytoData.deadline) * 1000;
+
+		const now = Date.now();
+
+		// Set initial expired state
+		isExpired.set(deadlineTimestamp <= now);
+
+		const timeUntilDeadline = deadlineTimestamp - now;
+
+		// Only show countdown if deadline is within 30 minutes and not expired
+		if (timeUntilDeadline > 0 && timeUntilDeadline <= 30 * 60 * 1000) {
+			expirationTimeMs.set(deadlineTimestamp);
+			timeRemaining.set(timeUntilDeadline);
+
+			// Start timer if it's not already running
+			if (!timerInterval) {
+				startExpirationTimer();
+			}
+		} else if (timeUntilDeadline > 30 * 60 * 1000) {
+			// If deadline is more than 30 minutes away, hide countdown and stop timer
+			if (timerInterval) {
+				clearInterval(timerInterval);
+				timerInterval = null;
+			}
+			expirationTimeMs.set(null);
+			timeRemaining.set(0);
+		} else if (timeUntilDeadline <= 0) {
+			// If expired, clear the timer
+			if (timerInterval) {
+				clearInterval(timerInterval);
+				timerInterval = null;
+			}
+			timeRemaining.set(0);
+		}
+	} else {
+		// If deadline is removed, clear the timer and reset expired state
+		if (timerInterval) {
+			clearInterval(timerInterval);
+			timerInterval = null;
+		}
+		expirationTimeMs.set(null);
+		timeRemaining.set(0);
+		isExpired.set(false);
+	}
+
+	onMount(() => {
+		// No need to start the timer here as our reactive statement will handle it
+	});
+
+	onDestroy(() => {
+		if (timerInterval) {
+			clearInterval(timerInterval);
+			timerInterval = null;
+		}
+	});
 </script>
 
 <div>
@@ -407,12 +510,29 @@
 						{/if}
 					</span>
 				</div>
-				<div class="text-rose-500 font-semibold">
-					No data provided
-				</div>
+			</div>
+
+			<div class="flex flex-col items-center justify-center py-8 px-4 text-center" style="background-color: {$paytoData.colorForeground}; color: {$paytoData.colorBackground};">
+				<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mb-4">
+					<circle cx="12" cy="12" r="10"/>
+					<path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+					<line x1="12" y1="17" x2="12.01" y2="17"/>
+				</svg>
+				<h2 class="text-xl font-bold mb-2">No Payment Data Provided</h2>
+				<p class="text-sm opacity-80 max-w-xs">No payment information was provided for this request. You can create a new payment link at the home page.</p>
+			</div>
+
+			<div class="p-4 flex justify-center">
+				<a href="/" class="inline-flex items-center px-4 py-2 rounded-md transition-colors duration-200 bg-zinc-700/50 hover:bg-zinc-700/70 text-zinc-300 border border-zinc-600 hover:border-zinc-500">
+					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+						<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+						<polyline points="9 22 9 12 15 12 15 22"/>
+					</svg>
+					Create New Link
+				</a>
 			</div>
 		</div>
-	{:else if $paytoData.deadline && ($paytoData.deadline instanceof Object ? Number($paytoData.deadline) : $paytoData.deadline) < Math.floor(Date.now() / 1000)}
+	{:else if $isExpired || ($paytoData.deadline && ($paytoData.deadline instanceof Object ? Number($paytoData.deadline) : $paytoData.deadline) < Math.floor(Date.now() / 1000))}
 		<div class={`card rounded-lg shadow-md font-medium print:border-2 print:border-black`} style="background-color: {$paytoData.colorBackground}; color: {$paytoData.colorForeground};">
 			<div class="flex items-center p-4">
 				<div class="flex-grow flex justify-between items-center">
@@ -424,8 +544,26 @@
 						{/if}
 					</span>
 				</div>
-				<div class="text-rose-500 font-semibold">
-					Request for payment is expired
+			</div>
+
+			<div class="flex flex-col items-center justify-center py-8 px-4 text-center" style="background-color: {$paytoData.colorForeground}; color: {$paytoData.colorBackground};">
+				<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mb-4">
+					<circle cx="12" cy="12" r="10"/>
+					<line x1="12" y1="8" x2="12" y2="12"/>
+					<line x1="12" y1="16" x2="12.01" y2="16"/>
+				</svg>
+				<h2 class="text-xl font-bold mb-2">Payment Request Expired</h2>
+				<p class="text-sm opacity-80 max-w-xs">This payment request has expired and is no longer valid. Please contact the recipient for a new payment link.</p>
+			</div>
+
+			<div class="p-4 flex justify-center">
+				<div class="text-sm opacity-70">
+					{#if $paytoData.value && Number($paytoData.value)>0}
+						Original amount: {$formattedValue}
+					{/if}
+					{#if $paytoData.item}
+						{$paytoData.value ? ' • ' : ''}Item: {$paytoData.item}
+					{/if}
 				</div>
 			</div>
 		</div>
@@ -479,6 +617,23 @@
 								{/if}
 							</div>
 						</div>
+					</div>
+				</div>
+			{/if}
+
+			<!-- Add expiration timer if within 30 minutes -->
+			{#if $expirationTimeMs}
+				<div class="px-4 pb-2 pt-0">
+					<div class={`flex ${$paytoData.rtl ? 'flex-row-reverse' : 'flex-row'} justify-between items-center mb-1`}>
+						<span class="text-sm" style="color: {$paytoData.colorForeground};">Expires in</span>
+						<span class="text-sm font-medium" style="color: {$paytoData.colorForeground};">{$formattedTimeRemaining}</span>
+					</div>
+					<div class="w-full bg-black/20 rounded-full h-1.5">
+						<div class="h-1.5 rounded-full transition-all duration-1000 ease-linear"
+							class:bg-emerald-500={$timePercentage > 50}
+							class:bg-amber-500={$timePercentage <= 50 && $timePercentage > 20}
+							class:bg-red-500={$timePercentage <= 20}
+							style="width: {$timePercentage}%"></div>
 					</div>
 				</div>
 			{/if}
