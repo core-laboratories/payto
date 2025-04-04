@@ -170,7 +170,7 @@
 	</FieldGroup>
 
 	<FieldGroup>
-		<FieldGroupLabel>Pass file Barcode Type</FieldGroupLabel>
+		<FieldGroupLabel>Barcode Type for downloaded pass</FieldGroupLabel>
 		<ListBox
 			id="barcode-list"
 			value={$barcodeValue}
@@ -211,7 +211,7 @@
 						type="submit"
 						disabled={!hostname || $isGenerating}
 					>
-						{$isGenerating ? 'Generating…' : 'Download Pass'}
+						{$isGenerating ? 'Generating…' : 'Download PayPass'}
 					</button>
 				</form>
 			</div>
