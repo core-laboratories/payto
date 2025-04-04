@@ -209,10 +209,10 @@
 		</Box>
 	</Row>
 	<Row>
-		<a id="pass" aria-hidden="true" aria-label="Pass"></a>
+		<a id="pass" aria-hidden="true" aria-label="PayPass"></a>
 		<Box>
 			<BoxTitle>
-				<label for="designCheckbox" class="mr-2">Pass</label>
+				<label for="designCheckbox" class="mr-2">PayPass</label>
 				<input
 					type="checkbox"
 					bind:checked={$designEnabled}

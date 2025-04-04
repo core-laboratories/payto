@@ -135,7 +135,7 @@ Examples:
 
 ### Expiration (Deadline)
 
-The expiration field specifies the expiration date and time for the transaction. The expiration date and time is expressed in the local timezone and converted to a UNIX timestamp in seconds. The expiration time is optional field. Value cannot be lower than the current time. The defined breakpoint is excluded.
+The expiration field specifies the expiration date and time for the transaction. The expiration date and time is expressed in the local timezone and converted to a UNIX timestamp in seconds. Another way it can be defined is as minutes (1-60) from the current time. The expiration time is an optional field. Value as timestamp cannot be lower than the current time, otherwise the payment will be expired. The defined breakpoint is excluded. If the timestamp is in the last 30 minutes, the countdown will be shown. If the minutes value is defined, the countdown will be shown.
 
 Supported payment types:
 
@@ -145,7 +145,7 @@ Example: `payto://xcb/${address}?amount=${asset_code}:${amount}&dl=${expiration}
 
 ### Recurring payments
 
-The recurring field specifies the recurrence of the payment. The recurring payment is optional field. The recurring payment is prefixed with `rc` and the value is `y` for yearly, `m` for monthly, `w` for weekly, and `d` for daily. If `d` is prefixed with a number between `2-365`, it indicates the recurrence every "number" of days. Due to varying month lengths, if a chosen day doesn't exist in a subsequent month, the payment will execute on the last day of that month.
+The recurring field specifies the recurrence of the payment. The recurring payment is an optional field. The recurring payment is prefixed with `rc` and the value is `y` for yearly, `m` for monthly, `w` for weekly, and `d` for daily. If `d` is prefixed with a number between `2-365`, it indicates the recurrence every "number" of days. Due to varying month lengths, if a chosen day doesn't exist in a subsequent month, the payment will execute on the last day of that month.
 
 Supported payment types:
 
@@ -159,7 +159,7 @@ Example: `payto://${type}/${address}?amount=${asset_code}:${amount}&rc=${recurri
 
 ### Transaction split
 
-The split field specifies the split of the transaction. The split is optional field. The value is amount to be deducted followed by `@` and second address in the network to deposit that amount. If the split is prefixed with `p:` it indicates that the value is in percentage. Value cannot be higher than the amount and both should be defined. In case of percentage maximum value is 100. If split is correctly defined, two transactions will be streamed.
+The split field specifies the split of the transaction. The split is an optional field. The value is the amount to be deducted followed by `@` and the second address in the network to deposit that amount. If the split is prefixed with `p:` it indicates that the value is in percentage. Value cannot be higher than the amount and both should be defined. In case of percentage, the maximum value is 100. If split is correctly defined, two transactions will be streamed.
 
 Supported payment types:
 
@@ -187,7 +187,7 @@ payto://xcb/recipientAddress?swap=ctn
 
 ### IBAN
 
-The IBAN field specifies the IBAN for the transaction. The IBAN is the International Bank Account Number. The IBAN is required field.
+The IBAN field specifies the IBAN for the transaction. The IBAN is the International Bank Account Number. The IBAN is a required field.
 
 Supported payment types:
 
@@ -197,7 +197,7 @@ Example: `payto://iban/${iban}?amount=${fiat_currency}:${amount}`
 
 ### BIC / SWIFT
 
-The BIC field specifies the BIC for the transaction. The BIC is the Bank Identifier Code. The BIC is required field.
+The BIC field specifies the BIC for the transaction. The BIC is the Bank Identifier Code. The BIC is a required field.
 
 Supported payment types:
 
@@ -211,7 +211,7 @@ Examples:
 
 ### Beneficiary Full Name
 
-The beneficiary field specifies the full name of the beneficiary for the transaction. The beneficiary is the recipient of the payment. The beneficiary is optional or required field.
+The beneficiary field specifies the full name of the beneficiary for the transaction. The beneficiary is the recipient of the payment. The beneficiary is an optional or required field.
 
 Supported payment types:
 
@@ -225,7 +225,7 @@ Example: `payto://iban/${iban}?amount=${fiat_currency}:${amount}&receiver-name=$
 
 ### Message for Beneficiary / Message / Description
 
-The message field specifies the message for the beneficiary. The message is optional field.
+The message field specifies the message for the beneficiary. The message is an optional field.
 
 Supported payment types:
 
@@ -238,7 +238,7 @@ Example: `payto://iban/${iban}?amount=${fiat_currency}:${amount}&message=${messa
 
 ### Transaction ID
 
-The transaction ID field specifies the unique identifier for the transaction. The transaction ID is optional field.
+The transaction ID field specifies the unique identifier for the transaction. The transaction ID is an optional field.
 
 Supported payment types:
 
@@ -248,7 +248,7 @@ Example: `payto://pix/${pix}?amount=${fiat_currency}:${amount}&id=${transaction_
 
 ### Location
 
-The location field specifies the geolocation (or other identifier) for the transaction to take place. The location is expressed in latitude and longitude (in decimal degrees) for transport network `geo`; in plus code (from Google) for transport network `plus` and `other` can be custom defined. The location is required field. Latitude and longitude is devided by `,`.
+The location field specifies the geolocation (or other identifier) for the transaction to take place. The location is expressed in latitude and longitude (in decimal degrees) for transport network `geo`; in plus code (from Google) for transport network `plus` and `other` can be custom defined. The location is a required field. Latitude and longitude are divided by `,`.
 
 You can generate:
 
@@ -268,7 +268,7 @@ Open navigation apps with the payto locations are possible via the [geo URI sche
 
 ### Pass
 
-The PAYTO URI scheme is designed to be flexible and extensible. It allows for the inclusion of additional parameters to support various payment types and use-cases. The scheme is intended to be used in a wide range of applications, including web browsers, mobile apps, and other software that handles payments. For this purposes you can define the payment instruction with some of the possibilities:
+The PAYTO URI scheme is designed to be flexible and extensible. It allows for the inclusion of additional parameters to support various payment types and use-cases. The scheme is intended to be used in a wide range of applications, including web browsers, mobile apps, and other software that handles payments. For these purposes, you can define the payment instruction with some of the possibilities:
 
 - Company name (`org`) - 25 characters max
 - Item name (`item`) - 40 characters max

@@ -159,14 +159,13 @@
 	</div>
 
 	<FieldGroup>
-		<FieldGroupLabel>Right-to-Left typing (RTL)</FieldGroupLabel>
 		<div class="flex items-center">
 			<input
 				type="checkbox"
 				bind:checked={$constructor.design.rtl}
 				id="rtlCheckbox"
 			/>
-			<label for="rtlCheckbox" class="ml-2">Enabled</label>
+			<label for="rtlCheckbox" class="ml-2">Right-to-Left typing (RTL)</label>
 		</div>
 	</FieldGroup>
 

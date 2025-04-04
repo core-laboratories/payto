@@ -78,10 +78,18 @@
 
 	// Timer state for expiration countdown
 	const expirationTimeMs = writable<number | null>(null);
+	const initialTimeMs = writable<number | null>(null); // Store the initial time when countdown starts
 	const timeRemaining = writable<number>(0);
-	const timePercentage = derived(timeRemaining, $timeRemaining => 
-		$expirationTimeMs ? Math.min(100, Math.max(0, ($timeRemaining / (30 * 60 * 1000)) * 100)) : 0
+
+	// Calculate percentage based on actual initial time, not fixed 30 minutes
+	const timePercentage = derived(
+		[timeRemaining, initialTimeMs],
+		([$timeRemaining, $initialTimeMs]) => {
+			if (!$initialTimeMs || !$expirationTimeMs) return 0;
+			return Math.min(100, Math.max(0, ($timeRemaining / $initialTimeMs) * 100));
+		}
 	);
+
 	const formattedTimeRemaining = derived(timeRemaining, $timeRemaining => {
 		if ($timeRemaining <= 0) return '00:00';
 		const minutes = Math.floor($timeRemaining / 60000);
@@ -101,6 +109,11 @@
 		if (timerInterval) {
 			clearInterval(timerInterval);
 		}
+
+		// Update immediately before starting the interval
+		const now = Date.now();
+		const remaining = Math.max(0, $expirationTimeMs - now);
+		timeRemaining.set(remaining);
 
 		timerInterval = setInterval(() => {
 			const now = Date.now();
@@ -436,43 +449,79 @@
 		return finalAddress;
 	}
 
+	// Function to check if a payment is expired
+	function isPaymentExpired(deadline: number | Date | undefined): boolean {
+		if (!deadline) return false;
+
+		const deadlineValue = deadline instanceof Object ? Number(deadline) : Number(deadline);
+
+		// If it's a relative deadline (1-60 minutes), rely only on the timer
+		if (deadlineValue >= 1 && deadlineValue <= 60) {
+			return $isExpired;
+		}
+
+		// Otherwise, check if the timestamp is in the past
+		return deadlineValue < Math.floor(Date.now() / 1000) || $isExpired;
+	}
+
 	// Check if already expired on initialization
 	$: if ($paytoData.deadline) {
-		const deadlineTimestamp = $paytoData.deadline instanceof Object
-			? Number($paytoData.deadline) * 1000
-			: Number($paytoData.deadline) * 1000;
+		let deadlineTimestamp: number;
+		const deadlineValue = $paytoData.deadline instanceof Object
+			? Number($paytoData.deadline)
+			: Number($paytoData.deadline);
+
+		// Check if deadline is a one or two-digit number (1-60)
+		if (deadlineValue >= 1 && deadlineValue <= 60) {
+			// Treat as minutes from current time
+			deadlineTimestamp = Date.now() + (deadlineValue * 60 * 1000);
+		} else {
+			// Treat as Unix timestamp in seconds
+			deadlineTimestamp = deadlineValue * 1000;
+		}
 
 		const now = Date.now();
 
 		// Set initial expired state
-		isExpired.set(deadlineTimestamp <= now);
+		const isCurrentlyExpired = deadlineTimestamp <= now;
+		isExpired.set(isCurrentlyExpired);
 
-		const timeUntilDeadline = deadlineTimestamp - now;
+		// Only start timer if not already expired
+		if (!isCurrentlyExpired) {
+			const timeUntilDeadline = deadlineTimestamp - now;
 
-		// Only show countdown if deadline is within 30 minutes and not expired
-		if (timeUntilDeadline > 0 && timeUntilDeadline <= 30 * 60 * 1000) {
-			expirationTimeMs.set(deadlineTimestamp);
-			timeRemaining.set(timeUntilDeadline);
+			// For relative deadlines (1-60 minutes), always show the countdown
+			// regardless of the 30-minute limit
+			const isRelativeDeadline = deadlineValue >= 1 && deadlineValue <= 60;
 
-			// Start timer if it's not already running
-			if (!timerInterval) {
-				startExpirationTimer();
+			if (timeUntilDeadline > 0 && (isRelativeDeadline || timeUntilDeadline <= 30 * 60 * 1000)) {
+				expirationTimeMs.set(deadlineTimestamp);
+				timeRemaining.set(timeUntilDeadline);
+				initialTimeMs.set(timeUntilDeadline); // Store initial time for percentage calculation
+
+				// Start timer if it's not already running
+				if (!timerInterval) {
+					startExpirationTimer();
+				}
+			} else if (timeUntilDeadline > 30 * 60 * 1000 && !isRelativeDeadline) {
+				// If deadline is more than 30 minutes away and not a relative deadline,
+				// hide countdown and stop timer
+				if (timerInterval) {
+					clearInterval(timerInterval);
+					timerInterval = null;
+				}
+				expirationTimeMs.set(null);
+				initialTimeMs.set(null);
+				timeRemaining.set(0);
 			}
-		} else if (timeUntilDeadline > 30 * 60 * 1000) {
-			// If deadline is more than 30 minutes away, hide countdown and stop timer
+		} else {
+			// If already expired, clear the timer and ensure expired state is true
 			if (timerInterval) {
 				clearInterval(timerInterval);
 				timerInterval = null;
 			}
-			expirationTimeMs.set(null);
 			timeRemaining.set(0);
-		} else if (timeUntilDeadline <= 0) {
-			// If expired, clear the timer
-			if (timerInterval) {
-				clearInterval(timerInterval);
-				timerInterval = null;
-			}
-			timeRemaining.set(0);
+			isExpired.set(true);
 		}
 	} else {
 		// If deadline is removed, clear the timer and reset expired state
@@ -481,6 +530,7 @@
 			timerInterval = null;
 		}
 		expirationTimeMs.set(null);
+		initialTimeMs.set(null);
 		timeRemaining.set(0);
 		isExpired.set(false);
 	}
@@ -532,7 +582,7 @@
 				</a>
 			</div>
 		</div>
-	{:else if $isExpired || ($paytoData.deadline && ($paytoData.deadline instanceof Object ? Number($paytoData.deadline) : $paytoData.deadline) < Math.floor(Date.now() / 1000))}
+	{:else if isPaymentExpired(typeof $paytoData.deadline === 'object' && 'subscribe' in $paytoData.deadline ? get($paytoData.deadline) : $paytoData.deadline)}
 		<div class={`card rounded-lg shadow-md font-medium print:border-2 print:border-black`} style="background-color: {$paytoData.colorBackground}; color: {$paytoData.colorForeground};">
 			<div class="flex items-center p-4">
 				<div class="flex-grow flex justify-between items-center">
@@ -621,7 +671,6 @@
 				</div>
 			{/if}
 
-			<!-- Add expiration timer if within 30 minutes -->
 			{#if $expirationTimeMs}
 				<div class="px-4 pb-2 pt-0">
 					<div class={`flex ${$paytoData.rtl ? 'flex-row-reverse' : 'flex-row'} justify-between items-center mb-1`}>
@@ -729,17 +778,16 @@
 					rel="noreferrer"
 					class="transition-opacity hover:opacity-80"
 					style="cursor: pointer; background: none; border: none; padding: 0;"
-					aria-label="Open in external application"
-					title="Open in external application"
+					aria-label="Pay via App"
+					title="Pay via App"
 				>
 					<svg
-						viewBox="0 0 24 24"
+						viewBox="0 0 36 36"
 						xmlns="http://www.w3.org/2000/svg"
-						style="width: 30px; height: 30px; fill: none; stroke: {$paytoData.colorForeground}; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;"
+						style="width: 36px; height: 36px; fill: none; stroke: {$paytoData.colorForeground}; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round;"
 					>
-						<path d="M15 3h6v6"/>
-						<path d="M10 14 21 3"/>
-						<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+						<path d="M25.5 21h.02"/>
+						<path d="M10.5 10.5h18a3 3 0 0 1 3 3v15a3 3 0 0 1-3 3H7.5a3 3 0 0 1-3-3V7.5a3 3 0 0 1 3-3h21"/>
 					</svg>
 				</a>
 				<button
@@ -751,11 +799,11 @@
 					disabled={!$nfcSupported}
 				>
 					<svg
-						viewBox="0 0 40 40"
+						viewBox="0 0 36 36"
 						xmlns="http://www.w3.org/2000/svg"
-						style="fill-rule:evenodd; clip-rule:evenodd; stroke-linejoin:round; stroke-miterlimit:2; width:40px; height:40px; fill:{$paytoData.colorForeground};"
+						style="fill-rule:evenodd; clip-rule:evenodd; stroke-linejoin:round; stroke-miterlimit:2; width:36px; height:36px; fill:{$paytoData.colorForeground};"
 					>
-						<path d="M29.608,0.832c4.694,9.378 4.407,18.245 4.37,19.181c0.037,0.815 0.324,9.694 -4.37,19.072c-0,0 -1.223,1.407 -3.04,0.563c-1.816,-0.844 -1.188,-3.093 -1.188,-3.093c0,0 3.804,-7.388 3.704,-16.462l0.001,-0.141c0.099,-9.075 -3.705,-16.59 -3.705,-16.59c0,0 -0.628,-2.249 1.188,-3.093c1.817,-0.843 3.04,0.563 3.04,0.563Zm-9.105,4.217c3.829,7.03 3.569,14.028 3.532,14.964c0.037,0.815 0.297,7.531 -3.527,15.129c0,0 -1.222,1.406 -3.039,0.563c-1.817,-0.844 -1.188,-3.093 -1.188,-3.093c0,-0 2.461,-3.522 2.86,-12.519l0.002,-0.141c-0.261,-8.998 -2.867,-12.372 -2.867,-12.372c0,0 -0.629,-2.249 1.188,-3.093c1.816,-0.844 3.039,0.562 3.039,0.562Zm-12.743,9.073c3.202,0 5.802,2.615 5.802,5.837c-0,3.221 -2.6,5.837 -5.802,5.837c-3.202,-0 -5.802,-2.616 -5.802,-5.837c-0,-3.222 2.6,-5.837 5.802,-5.837Z" style="fill-rule:nonzero;"/>
+						<path d="M26.647,0.749c4.225,8.44 3.966,16.42 3.933,17.263c0.033,0.734 0.292,8.725 -3.933,17.165c-0,0 -1.101,1.266 -2.736,0.507c-1.634,-0.76 -1.069,-2.784 -1.069,-2.784c0,0 3.424,-6.649 3.334,-14.815l0.001,-0.127c0.089,-8.168 -3.335,-14.931 -3.335,-14.931c0,0 -0.565,-2.024 1.069,-2.784c1.635,-0.759 2.736,0.507 2.736,0.507Zm-8.195,3.795c3.446,6.327 3.212,12.625 3.179,13.468c0.033,0.734 0.267,6.778 -3.174,13.616c0,0 -1.1,1.265 -2.735,0.507c-1.635,-0.76 -1.069,-2.784 -1.069,-2.784c0,-0 2.215,-3.17 2.574,-11.267l0.002,-0.127c-0.235,-8.098 -2.58,-11.135 -2.58,-11.135c0,0 -0.566,-2.024 1.069,-2.784c1.634,-0.76 2.734,0.506 2.734,0.506Zm-11.469,8.166c2.882,0 5.222,2.353 5.222,5.253c-0,2.899 -2.34,5.253 -5.222,5.253c-2.882,-0 -5.222,-2.354 -5.222,-5.253c-0,-2.9 2.34,-5.253 5.222,-5.253Z" style="fill-rule:nonzero;"/>
 					</svg>
 				</button>
 			</div>
