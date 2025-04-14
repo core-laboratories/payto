@@ -64,7 +64,7 @@
 	<FieldGroup>
 		<FieldGroupLabel>Account Alias *</FieldGroupLabel>
 		<FieldGroupText
-			placeholder="e.g. john.doe@gmail.com"
+			placeholder="e.g. username@onion.email"
 			bind:value={aliasValue}
 			oninput={handleAliasInput}
 			onchange={handleAliasInput}

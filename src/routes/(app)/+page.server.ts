@@ -125,6 +125,7 @@ export const actions = {
 		try {
 			const formData = await request.formData();
 			const props = JSON.parse(formData.get('props') as string);
+			const design = JSON.parse(formData.get('design') as string);
 			const hostname = formData.get('hostname') as string;
 			const membership = formData.get('membership') as string;
 			const authorityField = (formData.get('authority') as string);
@@ -159,7 +160,7 @@ export const actions = {
 
 			// Basic pass data structure
 			const bareLink = getLink(hostname, props);
-			const org = kvData.name || (props.design.org || (authorityField.toUpperCase()) || 'PayTo');
+			const org = kvData.name || (design.org || (authorityField.toUpperCase()) || 'PayTo');
 			const originator = kvData.id || 'payto';
 			const originatorName = kvData.name || 'PayTo';
 			const memberAddress = membership || props.destination;
@@ -182,9 +183,9 @@ export const actions = {
 				logoText: getLogoText(hostname, props),
 				description: 'Wallet by ' + org,
 				expirationDate: new Date((props.params.dl.value || (kvData.id ? (Date.now() + 2 * 365 * 24 * 60 * 60 * 1000) : (Date.now() + 365 * 24 * 60 * 60 * 1000)))).toISOString(),
-				backgroundColor: validColors(props.design.colorB, props.design.colorF) ? props.design.colorB : (kvData.theme.colorB || '#77bc65'),
-				foregroundColor: validColors(props.design.colorF, props.design.colorB) ? props.design.colorF : (kvData.theme.colorF || '#192a14'),
-				labelColor: validColors(props.design.colorF, props.design.colorB) ? props.design.colorF : (kvData.theme.colorTxt || '#192a14'),
+				backgroundColor: validColors(design.colorB, design.colorF) ? design.colorB : (kvData.theme.colorB || '#77bc65'),
+				foregroundColor: validColors(design.colorF, design.colorB) ? design.colorF : (kvData.theme.colorF || '#192a14'),
+				labelColor: validColors(design.colorF, design.colorB) ? design.colorF : (kvData.theme.colorTxt || '#192a14'),
 				url: bareLink,
 				...(hostname === 'void' && (props.network === 'geo' || props.network === 'plus') ? {
 					locations: [
@@ -212,11 +213,11 @@ export const actions = {
 
 				// Primary barcode (selected type)
 				barcode: {
-					format: props.design.barcode === 'aztec'
+					format: design.barcode === 'aztec'
 						? 'PKBarcodeFormatAztec'
-						: props.design.barcode === 'code128'
+						: design.barcode === 'code128'
 							? 'PKBarcodeFormatCode128'
-							: `PKBarcodeFormat${props.design.barcode.toUpperCase()}`,
+							: `PKBarcodeFormat${design.barcode.toUpperCase()}`,
 					message: bareLink,
 					messageEncoding: 'iso-8859-1'
 				},
@@ -331,7 +332,13 @@ export const actions = {
 						value: `This Pass is issued by: ${originatorName}`,
 						attributedValue: `${basicData.orgUrl ? basicData.orgUrl : (kvData.name ? '' : 'https://payto.money')}`,
 						dataDetectorTypes: ["PKDataDetectorTypeLink"]
-					}
+					},
+					...(design.isEmail || design.isTelegram ? [{
+						key: 'notification',
+						label: 'Notifications',
+						value: design.isEmail ? 'Email' : design.isTelegram ? 'Telegram' : 'None',
+						attributedValue: design.isEmail ? design.email : design.isTelegram ? design.telegram : ''
+					}] : []),
 				]
 			};
 
@@ -402,11 +409,11 @@ export const actions = {
 							network: props.network, // Network used (string)
 							currency: currency, // Currency used (string)
 							...(props.params.amount.value ? { amount: props.params.amount.value } : {}), // Amount of payment (number)
-							...(props.design.org ? { custom_org: true } : {}), // Custom organization name (boolean)
+							...(design.org ? { custom_org: true } : {}), // Custom organization name (boolean)
 							...(props.params.donate?.value ? { donate: true } : {}), // Donation (boolean)
 							...(props.params.rc?.value ? { recurring: true } : {}), // Recurring (boolean)
-							...(props.design.colorF ? { color_f: props.design.colorF } : {}), // Foreground color (string)
-							...(props.design.colorB ? { color_b: props.design.colorB } : {}), // Background color (string)
+							...(design.colorF ? { color_f: design.colorF } : {}), // Foreground color (string)
+							...(design.colorB ? { color_b: design.colorB } : {}), // Background color (string)
 							...(props.params.split?.value ? { split: true } : {}), // Split (boolean)
 							...(authority ? { authority } : {}), // Authority used (string)
 						}

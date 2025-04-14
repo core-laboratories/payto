@@ -116,7 +116,11 @@ const INITIAL_STATE: IComplexState = {
 		colorF: '#192a14',
 		colorB: '#77bc65',
 		barcode: 'qr',
-		rtl: false
+		rtl: false,
+		isEmail: false,
+		email: undefined,
+		isTelegram: false,
+		telegram: undefined,
 	},
 	isCleared: false,
 	paymentType: 'ican',

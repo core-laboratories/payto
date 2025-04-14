@@ -24,21 +24,19 @@
 						<div>
 							Pass Live notification for incoming payments for{' '}
 							<span class="relative overflow-hidden cursor-help group hover:overflow-visible focus-visible:outline-none border-b border-dotted border-gray-400" aria-describedby="tooltip-assets">
-								Assets
-								<span role="tooltip" id="tooltip-assets" class="invisible absolute bottom-full left-1/2 z-10 mb-2 w-48 -translate-x-1/2 rounded bg-slate-700 p-2 text-xs text-white opacity-0 transition-all before:invisible before:absolute before:left-1/2 before:top-full before:z-10 before:mb-2 before:-ml-1 before:border-x-4 before:border-t-4 before:border-x-transparent before:border-t-slate-700 before:opacity-0 before:transition-all before:content-[''] group-hover:visible group-hover:block group-hover:opacity-100 group-hover:before:visible group-hover:before:opacity-100">Currently supported: XCB</span>
+								Assets<span role="tooltip" id="tooltip-assets" class="invisible absolute bottom-full left-1/2 z-10 mb-2 w-48 -translate-x-1/2 rounded bg-slate-700 p-2 text-xs text-white opacity-0 transition-all before:invisible before:absolute before:left-1/2 before:top-full before:z-10 before:mb-2 before:-ml-1 before:border-x-4 before:border-t-4 before:border-x-transparent before:border-t-slate-700 before:opacity-0 before:transition-all before:content-[''] group-hover:visible group-hover:block group-hover:opacity-100 group-hover:before:visible group-hover:before:opacity-100">Currently supported: XCB</span>
 							</span>
 							{' '}and{' '}
 							<span class="relative overflow-hidden cursor-help group hover:overflow-visible focus-visible:outline-none border-b border-dotted border-gray-400" aria-describedby="tooltip-tokens">
-								Predefined Tokens
-								<span role="tooltip" id="tooltip-tokens" class="invisible absolute bottom-full left-1/2 z-10 mb-2 w-48 -translate-x-1/2 rounded bg-slate-700 p-2 text-xs text-white opacity-0 transition-all before:invisible before:absolute before:left-1/2 before:top-full before:z-10 before:mb-2 before:-ml-1 before:border-x-4 before:border-t-4 before:border-x-transparent before:border-t-slate-700 before:opacity-0 before:transition-all before:content-[''] group-hover:visible group-hover:block group-hover:opacity-100 group-hover:before:visible group-hover:before:opacity-100">Currently supported: CTN</span>
-							</span>
+								Predefined Tokens<span role="tooltip" id="tooltip-tokens" class="invisible absolute bottom-full left-1/2 z-10 mb-2 w-48 -translate-x-1/2 rounded bg-slate-700 p-2 text-xs text-white opacity-0 transition-all before:invisible before:absolute before:left-1/2 before:top-full before:z-10 before:mb-2 before:-ml-1 before:border-x-4 before:border-t-4 before:border-x-transparent before:border-t-slate-700 before:opacity-0 before:transition-all before:content-[''] group-hover:visible group-hover:block group-hover:opacity-100 group-hover:before:visible group-hover:before:opacity-100">Currently supported: CTN, USD𐆖</span>
+							</span>. <span class="text-sm">This feature applies if you configure the Pass notification while creating a Pass.</span>
 						</div>
 					</li>
 					<li class="flex items-start gap-2">
 						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
 							<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
 						</svg>
-						<div>Check the current balance of your wallet</div>
+						<div>Check the current balance of your wallet. <span class="text-sm">This feature applies if you configure the Pass notification while creating a Pass.</span></div>
 					</li>
 					<li class="flex items-start gap-2">
 						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
@@ -67,7 +65,7 @@
 					<span class="block text-sm font-normal text-slate-400">Ideal for PayTo:Merchants.</span>
 				</h3>
 				<h4>
-					<span class="text-2xl">USDX</span>
+					<span class="text-2xl">USD𐆖</span>
 					<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500 lg:text-5xl">$ 400</span>
 					<span class="text-sm">/month</span>
 				</h4>
@@ -110,7 +108,7 @@
 				</ul>
 			</div>
 			<footer class="p-6 text-sm text-center border-t border-emerald-800 bg-gray-700/75">
-				<a class="transition-colors duration-300 text-emerald-500 hover:text-emerald-600 focus:text-emerald-700" target="_blank" rel="noopener" href="https://app.ping.exchange/trade?market=usdx_usdc">On-Ramp USDX</a>
+				<a class="transition-colors duration-300 text-emerald-500 hover:text-emerald-600 focus:text-emerald-700" target="_blank" rel="noopener" href="https://app.ping.exchange/trade?market=usdx_usdc">On-Ramp USD𐆖</a>
 			</footer>
 		</div>
 	</div>
@@ -122,7 +120,7 @@
 					<span class="block text-sm font-normal text-slate-400">Ideal for PayTo:Businesses.</span>
 				</h3>
 				<h4>
-					<span class="text-2xl">USDX</span>
+					<span class="text-2xl">USD𐆖</span>
 					<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500 lg:text-5xl">$ 4,000</span>
 					<span class="text-sm">/month</span>
 				</h4>
@@ -201,7 +199,7 @@
 				</ul>
 			</div>
 			<footer class="p-6 text-sm text-center border-t border-emerald-800 bg-gray-700/75">
-				<a class="transition-colors duration-300 text-emerald-500 hover:text-emerald-600 focus:text-emerald-700" target="_blank" rel="noopener" href="https://app.ping.exchange/trade?market=usdx_usdc">On-Ramp USDX</a>
+				<a class="transition-colors duration-300 text-emerald-500 hover:text-emerald-600 focus:text-emerald-700" target="_blank" rel="noopener" href="https://app.ping.exchange/trade?market=usdx_usdc">On-Ramp USD𐆖</a>
 			</footer>
 		</div>
 	</div>
