@@ -305,9 +305,7 @@ export const actions = {
 						key: 'subscription',
 						label: 'Subscription',
 						value: `Current subscription: <i>Basic</i><br>Valid till: Unlimited<br>Click to Pay/Extend`,
-						attributedValue: `${PRIVATE_WEB_SERVICE_URL}/subscribe?pass=${basicData.serialNumber}&tk=${generateToken(JSON.stringify({
-							pass: basicData.serialNumber
-						}))}`,
+						attributedValue: `${PRIVATE_WEB_SERVICE_URL}/api/v1/subscription?originator=${originator}&subscriber=${memberAddress}&destination=${props.destination}&network=${props.network}${design.isEmail ? '&email=' + design.email : ''}${design.isTelegram ? '&telegram=' + design.telegram : ''}`,
 						dataDetectorTypes: ["PKDataDetectorTypeLink"]
 					},
 				],
@@ -317,13 +315,6 @@ export const actions = {
 						label: `Balances`,
 						value: 'Click to view',
 						attributedValue: explorerUrl || '',
-						dataDetectorTypes: ["PKDataDetectorTypeLink"]
-					}] : []),
-					...(hostname === 'ican' ? [{
-						key: 'onramp',
-						label: 'On-ramp',
-						value: `Buy assets 📥`,
-						attributedValue: `https://coreport.net/form?address=${props.destination}`,
 						dataDetectorTypes: ["PKDataDetectorTypeLink"]
 					}] : []),
 					{

@@ -4,8 +4,7 @@
 		FieldGroupColorPicker,
 		FieldGroupLabel,
 		FieldGroupText,
-		ListBox,
-		FieldGroupAppendix
+		ListBox
 	} from '$lib/components';
 
 	import { derived, get, writable } from 'svelte/store';
@@ -15,6 +14,8 @@
 	import { generateWebLink, getWebLink } from '$lib/helpers/generate.helper';
 	import { getAddress } from '$lib/helpers/get-address.helper';
 	import { toast } from '$lib/components/toast';
+
+	const PUBLIC_TG_BOT_NAME = import.meta.env.PUBLIC_TG_BOT_NAME;
 
 	export let hostname: ITransitionType | undefined = undefined;
 	export let authority: string | undefined = undefined;
@@ -197,14 +198,12 @@
 		/>
 	</FieldGroup>
 
-	<!-- Add Notifications section -->
 	<div class="flex flex-col gap-6">
 		<h2 class="text-lg font-bold flex items-center">
 			Notifications
-			<a href="/pro" target="_blank" class="inline-flex items-center ml-2 px-2 py-0.5 text-xs rounded-sm bg-emerald-500 text-gray-700! no-underline! hover:bg-emerald-400">Pro+</a>
+			<a href="/pro" target="_blank" class="inline-flex items-center ml-2 px-2 py-0.5 text-xs rounded-sm bg-emerald-500 text-gray-700! no-underline! hover:bg-emerald-400">Pro</a>
 		</h2>
 
-		<!-- Email notification -->
 		<FieldGroup>
 			<div class="flex items-center">
 				<input
@@ -244,7 +243,6 @@
 			{/if}
 		</FieldGroup>
 
-		<!-- Telegram notification -->
 		<FieldGroup>
 			<div class="flex items-center">
 				<input
@@ -284,6 +282,11 @@
 						}}
 					/>
 				</div>
+				{#if PUBLIC_TG_BOT_NAME}
+					<p class="text-sm mt-1">
+						<a href={`https://t.me/${PUBLIC_TG_BOT_NAME}`} target="_blank" rel="noopener" class="text-blue-500 hover:text-blue-600">Initialize Telegram bot (required for notifications).</a>
+					</p>
+				{/if}
 				{#if !$telegramValid}
 					<p class="text-rose-500 text-sm mt-1">Username must be valid Telegram username</p>
 				{/if}
@@ -308,34 +311,34 @@
 				</div>
 			{/if}
 
-			<div class="is-full lg:basis-1/2">
-				<form
-					method="POST"
-					action="?/generatePass"
-					use:enhance={formEnhance}
-					class="w-full"
-				>
-					<input type="hidden" name="props" value={JSON.stringify($constructorStore.networks[hostname || 'ican'])} />
-					<input type="hidden" name="design" value={JSON.stringify($constructorStore.design)} />
-					<input type="hidden" name="hostname" value={hostname} />
-					<input type="hidden" name="authority" value={authority} />
-					<button
-						class="w-full bs-12 py-2 px-3 text-center text-white border border-gray-700 bg-gray-700 hover:bg-gray-600 rounded-sm transition duration-200 outline-none focus-visible:ring focus-visible:ring-green-800 focus-visible:ring-offset-2 active:scale-(0.99) text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-						type="submit"
-						disabled={!hostname || $isGenerating}
-					>
-						{$isGenerating ? 'Generating…' : 'Download PayPass'}
-					</button>
-				</form>
-			</div>
+			<button
+				class="is-full lg:basis-1/2 bs-12 py-2 px-3 text-center text-white border border-gray-700 bg-gray-700 hover:bg-gray-600 rounded-sm transition duration-200 outline-none focus-visible:ring focus-visible:ring-green-800 focus-visible:ring-offset-2 active:scale-(0.99) sm:text-sm"
+				type="button"
+				onclick={() => constructor.resetDesign()}
+			>
+				Clear PayPass Data
+			</button>
 		</div>
 
-		<button
-			class="is-full bs-12 py-2 px-3 text-center text-white border border-gray-700 bg-gray-700 hover:bg-gray-600 rounded-sm transition duration-200 outline-none focus-visible:ring focus-visible:ring-green-800 focus-visible:ring-offset-2 active:scale-(0.99) sm:text-sm"
-			type="button"
-			onclick={() => constructor.resetDesign()}
-		>
-			Clear Pass Data
-		</button>
+		<div class="is-full">
+			<form
+				method="POST"
+				action="?/generatePass"
+				use:enhance={formEnhance}
+				class="w-full"
+			>
+				<input type="hidden" name="props" value={JSON.stringify($constructorStore.networks[hostname || 'ican'])} />
+				<input type="hidden" name="design" value={JSON.stringify($constructorStore.design)} />
+				<input type="hidden" name="hostname" value={hostname} />
+				<input type="hidden" name="authority" value={authority} />
+				<button
+					class="w-full bs-12 py-2 px-3 text-center text-white border border-gray-700 bg-gray-700 hover:bg-gray-600 rounded-sm transition duration-200 outline-none focus-visible:ring focus-visible:ring-green-800 focus-visible:ring-offset-2 active:scale-(0.99) text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+					type="submit"
+					disabled={!hostname || $isGenerating}
+				>
+					{$isGenerating ? 'Generating…' : 'Download PayPass'}
+				</button>
+			</form>
+		</div>
 	</div>
 </div>
