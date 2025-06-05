@@ -9,9 +9,7 @@ import ExchNumberFormat from 'exchange-rounding';
 import JSZip from 'jszip';
 import forge from 'node-forge';
 import { createClient } from '@supabase/supabase-js';
-// @ts-expect-error: Module '"$env/static/private"' has no exported member.
 import { PRIVATE_PASS_TEAM_IDENTIFIER, PRIVATE_PASS_PRIVATE_KEY, PRIVATE_AUTH_SECRET, PRIVATE_WEB_SERVICE_URL, PRIVATE_SUPABASE_URL, PRIVATE_SUPABASE_KEY } from '$env/static/private';
-// @ts-expect-error: Module '"$env/static/public"' has no exported member.
 import { PUBLIC_ENABLE_STATS } from '$env/static/public';
 
 // @ts-expect-error: Module is untyped
@@ -304,7 +302,7 @@ export const actions = {
 					{
 						key: 'subscription',
 						label: 'Subscription',
-						value: `Current subscription: <i>Basic</i><br>Valid till: Unlimited<br>Click to Pay/Extend`,
+						value: `Pay/Extend subscription`,
 						attributedValue: `${PRIVATE_WEB_SERVICE_URL}/api/v1/subscription?originator=${originator}&subscriber=${memberAddress}&destination=${props.destination}&network=${props.network}${design.isEmail ? '&email=' + design.email : ''}${design.isTelegram ? '&telegram=' + design.telegram : ''}`,
 						dataDetectorTypes: ["PKDataDetectorTypeLink"]
 					},

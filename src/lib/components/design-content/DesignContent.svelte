@@ -172,8 +172,8 @@
 	<div>
 		Current Color Euclidean distance:
 		<span class:text-red-500={$distance < 100}>{$distance}</span>
-		<p class="-mb-1 text-gray-400">
-			Note: Similar Colors will not be accepted - the minimum Euclidean distance is 100.
+		<p class="-mb-1 text-gray-400 text-sm">
+			Note: Colors that are similar will not be accepted; a minimum Euclidean distance of 100 is required.
 		</p>
 	</div>
 
