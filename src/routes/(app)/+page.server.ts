@@ -9,7 +9,7 @@ import ExchNumberFormat from 'exchange-rounding';
 import JSZip from 'jszip';
 import forge from 'node-forge';
 // @ts-ignore
-import { decode } from 'open-location-code';
+import OpenLocationCode from 'open-location-code/js/src/openlocationcode';
 import { createClient } from '@supabase/supabase-js';
 import { PRIVATE_PASS_TEAM_IDENTIFIER, PRIVATE_PASS_PRIVATE_KEY, PRIVATE_WEB_SERVICE_URL, PRIVATE_SUPABASE_URL, PRIVATE_SUPABASE_KEY } from '$env/static/private';
 import { PUBLIC_ENABLE_STATS } from '$env/static/public';
@@ -34,7 +34,7 @@ function getLink(hostname: string, props: any) {
 
 function getLocationCode(plusCode: string): [number, number] {
 	// @ts-ignore
-	const codeArea = decode(plusCode);
+	const codeArea = OpenLocationCode.decode(plusCode);
 	return [codeArea.latitudeCenter, codeArea.longitudeCenter];
 }
 
