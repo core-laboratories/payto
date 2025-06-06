@@ -8,13 +8,11 @@ import { KV } from '$lib/helpers/kv.helper';
 import ExchNumberFormat from 'exchange-rounding';
 import JSZip from 'jszip';
 import forge from 'node-forge';
+// @ts-ignore
+import { decode } from 'open-location-code';
 import { createClient } from '@supabase/supabase-js';
-import { PRIVATE_PASS_TEAM_IDENTIFIER, PRIVATE_PASS_PRIVATE_KEY, PRIVATE_AUTH_SECRET, PRIVATE_WEB_SERVICE_URL, PRIVATE_SUPABASE_URL, PRIVATE_SUPABASE_KEY } from '$env/static/private';
+import { PRIVATE_PASS_TEAM_IDENTIFIER, PRIVATE_PASS_PRIVATE_KEY, PRIVATE_WEB_SERVICE_URL, PRIVATE_SUPABASE_URL, PRIVATE_SUPABASE_KEY } from '$env/static/private';
 import { PUBLIC_ENABLE_STATS } from '$env/static/public';
-
-// @ts-expect-error: Module is untyped
-import pkg from 'open-location-code/js/src/openlocationcode';
-const { decode } = pkg;
 
 type Actions = {
 	generatePass: (event: RequestEvent) => Promise<Response>;
@@ -35,6 +33,7 @@ function getLink(hostname: string, props: any) {
 }
 
 function getLocationCode(plusCode: string): [number, number] {
+	// @ts-ignore
 	const codeArea = decode(plusCode);
 	return [codeArea.latitudeCenter, codeArea.longitudeCenter];
 }
@@ -43,7 +42,7 @@ function getLogoText(hostname: string, props: any) {
 	return `${(props.currency.value && props.currency.value.length < 6) ? props.currency.value.toUpperCase() : (props.network.toUpperCase() ? props.network.toUpperCase() : hostname.toUpperCase())} ${(props.destination.length > 8) ? props.destination.slice(0, 4).toUpperCase() + '…' + props.destination.slice(-4).toUpperCase() : props.destination.toUpperCase()}`;
 }
 
-function generateToken(json: string) {
+/*function generateToken(json: string) {
 	const payload = JSON.stringify({
 		...JSON.parse(json),
 		timestamp: Date.now()
@@ -52,7 +51,7 @@ function generateToken(json: string) {
 	hmac.start('sha256', PRIVATE_AUTH_SECRET);
 	hmac.update(payload);
 	return hmac.digest().toHex();
-}
+}*/
 
 function getFormattedDateTime(includeTimezone: boolean = true) {
 	const now = new Date();
