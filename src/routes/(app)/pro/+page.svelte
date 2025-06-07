@@ -1,5 +1,5 @@
 <script lang="ts">
-	const PUBLIC_COMMUNITY_URL = import.meta.env.PUBLIC_COMMUNITY_URL;
+	import { PUBLIC_COMMUNITY_URL } from '$env/static/public';
 </script>
 
 <div class="flex flex-col items-center gap-8 p-4 lg:flex-row lg:justify-center lg:items-start">

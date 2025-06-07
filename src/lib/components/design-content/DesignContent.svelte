@@ -15,7 +15,7 @@
 	import { getAddress } from '$lib/helpers/get-address.helper';
 	import { toast } from '$lib/components/toast';
 
-	const PUBLIC_TG_BOT_NAME = import.meta.env.PUBLIC_TG_BOT_NAME;
+	import { PUBLIC_TG_BOT_NAME } from '$env/static/public';
 
 	export let hostname: ITransitionType | undefined = undefined;
 	export let authority: string | undefined = undefined;
