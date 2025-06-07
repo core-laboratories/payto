@@ -2,16 +2,16 @@
 
 > Decentralized Asset Transfer
 
-The 'payto' URI scheme builder supports Payments as outlined in [RFC 8905](https://datatracker.ietf.org/doc/rfc8905/) and subsequent amendments.
+The 'payto' URI scheme builder supports payments as outlined in [RFC 8905](https://datatracker.ietf.org/doc/rfc8905/) and subsequent amendments.
 
 ## Technical Specifications and Organizational Notes
 
 - [Extended PayTo URI](docs/scheme.md)
 - [RFC 8905](https://datatracker.ietf.org/doc/rfc8905/)
 
-## PayTo libraries
+## PayTo Libraries
 
-Typescript / JavaScript:
+**TypeScript / JavaScript:**
 
 - [PayTo resource locator](https://github.com/core-laboratories/payto-rl)
 
@@ -23,7 +23,7 @@ If you're reading this, you've likely already initialized your project. Congratu
 # To create a new project in the current directory
 npm create svelte@latest
 
-# To create a new project in 'my-app' directory
+# To create a new project in the 'my-app' directory
 npm create svelte@latest my-app
 ```
 
@@ -46,17 +46,21 @@ To create a production version of your app:
 npm run build
 ```
 
-The production build can be previewed using `npm run preview`.
+You can preview the production build using:
+
+```bash
+npm run preview
+```
 
 > For deploying your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) suited to your target environment.
 
-## Pro features
+## Pro Features
 
 You can see the [Pro plans](https://payto.money/pro) for more information.
 
-To customize the Pass, you can become the authority of your own Pass. Each authority has maximum validity of pass 3 years instead of 1 year.
+To customize the Pass, you can become the authority of your own Pass. Each authority has a maximum pass validity of 3 years instead of 1 year.
 
-Issuing authorities[^authority] are delivering object as this example to e-mail: [sales@payto.money](mailto:sales@payto.money?subject=PayTo%20Authority%20Request)
+Issuing authorities[^authority] deliver an object like this example to the email: [sales@payto.money](mailto:sales@payto.money?subject=PayTo%20Authority%20Request)
 
 ```json
 {
@@ -92,19 +96,19 @@ Issuing authorities[^authority] are delivering object as this example to e-mail:
 
 Where:
 
-- `id` is the authority id of the Pass. (Required, Unique, Lowercase no spaces)
-- `name` is the organization name of the Pass. If set it is forced to the Pass. (Default: PayTo)
-- `identifier` is the identifier of the Pass. (Required, Unique, Lowercase - Reverse DNS example: `pass.money.payto`)
-- `url` is the url of the Pass. (Default: none)
-- `icons` is the icons of the Pass. (Default: PayTo logo)
-- `theme` is the theme of the Pass. (Default: PayTo theme)
-- `forceTheme` do you want to force the theme if the user has set it's own? (Default: false)
-- `customCurrencyData` is the custom currency data of the Pass. (Default: none)
-- `currencyLocale` is the currency locale of the Pass. (Default: undefined - autodetect)
+- `id`: The authority ID of the Pass. (Required, unique, lowercase, no spaces)
+- `name`: The organization name of the Pass. If set, it is forced on the Pass. (Default: PayTo)
+- `identifier`: The identifier of the Pass. (Required, unique, lowercase - reverse DNS example: `pass.money.payto`)
+- `url`: The URL of the Pass. (Default: none)
+- `icons`: The icons of the Pass. (Default: PayTo logo)
+- `theme`: The theme of the Pass. (Default: PayTo theme)
+- `forceTheme`: Whether to force the theme if the user has set their own. (Default: false)
+- `customCurrencyData`: The custom currency data of the Pass. (Default: none)
+- `currencyLocale`: The currency locale of the Pass. (Default: undefined - autodetect)
 
-[^authority] are available for the [Business plan](https://payto.money/pro).
+[^authority]: Available for the [Business plan](https://payto.money/pro).
 
-After successful registering the authority, you need to append to the url the `authority` parameter.
+After successfully registering the authority, you need to append the `authority` parameter to the URL:
 
 ```txt
 https://payto.money?authority={id}
