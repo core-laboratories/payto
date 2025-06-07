@@ -1,15 +1,17 @@
 <script lang="ts">
-	export let children: typeof import('svelte').SvelteComponent | null = null;
+	import type { Component } from 'svelte';
+
+	export let children: Component | null = null;
 </script>
 
 <svelte:head>
-	<title>Payto Money — Decentralized transfer of Assets</title>
-	<meta name="description" content="The Payto URI generator transfers Assets decentralized via a link or a redirect." />
-	<meta property="twitter:title" content="Payto Money — Decentralized transfer of Assets" />
-	<meta property="twitter:description" content="The Payto URI generator transfers Assets decentralized via a link or a redirect." />
+	<title>PayTo:Money — Direct Asset Transfers</title>
+	<meta name="description" content="Direct Asset Transfers without intermediaries. Send and receive digital assets peer-to-peer." />
+	<meta property="twitter:title" content="PayTo:Money — Direct Asset Transfers" />
+	<meta property="twitter:description" content="Direct Asset Transfers without intermediaries. Send and receive digital assets peer-to-peer." />
 	<meta property="twitter:image" content="https://payto.money/icons/android-chrome-512x512.png" />
-	<meta property="og:title" content="Payto Money — Decentralized transfer of Assets" />
-	<meta property="og:description" content="The Payto URI generator transfers Assets decentralized via a link or a redirect." />
+	<meta property="og:title" content="PayTo:Money — Direct Asset Transfers" />
+	<meta property="og:description" content="Direct Asset Transfers without intermediaries. Send and receive digital assets peer-to-peer." />
 	<meta property="og:image" content="https://payto.money/icons/android-chrome-512x512.png" />
 </svelte:head>
 

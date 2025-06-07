@@ -9,12 +9,13 @@ interface IRGB {
  * @param {string} hex - HEX color string.
  * @returns {IRGB} RGB color object.
  */
-function hexToRgb(hex: string): IRGB {
-	hex = hex.replace(/^#/, '');
-	const r = parseInt(hex.slice(0, 2), 16);
-	const g = parseInt(hex.slice(2, 4), 16);
-	const b = parseInt(hex.slice(4, 6), 16);
-	return { r, g, b };
+export function hexToRgb(hex: string): { r: number; g: number; b: number } {
+	const bigint = parseInt(hex.slice(1), 16);
+	return {
+		r: (bigint >> 16) & 255,
+		g: (bigint >> 8) & 255,
+		b: bigint & 255,
+	};
 }
 
 /**

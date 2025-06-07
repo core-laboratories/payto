@@ -1,1 +1,1 @@
-export { default as Tabs } from './tabs.svelte';
+export { default as Tabs } from './Tabs.svelte';

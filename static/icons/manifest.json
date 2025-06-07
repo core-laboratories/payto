@@ -1,10 +1,10 @@
 {
-	"name": "PaytoMoney",
-	"short_name": "Payto",
+	"name": "PayTo:Money",
+	"short_name": "PayTo:",
 	"display": "standalone",
 	"theme_color": "#77bb65",
 	"background_color": "#111827",
-	"description": "PaytoMoney is a simple and secure way to send and receive money.",
+	"description": "Direct Asset Transfers without intermediaries. Send and receive digital assets peer-to-peer.",
 	"icons": [
 		{
 			"src": "/icons/icon-48x48.png",

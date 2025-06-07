@@ -10,21 +10,75 @@
 
 	import { constructor } from '$lib/store/constructor.store';
 	import { fly } from 'svelte/transition';
+	import { upiSchema } from '$lib/validators/upi.validator';
+
+	let aliasError = $state(false);
+	let aliasMsg = $state('');
+	let aliasValue = $state<string | undefined>(undefined);
+
+	$effect(() => {
+		if (!$constructor.networks.upi.accountAlias) {
+			aliasValue = undefined;
+		}
+	});
 
 	function handleRecurringChange() {
 		if (!$constructor.networks.upi.isRc) {
 			$constructor.networks.upi.params.rc.value = undefined;
 		}
 	}
+
+	function validateUpi(value: string) {
+		if (!value) {
+			aliasError = false;
+			aliasMsg = '';
+			$constructor.networks.upi.accountAlias = undefined;
+			return;
+		}
+
+		try {
+			const result = upiSchema.safeParse({ accountAlias: value });
+
+			if (!result.success) {
+				aliasError = true;
+				aliasMsg = result.error.errors[0]?.message || 'Invalid email format';
+			} else {
+				aliasError = false;
+				aliasMsg = '';
+				$constructor.networks.upi.accountAlias = value.toLowerCase();
+			}
+		} catch (error: any) {
+			aliasError = true;
+			aliasMsg = error.message || 'Invalid email format';
+		}
+	}
+
+	function handleAliasInput(event: Event) {
+		const value = (event.target as HTMLInputElement).value;
+		aliasValue = value;
+		validateUpi(value);
+	}
 </script>
 
-<div class="[ flex flex-col gap-6 ]" in:fly={{ y: 64 }}>
+<div class="flex flex-col gap-6" in:fly={{ y: 64 }}>
 	<FieldGroup>
 		<FieldGroupLabel>Account Alias *</FieldGroupLabel>
 		<FieldGroupText
-			placeholder="e.g. john.doe@gmail.com"
-			bind:value={$constructor.networks.upi.accountAlias}
+			placeholder="e.g. username@onion.email"
+			bind:value={aliasValue}
+			oninput={handleAliasInput}
+			onchange={handleAliasInput}
+			classValue={`${
+				aliasError
+					? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
+					: aliasValue
+						? 'border-2 border-emerald-500 focus:border-emerald-500 focus-visible:border-emerald-500'
+						: ''
+			}`}
 		/>
+		{#if aliasError && aliasMsg}
+			<span class="text-sm text-rose-500">{aliasMsg}</span>
+		{/if}
 	</FieldGroup>
 
 	<FieldGroup>
@@ -55,7 +109,7 @@
 		<FieldGroupLabel>Fiat currency</FieldGroupLabel>
 		<FieldGroupText
 			placeholder="e.g. CHF; EUR; USD"
-			classValue="uppercase"
+			classValue="uppercase placeholder:normal-case"
 			bind:value={$constructor.networks.upi.params.currency.value}
 		/>
 		<FieldGroupAppendix>Empty value uses the default network currency.</FieldGroupAppendix>
@@ -67,7 +121,7 @@
 				type="checkbox"
 				bind:checked={$constructor.networks.upi.isRc}
 				id="recurringCheckbox"
-				on:change={handleRecurringChange}
+				onchange={handleRecurringChange}
 			/>
 			<label for="recurringCheckbox" class="ml-2">Recurring payments</label>
 		</div>

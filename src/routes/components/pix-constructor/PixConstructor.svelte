@@ -9,6 +9,17 @@
 
 	import { constructor } from '$lib/store/constructor.store';
 	import { fly } from 'svelte/transition';
+	import { pixSchema } from '$lib/validators/pix.validator';
+
+	let aliasError = $state(false);
+	let aliasMsg = $state('');
+	let aliasValue = $state<string | undefined>(undefined);
+
+	$effect(() => {
+		if (!$constructor.networks.pix.accountAlias) {
+			aliasValue = undefined;
+		}
+	});
 
 	function handleIdChange() {
 		if (!$constructor.networks.pix.isId) {
@@ -27,15 +38,58 @@
 			$constructor.networks.pix.params.rc.value = undefined;
 		}
 	}
+
+	function validatePix(value: string) {
+		if (!value) {
+			aliasError = false;
+			aliasMsg = '';
+			$constructor.networks.pix.accountAlias = undefined;
+			return;
+		}
+
+		try {
+			const result = pixSchema.safeParse({ accountAlias: value });
+
+			if (!result.success) {
+				aliasError = true;
+				aliasMsg = result.error.errors[0]?.message || 'Invalid email format';
+			} else {
+				aliasError = false;
+				aliasMsg = '';
+				$constructor.networks.pix.accountAlias = value.toLowerCase();
+			}
+		} catch (error: any) {
+			aliasError = true;
+			aliasMsg = error.message || 'Invalid email format';
+		}
+	}
+
+	function handleAliasInput(event: Event) {
+		const value = (event.target as HTMLInputElement).value;
+		aliasValue = value;
+		validatePix(value);
+	}
 </script>
 
-<div class="[ flex flex-col gap-6 ]" in:fly={{ y: 64 }}>
+<div class="flex flex-col gap-6" in:fly={{ y: 64 }}>
 	<FieldGroup>
 		<FieldGroupLabel>Account Alias *</FieldGroupLabel>
 		<FieldGroupText
-			placeholder="e.g. john.doe@gmail.com"
-			bind:value={$constructor.networks.pix.accountAlias}
+			placeholder="e.g. username@onion.email"
+			bind:value={aliasValue}
+			oninput={handleAliasInput}
+			onchange={handleAliasInput}
+			classValue={`${
+				aliasError
+					? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
+					: aliasValue
+						? 'border-2 border-emerald-500 focus:border-emerald-500 focus-visible:border-emerald-500'
+						: ''
+			}`}
 		/>
+		{#if aliasError && aliasMsg}
+			<span class="text-sm text-rose-500">{aliasMsg}</span>
+		{/if}
 	</FieldGroup>
 
 	<FieldGroup>
@@ -58,7 +112,7 @@
 		<FieldGroupLabel>Fiat currency (BRL default)</FieldGroupLabel>
 		<FieldGroupText
 			placeholder="e.g. CHF; EUR; USD; …"
-			classValue="uppercase"
+			classValue="uppercase placeholder:normal-case"
 			bind:value={$constructor.networks.pix.params.currency.value}
 		/>
 	</FieldGroup>
@@ -68,7 +122,7 @@
 			type="checkbox"
 			bind:checked={$constructor.networks.pix.isId}
 			id="idCheckbox"
-			on:change={handleIdChange}
+			onchange={handleIdChange}
 		/>
 		<label for="idCheckbox" class="ml-2">Transaction ID</label>
 	</div>
@@ -87,7 +141,7 @@
 			type="checkbox"
 			bind:checked={$constructor.networks.pix.isDesc}
 			id="descCheckbox"
-			on:change={handleDescChange}
+			onchange={handleDescChange}
 		/>
 		<label for="descCheckbox" class="ml-2">Description</label>
 	</div>
@@ -107,7 +161,7 @@
 				type="checkbox"
 				bind:checked={$constructor.networks.pix.isRc}
 				id="recurringCheckbox"
-				on:change={handleRecurringChange}
+				onchange={handleRecurringChange}
 			/>
 			<label for="recurringCheckbox" class="ml-2">Recurring payments</label>
 		</div>

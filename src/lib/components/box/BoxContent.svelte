@@ -1,5 +1,7 @@
 <script lang="ts">
-	export let children: typeof import('svelte').SvelteComponent | null = null;
+	import type { Component } from 'svelte';
+
+	export let children: Component | null = null;
 </script>
 
 {#if children}

@@ -8,7 +8,7 @@ import { calculateColorDistance } from '$lib/helpers/euclidean-distance.helper';
  * and placeholder of each field.
  * @param props - The props object that was used to initialized store.
  */
-const generateLink = (payload: IPayload[], props: Record<string, any>, donate: boolean = false) => {
+export const generateLink = (payload: IPayload[] = [], props: Record<string, any>, donate: boolean = false) => {
 	let link = payload
 		.filter((payload) => (payload.value !== undefined || payload.query === true))
 		.reduce((acc, payload) => acc.concat('/', payload.value || (payload.placeholder ? payload.placeholder : '')), 'payto:/');
@@ -58,7 +58,7 @@ const generateLink = (payload: IPayload[], props: Record<string, any>, donate: b
 
 		// Design transformer
 		if (design) {
-			const { org, item, colorF, colorB, barcode } = design;
+			const { org, item, colorF, colorB, barcode, rtl } = design;
 			if (org) searchParams.set('org', org);
 			if (item) searchParams.set('item', item);
 			if (colorB && colorF && colorB !== '#77bc65' && colorF !== '#192a14') {
@@ -84,6 +84,9 @@ const generateLink = (payload: IPayload[], props: Record<string, any>, donate: b
 				} else {
 					searchParams.delete('color-b');
 				}
+			}
+			if (rtl) {
+				searchParams.set('rtl', '1');
 			}
 			if (barcode !== 'qr') {
 				if (barcode) searchParams.set('barcode', barcode);
@@ -137,12 +140,15 @@ const caseCurrency = (str: string | undefined) => (str && str.startsWith("0x")) 
  */
 const shortenTitle = (str: string | undefined) => (str && str.length > 10) ? `${str.slice(0,4)}…${str.slice(-4)}` : str;
 
+const recurringIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke-width="2"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 004 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>`;
+
 /**
  * It takes a prefix and a props object, and returns a title
  * @param {'Pay' | 'Donate'} prefix - 'pay' | 'donate'
  * @param props - The props object that was used to initialized store.
+ * @param html - Whether to return the title for HTML output
  */
-const getTitle = (prefix: 'pay' | 'donate', props: Record<string, any>) => {
+const getTitle = (prefix: 'pay' | 'donate', props: Record<string, any>, code: string | boolean = false) => {
 	let network
 	if (props.network === 'void') {
 		network = props.transport !== 'other'
@@ -155,12 +161,46 @@ const getTitle = (prefix: 'pay' | 'donate', props: Record<string, any>) => {
 		? shortenTitle(props.other)
 		: '');
 	}
+
 	let namePrefix;
 	if (typeof props.params !== 'undefined' && typeof props.params.rc !== 'undefined' && typeof props.params.rc.value !== 'undefined') {
-		namePrefix = `Recurring ${prefix}`;
+		if (prefix === 'donate') {
+			if (code === 'html') {
+				namePrefix = `${recurringIcon}&nbsp;<strong>Donate<span>To:</span></strong>`;
+			} else if (code === 'tailwind') {
+				namePrefix = `${recurringIcon}&nbsp;<strong class="italic mr-1">Donate<span class="text-[#5675ff]">To:</span></strong>`;
+			} else {
+				namePrefix = `Recurring DonateTo:`;
+			}
+		} else {
+			if (code === 'html') {
+				namePrefix = `${recurringIcon}&nbsp;<strong>Pay<span>To:</span></strong>`;
+			} else if (code === 'tailwind') {
+				namePrefix = `${recurringIcon}&nbsp;<strong class="italic mr-1">Pay<span class="text-[#059669]">To:</span></strong>`;
+			} else {
+				namePrefix = `Recurring PayTo:`;
+			}
+		}
 	} else {
-		namePrefix = prefix[0].toUpperCase() + prefix.slice(1);
+		if (prefix === 'donate') {
+			if (code === 'html') {
+				namePrefix = `<strong>Donate<span>To:</span></strong>`;
+			} else if (code === 'tailwind') {
+				namePrefix = `<strong class="italic mr-1">Donate<span class="text-[#5675ff]">To:</span></strong>`;
+			} else {
+				namePrefix = `DonateTo:`;
+			}
+		} else {
+			if (code === 'html') {
+				namePrefix = `<strong>Pay<span>To:</span></strong>`;
+			} else if (code === 'tailwind') {
+				namePrefix = `<strong class="italic mr-1">Pay<span class="text-[#059669]">To:</span></strong>`;
+			} else {
+				namePrefix = `PayTo:`;
+			}
+		}
 	}
+
 	let title = `${namePrefix} via ${network ? network.toUpperCase() : ''}`;
 	if (props.chain > 0 && (props.network === 'eth' || props.network === 'other')) {
 		title += `@${props.chain}`;
@@ -213,7 +253,7 @@ cursor:pointer;
 color:#72bd5e;
 padding:6px 12px;
 background:#72bd5e20;
-font:15px/20px BlinkMacSystemFont, -apple-system, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+font:16px/20px BlinkMacSystemFont, -apple-system, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
 border:1px solid #639953;
 border-radius:16px;
 text-decoration:none;
@@ -221,7 +261,16 @@ height:fit-content;
 transition: all .15s cubic-bezier(.4,0,.2,1);
 white-space:nowrap;
 `;
-	return `<a href="${link}" class="ptPay" style="${style}">💸 ${getTitle('pay', props)}</a><style>a.ptPay:hover{border-color:#95e87f !important;color:#95e87f !important}</style>`;
+const stylePayto = `
+<style>
+a.ptPay>strong{font-style:italic;margin-right:4px}
+a.ptPay>strong>span{color:#059669}
+a.ptPay>svg{vertical-align:-3px;margin-right:2px}
+a.ptPay:hover{border-color:#95e87f!important;background-color: #72bd5e38!important}
+a.ptPay{display:inline-flex;align-items:center}
+</style>`;
+
+	return `<a href="${link}" class="ptPay" style="${style}">${getTitle('pay', props, 'html')}</a>${stylePayto}`;
 };
 
 /**
@@ -237,7 +286,7 @@ cursor:pointer;
 color:#849dfc;
 padding:6px 12px;
 background:#849dfc20;
-font:15px/20px BlinkMacSystemFont, -apple-system, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+font:16px/20px BlinkMacSystemFont, -apple-system, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
 border:1px solid #878fc5;
 border-radius:16px;
 text-decoration:none;
@@ -245,7 +294,38 @@ height:fit-content;
 transition:all .15s cubic-bezier(.4, 0, .2, 1);
 white-space:nowrap;
 `;
-	return `<a href="${link}" class="ptDonate" style="${style}">💠 ${getTitle('donate', props)}</a><style>a.ptDonate:hover{border-color:#b6c2f4 !important;color:#b6c2f4 !important}</style>`;
+const styleDonateto = `
+<style>
+a.ptDonate>strong{font-style:italic;margin-right:4px}
+a.ptDonate>strong>span{color:#5675ff}
+a.ptDonate>svg{vertical-align:-3px;margin-right:2px}
+a.ptDonate:hover{border-color:#b6c2f4!important;background-color: #849dfc38!important}
+a.ptDonate{display:inline-flex;align-items:center}
+</style>`;
+
+	return `<a href="${link}" class="ptDonate" style="${style}">${getTitle('donate', props, 'html')}</a>${styleDonateto}`;
+};
+
+/**
+ * It takes a link and a props object and returns a string of HTML that can be used to render a
+ * payment button
+ * @param {string} link - The link to the payment page.
+ * @param props - The props object that was used to initialized store.
+ * @returns A string of HTML code that will be used to create a payment button.
+ */
+const generateTailwindPaymentButton = (link: string, props: Record<string, any>) => {
+	return `<a href="${link}" class="inline-flex items-center cursor-pointer px-3 py-1.5 bg-[#72bd5e20] hover:bg-[#72bd5e38] !text-[#72bd5e] font-sans leading-5 border border-[#639953] rounded-full !no-underline h-fit whitespace-nowrap transition-all duration-150 ease-in-out hover:border-[#95e87f] hover:text-[#95e87f] font-sans group">${getTitle('pay', props, 'tailwind')}</a>`;
+};
+
+/**
+ * It takes a link and a props object and returns a string of HTML that can be used to render a
+ * donation button
+ * @param {string} link - The link to the donation page.
+ * @param props - The props object that was used to initialized store.
+ * @returns A string of HTML code that will be used to create a donation button.
+ */
+const generateTailwindDonationButton = (link: string, props: Record<string, any>) => {
+	return `<a href="${link}" class="inline-flex items-center cursor-pointer px-3 py-1.5 bg-[#849dfc20] hover:bg-[#849dfc38] !text-[#849dfc] font-sans leading-5 border border-[#878fc5] rounded-full !no-underline h-fit whitespace-nowrap transition-all duration-150 ease-in-out hover:border-[#b6c2f4] hover:text-[#b6c2f4] font-sans group">${getTitle('donate', props, 'tailwind')}</a>`;
 };
 
 /**
@@ -306,19 +386,79 @@ export const generate = (type: ITransitionType, props: any, payload: IPayload[])
 	const link = generateLink(payload, props);
 
 	return [
-		{ label: 'Link', value: link },
+		{ label: 'Link', value: link, length: link.length },
 		{ label: 'Markdown', value: generateMarkDown(link, props) },
-		{ label: 'Html link', value: generateHtmlLink(link, props) },
+		{ label: 'HTML Link', value: generateHtmlLink(link, props) },
 		{
-			label: 'Html payment button',
+			label: 'HTML Payment Button',
 			value: generateHtmlPaymentButton(link, props),
-			previewable: true
+			previewable: true,
+			type: 'payment'
 		},
 		{
-			label: 'Html donation button',
+			label: 'HTML Donation Button',
 			value: generateHtmlDonationButton(generateLink(payload, props, true), props),
-			previewable: true
+			previewable: true,
+			type: 'donation'
 		},
-		{ label: 'Meta tag', note: 'Basic payment instructions only.', value: generateMetaTag(type, props) }
+		{ label: 'Tailwind Payment Button', value: generateTailwindPaymentButton(link, props), type: 'payment' },
+		{ label: 'Tailwind Donation Button', value: generateTailwindDonationButton(generateLink(payload, props, true), props), type: 'donation' },
+		{ label: 'FinTag (Meta Tag)', note: 'Basic payment instructions only.', value: generateMetaTag(type, props) }
 	];
 };
+
+interface IWebLinkOptions {
+	payload?: IPayload[];
+	network?: ITransitionType;
+	networkData?: any;
+	design?: boolean;
+	doante?: boolean;
+	transform?: boolean;
+}
+
+export const getWebLink = ({
+	payload,
+	network,
+	networkData,
+	design = false,
+	doante = false,
+	transform = false
+}: IWebLinkOptions): string => {
+	if (!network || !networkData) return '#';
+
+	const domain = import.meta.env.DEV
+		? `http://localhost:${import.meta.env.VITE_DEV_SERVER_PORT || 5173}`
+		: 'https://payto.money';
+
+	const finalPayload = payload ?? [
+		{
+			value: networkData.network === 'other'
+				? networkData.other?.toLowerCase()
+				: networkData.network
+		},
+		{
+			value: networkData.destination
+		}
+	];
+
+	const props = {
+		...networkData,
+		params: {
+			...networkData.params,
+			...(design ? { design: networkData.design } : {})
+		}
+	};
+
+	const link = generateLink(finalPayload, props, doante);
+	return link ? (transform ? `${domain}/${link.slice(5)}` : link) : '#';
+};
+
+export const generateWebLink = (link: string) => {
+	if (!link) return '#';
+
+	const domain = import.meta.env.DEV
+		? `http://localhost:${import.meta.env.VITE_DEV_SERVER_PORT || 5173}`
+		: 'https://payto.money';
+
+	return `${domain}/${link.slice(5)}`;
+}

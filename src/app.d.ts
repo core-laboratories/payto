@@ -52,8 +52,10 @@ interface IPayload {
 interface IOutput {
 	label: string;
 	value: string;
+	length?: number;
 	note?: string;
 	previewable?: boolean;
+	type?: string;
 }
 
 interface IState {
@@ -99,6 +101,11 @@ interface IDesignState {
 	colorF?: string;
 	colorB?: string;
 	barcode?: string;
+	rtl?: boolean;
+	isEmail?: boolean;
+	email?: string;
+	isTelegram?: boolean;
+	telegram?: string;
 }
 
 interface ILocValue extends IValue {
@@ -119,6 +126,8 @@ interface IComplexState {
 		[K in ITransitionType]: ITransactionState;
 	};
 	design: IDesignState;
+	isCleared: boolean;
+	paymentType: string
 }
 
 /*interface IStateParams {

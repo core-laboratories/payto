@@ -1,0 +1,121 @@
+@import url('https://fonts.googleapis.com/css2?family=Arimo:ital,wght@0,400..700;1,400..700&display=swap');
+@import url("https://cdn.jsdelivr.net/gh/rastislavcore/zephirum/zephirum.css");
+@import "tailwindcss";
+@import "./theme.css";
+
+@layer base {
+	button:not(:disabled),
+	[role="button"]:not(:disabled),
+	label:not(:disabled),
+	input[type="checkbox"]:not(:disabled),
+	input[type="radio"]:not(:disabled),
+	input[type="color"]:not(:disabled) {
+		cursor: pointer;
+	}
+}
+
+.pt-logo {
+    @apply font-bold italic;
+	font-optical-sizing: auto;
+}
+
+html {
+	@apply font-family-arimo bg-gray-900 bg-repeat h-full min-h-full text-base leading-6;
+	background-image: url("/images/tile.svg");
+    font-synthesis: none;
+	text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	-webkit-text-size-adjust: 100%;
+}
+
+body {
+	@apply text-gray-50 min-h-full h-full;
+	-webkit-tap-highlight-color: transparent;
+	color-scheme: dark;
+	min-height: -webkit-fill-available;
+	min-height: -moz-available;
+}
+
+::selection {
+	@apply bg-green-900 text-gray-50;
+}
+
+a {
+    @apply text-emerald-200;
+}
+
+a:hover {
+	@apply text-emerald-300;
+	text-decoration: underline;
+}
+
+a:active {
+	@apply text-emerald-200;
+}
+
+a:visited {
+	@apply text-emerald-400;
+}
+
+a.logo {
+	@apply text-core;
+}
+
+a.logo:hover {
+	@apply no-underline;
+}
+
+a.button {
+	@apply no-underline text-white;
+}
+
+a.button:hover {
+	@apply bg-gray-600;
+}
+
+input[type="checkbox"] {
+	@apply cursor-pointer appearance-none border border-gray-400 rounded-sm bg-gray-700 relative outline-none w-4 h-4 align-middle;
+}
+
+input[type='radio'] {
+	@apply cursor-pointer appearance-none border border-gray-400 rounded-full bg-gray-700 relative outline-none w-4 h-4 align-middle;
+}
+
+input[type='checkbox']:checked {
+    background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
+}
+
+input[type='radio']:checked {
+	background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3ccircle cx='8' cy='8' r='3'/%3e%3c/svg%3e");
+}
+
+input[type='checkbox']:checked, input[type='radio']:checked {
+	@apply bg-green-400;
+}
+
+input[type='checkbox']:focus, input[type='radio']:focus {
+	@apply focus:ring focus:ring-green-400/70 focus:ring-offset-2;
+}
+
+input[type='checkbox']:hover, input[type='radio']:hover {
+	@apply border-green-400;
+}
+
+input[type='checkbox']:checked:hover, input[type='radio']:checked:hover {
+	@apply bg-green-400;
+}
+
+abbr {
+	@apply cursor-help;
+}
+
+abbr:where([title]) {
+	@apply underline underline-offset-2 decoration-gray-500;
+}
+
+@media print {
+	.amount-text {
+		@apply !text-black;
+	}
+}

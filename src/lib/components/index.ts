@@ -1,11 +1,5 @@
-export { DesignContent } from './designContent';
-export { Page } from './page';
 export { Box, BoxTitle, BoxContent } from './box';
-export { Row } from './row';
-export { Listbox } from './listBox';
-export { Tabs } from './tabs';
-export { toast } from './toast';
-export { default as Toast } from './toast/toast.svelte';
+export { DesignContent } from './design-content';
 export {
 	FieldGroup,
 	FieldGroupColorPicker,
@@ -16,5 +10,11 @@ export {
 	FieldGroupDateTime,
 	FieldGroupAppendix,
 	FieldGroupRadioWithNumber
-} from './fieldgroup';
-export { WalletCard } from './walletCard';
+} from './field-group';
+export { ListBox } from './list-box';
+export { Qr } from './qr';
+export { Page } from './page';
+export { Row } from './row';
+export { Tabs } from './tabs';
+export { Toast, toast } from './toast';
+export { WalletCard } from './wallet-card';

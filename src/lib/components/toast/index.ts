@@ -14,3 +14,5 @@ export function toast({ message, type = 'info', duration = 3000 }: Omit<Toast, '
 		toasts.update((current) => current.filter((toast) => toast.id !== id));
 	}, duration);
 }
+
+export { default as Toast } from './Toast.svelte';

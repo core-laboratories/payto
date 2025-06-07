@@ -116,7 +116,14 @@ const INITIAL_STATE: IComplexState = {
 		colorF: '#192a14',
 		colorB: '#77bc65',
 		barcode: 'qr',
-	}
+		rtl: false,
+		isEmail: false,
+		email: undefined,
+		isTelegram: false,
+		telegram: undefined,
+	},
+	isCleared: false,
+	paymentType: 'ican',
 };
 
 const BUILDER = {
@@ -162,7 +169,7 @@ const BUILDER = {
 				},
 				{
 					placeholder: '',
-					value: fullProps.bic ? encodeURIComponent(fullProps.bic) : undefined
+					value: fullProps.bic && fullProps.iban ? encodeURIComponent(fullProps.bic) : undefined
 				},
 				{
 					placeholder: '',
@@ -226,7 +233,7 @@ const BUILDER = {
 				},
 				{
 					placeholder: '',
-					value: (fullProps.routingNumber && /^\d+$/.test(fullProps.routingNumber)) ? fullProps.routingNumber : undefined
+					value: (fullProps.routingNumber && fullProps.accountNumber && /^\d+$/.test(fullProps.routingNumber) && /^\d+$/.test(fullProps.accountNumber)) ? fullProps.routingNumber : undefined
 				},
 				{
 					placeholder: '',

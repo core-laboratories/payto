@@ -5,38 +5,163 @@
 		FieldGroupLabel,
 		FieldGroupNumber,
 		FieldGroupText,
-		Listbox
+		ListBox
 	} from '$lib/components';
 
 	import { TRANSPORT } from '$lib/data/transports.data';
-	import { join } from '$lib/helpers/join.helper';
 	import { constructor } from '$lib/store/constructor.store';
 	import { fade, fly } from 'svelte/transition';
+	import { coordinatesSchema, plusCodeSchema } from '$lib/validators/location.validator';
+
+	let latError = $state(false);
+	let latMsg = $state('');
+	let latValue = $state<string | undefined>(undefined);
+
+	let lonError = $state(false);
+	let lonMsg = $state('');
+	let lonValue = $state<string | undefined>(undefined);
+
+	let plusCodeError = $state(false);
+	let plusCodeMsg = $state('');
+	let plusCodeValue = $state<string | undefined>(undefined);
+
+	$effect(() => {
+		if ($constructor.isCleared) {
+			latValue = undefined;
+			lonValue = undefined;
+			latError = false;
+			lonError = false;
+			latMsg = '';
+			lonMsg = '';
+			plusCodeValue = undefined;
+			plusCodeError = false;
+			plusCodeMsg = '';
+		}
+	});
+
+	function validateCoordinates() {
+		if (!latValue && !lonValue) {
+			latError = false;
+			lonError = false;
+			latMsg = '';
+			lonMsg = '';
+			$constructor.networks.void.params.loc.lat = undefined;
+			$constructor.networks.void.params.loc.lon = undefined;
+			return;
+		}
+
+		try {
+			const result = coordinatesSchema.safeParse({
+				latitude: latValue || '',
+				longitude: lonValue || ''
+			});
+
+			if (!result.success) {
+				const errors = result.error.errors;
+				errors.forEach((error) => {
+					if (error.path.includes('latitude')) {
+						latError = true;
+						latMsg = error.message;
+						$constructor.networks.void.params.loc.lat = undefined;
+					} else {
+						lonError = true;
+						lonMsg = error.message;
+						$constructor.networks.void.params.loc.lon = undefined;
+					}
+				});
+			} else {
+				latError = false;
+				lonError = false;
+				latMsg = '';
+				lonMsg = '';
+				$constructor.networks.void.params.loc.lat = latValue;
+				$constructor.networks.void.params.loc.lon = lonValue;
+			}
+		} catch (error: any) {
+			latError = true;
+			lonError = true;
+			latMsg = lonMsg = error.message || 'Invalid coordinate format';
+		}
+	}
+
+	function validatePlusCode(value: string) {
+		if (!value) {
+			plusCodeError = false;
+			plusCodeMsg = '';
+			$constructor.networks.void.params.loc.plus = undefined;
+			return;
+		}
+
+		try {
+			const result = plusCodeSchema.safeParse({ code: value });
+
+			if (!result.success) {
+				plusCodeError = true;
+				plusCodeMsg = result.error.errors[0]?.message || 'Invalid Plus Code format';
+				$constructor.networks.void.params.loc.plus = undefined;
+			} else {
+				plusCodeError = false;
+				plusCodeMsg = '';
+				$constructor.networks.void.params.loc.plus = value.toUpperCase();
+			}
+		} catch (error: any) {
+			plusCodeError = true;
+			plusCodeMsg = error.message || 'Invalid Plus Code format';
+		}
+	}
+
+	function handleLatInput(event: Event) {
+		const value = (event.target as HTMLInputElement).value;
+		latValue = value;
+		validateCoordinates();
+	}
+
+	function handleLonInput(event: Event) {
+		const value = (event.target as HTMLInputElement).value;
+		lonValue = value;
+		validateCoordinates();
+	}
+
+	function handlePlusCodeInput(event: Event) {
+		const value = (event.target as HTMLInputElement).value;
+		plusCodeValue = value;
+		validatePlusCode(value);
+	}
+
+	function handleOtherNetworkInput(event: Event) {
+		const otherNetworkValue = $constructor.networks.void.other;
+
+		if ($constructor.networks.void.transport === 'other') {
+			const isOtherMatchToNetworks = TRANSPORT.void.find((network) => network.value.toLowerCase() === otherNetworkValue?.toLowerCase() || network.label.toLowerCase() === otherNetworkValue?.toLowerCase());
+
+			if (isOtherMatchToNetworks) {
+				$constructor.networks.void.transport = isOtherMatchToNetworks.value;
+				$constructor.networks.void.other = undefined;
+			}
+		}
+	}
 </script>
 
-<div class="[ flex flex-col gap-6 ]" in:fly={{ y: 64 }}>
-	<div class={join('[ flex flex-col items-stretch gap-2 ]')}>
+<div class="flex flex-col gap-6" in:fly={{ y: 64 }}>
+	<div class="flex flex-col items-stretch gap-2">
 		<label id="transport-network-label" for="transport-network">Transport Network *</label>
-		<div class="[ flex flex-col items-stretch gap-4 ]">
+		<div class="flex flex-col items-stretch gap-4">
 			{#if $constructor.networks.void.transport !== 'other'}
 				<div in:fade>
-					<Listbox bind:value={$constructor.networks.void.transport} items={TRANSPORT.void} />
+					<ListBox bind:value={$constructor.networks.void.transport} items={TRANSPORT.void} />
 				</div>
 			{/if}
 			{#if $constructor.networks.void.transport === 'other'}
-				<div class={join('[ flex items-center ]', '[ relative ]')} in:fade>
+				<div class="flex items-center relative" in:fade>
 					<button
-						class={join(
-							'[ flex items-center justify-between ]',
-							'[ absolute inline-start-0 mli-3 p-2 text-gray-50 bg-gray-700 rounded-full outline-none transition-all duration-200 ]',
-							'[ focus-within:bg-green-900 focus-within:text-green-50 active:scale-95 ]'
-						)}
+						class="absolute start-0 ms-3 p-2 text-gray-50 bg-gray-700 rounded-full outline-none transition duration-200"
 						type="button"
 						title="Back to network menu options"
-						on:pointerdown={() => ($constructor.networks.void.transport = 'geo')}
+						aria-label="Back to network menu options"
+						onpointerdown={() => ($constructor.networks.void.transport = 'geo')}
 					>
 						<svg
-							class={join('[ bs-4 is-4 ]')}
+							class="w-5"
 							fill="none"
 							stroke="currentColor"
 							stroke-width="1.5"
@@ -44,20 +169,12 @@
 							xmlns="http://www.w3.org/2000/svg"
 							aria-hidden="true"
 						>
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
-							/>
+							<path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
 						</svg>
 					</button>
 
 					<input
-						class={join(
-							'[ is-full bs-12 plb-2 pis-14 pie-3 text-start bg-gray-900 rounded-md border-none caret-teal-500 ]',
-							'[ focus:outline-none focus-visible:ring-4 focus-visible:ring-opacity-75 focus-visible:ring-green-800 focus-visible:ring-offset-green-700 focus-visible:ring-offset-2 ]',
-							'[ sm:text-sm ]'
-						)}
+						class="w-full h-12 py-2 ps-14 pie-3 text-start bg-gray-900 rounded-sm border-none caret-teal-500"
 						type="text"
 						id="transport-network"
 						placeholder="Other network"
@@ -65,90 +182,102 @@
 						aria-labelledby="transport-network-label"
 						style="text-transform: uppercase"
 						bind:value={$constructor.networks.void.other}
+						oninput={handleOtherNetworkInput}
 					/>
 				</div>
 			{/if}
 		</div>
 	</div>
 
-	<div class={join('[ flex flex-col items-stretch gap-2 ]')}>
+	<div class="flex flex-col items-stretch gap-2">
 		<label id="exchange-point-label" for="exchange-point">Location</label>
 		{#if $constructor.networks.void.transport === 'geo'}
-			<div class="[ flex gap-4 ]">
-				<input
-					class={join(
-						'[ is-full bs-12 plb-2 pli-3 text-start bg-gray-900 rounded-md border-none caret-teal-500 ]',
-						'[ focus:outline-none focus-visible:ring-4 focus-visible:ring-opacity-75 focus-visible:ring-green-800 focus-visible:ring-offset-green-700 focus-visible:ring-offset-2 ]',
-						'[ sm:text-sm ]'
-					)}
-					type="number"
-					placeholder="Latitude"
-					autocomplete="off"
-					aria-labelledby="exchange-point-label"
-					bind:value={$constructor.networks.void.params.loc.lat}
-				/>
-				<input
-					class={join(
-						'[ is-full bs-12 plb-2 pli-3 text-start bg-gray-900 rounded-md border-none caret-teal-500 ]',
-						'[ focus:outline-none focus-visible:ring-4 focus-visible:ring-opacity-75 focus-visible:ring-green-800 focus-visible:ring-offset-green-700 focus-visible:ring-offset-2 ]',
-						'[ sm:text-sm ]'
-					)}
-					type="number"
-					id="exchange-point"
-					placeholder="Longitude"
-					autocomplete="off"
-					aria-labelledby="exchange-point-label"
-					bind:value={$constructor.networks.void.params.loc.lon}
-				/>
+			<div class="flex gap-4">
+				<FieldGroup>
+					<FieldGroupText
+						id="latitude"
+						placeholder="Latitude"
+						bind:value={latValue}
+						oninput={handleLatInput}
+						classValue={`tracking-widest placeholder:tracking-normal [&:not(:placeholder-shown)]:font-code ${
+							latError
+								? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
+								: latValue
+									? 'border-2 border-emerald-500 focus:border-emerald-500 focus-visible:border-emerald-500'
+									: ''
+						}`}
+					/>
+				</FieldGroup>
+				<FieldGroup>
+					<FieldGroupText
+						id="longitude"
+						placeholder="Longitude"
+						bind:value={lonValue}
+						oninput={handleLonInput}
+						classValue={`tracking-widest placeholder:tracking-normal [&:not(:placeholder-shown)]:font-code ${
+							lonError
+								? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
+								: lonValue
+									? 'border-2 border-emerald-500 focus:border-emerald-500 focus-visible:border-emerald-500'
+									: ''
+						}`}
+					/>
+				</FieldGroup>
 			</div>
-			<small class="[ -mbs-1 text-gray-400 ]">
+			{#if latError && latMsg}
+				<span class="text-sm text-rose-500">{latMsg}</span>
+			{/if}
+			{#if lonError && lonMsg}
+				<span class="text-sm text-rose-500">{lonMsg}</span>
+			{/if}
+			<small class="-mt-1 text-gray-400">
 				Search for the geocoordinates -
 				<a
-					class="[ transition-all duration-200 ] [ visited:text-gray-200 hover:text-gray-300 ]"
+					class="transition-all duration-200 visited:text-gray-200 hover:text-gray-300"
 					href="https://www.latlong.net/"
 					target="_blank"
 					rel="noreferrer"
 				>
-					Latitude & Longitude (DD - Decimal Degrees)
+					Latitude & Longitude (Decimal Degrees)
 				</a>
 			</small>
 		{/if}
 
 		{#if $constructor.networks.void.transport === 'plus'}
-			<input
-				class={join(
-					'[ is-full bs-12 plb-2 pli-3 text-start bg-gray-900 rounded-md border-none caret-teal-500 ]',
-					'[ focus:outline-none focus-visible:ring-4 focus-visible:ring-opacity-75 focus-visible:ring-green-800 focus-visible:ring-offset-green-700 focus-visible:ring-offset-2 ]',
-					'[ sm:text-sm ]'
-				)}
-				type="text"
-				id="exchange-point"
-				placeholder="Plus Code, e.g. 87G8Q2PQ+96"
-				autocomplete="off"
-				aria-labelledby="exchange-point-label"
-				style="text-transform: uppercase"
-				bind:value={$constructor.networks.void.params.loc.plus}
-			/>
-			<small class="[ -mbs-1 text-gray-400 ]">
-				Search for the 
+			<FieldGroup>
+				<FieldGroupText
+					id="plus-code"
+					placeholder="Plus Code, e.g. 8FWV26PJ+87"
+					bind:value={plusCodeValue}
+					oninput={handlePlusCodeInput}
+					classValue={`tracking-widest placeholder:tracking-normal uppercase [&:not(:placeholder-shown)]:font-code ${
+						plusCodeError
+							? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
+							: plusCodeValue
+								? 'border-2 border-emerald-500 focus:border-emerald-500 focus-visible:border-emerald-500'
+								: ''
+					}`}
+				/>
+			</FieldGroup>
+			{#if plusCodeError && plusCodeMsg}
+				<span class="text-sm text-rose-500">{plusCodeMsg}</span>
+			{/if}
+			<small class="-mt-1 text-gray-400">
+				Search for the{' '}
 				<a
-					class="[ transition-all duration-200 ] [ visited:text-gray-200 hover:text-gray-300 ]"
+					class="transition-all duration-200 visited:text-gray-200 hover:text-gray-300"
 					href="https://plus.codes/map"
 					target="_blank"
 					rel="noreferrer"
 				>
-					Plus Code
+					Plus Code (Long Format)
 				</a>
 			</small>
 		{/if}
 
 		{#if $constructor.networks.void.transport === 'other'}
 			<input
-				class={join(
-					'[ is-full bs-12 plb-2 pli-3 text-start bg-gray-900 rounded-md border-none caret-teal-500 ]',
-					'[ focus:outline-none focus-visible:ring-4 focus-visible:ring-opacity-75 focus-visible:ring-green-800 focus-visible:ring-offset-green-700 focus-visible:ring-offset-2 ]',
-					'[ sm:text-sm ]'
-				)}
+				class="w-full h-12 py-2 ps-3 text-start bg-gray-900 rounded-sm border-none caret-teal-500 text-sm tracking-widest placeholder:tracking-normal [&:not(:placeholder-shown)]:font-code"
 				type="text"
 				id="exchange-point"
 				placeholder="Point"
@@ -188,7 +317,7 @@
 		<FieldGroupText
 			placeholder="e.g. XCB; USD"
 			bind:value={$constructor.networks.void.params.currency.value}
-			classValue="uppercase"
+			classValue="uppercase placeholder:normal-case"
 		/>
 		<FieldGroupAppendix>Empty value uses the default network currency.</FieldGroupAppendix>
 	</FieldGroup>
