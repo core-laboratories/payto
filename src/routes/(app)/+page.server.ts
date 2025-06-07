@@ -12,9 +12,9 @@ import forge from 'node-forge';
 import OpenLocationCode from 'open-location-code/js/src/openlocationcode';
 import { createClient } from '@supabase/supabase-js';
 import { PRIVATE_PASS_TEAM_IDENTIFIER, PRIVATE_PASS_PRIVATE_KEY, PRIVATE_WEB_SERVICE_URL, PRIVATE_SUPABASE_URL, PRIVATE_SUPABASE_KEY } from '$env/static/private';
-import { PUBLIC_ENABLE_STATS } from '$env/static/public';
+import { env } from '$env/dynamic/public';
 
-const enableStats = PUBLIC_ENABLE_STATS === 'true';
+const enableStats = env.PUBLIC_ENABLE_STATS === 'true' ? true : false;
 
 type Actions = {
 	generatePass: (event: RequestEvent) => Promise<Response>;
