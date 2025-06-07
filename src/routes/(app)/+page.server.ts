@@ -14,6 +14,8 @@ import { createClient } from '@supabase/supabase-js';
 import { PRIVATE_PASS_TEAM_IDENTIFIER, PRIVATE_PASS_PRIVATE_KEY, PRIVATE_WEB_SERVICE_URL, PRIVATE_SUPABASE_URL, PRIVATE_SUPABASE_KEY } from '$env/static/private';
 import { PUBLIC_ENABLE_STATS } from '$env/static/public';
 
+const enableStats = PUBLIC_ENABLE_STATS === 'true';
+
 type Actions = {
 	generatePass: (event: RequestEvent) => Promise<Response>;
 };
@@ -88,7 +90,7 @@ const formatter = (currency: string | undefined, format: string | undefined, cus
 }
 
 let supabase = null;
-if (PUBLIC_ENABLE_STATS) {
+if (enableStats) {
 	supabase = createClient(PRIVATE_SUPABASE_URL, PRIVATE_SUPABASE_KEY);
 }
 
@@ -386,7 +388,7 @@ export const actions = {
 			// Generate the .pkpass file
 			const pkpassBlob = await zip.generateAsync({ type: 'blob' });
 
-			if (pkpassBlob && PUBLIC_ENABLE_STATS) {
+			if (pkpassBlob && enableStats) {
 				// Send anonymized stats to Supabase
 				// @ts-expect-error: Supabase client is not initialized
 				await supabase
