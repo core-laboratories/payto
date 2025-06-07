@@ -11,8 +11,8 @@ import forge from 'node-forge';
 // @ts-ignore
 import OpenLocationCode from 'open-location-code/js/src/openlocationcode';
 import { createClient } from '@supabase/supabase-js';
-import { PRIVATE_PASS_TEAM_IDENTIFIER, PRIVATE_PASS_PRIVATE_KEY, PRIVATE_WEB_SERVICE_URL, PRIVATE_SUPABASE_URL, PRIVATE_SUPABASE_KEY } from '$env/static/private';
-import { env } from '$env/dynamic/public';
+import { env } from '$env/dynamic/private';
+import { PRIVATE_PASS_TEAM_IDENTIFIER, PRIVATE_PASS_PRIVATE_KEY, PRIVATE_WEB_SERVICE_URL } from '$env/static/private';
 
 const enableStats = env.PUBLIC_ENABLE_STATS === 'true' ? true : false;
 
@@ -91,7 +91,9 @@ const formatter = (currency: string | undefined, format: string | undefined, cus
 
 let supabase = null;
 if (enableStats) {
-	supabase = createClient(PRIVATE_SUPABASE_URL, PRIVATE_SUPABASE_KEY);
+	const supabaseUrl = env.PRIVATE_SUPABASE_URL;
+	const supabaseKey = env.PRIVATE_SUPABASE_KEY;
+	supabase = createClient(supabaseUrl, supabaseKey);
 }
 
 export async function load({ url }) {
