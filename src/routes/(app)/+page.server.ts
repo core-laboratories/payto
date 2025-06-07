@@ -12,7 +12,10 @@ import forge from 'node-forge';
 import OpenLocationCode from 'open-location-code/js/src/openlocationcode';
 import { createClient } from '@supabase/supabase-js';
 import { env } from '$env/dynamic/private';
-import { PRIVATE_PASS_TEAM_IDENTIFIER, PRIVATE_PASS_PRIVATE_KEY, PRIVATE_WEB_SERVICE_URL } from '$env/static/private';
+
+const teamIdentifier = env.PRIVATE_PASS_TEAM_IDENTIFIER;
+const privateKey = env.PRIVATE_PASS_PRIVATE_KEY;
+const webServiceUrl = env.PRIVATE_WEB_SERVICE_URL;
 
 const enableStats = env.PUBLIC_ENABLE_STATS === 'true' ? true : false;
 
@@ -205,7 +208,7 @@ export const actions = {
 			const passData = {
 				...basicData,
 				formatVersion: 1,
-				teamIdentifier: PRIVATE_PASS_TEAM_IDENTIFIER,
+				teamIdentifier: teamIdentifier,
 
 				// NFC configuration
 				nfc: {
@@ -306,7 +309,7 @@ export const actions = {
 						key: 'subscription',
 						label: 'Subscription',
 						value: `Pay/Extend subscription`,
-						attributedValue: `${PRIVATE_WEB_SERVICE_URL}/api/v1/subscription?originator=${originator}&subscriber=${memberAddress}&destination=${props.destination}&network=${props.network}${design.isEmail ? '&email=' + design.email : ''}${design.isTelegram ? '&telegram=' + design.telegram : ''}`,
+						attributedValue: `${webServiceUrl}/api/v1/subscription?originator=${originator}&subscriber=${memberAddress}&destination=${props.destination}&network=${props.network}${design.isEmail ? '&email=' + design.email : ''}${design.isTelegram ? '&telegram=' + design.telegram : ''}`,
 						dataDetectorTypes: ["PKDataDetectorTypeLink"]
 					},
 				],
@@ -380,7 +383,7 @@ export const actions = {
 			zip.file('manifest.json', JSON.stringify(manifest, null, 2));
 
 			// Create signature using KV private key
-			const privateKeyObj = forge.pki.privateKeyFromPem(PRIVATE_PASS_PRIVATE_KEY);
+			const privateKeyObj = forge.pki.privateKeyFromPem(privateKey);
 			const manifestText = JSON.stringify(manifest, null, 2);
 			const signature = forge.util.encode64(
 				privateKeyObj.sign(forge.md.sha1.create().update(manifestText))
