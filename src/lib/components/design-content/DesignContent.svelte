@@ -15,7 +15,7 @@
 	import { getAddress } from '$lib/helpers/get-address.helper';
 	import { toast } from '$lib/components/toast';
 
-	import { PUBLIC_TG_BOT_NAME } from '$env/static/public';
+	import { env } from '$env/dynamic/public';
 
 	export let hostname: ITransitionType | undefined = undefined;
 	export let authority: string | undefined = undefined;
@@ -282,9 +282,9 @@
 						}}
 					/>
 				</div>
-				{#if PUBLIC_TG_BOT_NAME}
+				{#if env.PUBLIC_TG_BOT_NAME}
 					<p class="text-sm mt-1">
-						<a href={`https://t.me/${PUBLIC_TG_BOT_NAME}`} target="_blank" rel="noopener" class="text-blue-500 hover:text-blue-600">Initialize Telegram bot (required for notifications).</a>
+						<a href={`https://t.me/${env.PUBLIC_TG_BOT_NAME}`} target="_blank" rel="noopener" class="text-blue-500 hover:text-blue-600">Initialize Telegram bot (required for notifications).</a>
 					</p>
 				{/if}
 				{#if !$telegramValid}
