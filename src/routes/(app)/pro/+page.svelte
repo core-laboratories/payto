@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { PUBLIC_COMMUNITY_URL } from '$env/static/public';
+	import { env } from '$env/dynamic/public';
 </script>
 
 <div class="flex flex-col items-center gap-8 p-4 lg:flex-row lg:justify-center lg:items-start">
@@ -42,12 +42,12 @@
 						</svg>
 						<div>Check the current balance of your wallet. <span class="text-sm">This feature applies if you configure the Pass notification while creating a Pass.</span></div>
 					</li>
-					{#if PUBLIC_COMMUNITY_URL}
+					{#if env.PUBLIC_COMMUNITY_URL}
 					<li class="flex items-start gap-2">
 						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
 							<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
 						</svg>
-						<div><a href={PUBLIC_COMMUNITY_URL} target="_blank" rel="noopener">Discord community support</a></div>
+						<div><a href={env.PUBLIC_COMMUNITY_URL} target="_blank" rel="noopener">Discord community support</a></div>
 					</li>
 					{/if}
 					<li class="flex items-start gap-2">

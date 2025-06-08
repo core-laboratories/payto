@@ -11,13 +11,13 @@ import forge from 'node-forge';
 // @ts-ignore
 import OpenLocationCode from 'open-location-code/js/src/openlocationcode';
 import { createClient } from '@supabase/supabase-js';
-import { env } from '$env/dynamic/private';
+import { PRIVATE_PASS_TEAM_IDENTIFIER, PRIVATE_PASS_PRIVATE_KEY, PRIVATE_WEB_SERVICE_URL, PRIVATE_SUPABASE_URL, PRIVATE_SUPABASE_KEY } from '$env/static/private';
+import { PUBLIC_ENABLE_STATS } from '$env/static/public';
 
-const teamIdentifier = env.PRIVATE_PASS_TEAM_IDENTIFIER;
-const privateKey = env.PRIVATE_PASS_PRIVATE_KEY;
-const webServiceUrl = env.PRIVATE_WEB_SERVICE_URL;
-
-const enableStats = env.PUBLIC_ENABLE_STATS === 'true' ? true : false;
+const teamIdentifier = PRIVATE_PASS_TEAM_IDENTIFIER;
+const privateKey = PRIVATE_PASS_PRIVATE_KEY;
+const webServiceUrl = PRIVATE_WEB_SERVICE_URL;
+const enableStats = PUBLIC_ENABLE_STATS === 'true' ? true : false;
 
 type Actions = {
 	generatePass: (event: RequestEvent) => Promise<Response>;
@@ -94,8 +94,8 @@ const formatter = (currency: string | undefined, format: string | undefined, cus
 
 let supabase = null;
 if (enableStats) {
-	const supabaseUrl = env.PRIVATE_SUPABASE_URL;
-	const supabaseKey = env.PRIVATE_SUPABASE_KEY;
+	const supabaseUrl = PRIVATE_SUPABASE_URL;
+	const supabaseKey = PRIVATE_SUPABASE_KEY;
 	supabase = createClient(supabaseUrl, supabaseKey);
 }
 
