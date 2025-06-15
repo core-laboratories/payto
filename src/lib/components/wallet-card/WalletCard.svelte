@@ -822,8 +822,8 @@
 					on:click={handleNfcClick}
 					class="transition-opacity hover:opacity-80"
 					style="cursor: {$nfcSupported ? 'pointer' : 'not-allowed'}; background: none; border: none; padding: 0;"
-					aria-label="Stream NFC"
-					title="Stream NFC"
+					aria-label="Tap to Pay"
+					title="Tap to Pay"
 					disabled={!$nfcSupported}
 				>
 					<svg

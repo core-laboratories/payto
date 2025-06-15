@@ -12,7 +12,7 @@
 				</h3>
 				<h4>
 					<span class="text-2xl">CTN</span>
-					<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500 lg:text-5xl">Ƈ 400</span>
+					<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500">Ƈ 400</span>
 					<span class="text-sm">/month</span>
 				</h4>
 				<a href="/?pass=1#pass" class="inline-flex items-center justify-center w-full h-12 gap-2 px-6 text-sm font-bold tracking-wide !text-white transition duration-300 rounded shadow-sm whitespace-nowrap bg-emerald-500 shadow-emerald-400 hover:bg-emerald-600 hover:shadow-md hover:shadow-emerald-400 focus:bg-emerald-700 focus:shadow-md focus:shadow-emerald-400 focus-visible:outline-none no-underline!">
@@ -32,7 +32,7 @@
 							</span>
 							{' '}and{' '}
 							<span class="relative overflow-hidden cursor-help group hover:overflow-visible focus-visible:outline-none border-b border-dotted border-gray-400" aria-describedby="tooltip-tokens">
-								Predefined Tokens<span role="tooltip" id="tooltip-tokens" class="invisible absolute bottom-full left-1/2 z-10 mb-2 w-48 -translate-x-1/2 rounded bg-slate-700 p-2 text-xs text-white opacity-0 transition-all before:invisible before:absolute before:left-1/2 before:top-full before:z-10 before:mb-2 before:-ml-1 before:border-x-4 before:border-t-4 before:border-x-transparent before:border-t-slate-700 before:opacity-0 before:transition-all before:content-[''] group-hover:visible group-hover:block group-hover:opacity-100 group-hover:before:visible group-hover:before:opacity-100">Currently supported: CTN</span>
+								Predefined Tokens<span role="tooltip" id="tooltip-tokens" class="invisible absolute bottom-full left-1/2 z-10 mb-2 w-48 -translate-x-1/2 rounded bg-slate-700 p-2 text-xs text-white opacity-0 transition-all before:invisible before:absolute before:left-1/2 before:top-full before:z-10 before:mb-2 before:-ml-1 before:border-x-4 before:border-t-4 before:border-x-transparent before:border-t-slate-700 before:opacity-0 before:transition-all before:content-[''] group-hover:visible group-hover:block group-hover:opacity-100 group-hover:before:visible group-hover:before:opacity-100">Currently supported:<br />CTN, USDX</span>
 							</span>. <span class="text-sm">This feature applies if you configure the Pass notification while creating a Pass.</span>
 						</div>
 					</li>
@@ -71,8 +71,8 @@
 					<span class="block text-sm font-normal text-slate-400">Ideal for PayTo:Merchants.</span>
 				</h3>
 				<h4>
-					<span class="text-2xl">EUR</span>
-					<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500 lg:text-5xl">€ 400</span>
+					<span class="text-2xl">USDX</span>
+					<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500">$𐆖 400</span>
 					<span class="text-sm">/month</span>
 				</h4>
 				<a href="mailto:sales@payto.money?subject=Pro%20Plus" class="inline-flex items-center justify-center w-full h-12 gap-2 px-6 text-sm font-bold tracking-wide !text-white transition duration-300 rounded shadow-sm whitespace-nowrap bg-emerald-500 shadow-emerald-400 hover:bg-emerald-600 hover:shadow-md hover:shadow-emerald-400 focus:bg-emerald-700 focus:shadow-md focus:shadow-emerald-400 focus-visible:outline-none !no-underline">
@@ -114,7 +114,7 @@
 				</ul>
 			</div>
 			<footer class="p-6 text-sm text-center border-t border-emerald-800 bg-gray-700/75">
-				<a class="transition-colors duration-300 text-emerald-500 hover:text-emerald-600 focus:text-emerald-700" href="mailto:sales@payto.money?subject=Pro%20Plus">Contact Us</a>
+				<a class="transition-colors duration-300 text-emerald-500 hover:text-emerald-600 focus:text-emerald-700" target="_blank" rel="noopener" href="https://app.ping.exchange/trade?market=usdx_usdc">On-Ramp USDX</a>
 			</footer>
 		</div>
 	</div>
@@ -126,8 +126,8 @@
 					<span class="block text-sm font-normal text-slate-400">Ideal for PayTo:Businesses.</span>
 				</h3>
 				<h4>
-					<span class="text-2xl">EUR</span>
-					<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500 lg:text-5xl">€ 4,000</span>
+					<span class="text-2xl">USDX</span>
+					<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500">$𐆖 4,000</span>
 					<span class="text-sm">/month</span>
 				</h4>
 				<a href="mailto:sales@payto.money?subject=Pro%20Business" class="inline-flex items-center justify-center w-full h-12 gap-2 px-6 text-sm font-bold tracking-wide !text-white transition duration-300 rounded shadow-sm whitespace-nowrap bg-emerald-500 shadow-emerald-400 hover:bg-emerald-600 hover:shadow-md hover:shadow-emerald-400 focus:bg-emerald-700 focus:shadow-md focus:shadow-emerald-400 focus-visible:outline-none !no-underline">
@@ -205,7 +205,7 @@
 				</ul>
 			</div>
 			<footer class="p-6 text-sm text-center border-t border-emerald-800 bg-gray-700/75">
-				<a class="transition-colors duration-300 text-emerald-500 hover:text-emerald-600 focus:text-emerald-700" href="mailto:sales@payto.money?subject=Pro%20Business">Contact Us</a>
+				<a class="transition-colors duration-300 text-emerald-500 hover:text-emerald-600 focus:text-emerald-700" target="_blank" rel="noopener" href="https://app.ping.exchange/trade?market=usdx_usdc">On-Ramp USDX</a>
 			</footer>
 		</div>
 	</div>
