@@ -11,12 +11,22 @@ import forge from 'node-forge';
 // @ts-ignore
 import OpenLocationCode from 'open-location-code/js/src/openlocationcode';
 import { createClient } from '@supabase/supabase-js';
-import { PRIVATE_PASS_TEAM_IDENTIFIER, PRIVATE_PASS_PRIVATE_KEY, PRIVATE_WEB_SERVICE_URL, PRIVATE_SUPABASE_URL, PRIVATE_SUPABASE_KEY } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import { PUBLIC_ENABLE_STATS } from '$env/static/public';
 
-const teamIdentifier = PRIVATE_PASS_TEAM_IDENTIFIER;
-const privateKey = PRIVATE_PASS_PRIVATE_KEY;
-const webServiceUrl = PRIVATE_WEB_SERVICE_URL;
+// Required environment variables
+const teamIdentifier = env.PRIVATE_PASS_TEAM_IDENTIFIER;
+if (!teamIdentifier) {
+	throw new Error('PRIVATE_PASS_TEAM_IDENTIFIER is required');
+}
+
+const privateKey = env.PRIVATE_PASS_PRIVATE_KEY;
+if (!privateKey) {
+	throw new Error('PRIVATE_PASS_PRIVATE_KEY is required');
+}
+
+// Optional environment variables with defaults
+const webServiceUrl = env.PRIVATE_WEB_SERVICE_URL || 'https://payto.money';
 const enableStats = PUBLIC_ENABLE_STATS === 'true' ? true : false;
 
 type Actions = {
@@ -94,9 +104,14 @@ const formatter = (currency: string | undefined, format: string | undefined, cus
 
 let supabase = null;
 if (enableStats) {
-	const supabaseUrl = PRIVATE_SUPABASE_URL;
-	const supabaseKey = PRIVATE_SUPABASE_KEY;
-	supabase = createClient(supabaseUrl, supabaseKey);
+	const supabaseUrl = env.PRIVATE_SUPABASE_URL;
+	const supabaseKey = env.PRIVATE_SUPABASE_KEY;
+
+	if (!supabaseUrl || !supabaseKey) {
+		console.warn('Supabase credentials not found. Stats will be disabled.');
+	} else {
+		supabase = createClient(supabaseUrl, supabaseKey);
+	}
 }
 
 export async function load({ url }) {
