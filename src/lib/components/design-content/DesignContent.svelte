@@ -133,7 +133,9 @@
 <div class="flex flex-col gap-6">
 	{#if !authority}
 		<FieldGroup>
-			<FieldGroupLabel>Organization Name</FieldGroupLabel>
+			<FieldGroupLabel>
+				Organization Name
+			</FieldGroupLabel>
 			<FieldGroupText
 				placeholder="PayTo"
 				bind:value={$constructor.design.org}
@@ -141,6 +143,18 @@
 			/>
 		</FieldGroup>
 	{/if}
+
+	<div class="flex items-center gap-3">
+		Organization:
+		<div class="flex items-center gap-1">
+			<div>Logo</div>
+			<a href="/pro" target="_blank" class="inline-flex items-center px-2 py-0.5 text-xs rounded-sm bg-emerald-500 text-gray-700! no-underline! hover:bg-emerald-400">Pro+</a>
+		</div>
+		<div class="flex items-center gap-1">
+			<div>Checkmark</div>
+			<a href="/pro" target="_blank" class="inline-flex items-center px-2 py-0.5 text-xs rounded-sm bg-emerald-500 text-gray-700! no-underline! hover:bg-emerald-400">Pro+</a>
+		</div>
+	</div>
 
 	<FieldGroup>
 		<FieldGroupLabel>Item Name</FieldGroupLabel>
