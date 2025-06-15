@@ -21,7 +21,7 @@
 	import { writable } from 'svelte/store';
 	import { ASSETS_NAMES } from '$lib/constants/asset-names';
 	import { getCategoryByValue } from '$lib/helpers/get-category-by-value.helper';
-	import { onDestroy } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 
 	// @ts-expect-error: Module is untyped
 	import pkg from 'open-location-code/js/src/openlocationcode';
@@ -573,11 +573,43 @@
 			timerInterval = null;
 		}
 	});
+
+	let isUpsideDown = false;
+
+	function updateRotationState() {
+		// Check angle of screen orientation
+		const angle = screen.orientation?.angle ?? window.orientation ?? 0;
+		// 180 degrees means the phone is upside down in portrait mode
+		isUpsideDown = angle === 180 || angle === -180;
+	}
+
+	onMount(() => {
+		updateRotationState(); // Initial check
+
+		// Listen for orientation change
+		window.addEventListener('orientationchange', updateRotationState);
+		screen.orientation?.addEventListener?.('change', updateRotationState);
+	});
+
+	onDestroy(() => {
+		window.removeEventListener('orientationchange', updateRotationState);
+		screen.orientation?.removeEventListener?.('change', updateRotationState);
+	});
 </script>
+
+<style>
+	.card {
+		transition: transform 0.3s ease;
+	}
+
+	.rotated {
+		transform: rotate(180deg);
+	}
+</style>
 
 <div>
 	{#if noData}
-		<div class={`card rounded-lg shadow-md font-medium print:border-2 print:border-black`} style="background-color: {$paytoData.colorBackground}; color: {$paytoData.colorForeground};">
+		<div class={`card rounded-lg shadow-md font-medium print:border-2 print:border-black ${isUpsideDown ? 'rotated' : ''}`} style="background-color: {$paytoData.colorBackground}; color: {$paytoData.colorForeground};">
 			<div class="flex items-center p-4">
 				<div class="flex-grow flex justify-between items-center">
 					<span class="text-l font-medium font-semibold" style="color: {$paytoData.colorForeground};">
@@ -611,7 +643,7 @@
 			</div>
 		</div>
 	{:else if isPaymentExpired(typeof $paytoData.deadline === 'object' && 'subscribe' in $paytoData.deadline ? get($paytoData.deadline) : $paytoData.deadline)}
-		<div class={`card rounded-lg shadow-md font-medium print:border-2 print:border-black`} style="background-color: {$paytoData.colorBackground}; color: {$paytoData.colorForeground};">
+		<div class={`card rounded-lg shadow-md font-medium print:border-2 print:border-black ${isUpsideDown ? 'rotated' : ''}`} style="background-color: {$paytoData.colorBackground}; color: {$paytoData.colorForeground};">
 			<div class="flex items-center p-4">
 				<div class="flex-grow flex justify-between items-center">
 					<span class="text-l font-medium font-semibold" style="color: {$paytoData.colorForeground};">
@@ -646,7 +678,7 @@
 			</div>
 		</div>
 	{:else}
-		<div class={`card rounded-lg shadow-md font-medium print:border-2 print:border-black`} style="background-color: {$paytoData.colorBackground}; color: {$paytoData.colorForeground};">
+		<div class={`card rounded-lg shadow-md font-medium print:border-2 print:border-black ${isUpsideDown ? 'rotated' : ''}`} style="background-color: {$paytoData.colorBackground}; color: {$paytoData.colorForeground};">
 			{#if $paytoData.rtl !== undefined && $paytoData.rtl === true}
 				<div class="flex items-center p-4">
 					<div class="flex-grow flex justify-between items-center">
