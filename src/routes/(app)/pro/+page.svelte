@@ -2,8 +2,132 @@
 	import { env } from '$env/dynamic/public';
 </script>
 
-<div class="flex flex-col items-center gap-8 p-4 lg:flex-row lg:justify-center lg:items-start">
-	<div class="w-full max-w-sm mx-auto rounded shadow-lg text-gray-100 bg-gray-800/75">
+<div class="flex flex-col items-center gap-8 p-4">
+	<!-- First row: Dynamic flex layout based on number of items -->
+	<div class="flex flex-wrap gap-8 w-full max-w-6xl">
+		<div class="w-full md:flex-1 lg:flex-1 rounded shadow-lg text-gray-100 bg-gray-800/75 h-fit">
+			<div class="flex flex-col h-full">
+				<header class="flex flex-col gap-6 p-6 text-slate-400">
+					<h3 class="text-xl font-bold text-green-300">
+						Pro<span class="text-2xl text-emerald-500">+</span>
+						<span class="block text-sm font-normal text-slate-400">Ideal for PayTo:Merchants.</span>
+					</h3>
+					<h4>
+						<span class="text-2xl">USDX</span>
+						<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500">$𐆖 200</span>
+						<span class="text-sm">/month</span>
+					</h4>
+					<a href="mailto:sales@payto.money?subject=Pro%20Plus" class="inline-flex items-center justify-center w-full h-12 gap-2 px-6 text-sm font-bold tracking-wide !text-white transition duration-300 rounded shadow-sm whitespace-nowrap bg-emerald-700 shadow-emerald-600 hover:bg-emerald-400 hover:shadow-md hover:shadow-emerald-400 focus:bg-emerald-700 focus:shadow-md focus:shadow-emerald-400 focus-visible:outline-none no-underline!">
+						<span>Subscribe monthly</span>
+					</a>
+				</header>
+				<div class="p-6 flex-1">
+					<ul class="space-y-4">
+						<li class="flex items-start gap-2">
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
+								<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
+							</svg>
+							<div>Merchant URL or IPFS Logo for PayPass</div>
+						</li>
+						<li class="flex items-start gap-2">
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
+								<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
+							</svg>
+							<div>Core Blockchain Node in Cloud</div>
+						</li>
+						<li class="flex items-start gap-2">
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
+								<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
+							</svg>
+							<span>ISO 27001 Certified DC</span>
+						</li>
+						<li class="flex items-start gap-2">
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
+								<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
+							</svg>
+							<div><a href="mailto:support@payto.money">Priority Support</a></div>
+						</li>
+					</ul>
+				</div>
+				<footer class="p-6 text-sm text-center border-t border-emerald-800 bg-gray-700/75 mt-auto">
+					<a class="transition-colors duration-300 text-emerald-500 hover:text-emerald-600 focus:text-emerald-700" target="_blank" rel="noopener" href="https://app.ping.exchange/trade?market=usdx_usdc">On-Ramp USDX</a>
+				</footer>
+			</div>
+		</div>
+		<div class="w-full md:flex-1 lg:flex-1 rounded shadow-lg text-gray-100 bg-gray-800/75 h-fit">
+			<div class="flex flex-col h-full">
+				<header class="flex flex-col gap-6 p-6 text-slate-400">
+					<h3 class="text-xl font-bold text-green-300">
+						Business
+						<span class="block text-sm font-normal text-slate-400">Ideal for PayTo:Businesses.</span>
+					</h3>
+					<h4>
+						<span class="text-2xl">USDX</span>
+						<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500">$𐆖 2,000</span>
+						<span class="text-sm">/month</span>
+					</h4>
+					<a href="mailto:sales@payto.money?subject=Pro%20Business" class="inline-flex items-center justify-center w-full h-12 gap-2 px-6 text-sm font-bold tracking-wide !text-white transition duration-300 rounded shadow-sm whitespace-nowrap bg-emerald-700 shadow-emerald-600 hover:bg-emerald-400 hover:shadow-md hover:shadow-emerald-400 focus:bg-emerald-700 focus:shadow-md focus:shadow-emerald-400 focus-visible:outline-none no-underline!">
+						<span>Subscribe monthly</span>
+					</a>
+				</header>
+				<div class="p-6 flex-1">
+					<ul class="space-y-4">
+						<li class="flex items-start gap-2">
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
+								<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
+							</svg>
+							<span>Passes issuance for your company</span>
+						</li>
+						<li class="flex items-start gap-2">
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
+								<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
+							</svg>
+							<div>White-labelled Passes</div>
+						</li>
+						<li class="flex items-start gap-2">
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
+								<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
+							</svg>
+							<div>Custom issuance authority for Passes</div>
+						</li>
+						<li class="flex items-start gap-2">
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
+								<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
+							</svg>
+							<div>One Custom Currency extension for Passes</div>
+						</li>
+						<li class="flex items-start gap-2">
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
+								<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
+							</svg>
+							<div>Company URL included in Passes</div>
+						</li>
+						<li class="flex items-start gap-2">
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
+								<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
+							</svg>
+							<div>Dedicated Core Blockchain Node</div>
+						</li>
+						<li class="flex items-start gap-2">
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
+								<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
+							</svg>
+							<div>Testnet (Devin) Core Blockchain Node</div>
+						</li>
+						<li class="flex items-start gap-2">
+							<div class="italic">+ Everything in Pro+ version</div>
+						</li>
+					</ul>
+				</div>
+				<footer class="p-6 text-sm text-center border-t border-emerald-800 bg-gray-700/75 mt-auto">
+					<a class="transition-colors duration-300 text-emerald-500 hover:text-emerald-600 focus:text-emerald-700" target="_blank" rel="noopener" href="https://app.ping.exchange/trade?market=usdx_usdc">On-Ramp USDX</a>
+				</footer>
+			</div>
+		</div>
+	</div>
+
+	<!-- Second row: Pro only (full width) -->
+	<div class="w-full max-w-6xl rounded shadow-lg text-gray-100 bg-gray-800/75">
 		<div class="flex flex-col">
 			<header class="flex flex-col gap-6 p-6 text-slate-400">
 				<h3 class="text-xl font-bold text-green-300">
@@ -15,8 +139,8 @@
 					<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500">Ƈ 400</span>
 					<span class="text-sm">/month</span>
 				</h4>
-				<a href="/?pass=1#pass" class="inline-flex items-center justify-center w-full h-12 gap-2 px-6 text-sm font-bold tracking-wide !text-white transition duration-300 rounded shadow-sm whitespace-nowrap bg-emerald-500 shadow-emerald-400 hover:bg-emerald-600 hover:shadow-md hover:shadow-emerald-400 focus:bg-emerald-700 focus:shadow-md focus:shadow-emerald-400 focus-visible:outline-none no-underline!">
-					<span>Create and Activate inside Pass</span>
+				<a href="/?pass=1#pass" class="inline-flex items-center justify-center w-full h-12 gap-2 px-6 text-sm font-bold tracking-wide !text-white transition duration-300 rounded shadow-sm whitespace-nowrap bg-emerald-700 shadow-emerald-600 hover:bg-emerald-400 hover:shadow-md hover:shadow-emerald-400 focus:bg-emerald-700 focus:shadow-md focus:shadow-emerald-400 focus-visible:outline-none no-underline!">
+					<span>Create and Activate inside PayPass</span>
 				</a>
 			</header>
 			<div class="p-6">
@@ -51,179 +175,12 @@
 					</li>
 					{/if}
 					<li class="flex items-start gap-2">
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
-							<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
-						</svg>
-						<div>+ Everything in Free version</div>
+						<div class="italic">+ Everything in Free version</div>
 					</li>
 				</ul>
 			</div>
 			<footer class="p-6 text-sm text-center border-t border-emerald-800 bg-gray-700/75">
 				<a class="transition-colors duration-300 text-emerald-500 hover:text-emerald-600 focus:text-emerald-700" target="_blank" rel="noopener" href="https://app.ping.exchange/trade?market=ctn_usdc">On-Ramp CTN</a>
-			</footer>
-		</div>
-	</div>
-	<div class="w-full max-w-sm mx-auto rounded shadow-lg text-gray-100 bg-gray-800/75">
-		<div class="flex flex-col">
-			<header class="flex flex-col gap-6 p-6 text-slate-400">
-				<h3 class="text-xl font-bold text-green-300">
-					Pro<span class="text-2xl text-emerald-500">+</span>
-					<span class="block text-sm font-normal text-slate-400">Ideal for PayTo:Merchants.</span>
-				</h3>
-				<h4>
-					<span class="text-2xl">USDX</span>
-					<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500">$𐆖 200</span>
-					<span class="text-sm">/month</span>
-				</h4>
-				<a href="mailto:sales@payto.money?subject=Pro%20Plus" class="inline-flex items-center justify-center w-full h-12 gap-2 px-6 text-sm font-bold tracking-wide !text-white transition duration-300 rounded shadow-sm whitespace-nowrap bg-emerald-500 shadow-emerald-400 hover:bg-emerald-600 hover:shadow-md hover:shadow-emerald-400 focus:bg-emerald-700 focus:shadow-md focus:shadow-emerald-400 focus-visible:outline-none !no-underline">
-					<span>Subscribe monthly</span>
-				</a>
-			</header>
-			<div class="p-6">
-				<ul class="space-y-4">
-					<li class="flex items-start gap-2">
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
-							<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
-						</svg>
-						<div>Dedicated SMS gateway for offline payments — <a href="https://txms.info" target="_blank" rel="noopener">TxMS service</a> for Testnet and Mainnet</div>
-					</li>
-					<li class="flex items-start gap-2">
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
-							<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
-						</svg>
-						<div>Merchant KYB with Checkmark</div>
-					</li>
-					<li class="flex items-start gap-2">
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
-							<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
-						</svg>
-						<div>Merchant Logo</div>
-					</li>
-					<li class="flex items-start gap-2">
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
-							<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
-						</svg>
-						<div>Core Blockchain Node in Cloud</div>
-					</li>
-					<li class="flex items-start gap-2">
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
-							<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
-						</svg>
-						<span>ISO 27001 Certified DC</span>
-					</li>
-					<li class="flex items-start gap-2">
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
-							<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
-						</svg>
-						<div><a href="mailto:support@payto.money">Priority Support</a></div>
-					</li>
-					<li class="flex items-start gap-2">
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
-							<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
-						</svg>
-						<div>+ Everything in Pro version</div>
-					</li>
-				</ul>
-			</div>
-			<footer class="p-6 text-sm text-center border-t border-emerald-800 bg-gray-700/75">
-				<a class="transition-colors duration-300 text-emerald-500 hover:text-emerald-600 focus:text-emerald-700" target="_blank" rel="noopener" href="https://app.ping.exchange/trade?market=usdx_usdc">On-Ramp USDX</a>
-			</footer>
-		</div>
-	</div>
-	<div class="w-full max-w-sm mx-auto rounded shadow-lg text-gray-100 bg-gray-800/75">
-		<div class="flex flex-col">
-			<header class="flex flex-col gap-6 p-6 text-slate-400">
-				<h3 class="text-xl font-bold text-green-300">
-					Business
-					<span class="block text-sm font-normal text-slate-400">Ideal for PayTo:Businesses.</span>
-				</h3>
-				<h4>
-					<span class="text-2xl">USDX</span>
-					<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500">$𐆖 2,000</span>
-					<span class="text-sm">/month</span>
-				</h4>
-				<a href="mailto:sales@payto.money?subject=Pro%20Business" class="inline-flex items-center justify-center w-full h-12 gap-2 px-6 text-sm font-bold tracking-wide !text-white transition duration-300 rounded shadow-sm whitespace-nowrap bg-emerald-500 shadow-emerald-400 hover:bg-emerald-600 hover:shadow-md hover:shadow-emerald-400 focus:bg-emerald-700 focus:shadow-md focus:shadow-emerald-400 focus-visible:outline-none !no-underline">
-					<span>Subscribe monthly</span>
-				</a>
-			</header>
-			<div class="p-6">
-				<ul class="space-y-4">
-					<li class="flex items-start gap-2">
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
-							<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
-						</svg>
-						<span>Passes issuance for your company</span>
-					</li>
-					<li class="flex items-start gap-2">
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
-							<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
-						</svg>
-						<div>White-labelled Passes</div>
-					</li>
-					<li class="flex items-start gap-2">
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
-							<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
-						</svg>
-						<div>Custom issuance authority for Passes</div>
-					</li>
-					<li class="flex items-start gap-2">
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
-							<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
-						</svg>
-						<div>Company KYB with Checkmark</div>
-					</li>
-					<li class="flex items-start gap-2">
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
-							<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
-						</svg>
-						<div>Company Logo</div>
-					</li>
-					<li class="flex items-start gap-2">
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
-							<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
-						</svg>
-						<div>One Custom Currency extension for Passes</div>
-					</li>
-					<li class="flex items-start gap-2">
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
-							<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
-						</svg>
-						<div>Company URL included in Passes</div>
-					</li>
-					<li class="flex items-start gap-2">
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
-							<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
-						</svg>
-						<div>Maximum validity of Passes up to 2 years</div>
-					</li>
-					<li class="flex items-start gap-2">
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
-							<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
-						</svg>
-						<div>Dedicated Core Blockchain Node</div>
-					</li>
-					<li class="flex items-start gap-2">
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
-							<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
-						</svg>
-						<div>Layer1 Core Blockchain Delivery Network Access</div>
-					</li>
-					<li class="flex items-start gap-2">
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
-							<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
-						</svg>
-						<div>Testnet (Devin) Core Blockchain Node</div>
-					</li>
-					<li class="flex items-start gap-2">
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true">
-							<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
-						</svg>
-						<div>+ Everything in Pro+ version</div>
-					</li>
-				</ul>
-			</div>
-			<footer class="p-6 text-sm text-center border-t border-emerald-800 bg-gray-700/75">
-				<a class="transition-colors duration-300 text-emerald-500 hover:text-emerald-600 focus:text-emerald-700" target="_blank" rel="noopener" href="https://app.ping.exchange/trade?market=usdx_usdc">On-Ramp USDX</a>
 			</footer>
 		</div>
 	</div>
