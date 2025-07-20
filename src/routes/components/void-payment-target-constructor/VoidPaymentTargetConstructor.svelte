@@ -148,7 +148,11 @@
 		<div class="flex flex-col items-stretch gap-4">
 			{#if $constructor.networks.void.transport !== 'other'}
 				<div in:fade>
-					<ListBox bind:value={$constructor.networks.void.transport} items={TRANSPORT.void} />
+					<ListBox
+						id="transport-network"
+						bind:value={$constructor.networks.void.transport}
+						items={TRANSPORT.void}
+					/>
 				</div>
 			{/if}
 			{#if $constructor.networks.void.transport === 'other'}

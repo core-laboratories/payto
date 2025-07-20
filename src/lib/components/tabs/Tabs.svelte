@@ -33,6 +33,12 @@
 
 	const tabs = writable<string>(selectedTab);
 
+	$: {
+		if (selectedTab !== $tabs) {
+			tabs.set(selectedTab);
+		}
+	}
+
 	const listboxItems: Array<{ value: string; label: string; ticker: string }> = Object.keys(paymentTypes).map(key => ({
 		value: key,
 		label: paymentTypes[key].label,
@@ -63,7 +69,7 @@
 		<div in:fade>
 			<ListBox
 				id="payment-type"
-				bind:value={selectedTab}
+				value={$tabs}
 				items={listboxItems}
 				onChange={handleTabChange}
 			/>

@@ -10,6 +10,8 @@
 	const expanded = writable(false);
 	let dropdownElement: HTMLDivElement | null = null;
 
+	$: selectedLabel = value ? findSelectedLabel() : 'Select an option';
+
 	function toggle() {
 		expanded.update((e) => !e);
 	}
@@ -19,7 +21,6 @@
 			expanded.update((e) => !e);
 			return;
 		}
-		value = item.value;
 		expanded.set(false);
 		onChange(item.value);
 	}
@@ -38,9 +39,13 @@
 		for (const item of items) {
 			if (isCategory(item)) {
 				const selectedItem = item.items.find(subItem => String(subItem.value) === String(value));
-				if (selectedItem) return selectedItem.label;
-			} else if (String(item.value) === String(value)) {
-				return item.label;
+				if (selectedItem) {
+					return selectedItem.label;
+				}
+			} else {
+				if (String(item.value) === String(value)) {
+					return item.label;
+				}
 			}
 		}
 		return 'Select an option';
@@ -55,7 +60,7 @@
 		aria-label="Toggle dropdown"
 		class="inline-flex items-center justify-between bg-gray-900 border-0 border-gray-800 w-full p-3 rounded-md cursor-context-menu focus:outline-none focus-visible:ring-4 focus-visible:ring-opacity-75 focus-visible:ring-green-800"
 	>
-		<span class="truncate">{findSelectedLabel()}</span>
+		<span class="truncate">{selectedLabel}</span>
 		<span class="ml-2">
 			<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
 				<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15l3.75 3.75L15.75 15m-7.5-6l3.75-3.75L15.75 9" />
