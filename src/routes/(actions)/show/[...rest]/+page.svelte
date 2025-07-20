@@ -33,7 +33,7 @@
 </script>
 
 <Page>
-	<Row>
+	<Row noGap>
 		<div class="max-w-full w-[400px] max-[480px]:w-full">
 			{#if $hasError}
 				<div class="p-4 bg-red-500/20 border border-red-500/30 rounded-lg text-red-200">

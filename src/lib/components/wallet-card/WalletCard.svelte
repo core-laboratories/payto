@@ -608,8 +608,8 @@
 </style>
 
 <div>
-	{#if noData}
-		<div class={`card rounded-lg shadow-md font-medium print:border-2 print:border-black ${isUpsideDown ? 'rotated' : ''}`} style="background-color: {$paytoData.colorBackground}; color: {$paytoData.colorForeground};">
+	<div class={`card md:rounded-2xl shadow-md font-medium print:border-2 print:border-black ${isUpsideDown ? 'rotated' : ''}`} style="background-color: {$paytoData.colorBackground}; color: {$paytoData.colorForeground};">
+		{#if noData}
 			<div class="flex items-center p-4">
 				<div class="flex-grow flex justify-between items-center">
 					<span class="text-l font-medium font-semibold" style="color: {$paytoData.colorForeground};">
@@ -641,9 +641,7 @@
 					Create New Link
 				</a>
 			</div>
-		</div>
-	{:else if isPaymentExpired(typeof $paytoData.deadline === 'object' && 'subscribe' in $paytoData.deadline ? get($paytoData.deadline) : $paytoData.deadline)}
-		<div class={`card rounded-lg shadow-md font-medium print:border-2 print:border-black ${isUpsideDown ? 'rotated' : ''}`} style="background-color: {$paytoData.colorBackground}; color: {$paytoData.colorForeground};">
+		{:else if isPaymentExpired(typeof $paytoData.deadline === 'object' && 'subscribe' in $paytoData.deadline ? get($paytoData.deadline) : $paytoData.deadline)}
 			<div class="flex items-center p-4">
 				<div class="flex-grow flex justify-between items-center">
 					<span class="text-l font-medium font-semibold" style="color: {$paytoData.colorForeground};">
@@ -676,9 +674,7 @@
 					{/if}
 				</div>
 			</div>
-		</div>
-	{:else}
-		<div class={`card rounded-lg shadow-md font-medium print:border-2 print:border-black ${isUpsideDown ? 'rotated' : ''}`} style="background-color: {$paytoData.colorBackground}; color: {$paytoData.colorForeground};">
+		{:else}
 			{#if $paytoData.rtl !== undefined && $paytoData.rtl === true}
 				<div class="flex items-center p-4">
 					<div class="flex-grow flex justify-between items-center">
@@ -814,10 +810,10 @@
 							<div class={`${$paytoData.rtl !== undefined && $paytoData.rtl === true ? 'text-right' : 'text-left'} w-full`}>
 								<div class="flex text-xl font-semibold break-words">
 									<a class="button is-full lg:basis-1/2 bs-12 py-2 px-3 text-center border rounded-md transition duration-200 outline-none focus-visible:ring focus-visible:ring-green-800 focus-visible:ring-offset-2 active:scale-(0.99) text-sm ${$paytoData.location ? 'cursor-pointer' : 'cursor-not-allowed'}"
-										 style="border-color: {$paytoData.colorForeground}; background-color: {$paytoData.colorForeground}; color: {$paytoData.colorBackground};"
-										 href={linkLocation($paytoData.location)}
-										 target="_blank"
-										 rel="noreferrer"
+											style="border-color: {$paytoData.colorForeground}; background-color: {$paytoData.colorForeground}; color: {$paytoData.colorBackground};"
+											href={linkLocation($paytoData.location)}
+											target="_blank"
+											rel="noreferrer"
 									>Navigate</a>
 								</div>
 							</div>
@@ -867,6 +863,6 @@
 					</svg>
 				</button>
 			</div>
-		</div>
-	{/if}
+		{/if}
+	</div>
 </div>

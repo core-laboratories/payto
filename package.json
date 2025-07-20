@@ -50,6 +50,7 @@
 		"device-sherlock": "^0.2.1",
 		"exchange-rounding": "^1.1.6",
 		"jszip": "^3.10.1",
+		"lucide-svelte": "^0.522.0",
 		"node-forge": "^1.3.1",
 		"open-location-code": "github:google/open-location-code#main",
 		"payto-rl": "^1.0.10",
