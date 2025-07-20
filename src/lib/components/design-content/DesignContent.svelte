@@ -138,7 +138,7 @@
 		<FieldGroup>
 			<FieldGroupLabel>Item Title</FieldGroupLabel>
 			<FieldGroupText
-				placeholder="e.g. Coffee ☕"
+				placeholder="e.g. Coffee ☕; Table №3"
 				bind:value={$constructor.design.item}
 				maxlength="40"
 			/>
