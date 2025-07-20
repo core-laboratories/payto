@@ -217,9 +217,9 @@
 						type="checkbox"
 						bind:checked={$designEnabled}
 						id="designCheckbox"
-						class="relative left-34 lg:left-40"
+						class="relative left-30 lg:left-36"
 					/>
-					<label for="designCheckbox" class="flex-1 cursor-pointer">PayPass</label>
+					<label for="designCheckbox" class="flex-1 cursor-pointer relative -left-4">PayPass</label>
 				</div>
 			</BoxTitle>
 			<BoxContent>
