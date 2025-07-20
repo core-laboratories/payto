@@ -229,8 +229,7 @@
 							/>
 							<div class="flex flex-col mt-4 gap-4">
 								<div class="w-full px-4 py-3 text-sm border rounded border-gray-700 bg-gray-800 text-gray-300" role="alert">
-									<h3 class="mb-1 font-semibold">Issuer</h3>
-									<p>Current issuing authority is <span class="font-bold">{$authority ? $authority.toUpperCase() : 'PAYTO'}</span>.</p>
+									<p>Issuing authority is <span class="font-bold">{$authority ? $authority.toUpperCase() : 'PAYTO'}</span>.</p>
 								</div>
 								<a href="/pro" target="_blank" rel="noreferrer" class="button is-full bs-12 py-2 px-3 text-center !text-white border border-gray-700 bg-gray-700 opacity-50 rounded-md text-sm hover:opacity-100 transition duration-200 font-bold">
 									Get <span class="text-green-300 italic">Pay</span><span class="text-emerald-500 italic">To</span><span class="text-green-300 italic">:Pro</span>

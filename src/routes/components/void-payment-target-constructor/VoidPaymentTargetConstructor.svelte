@@ -57,8 +57,8 @@
 			});
 
 			if (!result.success) {
-				const errors = result.error.errors;
-				errors.forEach((error) => {
+				const errors = result.error.issues;
+				errors.forEach((error: any) => {
 					if (error.path.includes('latitude')) {
 						latError = true;
 						latMsg = error.message;
@@ -97,7 +97,7 @@
 
 			if (!result.success) {
 				plusCodeError = true;
-				plusCodeMsg = result.error.errors[0]?.message || 'Invalid Plus Code format';
+				plusCodeMsg = result.error.issues[0]?.message || 'Invalid Plus Code format';
 				$constructor.networks.void.params.loc.plus = undefined;
 			} else {
 				plusCodeError = false;

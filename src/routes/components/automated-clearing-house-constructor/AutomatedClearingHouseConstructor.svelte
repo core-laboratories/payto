@@ -56,7 +56,7 @@
 				const result = achAccountSchema.safeParse({ accountNumber: value });
 				if (!result.success) {
 					accountError = true;
-					accountMsg = result.error.errors[0]?.message || 'Invalid account number format';
+					accountMsg = result.error.issues[0]?.message || 'Invalid account number format';
 					$constructor.networks.ach.accountNumber = undefined;
 				} else {
 					accountError = false;
@@ -67,7 +67,7 @@
 				const result = achRoutingSchema.safeParse({ routingNumber: value });
 				if (!result.success) {
 					routingError = true;
-					routingMsg = result.error.errors[0]?.message || 'Invalid routing number format';
+					routingMsg = result.error.issues[0]?.message || 'Invalid routing number format';
 					$constructor.networks.ach.routingNumber = undefined;
 				} else {
 					routingError = false;

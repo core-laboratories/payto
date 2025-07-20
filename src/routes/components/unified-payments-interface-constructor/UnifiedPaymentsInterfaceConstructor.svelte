@@ -41,7 +41,7 @@
 
 			if (!result.success) {
 				aliasError = true;
-				aliasMsg = result.error.errors[0]?.message || 'Invalid email format';
+				aliasMsg = result.error.issues[0]?.message || 'Invalid email format';
 			} else {
 				aliasError = false;
 				aliasMsg = '';

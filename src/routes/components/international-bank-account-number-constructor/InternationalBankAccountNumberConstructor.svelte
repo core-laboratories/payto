@@ -54,7 +54,7 @@
 
 			if (!result.success) {
 				ibanError = true;
-				ibanMsg = result.error.errors[0]?.message || 'Invalid IBAN format';
+				ibanMsg = result.error.issues[0]?.message || 'Invalid IBAN format';
 				$constructor.networks.iban.iban = undefined;
 			} else {
 				ibanError = false;
@@ -92,7 +92,7 @@
 
 			if (!result.success) {
 				bicError = true;
-				bicMsg = result.error.errors[0]?.message || 'Invalid BIC format';
+				bicMsg = result.error.issues[0]?.message || 'Invalid BIC format';
 				$constructor.networks.iban.bic = undefined;
 			} else {
 				bicError = false;

@@ -35,7 +35,7 @@
 
 			if (!result.success) {
 				bicError = true;
-				bicMsg = result.error.errors[0]?.message || 'Invalid BIC format';
+				bicMsg = result.error.issues[0]?.message || 'Invalid BIC format';
 				$constructor.networks.bic.bic = undefined;
 			} else {
 				bicError = false;

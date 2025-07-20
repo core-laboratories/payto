@@ -6,6 +6,7 @@
 		FieldGroupText,
 		ListBox
 	} from '$lib/components';
+	import { ChevronDown, ChevronUp } from 'lucide-svelte';
 
 	import { derived, get, writable } from 'svelte/store';
 	import { constructor } from '$lib/store/constructor.store';
@@ -128,77 +129,98 @@
 			transform: true
 		});
 	}
+
+	let showCustomization = false;
 </script>
 
 <div class="flex flex-col gap-6">
 	{#if !authority}
 		<FieldGroup>
-			<FieldGroupLabel>
-				Organization Name
-			</FieldGroupLabel>
+			<FieldGroupLabel>Item Title</FieldGroupLabel>
 			<FieldGroupText
-				placeholder="PayTo"
-				bind:value={$constructor.design.org}
-				maxlength="25"
+				placeholder="e.g. Coffee ☕"
+				bind:value={$constructor.design.item}
+				maxlength="40"
 			/>
 		</FieldGroup>
 	{/if}
 
-	<FieldGroup>
-		<FieldGroupLabel>Item Name</FieldGroupLabel>
-		<FieldGroupText
-			placeholder="Payment for…"
-			bind:value={$constructor.design.item}
-			maxlength="40"
-		/>
-	</FieldGroup>
+	<button
+		type="button"
+		onclick={() => showCustomization = !showCustomization}
+		class="flex items-center justify-between w-full p-0 text-left hover:text-gray-300 transition-colors duration-200 border-none bg-transparent"
+	>
+		<span class="text-lg font-bold">Customization</span>
+		{#if showCustomization}
+			<ChevronUp class="w-5 h-5" />
+		{:else}
+			<ChevronDown class="w-5 h-5" />
+		{/if}
+	</button>
 
-	<div class="flex flex-col gap-6">
-		<h2 class="text-lg font-bold">Theme setup</h2>
-	</div>
+	{#if showCustomization}
+		<div class="space-y-4">
+			{#if !authority}
+				<FieldGroup>
+					<FieldGroupLabel>
+						Organization Name
+					</FieldGroupLabel>
+					<FieldGroupText
+						placeholder="PayTo"
+						bind:value={$constructor.design.org}
+						maxlength="25"
+					/>
+				</FieldGroup>
+			{/if}
 
-	<FieldGroup flexType="row" itemPosition="items-center">
-		<FieldGroupColorPicker
-			label="Foreground Color"
-			bind:value={$constructor.design.colorF}
-		/>
-	</FieldGroup>
+			<div class="flex flex-col gap-6">
+				<h2 class="text-lg font-bold">Theme setup</h2>
+			</div>
 
-	<FieldGroup flexType="row" itemPosition="items-center">
-		<FieldGroupColorPicker
-			label="Background Color"
-			bind:value={$constructor.design.colorB}
-		/>
-	</FieldGroup>
+			<FieldGroup flexType="row" itemPosition="items-center">
+				<FieldGroupColorPicker
+					label="Foreground Color"
+					bind:value={$constructor.design.colorF}
+				/>
+			</FieldGroup>
 
-	<div>
-		Current Color Euclidean distance:
-		<span class:text-red-500={$distance < 100}>{$distance}</span>
-		<p class="-mb-1 text-gray-400 text-sm">
-			Note: Colors that are similar will not be accepted; a minimum Euclidean distance of 100 is required.
-		</p>
-	</div>
+			<FieldGroup flexType="row" itemPosition="items-center">
+				<FieldGroupColorPicker
+					label="Background Color"
+					bind:value={$constructor.design.colorB}
+				/>
+			</FieldGroup>
 
-	<FieldGroup>
-		<div class="flex items-center">
-			<input
-				type="checkbox"
-				bind:checked={$constructor.design.rtl}
-				id="rtlCheckbox"
-			/>
-			<label for="rtlCheckbox" class="ml-2">Right-to-Left typing (RTL)</label>
+			<div>
+				Current Color Euclidean distance:
+				<span class:text-red-500={$distance < 100}>{$distance}</span>
+				<p class="-mb-1 text-gray-400 text-sm">
+					Note: Colors that are similar will not be accepted; a minimum Euclidean distance of 100 is required.
+				</p>
+			</div>
+
+			<FieldGroup>
+				<div class="flex items-center">
+					<input
+						type="checkbox"
+						bind:checked={$constructor.design.rtl}
+						id="rtlCheckbox"
+					/>
+					<label for="rtlCheckbox" class="ml-2">Right-to-Left typing (RTL)</label>
+				</div>
+			</FieldGroup>
+
+			<FieldGroup>
+				<FieldGroupLabel>Barcode Type for downloaded pass</FieldGroupLabel>
+				<ListBox
+					id="barcode-list"
+					value={$barcodeValue}
+					onChange={updateBarcode}
+					items={barcodeTypes}
+				/>
+			</FieldGroup>
 		</div>
-	</FieldGroup>
-
-	<FieldGroup>
-		<FieldGroupLabel>Barcode Type for downloaded pass</FieldGroupLabel>
-		<ListBox
-			id="barcode-list"
-			value={$barcodeValue}
-			onChange={updateBarcode}
-			items={barcodeTypes}
-		/>
-	</FieldGroup>
+	{/if}
 
 	<div class="flex flex-col gap-6">
 		<h2 class="text-lg font-bold flex items-center">
