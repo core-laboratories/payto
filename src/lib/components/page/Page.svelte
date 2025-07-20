@@ -2,6 +2,7 @@
 	import type { Component } from 'svelte';
 
 	export let children: Component | null = null;
+	export let classValue: string = '';
 </script>
 
 <svelte:head>
@@ -15,7 +16,7 @@
 	<meta property="og:image" content="https://payto.money/icons/android-chrome-512x512.png" />
 </svelte:head>
 
-<div>
+<div class={classValue}>
 	{#if children}
 		<svelte:component this={children} />
 	{/if}

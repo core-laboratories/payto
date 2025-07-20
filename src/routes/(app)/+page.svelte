@@ -90,8 +90,8 @@
 
 <Toast />
 
-<Page>
-	<Row classValue="lg:flex-row lg:gap-4">
+<Page classValue="space-y-6 lg:space-y-8">
+	<Row classValue="lg:flex-row gap-4">
 		<Box classValue="lg:basis-[calc(50%-2.5rem)]">
 			<a id="constructor" aria-hidden="true" aria-label="Constructor"></a>
 			<BoxTitle>
@@ -212,12 +212,15 @@
 		<a id="pass" aria-hidden="true" aria-label="PayPass"></a>
 		<Box>
 			<BoxTitle>
-				<label for="designCheckbox" class="mr-2">PayPass</label>
-				<input
-					type="checkbox"
-					bind:checked={$designEnabled}
-					id="designCheckbox"
-				/>
+				<div class="relative flex items-center w-full">
+					<input
+						type="checkbox"
+						bind:checked={$designEnabled}
+						id="designCheckbox"
+						class="relative left-34 lg:left-40"
+					/>
+					<label for="designCheckbox" class="flex-1 cursor-pointer">PayPass</label>
+				</div>
 			</BoxTitle>
 			<BoxContent>
 				{#if $designEnabled}

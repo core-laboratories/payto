@@ -166,7 +166,7 @@
 						Organization Name
 					</FieldGroupLabel>
 					<FieldGroupText
-						placeholder="PayTo"
+						placeholder="e.g. PayTo"
 						bind:value={$constructor.design.org}
 						maxlength="25"
 					/>
