@@ -16,7 +16,6 @@
 
 html {
 	@apply font-family-arimo bg-gray-900 bg-repeat h-full min-h-full text-base leading-6;
-	background-image: url("/images/tile.svg");
 	font-synthesis: none;
 	text-rendering: optimizeLegibility;
 	-webkit-font-smoothing: antialiased;
