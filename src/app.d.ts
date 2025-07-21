@@ -106,6 +106,7 @@ interface IDesignState {
 	email?: string;
 	isTelegram?: boolean;
 	telegram?: string;
+	mode?: string;
 }
 
 interface ILocValue extends IValue {

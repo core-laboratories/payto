@@ -56,9 +56,9 @@ export const generateLink = (payload: IPayload[] = [], props: Record<string, any
 			);
 		}
 
-		// Design transformer
+		// PayPass transformer
 		if (design) {
-			const { org, item, colorF, colorB, barcode, rtl } = design;
+			const { org, item, colorF, colorB, barcode, rtl, mode } = design;
 			if (org) searchParams.set('org', org);
 			if (item) searchParams.set('item', item);
 			if (colorB && colorF && colorB !== '#77bc65' && colorF !== '#192a14') {
@@ -90,6 +90,13 @@ export const generateLink = (payload: IPayload[] = [], props: Record<string, any
 			}
 			if (barcode !== 'qr') {
 				if (barcode) searchParams.set('barcode', barcode);
+			}
+			if (mode) {
+				if (mode === 'auto') {
+					searchParams.delete('mode');
+				} else {
+					searchParams.set('mode', mode);
+				}
 			}
 		}
 	}

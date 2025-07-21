@@ -121,6 +121,7 @@ const INITIAL_STATE: IComplexState = {
 		email: undefined,
 		isTelegram: false,
 		telegram: undefined,
+		mode: undefined,
 	},
 	isCleared: false,
 	paymentType: 'ican',

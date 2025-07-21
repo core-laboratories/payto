@@ -58,12 +58,12 @@
 
 <main>
 	<div class="max-w-screen-xl mx-auto px-4 flex items-center justify-start min-h-screen md:px-8">
-		<div class="max-w-lg mx-auto text-gray-600">
+		<div class="max-w-lg mx-auto">
 			<div class="space-y-3 text-center">
 				<h3 class="text-primary-600 font-semibold">
 					{status} Error
 				</h3>
-				<p class="text-gray-800 text-4xl font-semibold sm:text-5xl">
+				<p class="text-4xl font-semibold sm:text-5xl">
 					{#if status === 404}
 						Page not found
 					{:else if status === 500}
@@ -92,7 +92,7 @@
 								<svelte:component this={item.icon} class="w-6 h-6" />
 							</div>
 							<div class="space-y-1">
-								<h4 class="text-gray-800 font-medium">{item.title}</h4>
+								<h4 class="font-medium">{item.title}</h4>
 								<p>
 									{item.desc}
 								</p>

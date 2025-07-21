@@ -28,6 +28,12 @@
 		{ label: 'Code 128', value: 'code128', ticker: 'Code 128' }
 	];
 
+	const passModes = [
+		{ label: 'Auto', value: 'auto', ticker: 'Autoselect by the App' },
+		{ label: 'Tap to Pay', value: 'tap', ticker: 'NFC mode' },
+		{ label: 'Code', value: 'code', ticker: 'QR Code mode' }
+	];
+
 	const constructorStore = derived(constructor, $c => $c);
 
 	const distance = derived(constructorStore, $constructor =>
@@ -37,6 +43,7 @@
 	);
 
 	const barcodeValue = derived(constructorStore, $constructor => $constructor.design.barcode ?? 'qr');
+	const passMode = derived(constructorStore, $constructor => $constructor.design.mode ?? 'auto');
 	const address = derived(constructorStore, $constructor =>
 		hostname ? getAddress($constructor.networks[hostname], hostname) : undefined
 	);
@@ -65,6 +72,13 @@
 		constructor.update(c => ({
 			...c,
 			design: { ...c.design, barcode: String(value) }
+		}));
+	}
+
+	function updatePassMode(value: string | number) {
+		constructor.update(c => ({
+			...c,
+			design: { ...c.design, mode: String(value) }
 		}));
 	}
 
@@ -211,12 +225,22 @@
 			</FieldGroup>
 
 			<FieldGroup>
-				<FieldGroupLabel>Barcode Type for downloaded pass</FieldGroupLabel>
+				<FieldGroupLabel>Barcode Type for downloaded PayPass</FieldGroupLabel>
 				<ListBox
 					id="barcode-list"
 					value={$barcodeValue}
 					onChange={updateBarcode}
 					items={barcodeTypes}
+				/>
+			</FieldGroup>
+
+			<FieldGroup>
+				<FieldGroupLabel>Default Pass mode in Apps <span class="text-gray-400 text-sm">If mode is supported by the App</span></FieldGroupLabel>
+				<ListBox
+					id="pass-mode"
+					value={$passMode}
+					onChange={updatePassMode}
+					items={passModes}
 				/>
 			</FieldGroup>
 		</div>
