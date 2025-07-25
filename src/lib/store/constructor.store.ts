@@ -113,8 +113,8 @@ const INITIAL_STATE: IComplexState = {
 	design: {
 		org: undefined,
 		item: undefined,
-		colorF: '#192a14',
-		colorB: '#77bc65',
+		colorF: '#9AB1D6',
+		colorB: '#2A3950',
 		barcode: 'qr',
 		rtl: false,
 		isEmail: false,

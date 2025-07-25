@@ -22,6 +22,7 @@
 			return;
 		}
 		expanded.set(false);
+		value = item.value;
 		onChange(item.value);
 	}
 

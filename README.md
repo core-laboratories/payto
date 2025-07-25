@@ -58,9 +58,29 @@ npm run preview
 
 You can see the [Pro plans](https://payto.money/pro) for more information.
 
-To customize the Pass, you can become the authority of your own Pass. Each authority has a maximum pass validity of 3 years instead of 1 year.
+To customize the PayPass, you can become the authority of your own PayPass.
 
 Issuing authorities[^authority] deliver an object like this example to the email: [sales@payto.money](mailto:sales@payto.money?subject=PayTo%20Authority%20Request)
+
+### Pro+ Plan
+
+```json
+{
+    "id": "payto",
+    "name": "PayTo",
+    "coreid": "cb…",
+    "icons": {
+        "icon": "https://payto.money/icons/icon.png",
+        "icon2x": "https://payto.money/icons/icon@2x.png",
+        "icon3x": "https://payto.money/icons/icon@3x.png",
+        "logo": "https://payto.money/icons/logo.png",
+        "logo2x": "https://payto.money/icons/logo@2x.png"
+    },
+    "webhook": "https://…"
+}
+```
+
+### Business Plan
 
 ```json
 {
@@ -98,9 +118,10 @@ Where:
 
 - `id`: The authority ID of the Pass. (Required, unique, lowercase, no spaces)
 - `name`: The organization name of the Pass. If set, it is forced on the Pass. (Default: PayTo)
+- `coreid`: The Core ID of the Pass.
 - `identifier`: The identifier of the Pass. (Required, unique, lowercase - reverse DNS example: `pass.money.payto`)
 - `url`: The URL of the Pass. (Default: none)
-- `icons`: The icons of the Pass. (Default: PayTo logo)
+- `icons`: The icons of the Pass. Accepted formats are URL or IPFS links. (Default: PayTo logo)
 - `theme`: The theme of the Pass. (Default: PayTo theme)
 - `forceTheme`: Whether to force the theme if the user has set their own. (Default: false)
 - `customCurrencyData`: The custom currency data of the Pass. (Default: none)

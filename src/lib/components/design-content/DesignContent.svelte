@@ -38,7 +38,7 @@
 
 	const distance = derived(constructorStore, $constructor =>
 		Math.floor(
-			calculateColorDistance($constructor.design.colorF || '#192a14', $constructor.design.colorB || '#77bc65')
+			calculateColorDistance($constructor.design.colorF || '#9AB1D6', $constructor.design.colorB || '#2A3950')
 		)
 	);
 
@@ -200,7 +200,7 @@
 
 			<FieldGroup flexType="row" itemPosition="items-center">
 				<FieldGroupColorPicker
-					label="Background Color"
+					label="Background Color (Online)"
 					bind:value={$constructor.design.colorB}
 				/>
 			</FieldGroup>
@@ -225,7 +225,7 @@
 			</FieldGroup>
 
 			<FieldGroup>
-				<FieldGroupLabel>Barcode Type for downloaded PayPass</FieldGroupLabel>
+				<FieldGroupLabel>Barcode Type for digital PayPass</FieldGroupLabel>
 				<ListBox
 					id="barcode-list"
 					value={$barcodeValue}
@@ -234,7 +234,7 @@
 				/>
 			</FieldGroup>
 
-			<FieldGroup>
+			<!--<FieldGroup>
 				<FieldGroupLabel>Default Pass mode in Apps <span class="text-gray-400 text-sm">If mode is supported by the App</span></FieldGroupLabel>
 				<ListBox
 					id="pass-mode"
@@ -242,14 +242,14 @@
 					onChange={updatePassMode}
 					items={passModes}
 				/>
-			</FieldGroup>
+			</FieldGroup>-->
 		</div>
 	{/if}
 
 	<div class="flex flex-col gap-6">
 		<h2 class="text-lg font-bold flex items-center">
 			Notifications
-			<a href="/pro" target="_blank" class="inline-flex items-center ml-2 px-2 py-0.5 text-xs rounded-sm bg-emerald-500 text-gray-700! no-underline! hover:bg-emerald-400">Pro</a>
+			<a href="/pro#pro" target="_blank" class="inline-flex items-center ml-2 px-2 py-0.5 text-xs rounded-sm bg-emerald-500 text-gray-700! no-underline! hover:bg-emerald-400">Pro</a>
 		</h2>
 
 		<FieldGroup>

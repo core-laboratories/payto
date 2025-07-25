@@ -18,7 +18,7 @@ export const addressSchema = z.object({
 
 	if (!data.network) {
 		ctx.addIssue({
-			code: z.ZodIssueCode.custom,
+			code: "custom",
 			message: isDebug ? `Network (${data.network}) is required` : 'Network is required',
 			path: ['wallet'],
 			fatal: true
@@ -33,7 +33,6 @@ export const addressSchema = z.object({
 			const icanResult = validateWalletAddress(data.destination, { network: ['ican'], testnet: isTestnetAllowed });
 			if (!icanResult.isValid) {
 				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
 					message: 'Invalid CORE address format',
 					path: ['wallet'],
 					fatal: true
@@ -44,7 +43,6 @@ export const addressSchema = z.object({
 				});
 			} else if (icanResult.metadata?.isTestnet && icanResult.network === 'xab') {
 				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
 					message: 'CORE testnet address detected',
 					path: ['wallet', 'testnet'],
 					fatal: !isTestnetAllowed
@@ -55,7 +53,6 @@ export const addressSchema = z.object({
 				});
 			} else if (icanResult.network === 'xce') {
 				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
 					message: 'CORE enterprise address detected',
 					path: ['wallet', 'enterprise'],
 					fatal: !isEnterpriseAllowed
@@ -66,7 +63,6 @@ export const addressSchema = z.object({
 				});
 			} else if (icanResult.network !== data.network) {
 				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
 					message: 'Different CORE network detected',
 					path: ['wallet'],
 					fatal: true
@@ -83,14 +79,12 @@ export const addressSchema = z.object({
 			});
 			if (!ethResult.isValid) {
 				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
 					message: 'Invalid ETH address format',
 					path: ['wallet'],
 					fatal: true
 				});
 			} else if (ethResult.metadata?.isTestnet) {
 				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
 					message: 'ETH testnet address detected',
 					path: ['wallet', 'testnet'],
 					fatal: !isTestnetAllowed
@@ -103,14 +97,12 @@ export const addressSchema = z.object({
 			const btcResult = validateWalletAddress(data.destination, { network: ['btc'], testnet: isTestnetAllowed });
 			if (!btcResult.isValid) {
 				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
 					message: 'Invalid BTC address format',
 					path: ['wallet'],
 					fatal: true
 				});
 			} else if (btcResult.metadata?.isTestnet) {
 				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
 					message: 'BTC testnet address detected',
 					path: ['wallet', 'testnet'],
 					fatal: !isTestnetAllowed
@@ -123,14 +115,12 @@ export const addressSchema = z.object({
 			const ltcResult = validateWalletAddress(data.destination, { network: ['ltc'], testnet: isTestnetAllowed });
 			if (!ltcResult.isValid) {
 				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
 					message: 'Invalid LTC address format',
 					path: ['wallet'],
 					fatal: true
 				});
 			} else if (ltcResult.metadata?.isTestnet) {
 				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
 					message: 'LTC testnet address detected',
 					path: ['wallet', 'testnet'],
 					fatal: !isTestnetAllowed
@@ -143,14 +133,12 @@ export const addressSchema = z.object({
 			const solResult = validateWalletAddress(data.destination, { network: ['sol'], testnet: isTestnetAllowed });
 			if (!solResult.isValid) {
 				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
 					message: 'Invalid SOL address format',
 					path: ['wallet'],
 					fatal: true
 				});
 			} else if (solResult.metadata?.isTestnet) {
 				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
 					message: 'SOL testnet address detected',
 					path: ['wallet', 'testnet'],
 					fatal: !isTestnetAllowed
@@ -163,7 +151,6 @@ export const addressSchema = z.object({
 			const xlmResult = validateWalletAddress(data.destination, { network: ['xlm'], testnet: isTestnetAllowed });
 			if (!xlmResult.isValid) {
 				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
 					message: 'Invalid XLM address format',
 					path: ['wallet'],
 					fatal: true
@@ -176,7 +163,6 @@ export const addressSchema = z.object({
 			const xrpResult = validateWalletAddress(data.destination, { network: ['xrp'], testnet: isTestnetAllowed });
 			if (!xrpResult.isValid) {
 				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
 					message: 'Invalid XRP address format',
 					path: ['wallet'],
 					fatal: true
@@ -189,14 +175,12 @@ export const addressSchema = z.object({
 			const dotResult = validateWalletAddress(data.destination, { network: ['dot'], testnet: isTestnetAllowed });
 			if (!dotResult.isValid) {
 				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
 					message: 'Invalid DOT address format',
 					path: ['wallet'],
 					fatal: true
 				});
 			} else if (dotResult.metadata?.isTestnet) {
 				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
 					message: 'DOT testnet address detected',
 					path: ['wallet', 'testnet'],
 					fatal: !isTestnetAllowed
@@ -209,7 +193,6 @@ export const addressSchema = z.object({
 			const bchResult = validateWalletAddress(data.destination, { network: ['bch'], testnet: isTestnetAllowed });
 			if (!bchResult.isValid) {
 				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
 					message: 'Invalid BCH address format',
 					path: ['wallet'],
 					fatal: true
@@ -223,14 +206,12 @@ export const addressSchema = z.object({
 			const xmrTestnetResult = moneroTestnetRegex.test(data.destination);
 			if (!xmrResult && !xmrTestnetResult) {
 				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
 					message: 'Invalid XMR address format',
 					path: ['wallet'],
 					fatal: true
 				});
 			} else if (xmrTestnetResult) {
 				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
 					message: 'XMR testnet address detected',
 					path: ['wallet', 'testnet'],
 					fatal: !isTestnetAllowed

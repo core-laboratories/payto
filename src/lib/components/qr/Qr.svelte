@@ -8,7 +8,7 @@
 
 	$: {
 		if (canvas && param) {
-			QRCode.toCanvas(canvas, param, { errorCorrectionLevel: 'H' }, function (error: Error | null | undefined) {
+			QRCode.toCanvas(canvas, param, { errorCorrectionLevel: 'M', margin: 0 }, function (error: Error | null | undefined) {
 				if (error) console.error(error);
 			});
 		}
@@ -16,7 +16,7 @@
 
 	onMount(() => {
 		if (canvas && param) {
-			QRCode.toCanvas(canvas, param, { errorCorrectionLevel: 'H' }, function (error: Error | null | undefined) {
+			QRCode.toCanvas(canvas, param, { errorCorrectionLevel: 'M', margin: 0 }, function (error: Error | null | undefined) {
 				if (error) console.error(error);
 			});
 		}
@@ -24,5 +24,10 @@
 </script>
 
 <div class="flex justify-center items-center">
-	<canvas class="rounded-xs" bind:this={canvas}></canvas>
+	<canvas
+		class="rounded-xs max-w-[324px] h-auto"
+		width="324"
+		height="324"
+		bind:this={canvas}>
+	</canvas>
 </div>

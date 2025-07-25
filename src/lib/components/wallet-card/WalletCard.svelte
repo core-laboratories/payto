@@ -22,6 +22,8 @@
 	import { ASSETS_NAMES } from '$lib/constants/asset-names';
 	import { getCategoryByValue } from '$lib/helpers/get-category-by-value.helper';
 	import { onDestroy, onMount } from 'svelte';
+	import { blo } from "@blockchainhub/blo";
+	import { ShoppingCart, X, QrCode, Nfc, Navigation2 } from 'lucide-svelte';
 
 	// @ts-expect-error: Module is untyped
 	import pkg from 'open-location-code/js/src/openlocationcode';
@@ -53,13 +55,14 @@
 		recurring: string | Readable<string> | undefined;
 		deadline: number | Readable<number> | undefined;
 		purpose: string | Readable<string> | undefined;
+		mode: string | Readable<string> | undefined;
 	}
 
 	const paytoData = writable<FlexiblePaytoData>({
 		hostname: hostname || 'ican',
 		paymentType: $constructor.paymentType,
-		colorBackground: '#77bc65',
-		colorForeground: '#192a14',
+		colorBackground: '#2A3950',
+		colorForeground: '#9AB1D6',
 		rtl: false,
 		value: undefined,
 		address: undefined,
@@ -72,6 +75,7 @@
 		recurring: undefined,
 		deadline: undefined,
 		purpose: 'Pay',
+		mode: undefined
 	});
 
 	const constructorStore = derived(constructor, $c => $c);
@@ -151,16 +155,16 @@
 	}
 
 	function defineColors(colorF: string | null | undefined, colorB: string | null | undefined) {
-		let colorForeground = '#192a14';
-		let colorBackground = '#77bc65';
+		let colorForeground = '#9AB1D6';
+		let colorBackground = '#2A3950';
 		if (colorF) {
 			const colorDistance = Math.floor(calculateColorDistance(colorF, colorB || colorBackground));
-			colorForeground = colorDistance > 100 ? colorF.startsWith('#') ? colorF : `#${colorF}` : '#192a14';
+			colorForeground = colorDistance > 100 ? colorF.startsWith('#') ? colorF : `#${colorF}` : '#9AB1D6';
 		}
 
 		if (colorB) {
 			const colorDistance = Math.floor(calculateColorDistance(colorF || colorForeground, colorB));
-			colorBackground = colorDistance > 100 ? colorB.startsWith('#') ? colorB : `#${colorB}` : '#77bc65';
+			colorBackground = colorDistance > 100 ? colorB.startsWith('#') ? colorB : `#${colorB}` : '#2A3950';
 		}
 
 		return { colorForeground, colorBackground };
@@ -217,6 +221,7 @@
 				rtl: payto.rtl || false,
 				deadline: payto.deadline || undefined,
 				purpose: paytoParams.get('donate') === '1' ? 'Donate' : 'Pay',
+				mode: paytoParams.get('mode') || undefined
 			});
 
 			formatter = derived(
@@ -274,6 +279,7 @@
 					rtl: $store.design.rtl || false,
 					deadline: $store.networks[hostname]?.params?.dl?.value,
 					purpose: paytoParams.get('donate') === '1' ? 'Donate' : 'Pay',
+					mode: paytoParams.get('mode') || undefined
 				};
 			});
 
@@ -357,11 +363,11 @@
 		const searchParams = new URLSearchParams(queryString);
 
 		searchParams.delete('org');
-        searchParams.delete('item');
-        searchParams.delete('color-f');
-        searchParams.delete('color-b');
-        searchParams.delete('barcode');
-        searchParams.delete('rtl');
+		searchParams.delete('item');
+		searchParams.delete('color-f');
+		searchParams.delete('color-b');
+		searchParams.delete('barcode');
+		searchParams.delete('rtl');
 
 		const formattedParams = searchParams.toString();
 
@@ -473,6 +479,13 @@
 		return finalAddress;
 	}
 
+	function getIdenticon(address: string | Readable<string> | undefined): string {
+		if (!address) return '';
+		const addr = typeof address === 'string' ? address : get(address);
+		if (!addr) return '';
+		return blo(addr);
+	}
+
 	// Function to check if a payment is expired
 	function isPaymentExpired(deadline: number | Date | undefined): boolean {
 		if (!deadline) return false;
@@ -487,6 +500,13 @@
 		// Otherwise, check if the timestamp is in the past
 		return deadlineValue < Math.floor(Date.now() / 1000) || $isExpired;
 	}
+
+	// Define isExpiredPayment as a reactive variable for use in the template
+	$: isExpiredPayment = isPaymentExpired(
+		typeof $paytoData.deadline === 'object' && 'subscribe' in $paytoData.deadline
+			? get($paytoData.deadline)
+			: $paytoData.deadline
+	);
 
 	// Check if already expired on initialization
 	$: if ($paytoData.deadline) {
@@ -578,7 +598,7 @@
 
 	function updateRotationState() {
 		// Check angle of screen orientation
-		const angle = screen.orientation?.angle ?? window.orientation ?? 0;
+		const angle = screen.orientation?.angle ?? 0;
 		// 180 degrees means the phone is upside down in portrait mode
 		isUpsideDown = angle === 180 || angle === -180;
 	}
@@ -607,262 +627,103 @@
 	}
 </style>
 
-<div>
-	<div class={`card md:rounded-2xl shadow-md font-medium print:border-2 print:border-black ${isUpsideDown ? 'rotated' : ''}`} style="background-color: {$paytoData.colorBackground}; color: {$paytoData.colorForeground};">
-		{#if noData}
-			<div class="flex items-center p-4">
-				<div class="flex-grow flex justify-between items-center">
-					<span class="text-l font-medium font-semibold" style="color: {$paytoData.colorForeground};">
-						{#if $paytoData.organization}
-							{$paytoData.organization}
-						{:else}
-							PayTo
-						{/if}
-					</span>
-				</div>
-			</div>
+<!-- Tap Design -->
+<div class="relative flex flex-col justify-between bg-gray-900 bg-gradient-to-b to-gray-800/90 w-full h-screen md:h-auto md:min-h-[600px] md:rounded-2xl shadow-md font-medium text-white print:border-2 print:border-black" style="background-color: {$paytoData.colorBackground};">
+	<!-- Snow effect (now at the top) -->
+	<div class={`absolute top-0 left-0 w-full h-16 pointer-events-none z-0 overflow-hidden ${isExpiredPayment || noData ? 'hidden' : ''}`}>
+		<div class="w-full h-full animate-pulse bg-gradient-to-b from-white/20 to-transparent rounded-t-2xl "></div>
+	</div>
 
-			<div class="flex flex-col items-center justify-center py-8 px-4 text-center" style="background-color: {$paytoData.colorForeground}; color: {$paytoData.colorBackground};">
-				<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mb-4">
-					<circle cx="12" cy="12" r="10"/>
-					<path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-					<line x1="12" y1="17" x2="12.01" y2="17"/>
-				</svg>
-				<h2 class="text-xl font-bold mb-2">No Payment Data Provided</h2>
-				<p class="text-sm opacity-80 max-w-xs">No payment information was provided for this request. You can create a new payment link at the home page.</p>
-			</div>
-
-			<div class="p-4 flex justify-center">
-				<a href="/" class="inline-flex items-center px-4 py-2 rounded-md transition-colors duration-200 bg-zinc-700/50 hover:bg-zinc-700/70 text-zinc-300 border border-zinc-600 hover:border-zinc-500">
-					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
-						<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-						<polyline points="9 22 9 12 15 12 15 22"/>
-					</svg>
-					Create New Link
-				</a>
-			</div>
-		{:else if isPaymentExpired(typeof $paytoData.deadline === 'object' && 'subscribe' in $paytoData.deadline ? get($paytoData.deadline) : $paytoData.deadline)}
-			<div class="flex items-center p-4">
-				<div class="flex-grow flex justify-between items-center">
-					<span class="text-l font-medium font-semibold" style="color: {$paytoData.colorForeground};">
-						{#if $paytoData.organization}
-							{$paytoData.organization}
-						{:else}
-							PayTo
-						{/if}
-					</span>
-				</div>
-			</div>
-
-			<div class="flex flex-col items-center justify-center py-8 px-4 text-center" style="background-color: {$paytoData.colorForeground}; color: {$paytoData.colorBackground};">
-				<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mb-4">
-					<circle cx="12" cy="12" r="10"/>
-					<line x1="12" y1="8" x2="12" y2="12"/>
-					<line x1="12" y1="16" x2="12.01" y2="16"/>
-				</svg>
-				<h2 class="text-xl font-bold mb-2">Payment Request Expired</h2>
-				<p class="text-sm opacity-80 max-w-xs">This payment request has expired and is no longer valid. Please contact the recipient for a new payment link.</p>
-			</div>
-
-			<div class="p-4 flex justify-center">
-				<div class="text-sm opacity-70">
-					{#if $paytoData.value && Number($paytoData.value)>0}
-						Original amount: {$formattedValue}
-					{/if}
-					{#if $paytoData.item}
-						{$paytoData.value ? ' • ' : ''}Item: {$paytoData.item}
-					{/if}
-				</div>
-			</div>
-		{:else}
-			{#if $paytoData.rtl !== undefined && $paytoData.rtl === true}
-				<div class="flex items-center p-4">
-					<div class="flex-grow flex justify-between items-center">
-						<div class="text-left">
-							<div class="text-sm uppercase">{$paytoData.purpose}</div>
-							<div class="font-semibold">
-								{#if $paytoData.recurring}
-									<span class="uppercase">{$paytoData.recurring}</span> Recurring
-								{:else}
-									One‑time
-								{/if}
-							</div>
-						</div>
-						<span class="text-l font-medium font-semibold" style="color: {$paytoData.colorForeground};">
-							{#if $paytoData.organization}
-								{$paytoData.organization}
-							{:else}
-								PayTo
-							{/if}
-						</span>
-					</div>
-					{#if $paytoData.organizationImage}
-						<img src={$paytoData.organizationImage} alt="Organization" class="ml-4 max-w-10 max-h-10" />
-					{/if}
-				</div>
+	<!-- Top: NFC icon and message -->
+	<div class={`flex flex-col items-center pt-8 mb-4 select-none z-10 ${isExpiredPayment || noData ? 'hidden' : ''}`}>
+		<div class={`${isUpsideDown ? 'rotated' : ''}`}>
+			{#if $nfcSupported}
+				<Nfc class="w-16 h-16 mb-2" />
 			{:else}
-				<div class="flex items-center p-4">
-					{#if $paytoData.organizationImage}
-						<img src={$paytoData.organizationImage} alt="Organization" class="ml-4 max-w-10 max-h-10" />
-					{/if}
-					<div class="flex-grow flex justify-between items-center">
-						<span class="text-l font-medium font-semibold" style="color: {$paytoData.colorForeground};">
-							{#if $paytoData.organization}
-								{$paytoData.organization}
-							{:else}
-								PayTo
-							{/if}
-						</span>
-						<div class="text-right">
-							<div class="text-sm uppercase">{$paytoData.purpose}</div>
-							<div class="font-semibold">
-								{#if $paytoData.recurring}
-									Recurring <span class="uppercase">{$paytoData.recurring}</span>
-								{:else}
-									One‑time
-								{/if}
-							</div>
+				<div class="p-4 rounded-lg inline-flex justify-center items-center bg-white mb-2">
+					<div class="text-center">
+						<Qr param={$qrcodeValue} />
+						<div class="text-sm text-black">{$paytoData.network ? $paytoData.network.toString().toUpperCase() : $paytoData.paymentType.toUpperCase()}{$paytoData.address ? `/${shortenAddress($paytoData.address)}` : ''}</div>
+					</div>
+				</div>
+			{/if}
+		</div>
+		<div class={`text-lg font-medium drop-shadow ${isUpsideDown ? 'rotated' : ''}`}>{$nfcSupported ? 'Tap' : 'Scan'} Here to {$paytoData.purpose}</div>
+	</div>
+
+	<!-- Main Card (rotated if needed) -->
+	<div class="flex-1 flex items-center justify-center">
+		<div class={`relative transition-transform duration-500 ${isUpsideDown ? 'rotated' : ''}`}>
+			<div class="rounded-2xl bg-black/40 shadow-xl px-8 pb-4 flex flex-col items-center min-w-[300px] max-w-xs relative overflow-hidden">
+				{#if $expirationTimeMs}
+					<div class="-mx-8 w-[calc(100%+4rem)] flex flex-col gap-1 mb-2">
+						<div class="w-full bg-black/20 rounded-t-2xl h-2 overflow-hidden">
+							<div
+								class="h-2 rounded-t-2xl transition-all duration-1000 ease-linear"
+								class:bg-emerald-500={$timePercentage > 50}
+								class:bg-amber-500={$timePercentage <= 50 && $timePercentage > 20}
+								class:bg-red-500={$timePercentage <= 20}
+								style="width: {$timePercentage}%"
+							></div>
+						</div>
+						<div class="flex justify-between text-xs px-4">
+							<span class="text-gray-300">Expires in</span>
+							<span class="font-medium text-gray-100">{$formattedTimeRemaining}</span>
 						</div>
 					</div>
-				</div>
-			{/if}
-
-			{#if $expirationTimeMs}
-				<div class="px-4 pb-2 pt-0">
-					<div class={`flex ${$paytoData.rtl ? 'flex-row-reverse' : 'flex-row'} justify-between items-center mb-1`}>
-						<span class="text-sm" style="color: {$paytoData.colorForeground};">Expires in</span>
-						<span class="text-sm font-medium" style="color: {$paytoData.colorForeground};">{$formattedTimeRemaining}</span>
-					</div>
-					<div class="w-full bg-black/20 rounded-full h-1.5">
-						<div class="h-1.5 rounded-full transition-all duration-1000 ease-linear"
-							class:bg-emerald-500={$timePercentage > 50}
-							class:bg-amber-500={$timePercentage <= 50 && $timePercentage > 20}
-							class:bg-red-500={$timePercentage <= 20}
-							style="width: {$timePercentage}%"></div>
-					</div>
-				</div>
-			{/if}
-
-			<div class="flex items-center pt-12 pb-12 justify-center w-full print:outline-2 print:outline-black" style="background-color: {$paytoData.colorForeground}; color: {$paytoData.colorBackground};">
-				<div class="flex items-center mx-12 print:mx-0">
-					<div class="amount-text text-2xl font-medium text-wrap" style="color: {$paytoData.colorBackground};">
-						{#if $paytoData.value && Number($paytoData.value)>0}
-							{$formattedValue}
-						{:else}
-							Custom Amount
+				{/if}
+				<div class="pt-4">
+					{#if $paytoData.address}
+						<div class="flex items-center justify-center mb-2">
+							<div class="flex items-center justify-center">
+								<img src={getIdenticon($paytoData.address)} alt="ID" class="w-14 h-14 rounded-full" />
+							</div>
+						</div>
+					{/if}
+					<div class="text-center">
+						{#if $paytoData.organization}
+							<div class="text-lg font-medium mb-2">{$paytoData.organization}</div>
 						{/if}
+						<div class="text-lg font-medium mb-1">{$paytoData.purpose}{#if $paytoData.item}{` `}for{` `}<span class="break-all">{$paytoData.item}</span>{/if}</div>
+						<div class="text-4xl font-bold tracking-tigh mt-1 mb-2">
+							{#if noData}
+								<span class="text-3xl">No Payment</span>
+							{:else if isExpiredPayment}
+								<span class="text-3xl">Expired</span>
+							{:else}
+								{#if $paytoData.value && Number($paytoData.value)>0}
+									{$formattedValue}{#if $paytoData.recurring}<span class="text-2xl uppercase">{` / `}{$paytoData.recurring}</span>{/if}
+								{:else}
+									<span class="text-3xl">Amount</span>{#if $paytoData.recurring}<span class="text-2xl uppercase">{` / `}{$paytoData.recurring}</span>{/if}
+								{/if}
+							{/if}
+						</div>
 					</div>
 				</div>
 			</div>
+		</div>
+	</div>
 
-			<div class="m-4">
-				<div class="flex justify-between items-center mb-2">
-					<div class={`${$paytoData.rtl !== undefined && $paytoData.rtl === true ? 'text-right' : 'text-left'} w-full`}>
-						<div class="text-sm">Payment type</div>
-						<div class="text-xl font-semibold">
-							{$paytoData.paymentType && $paytoData.paymentType === 'void' ? 'CASH' : $paytoData.paymentType?.toUpperCase()}{$paytoData.network && `: ${ASSETS_NAMES[String($paytoData.network).toUpperCase()] ?? String($paytoData.network).toUpperCase()}`}
-						</div>
-					</div>
-				</div>
-				{#if ($paytoData.hostname === 'iban' || $paytoData.hostname === 'ach') && $paytoData.address}
-					<div class="flex justify-between items-center mb-2">
-						<div class={`${$paytoData.rtl !== undefined && $paytoData.rtl === true ? 'text-right' : 'text-left'} w-full`}>
-							<div class="text-sm">Account Number</div>
-							<div class="{$paytoData.hostname === 'iban' ? 'text-md' : 'text-xl'} font-semibold">
-								{$paytoData.hostname === 'iban' ? ICAN.printFormat($paytoData.address.toString() ?? '') : $paytoData.address}
-							</div>
-						</div>
-					</div>
-				{/if}
-				{#if $paytoData.currency}
-				<div class="flex justify-between items-center mb-2">
-					<div class={`${$paytoData.rtl !== undefined && $paytoData.rtl === true ? 'text-right' : 'text-left'} w-full`}>
-						<div class="text-sm">Asset</div>
-						<div class="text-xl font-semibold">
-							{$paytoData.currency &&
-								`${ASSETS_NAMES[String($paytoData.currency).toUpperCase()] ??
-									(String($paytoData.currency).length > 8
-										? `${String($paytoData.currency).substring(0, 4).toUpperCase()}…${String($paytoData.currency).substring(String($paytoData.currency).length - 4).toUpperCase()}`
-										: String($paytoData.currency).toUpperCase()
-									)
-								}`
-							}
-						</div>
-					</div>
-				</div>
-				{/if}
-				{#if $paytoData.item}
-					<div class="flex justify-between items-center mb-2">
-						<div class={`${$paytoData.rtl !== undefined && $paytoData.rtl === true ? 'text-right' : 'text-left'} w-full`}>
-							<div class="text-sm">Item</div>
-							<div class="text-xl font-semibold break-words">
-								{$paytoData.item}
-							</div>
-						</div>
-					</div>
-				{/if}
-			</div>
-
-			{#if currentUrl}
-				<div class="flex justify-center items-center m-4 mt-5 flex-col">
-					{#if (($paytoData.network === 'geo' || $paytoData.network === 'plus') && $paytoData.location)}
-						<div class="flex justify-between items-center mb-6 print:hidden">
-							<div class={`${$paytoData.rtl !== undefined && $paytoData.rtl === true ? 'text-right' : 'text-left'} w-full`}>
-								<div class="flex text-xl font-semibold break-words">
-									<a class="button is-full lg:basis-1/2 bs-12 py-2 px-3 text-center border rounded-md transition duration-200 outline-none focus-visible:ring focus-visible:ring-green-800 focus-visible:ring-offset-2 active:scale-(0.99) text-sm ${$paytoData.location ? 'cursor-pointer' : 'cursor-not-allowed'}"
-											style="border-color: {$paytoData.colorForeground}; background-color: {$paytoData.colorForeground}; color: {$paytoData.colorBackground};"
-											href={linkLocation($paytoData.location)}
-											target="_blank"
-											rel="noreferrer"
-									>Navigate</a>
-								</div>
-							</div>
-						</div>
-					{/if}
-					<div class="p-4 rounded-lg inline-flex justify-center items-center bg-white">
-						<div class="text-center">
-							<Qr param={$qrcodeValue} />
-							<div class="text-sm mt-2 text-black">{$paytoData.network ? $paytoData.network.toString().toUpperCase() : $paytoData.paymentType.toUpperCase()}{$paytoData.address ? `/${shortenAddress($paytoData.address)}` : ''}</div>
-						</div>
-					</div>
-				</div>
-			{/if}
-
-			<div class={`flex ${$paytoData.rtl !== undefined && $paytoData.rtl === true ? 'flex-row-reverse justify-between' : 'justify-between'} items-center p-4 print:hidden`}>
-				<a
-					href={$currentBareUrl}
-					rel="noreferrer"
-					class="transition-opacity hover:opacity-80"
-					style="cursor: pointer; background: none; border: none; padding: 0;"
-					aria-label="Pay via App"
-					title="Pay via App"
-				>
-					<svg
-						viewBox="0 0 36 36"
-						xmlns="http://www.w3.org/2000/svg"
-						style="width: 36px; height: 36px; fill: none; stroke: {$paytoData.colorForeground}; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round;"
-					>
-						<path d="M25.5 21h.02"/>
-						<path d="M10.5 10.5h18a3 3 0 0 1 3 3v15a3 3 0 0 1-3 3H7.5a3 3 0 0 1-3-3V7.5a3 3 0 0 1 3-3h21"/>
-					</svg>
-				</a>
-				<button
-					on:click={handleNfcClick}
-					class="transition-opacity hover:opacity-80"
-					style="cursor: {$nfcSupported ? 'pointer' : 'not-allowed'}; background: none; border: none; padding: 0;"
-					aria-label="Tap to Pay"
-					title="Tap to Pay"
-					disabled={!$nfcSupported}
-				>
-					<svg
-						viewBox="0 0 36 36"
-						xmlns="http://www.w3.org/2000/svg"
-						style="fill-rule:evenodd; clip-rule:evenodd; stroke-linejoin:round; stroke-miterlimit:2; width:36px; height:36px; fill:{$paytoData.colorForeground};"
-					>
-						<path d="M26.647,0.749c4.225,8.44 3.966,16.42 3.933,17.263c0.033,0.734 0.292,8.725 -3.933,17.165c-0,0 -1.101,1.266 -2.736,0.507c-1.634,-0.76 -1.069,-2.784 -1.069,-2.784c0,0 3.424,-6.649 3.334,-14.815l0.001,-0.127c0.089,-8.168 -3.335,-14.931 -3.335,-14.931c0,0 -0.565,-2.024 1.069,-2.784c1.635,-0.759 2.736,0.507 2.736,0.507Zm-8.195,3.795c3.446,6.327 3.212,12.625 3.179,13.468c0.033,0.734 0.267,6.778 -3.174,13.616c0,0 -1.1,1.265 -2.735,0.507c-1.635,-0.76 -1.069,-2.784 -1.069,-2.784c0,-0 2.215,-3.17 2.574,-11.267l0.002,-0.127c-0.235,-8.098 -2.58,-11.135 -2.58,-11.135c0,0 -0.566,-2.024 1.069,-2.784c1.634,-0.76 2.734,0.506 2.734,0.506Zm-11.469,8.166c2.882,0 5.222,2.353 5.222,5.253c-0,2.899 -2.34,5.253 -5.222,5.253c-2.882,-0 -5.222,-2.354 -5.222,-5.253c-0,-2.9 2.34,-5.253 5.222,-5.253Z" style="fill-rule:nonzero;"/>
-					</svg>
-				</button>
-			</div>
+	<div class={`relative flex justify-center items-center gap-6 px-12 pb-8 mt-4 z-10 ${$paytoData.rtl !== undefined && $paytoData.rtl === true ? 'flex-row-reverse' : ''}`}>
+		<button class="bg-black/40 rounded-full p-4 hover:bg-black/80 transition" aria-label="Close" on:click={() => window.history.back()}>
+			<X class="w-7 h-7" />
+		</button>
+		{#if $nfcSupported}
+			<button class="bg-black/40 rounded-full p-4 hover:bg-black/80 transition" aria-label="Switch Mode">
+				<QrCode class="w-7 h-7" />
+			</button>
+		{/if}
+		{#if (($paytoData.network === 'geo' || $paytoData.network === 'plus') && $paytoData.location)}
+			<button
+				class="bg-black/40 rounded-full p-4 hover:bg-black/80 transition"
+				aria-label="Navigate"
+				on:click={() => {
+					window.open(linkLocation($paytoData.location), '_blank');
+				}}
+			>
+				<Navigation2 class="w-7 h-7" />
+			</button>
 		{/if}
 	</div>
 </div>
+

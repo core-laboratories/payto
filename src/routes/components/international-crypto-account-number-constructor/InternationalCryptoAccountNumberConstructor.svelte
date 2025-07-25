@@ -126,7 +126,7 @@
 			if (!result.success) {
 				const error = result.error.issues[0];
 				addressValidated = true;
-				addressError = false;
+				addressError = false; // Soft fail
 				addressTestnet = error.path.includes('testnet');
 				addressEnterprise = error.path.includes('enterprise');
 				addressMsg = error.message;

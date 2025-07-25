@@ -202,9 +202,9 @@ export const actions = {
 				logoText: getLogoText(hostname, props),
 				description: 'Wallet by ' + org,
 				expirationDate: new Date((props.params.dl.value || (kvData.id ? (Date.now() + 2 * 365 * 24 * 60 * 60 * 1000) : (Date.now() + 365 * 24 * 60 * 60 * 1000)))).toISOString(),
-				backgroundColor: validColors(design.colorB, design.colorF) ? design.colorB : (kvData.theme.colorB || '#77bc65'),
-				foregroundColor: validColors(design.colorF, design.colorB) ? design.colorF : (kvData.theme.colorF || '#192a14'),
-				labelColor: validColors(design.colorF, design.colorB) ? design.colorF : (kvData.theme.colorTxt || '#192a14'),
+				backgroundColor: validColors(design.colorB, design.colorF) ? design.colorB : (kvData.theme.colorB || '#2A3950'),
+				foregroundColor: validColors(design.colorF, design.colorB) ? design.colorF : (kvData.theme.colorF || '#9AB1D6'),
+				labelColor: validColors(design.colorF, design.colorB) ? design.colorF : (kvData.theme.colorTxt || '#9AB1D6'),
 				url: bareLink,
 				...(hostname === 'void' && (props.network === 'geo' || props.network === 'plus') ? {
 					locations: [
