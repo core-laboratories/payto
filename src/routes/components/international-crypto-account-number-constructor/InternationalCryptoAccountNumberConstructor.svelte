@@ -215,7 +215,7 @@
 				}
 
 				splitAddressValidated = true;
-				splitAddressError = false;
+				splitAddressError = false; // Soft fail
 				splitAddressTestnet = isTestnet;
 				splitAddressEnterprise = error.path.includes('enterprise');
 				splitAddressMsg = error.message;

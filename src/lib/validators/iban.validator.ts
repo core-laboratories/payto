@@ -6,7 +6,6 @@ export const ibanSchema = z.object({
 }).superRefine((data, ctx) => {
 	if (!data.iban) {
 		ctx.addIssue({
-			code: "custom",
 			message: 'IBAN is required',
 			path: ['iban'],
 			fatal: true
@@ -17,7 +16,6 @@ export const ibanSchema = z.object({
 	const isValid = ICAN.isValid(data.iban, false);
 	if (!isValid) {
 		ctx.addIssue({
-			code: "custom",
 			message: 'Invalid IBAN format',
 			path: ['iban'],
 			fatal: true

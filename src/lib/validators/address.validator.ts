@@ -18,7 +18,6 @@ export const addressSchema = z.object({
 
 	if (!data.network) {
 		ctx.addIssue({
-			code: "custom",
 			message: isDebug ? `Network (${data.network}) is required` : 'Network is required',
 			path: ['wallet'],
 			fatal: true
