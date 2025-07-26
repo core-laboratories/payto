@@ -629,6 +629,33 @@
 		window.removeEventListener('orientationchange', updateRotationState);
 		screen.orientation?.removeEventListener?.('change', updateRotationState);
 	});
+
+	let mode: 'qr' | 'nfc' = 'qr';
+	let nfcScanController: AbortController | null = null;
+
+	async function switchMode() {
+		if (mode === 'qr') {
+			mode = 'nfc';
+			if ($nfcSupported) {
+				try {
+					if ('NDEFReader' in window) {
+						nfcScanController = new AbortController();
+						const ndef = new NDEFReader();
+						await ndef.scan({ signal: nfcScanController.signal });
+					}
+				} catch (error) {
+					console.warn('NFC not supported or permission denied:', error);
+					mode = 'qr';
+				}
+			}
+		} else {
+			mode = 'qr';
+			if (nfcScanController) {
+				nfcScanController.abort();
+				nfcScanController = null;
+			}
+		}
+	}
 </script>
 
 <style>
@@ -651,7 +678,7 @@
 	<!-- Top: NFC icon and message -->
 	<div class={`flex flex-col items-center pt-8 mb-4 select-none z-10 ${isExpiredPayment || noData ? 'hidden' : ''}`}>
 		<div class={`${isUpsideDown ? 'rotated' : ''}`}>
-			{#if $nfcSupported}
+			{#if $nfcSupported && mode === 'nfc'}
 				<Nfc class="w-16 h-16 mb-2" />
 			{:else}
 				<div class="p-4 pb-1 rounded-lg inline-flex justify-center items-center bg-white mb-2">
@@ -662,7 +689,7 @@
 				</div>
 			{/if}
 		</div>
-		<div class={`text-lg font-medium drop-shadow ${isUpsideDown ? 'rotated' : ''}`}>{$nfcSupported ? 'Tap' : 'Scan'} Here to {$paytoData.purpose}</div>
+		<div class={`text-lg font-medium drop-shadow ${isUpsideDown ? 'rotated' : ''}`}>{$nfcSupported && mode === 'nfc' ? 'Tap' : 'Scan'} Here to {$paytoData.purpose}</div>
 	</div>
 
 	<!-- Main Card (rotated if needed) -->
@@ -723,8 +750,12 @@
 			<X class="w-7 h-7" />
 		</button>
 		{#if $nfcSupported}
-			<button class="bg-black/40 rounded-full p-4 hover:bg-black/80 transition" aria-label="Switch Mode">
-				<QrCode class="w-7 h-7" />
+			<button class="bg-black/40 rounded-full p-4 hover:bg-black/80 transition" aria-label="Switch Mode" on:click={switchMode}>
+				{#if mode === 'qr'}
+					<Nfc class="w-7 h-7" />
+				{:else}
+					<QrCode class="w-7 h-7" />
+				{/if}
 			</button>
 		{/if}
 		{#if (($paytoData.network === 'geo' || $paytoData.network === 'plus') && $paytoData.location)}
