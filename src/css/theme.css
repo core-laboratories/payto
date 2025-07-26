@@ -1,7 +1,7 @@
 @theme {
     --font-family: "Arimo", serif;
     --font-family-arimo: "Arimo", serif;
-
+    --font-family-zephirum: "Zephirum", monospace;
 	--font-code: Zephirum, monospace;
 
 	--color-core: oklch(0.73 0.14 140);

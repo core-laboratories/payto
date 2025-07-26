@@ -603,6 +603,20 @@
 		isUpsideDown = angle === 180 || angle === -180;
 	}
 
+	function handleCloseOrBack() {
+		if (window.history.length > 1) {
+			window.history.back();
+			setTimeout(() => {
+				// If still on the same page after back, close the tab
+				if (document.visibilityState === 'visible') {
+					window.close();
+				}
+			}, 500);
+		} else {
+			window.close();
+		}
+	}
+
 	onMount(() => {
 		updateRotationState(); // Initial check
 
@@ -640,10 +654,10 @@
 			{#if $nfcSupported}
 				<Nfc class="w-16 h-16 mb-2" />
 			{:else}
-				<div class="p-4 rounded-lg inline-flex justify-center items-center bg-white mb-2">
+				<div class="p-4 pb-1 rounded-lg inline-flex justify-center items-center bg-white mb-2">
 					<div class="text-center">
 						<Qr param={$qrcodeValue} />
-						<div class="text-sm text-black">{$paytoData.network ? $paytoData.network.toString().toUpperCase() : $paytoData.paymentType.toUpperCase()}{$paytoData.address ? `/${shortenAddress($paytoData.address)}` : ''}</div>
+						<div class="text-sm text-black mt-1">{$paytoData.network ? $paytoData.network.toString().toUpperCase() : $paytoData.paymentType.toUpperCase()}{$paytoData.address ? `/${shortenAddress($paytoData.address)}` : ''}</div>
 					</div>
 				</div>
 			{/if}
@@ -705,7 +719,7 @@
 	</div>
 
 	<div class={`relative flex justify-center items-center gap-6 px-12 pb-8 mt-4 z-10 ${$paytoData.rtl !== undefined && $paytoData.rtl === true ? 'flex-row-reverse' : ''}`}>
-		<button class="bg-black/40 rounded-full p-4 hover:bg-black/80 transition" aria-label="Close" on:click={() => window.history.back()}>
+		<button class="bg-black/40 rounded-full p-4 hover:bg-black/80 transition" aria-label="Close" on:click={handleCloseOrBack}>
 			<X class="w-7 h-7" />
 		</button>
 		{#if $nfcSupported}

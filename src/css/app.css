@@ -36,6 +36,10 @@ body {
 	@apply bg-green-900 text-gray-50;
 }
 
+.zephirum {
+	@apply font-family-zephirum;
+}
+
 .pt-logo {
 	@apply font-bold italic;
 	font-optical-sizing: auto;
