@@ -20,12 +20,12 @@
 						<span class="block text-sm font-normal text-slate-400">Ideal for PayTo:Merchants.</span>
 					</h3>
 					<h4>
-						<span class="text-2xl">CHF</span>
-						<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500">₣ 100</span>
+						<span class="text-2xl">USD</span>
+						<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500">$ 100</span>
 						<span class="text-sm">/month</span>
 					</h4>
-					<a href="mailto:sales@payto.money?subject=Pro%20Plus" class="inline-flex items-center justify-center w-full h-12 gap-2 px-6 text-sm font-bold tracking-wide !text-white transition duration-300 rounded shadow-sm whitespace-nowrap bg-emerald-700 shadow-emerald-600 hover:bg-emerald-400 hover:shadow-md hover:shadow-emerald-400 focus:bg-emerald-700 focus:shadow-md focus:shadow-emerald-400 focus-visible:outline-none no-underline!">
-						<span>Enter Details</span>
+					<a href="mailto:sales@payto.money?subject=Pro%20Plus&body=Core%20ID%3A%0AIcon%3A%0AIcon%202x%3A%0AIcon%203x%3A%0ALogo%3A%0ALogo%202x%3A%0AWebhook%3A" class="inline-flex items-center justify-center w-full h-12 gap-2 px-6 text-sm font-bold tracking-wide !text-white transition duration-300 rounded shadow-sm whitespace-nowrap bg-emerald-700 shadow-emerald-600 hover:bg-emerald-400 hover:shadow-md hover:shadow-emerald-400 focus:bg-emerald-700 focus:shadow-md focus:shadow-emerald-400 focus-visible:outline-none no-underline!">
+						<span>Enter Details by Email</span>
 					</a>
 				</header>
 				<div class="p-6 flex-1">
@@ -62,12 +62,12 @@
 						<span class="block text-sm font-normal text-slate-400">Ideal for PayTo:Businesses.</span>
 					</h3>
 					<h4>
-						<span class="text-2xl">CHF</span>
-						<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500">₣ 2,000</span>
+						<span class="text-2xl">USD</span>
+						<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500">$ 2,000</span>
 						<span class="text-sm">/month</span>
 					</h4>
-					<a href="mailto:sales@payto.money?subject=Pro%20Business" class="inline-flex items-center justify-center w-full h-12 gap-2 px-6 text-sm font-bold tracking-wide !text-white transition duration-300 rounded shadow-sm whitespace-nowrap bg-emerald-700 shadow-emerald-600 hover:bg-emerald-400 hover:shadow-md hover:shadow-emerald-400 focus:bg-emerald-700 focus:shadow-md focus:shadow-emerald-400 focus-visible:outline-none no-underline!">
-						<span>Enter Details</span>
+					<a href="mailto:sales@payto.money?subject=Pro%20Business&body=Name%3A%0AURL%3A%0AIcon%3A%0AIcon%202x%3A%0AIcon%203x%3A%0ALogo%3A%0ALogo%202x%3A%0AColor%20B%3A%0AColor%20F%3A%0AColor%20Txt%3A%0AForce%20Theme%3A%0ACustom%20Currency%3A" class="inline-flex items-center justify-center w-full h-12 gap-2 px-6 text-sm font-bold tracking-wide !text-white transition duration-300 rounded shadow-sm whitespace-nowrap bg-emerald-700 shadow-emerald-600 hover:bg-emerald-400 hover:shadow-md hover:shadow-emerald-400 focus:bg-emerald-700 focus:shadow-md focus:shadow-emerald-400 focus-visible:outline-none no-underline!">
+						<span>Enter Details by Email</span>
 					</a>
 				</header>
 				<div class="p-6 flex-1">
@@ -120,7 +120,7 @@
 				</h3>
 				<h4>
 					<span class="text-2xl">CTN</span>
-					<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500">Ƈ 400</span>
+					<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500">Ƈ 400</span>
 					<span class="text-sm">/month</span>
 				</h4>
 				<a href="/?pass=1#pass" class="inline-flex items-center justify-center w-full h-12 gap-2 px-6 text-sm font-bold tracking-wide !text-white transition duration-300 rounded shadow-sm whitespace-nowrap bg-emerald-700 shadow-emerald-600 hover:bg-emerald-400 hover:shadow-md hover:shadow-emerald-400 focus:bg-emerald-700 focus:shadow-md focus:shadow-emerald-400 focus-visible:outline-none no-underline!">

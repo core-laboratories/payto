@@ -38,6 +38,8 @@
 	let noData: boolean = true;
 	const bareUrl = writable<string | null>(null);
 	let formatter: Readable<ExchNumberFormat> | undefined;
+	let mode: 'qr' | 'nfc' = 'qr';
+	let nfcScanController: AbortController | null = null;
 	interface FlexiblePaytoData {
 		hostname: string;
 		paymentType: string;
@@ -479,6 +481,19 @@
 		return finalAddress;
 	}
 
+	function getInfoDisplay(paytoData: any): string {
+		let infoDisplay = '';
+		if (paytoData.network) {
+			infoDisplay = paytoData.network.toString().toUpperCase();
+		} else {
+			infoDisplay = paytoData.paymentType.toUpperCase();
+		}
+		if (paytoData.address) {
+			infoDisplay += `/${shortenAddress(paytoData.address)}`;
+		}
+		return infoDisplay;
+	}
+
 	function getIdenticon(address: string | Readable<string> | undefined): string {
 		if (!address) return '';
 		const addr = typeof address === 'string' ? address : get(address);
@@ -644,9 +659,6 @@
 		screen.orientation?.removeEventListener?.('change', updateRotationState);
 	});
 
-	let mode: 'qr' | 'nfc' = 'qr';
-	let nfcScanController: AbortController | null = null;
-
 	async function switchMode() {
 		if (mode === 'qr') {
 			mode = 'nfc';
@@ -683,9 +695,9 @@
 </style>
 
 <!-- Tap Design -->
-<div class="relative flex flex-col justify-between bg-gray-900 bg-gradient-to-b to-gray-800/90 w-full h-screen sm:h-auto min-h-[600px] sm:rounded-2xl shadow-md font-medium text-white print:border-2 print:border-black" style="background-color: {$paytoData.colorBackground};">
+<div class="relative flex flex-col justify-between bg-gray-900 bg-gradient-to-b to-gray-800/90 w-full h-screen sm:h-auto min-h-[600px] sm:rounded-2xl shadow-md font-medium text-white print:border-2 print:border-black print:text-black print:shadow-none" style="background-color: {$paytoData.colorBackground};">
 	<!-- Snow effect (now at the top) -->
-	<div class={`absolute top-0 left-0 w-full h-16 pointer-events-none z-0 overflow-hidden ${isExpiredPayment || noData ? 'hidden' : ''}`}>
+	<div class={`absolute top-0 left-0 w-full h-16 pointer-events-none z-0 overflow-hidden print:hidden ${isExpiredPayment || noData ? 'hidden' : ''}`}>
 		<div class="w-full h-full animate-pulse bg-gradient-to-b from-white/20 to-transparent sm:rounded-t-2xl"></div>
 	</div>
 
@@ -693,23 +705,29 @@
 	<div class={`flex flex-col items-center pt-8 mb-4 select-none z-10 ${isExpiredPayment || noData ? 'hidden' : ''}`}>
 		<div class={`${isUpsideDown ? 'rotated' : ''}`}>
 			{#if $nfcSupported && mode === 'nfc'}
-				<Nfc class="w-16 h-16 mb-2" />
+				<Nfc class="w-16 h-16 mb-2 print:hidden" />
 			{:else}
-				<div class="p-4 pb-1 rounded-lg inline-flex justify-center items-center bg-white mb-2">
+				<div class="p-4 pb-1 rounded-lg flex justify-center items-center bg-white mb-2 print:hidden">
 					<div class="text-center">
 						<Qr param={$qrcodeValue} />
-						<div class="text-sm text-black mt-1">{$paytoData.network ? $paytoData.network.toString().toUpperCase() : $paytoData.paymentType.toUpperCase()}{$paytoData.address ? `/${shortenAddress($paytoData.address)}` : ''}</div>
+						<div class="text-sm text-black mt-1">{getInfoDisplay($paytoData)}</div>
 					</div>
 				</div>
 			{/if}
+			<div class="p-4 pb-1 rounded-lg flex justify-center items-center bg-white mb-2 hidden print:block">
+				<div class="text-center">
+					<Qr param={$qrcodeValue} />
+					<div class="text-sm text-black mt-1">{getInfoDisplay($paytoData)}</div>
+				</div>
+			</div>
 		</div>
-		<div class={`text-lg font-medium drop-shadow ${isUpsideDown ? 'rotated' : ''}`}>{$nfcSupported && mode === 'nfc' ? 'Tap' : 'Scan'} Here to {$paytoData.purpose}{printType($paytoData, true)}</div>
+		<div class={`text-lg font-medium drop-shadow print:drop-shadow-none ${isUpsideDown ? 'rotated' : ''}`}>{$nfcSupported && mode === 'nfc' ? 'Tap' : 'Scan'} Here to {$paytoData.purpose}{printType($paytoData, true)}</div>
 	</div>
 
 	<!-- Main Card (rotated if needed) -->
 	<div class="flex-1 flex items-center justify-center">
 		<div class={`relative transition-transform duration-500 ${isUpsideDown ? 'rotated' : ''}`}>
-			<div class="rounded-2xl bg-black/40 shadow-xl px-8 pb-4 flex flex-col items-center min-w-[320px] max-w-xs relative overflow-hidden">
+			<div class="rounded-2xl bg-black/40 shadow-xl px-8 pb-4 flex flex-col items-center min-w-[320px] max-w-xs relative overflow-hidden print:shadow-none print:border-2 print:border-gray-400">
 				{#if $expirationTimeMs}
 					<div class="-mx-8 w-[calc(100%+4rem)] flex flex-col gap-1 mb-2">
 						<div class="w-full bg-black/20 rounded-t-2xl h-2 overflow-hidden">
@@ -759,7 +777,7 @@
 		</div>
 	</div>
 
-	<div class={`relative flex justify-center items-center gap-6 px-12 pb-8 mt-4 z-10 ${$paytoData.rtl !== undefined && $paytoData.rtl === true ? 'flex-row-reverse' : ''}`}>
+	<div class={`relative flex justify-center items-center gap-6 px-12 pb-8 mt-4 z-10 print:hidden ${$paytoData.rtl !== undefined && $paytoData.rtl === true ? 'flex-row-reverse' : ''}`}>
 		<button class="bg-black/40 rounded-full p-4 hover:bg-black/80 transition" aria-label="Close" on:click={handleCloseOrBack}>
 			<X class="w-7 h-7" />
 		</button>

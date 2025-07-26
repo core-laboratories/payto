@@ -12,6 +12,7 @@ import forge from 'node-forge';
 import OpenLocationCode from 'open-location-code/js/src/openlocationcode';
 import { createClient } from '@supabase/supabase-js';
 import { env } from '$env/dynamic/private';
+import { env as publicEnv } from '$env/dynamic/public';
 import { PUBLIC_ENABLE_STATS } from '$env/static/public';
 
 // Required environment variables
@@ -26,7 +27,7 @@ if (!privateKey) {
 }
 
 // Optional environment variables with defaults
-const webServiceUrl = env.PRIVATE_WEB_SERVICE_URL || 'https://payto.money';
+const proUrl = publicEnv.PUBLIC_PRO_URL || 'https://payto.money/activate/pro';
 const enableStats = PUBLIC_ENABLE_STATS === 'true' ? true : false;
 
 type Actions = {
@@ -321,10 +322,10 @@ export const actions = {
 						value: props.split.address
 					}] : []),
 					{
-						key: 'subscription',
-						label: 'Subscription',
-						value: `Pay/Extend subscription`,
-						attributedValue: `${webServiceUrl}/api/v1/subscription?originator=${originator}&subscriber=${memberAddress}&destination=${props.destination}&network=${props.network}${design.isEmail ? '&email=' + design.email : ''}${design.isTelegram ? '&telegram=' + design.telegram : ''}`,
+						key: 'pro',
+						label: 'Pro',
+						value: `Activate Pro`,
+						attributedValue: `${proUrl}?originator=${originator}&subscriber=${memberAddress}&destination=${props.destination}&network=${props.network}`,
 						dataDetectorTypes: ["PKDataDetectorTypeLink"]
 					},
 				],
@@ -343,12 +344,6 @@ export const actions = {
 						attributedValue: `${basicData.orgUrl ? basicData.orgUrl : (kvData.name ? '' : 'https://payto.money')}`,
 						dataDetectorTypes: ["PKDataDetectorTypeLink"]
 					},
-					...(design.isEmail || design.isTelegram ? [{
-						key: 'notification',
-						label: 'Notifications',
-						value: design.isEmail ? 'Email' : design.isTelegram ? 'Telegram' : 'None',
-						attributedValue: design.isEmail ? design.email : design.isTelegram ? design.telegram : ''
-					}] : []),
 				]
 			};
 

@@ -102,10 +102,6 @@ interface IDesignState {
 	colorB?: string;
 	barcode?: string;
 	rtl?: boolean;
-	isEmail?: boolean;
-	email?: string;
-	isTelegram?: boolean;
-	telegram?: string;
 	mode?: string;
 }
 

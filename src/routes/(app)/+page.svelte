@@ -241,8 +241,8 @@
 									<p class="m-0">Issuing authority is: <span class="font-bold">{$authority ? $authority.toUpperCase() : 'PAYTO'}</span></p>
 									<a href="/pro#pro-business" target="_blank" class="inline-flex items-center font-bold ml-2 px-2 py-0.5 text-xs rounded-sm bg-emerald-500 text-gray-700! no-underline! hover:bg-emerald-400">Business</a>
 								</div>
-								<a href="/pro" target="_blank" rel="noreferrer" class="button is-full bs-12 py-2 px-3 text-center !text-white border border-gray-700 bg-gray-700 opacity-50 rounded-md text-sm hover:opacity-100 transition duration-200 font-bold">
-									Get <span class="text-green-300 italic">Pay</span><span class="text-emerald-500 italic">To</span><span class="text-green-300 italic">:Pro</span>
+								<a href="/pro" target="_blank" rel="noreferrer" class="button is-full bs-12 py-2 px-3 text-center !text-white italic border border-gray-700 bg-gray-700 opacity-50 rounded-md text-sm hover:opacity-100 transition duration-200 font-bold">
+									Get <span class="text-green-300">Pay</span><span class="text-emerald-500">To</span><span class="text-green-300">:Pro</span> Plans
 								</a>
 							</div>
 						</div>
