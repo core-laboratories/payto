@@ -384,7 +384,7 @@
 					type="submit"
 					disabled={!hostname || $isGenerating}
 				>
-					{$isGenerating ? 'Generating…' : 'Download PayPass'}
+					{$isGenerating ? 'Generating…' : 'Download Digital PayPass'}
 				</button>
 			</form>
 		</div>
