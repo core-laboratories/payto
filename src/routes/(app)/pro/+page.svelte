@@ -20,8 +20,8 @@
 						<span class="block text-sm font-normal text-slate-400">Ideal for PayTo:Merchants.</span>
 					</h3>
 					<h4>
-						<span class="text-2xl">USD</span>
-						<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500">$ 100</span>
+						<span class="text-2xl">CHF</span>
+						<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500">₣ 100</span>
 						<span class="text-sm">/month</span>
 					</h4>
 					<a href="mailto:sales@payto.money?subject=Pro%20Plus" class="inline-flex items-center justify-center w-full h-12 gap-2 px-6 text-sm font-bold tracking-wide !text-white transition duration-300 rounded shadow-sm whitespace-nowrap bg-emerald-700 shadow-emerald-600 hover:bg-emerald-400 hover:shadow-md hover:shadow-emerald-400 focus:bg-emerald-700 focus:shadow-md focus:shadow-emerald-400 focus-visible:outline-none no-underline!">
@@ -32,11 +32,11 @@
 					<ul class="space-y-4">
 						<li class="flex items-start gap-2">
 							<CircleCheck class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
-							<div>Merchant URL or IPFS Logo for PayPass</div>
+							<div>Merchant URL or IPFS Logo for Digital PayPass</div>
 						</li>
 						<li class="flex items-start gap-2">
 							<CircleCheck class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
-							<div>Get a verified checkmark for PayPass if Core ID is KYC/KYB‑verified</div>
+							<div>Get a verified checkmark for Digital PayPass if Core ID is KYC/KYB‑verified</div>
 						</li>
 						<li class="flex items-start gap-2">
 							<CircleCheck class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
@@ -62,8 +62,8 @@
 						<span class="block text-sm font-normal text-slate-400">Ideal for PayTo:Businesses.</span>
 					</h3>
 					<h4>
-						<span class="text-2xl">USD</span>
-						<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500">$ 2,000</span>
+						<span class="text-2xl">CHF</span>
+						<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500">₣ 2,000</span>
 						<span class="text-sm">/month</span>
 					</h4>
 					<a href="mailto:sales@payto.money?subject=Pro%20Business" class="inline-flex items-center justify-center w-full h-12 gap-2 px-6 text-sm font-bold tracking-wide !text-white transition duration-300 rounded shadow-sm whitespace-nowrap bg-emerald-700 shadow-emerald-600 hover:bg-emerald-400 hover:shadow-md hover:shadow-emerald-400 focus:bg-emerald-700 focus:shadow-md focus:shadow-emerald-400 focus-visible:outline-none no-underline!">
@@ -78,19 +78,19 @@
 						</li>
 						<li class="flex items-start gap-2">
 							<CircleCheck class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
-							<div>White-labelled PayPass</div>
+							<div>White-labelled Digital PayPass</div>
 						</li>
 						<li class="flex items-start gap-2">
 							<CircleCheck class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
-							<div>Custom issuance authority for PayPass</div>
+							<div>Custom issuance authority for Digital PayPass</div>
 						</li>
 						<li class="flex items-start gap-2">
 							<CircleCheck class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
-							<div>One Custom Currency extension for PayPass</div>
+							<div>One Custom Currency extension for Digital PayPass</div>
 						</li>
 						<li class="flex items-start gap-2">
 							<CircleCheck class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
-							<div>Company URL included in PayPass</div>
+							<div>Company URL included in Digital PayPass</div>
 						</li>
 						<li class="flex items-start gap-2">
 							<CircleCheck class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
@@ -141,10 +141,6 @@
 								Predefined Tokens<span role="tooltip" id="tooltip-tokens" class="invisible absolute bottom-full left-1/2 z-10 mb-2 w-48 -translate-x-1/2 rounded bg-slate-700 p-2 text-xs text-white opacity-0 transition-all before:invisible before:absolute before:left-1/2 before:top-full before:z-10 before:mb-2 before:-ml-1 before:border-x-4 before:border-t-4 before:border-x-transparent before:border-t-slate-700 before:opacity-0 before:transition-all before:content-[''] group-hover:visible group-hover:block group-hover:opacity-100 group-hover:before:visible group-hover:before:opacity-100">Currently supported:<br />CTN, USDX</span>
 							</span>. *
 						</div>
-					</li>
-					<li class="flex items-start gap-2">
-						<CircleCheck class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
-						<div>Check the current balance of your wallet. *</div>
 					</li>
 					<li class="flex items-start gap-2">
 						<CircleCheck class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
