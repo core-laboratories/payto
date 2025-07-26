@@ -617,6 +617,20 @@
 		}
 	}
 
+	function printType(paytoData: any, prefix: boolean) {
+		if (paytoData.paymentType === 'void') {
+			return prefix ? ` with Cash` : `Cash`;
+		} else if (paytoData.paymentType === 'ican') {
+			return ``; // Default to ICAN
+		} else if (paytoData.network && paytoData.paymentType) {
+			return prefix ? ` via ${paytoData.network.toString().toUpperCase()}` : `${paytoData.network.toString().toUpperCase()}`;
+		} else if (paytoData.paymentType) {
+			return prefix ? ` via ${paytoData.paymentType.toString().toUpperCase()}` : `${paytoData.paymentType.toString().toUpperCase()}`;
+		} else {
+			return prefix ? ` for ${paytoData.item}` : `${paytoData.item}`;
+		}
+	}
+
 	onMount(() => {
 		updateRotationState(); // Initial check
 
@@ -689,7 +703,7 @@
 				</div>
 			{/if}
 		</div>
-		<div class={`text-lg font-medium drop-shadow ${isUpsideDown ? 'rotated' : ''}`}>{$nfcSupported && mode === 'nfc' ? 'Tap' : 'Scan'} Here to {$paytoData.purpose}</div>
+		<div class={`text-lg font-medium drop-shadow ${isUpsideDown ? 'rotated' : ''}`}>{$nfcSupported && mode === 'nfc' ? 'Tap' : 'Scan'} Here to {$paytoData.purpose}{printType($paytoData, true)}</div>
 	</div>
 
 	<!-- Main Card (rotated if needed) -->

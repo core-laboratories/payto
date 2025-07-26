@@ -44,7 +44,6 @@
 
 <div class="max-w-full w-[400px] w-full sm:max-w-[440px] mx-auto sm:py-8">
 	{#if $loading}
-		<!-- Modern animated loading card -->
 		<div class="p-6 bg-zinc-800/60 border border-zinc-700 rounded-xl animate-pulse flex flex-col gap-4 shadow-lg">
 			<div class="h-8 w-2/3 bg-zinc-700 rounded mb-2"></div>
 			<div class="h-4 w-1/2 bg-zinc-700 rounded"></div>
