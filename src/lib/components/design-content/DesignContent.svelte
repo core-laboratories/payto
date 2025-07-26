@@ -246,7 +246,7 @@
 		</div>
 	{/if}
 
-	<div class="flex flex-col gap-6">
+	<div class="flex flex-col gap-3">
 		<h2 class="text-lg font-bold flex items-center">
 			Notifications
 			<a href="/pro#pro" target="_blank" class="inline-flex items-center ml-2 px-2 py-0.5 text-xs rounded-sm bg-emerald-500 text-gray-700! no-underline! hover:bg-emerald-400">Pro</a>
@@ -270,6 +270,7 @@
 			{#if $constructor.design.isEmail}
 				<FieldGroupText
 					placeholder="e.g. user@onion.email"
+					classValue="my-2"
 					bind:value={$constructor.design.email}
 					type="email"
 					oninput={(e: Event) => {
@@ -311,6 +312,7 @@
 					<span class="mr-2 text-white font-bold">@</span>
 					<FieldGroupText
 						placeholder="username"
+						classValue="my-2"
 						bind:value={$constructor.design.telegram}
 						oninput={(e: Event) => {
 							const input = e.target as HTMLInputElement;
