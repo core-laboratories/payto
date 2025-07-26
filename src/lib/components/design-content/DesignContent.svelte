@@ -228,18 +228,6 @@
 	{/if}
 
 	<div class="flex flex-col gap-3">
-		<div class="flex items-center">
-			<span>Notifications</span>
-			<a href="/pro#pro" target="_blank" class="inline-flex items-center font-bold ml-2 px-2 py-0.5 text-xs rounded-sm bg-emerald-500 text-gray-700! no-underline! hover:bg-emerald-400">Pro</a>
-		</div>
-
-		<div class="flex items-center">
-			<span>Webhook</span>
-			<a href="/pro#pro-plus" target="_blank" class="inline-flex items-center font-bold ml-2 px-2 py-0.5 text-xs rounded-sm bg-emerald-500 text-gray-700! no-underline! hover:bg-emerald-400">Pro+</a>
-		</div>
-	</div>
-
-	<div class="flex flex-col gap-3">
 		<div class="flex flex-col lg:flex-row gap-3">
 			{#if hostname}
 				<a
