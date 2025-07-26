@@ -32,22 +32,18 @@
 	});
 </script>
 
-<Page>
-	<Row>
-		<div class="max-w-full w-[400px] max-[480px]:w-full">
-			{#if $hasError}
-				<div class="p-4 bg-red-500/20 border border-red-500/30 rounded-lg text-red-200">
-					<h3 class="text-lg font-medium mb-2">Error</h3>
-					<p>{$errorMessage}</p>
-				</div>
-			{:else if $urlParam}
-				<WalletCard url={$urlParam} />
-			{:else}
-				<div class="p-4 bg-zinc-800/50 border border-zinc-700 rounded-lg animate-pulse">
-					<div class="h-6 w-3/4 bg-zinc-700 rounded mb-4"></div>
-					<div class="h-4 w-1/2 bg-zinc-700 rounded"></div>
-				</div>
-			{/if}
+<div class="max-w-full w-[400px] w-full sm:max-w-[440px] mx-auto sm:py-8">
+	{#if $hasError}
+		<div class="p-4 bg-red-500/20 border border-red-500/30 rounded-lg text-red-200">
+			<h3 class="text-lg font-medium mb-2">Error</h3>
+			<p>{$errorMessage}</p>
 		</div>
-	</Row>
-</Page>
+	{:else if $urlParam}
+		<WalletCard url={$urlParam} />
+	{:else}
+		<div class="p-4 bg-zinc-800/50 border border-zinc-700 rounded-lg animate-pulse">
+			<div class="h-6 w-3/4 bg-zinc-700 rounded mb-4"></div>
+			<div class="h-4 w-1/2 bg-zinc-700 rounded"></div>
+		</div>
+	{/if}
+</div>

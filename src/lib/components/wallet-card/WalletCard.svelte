@@ -628,10 +628,10 @@
 </style>
 
 <!-- Tap Design -->
-<div class="relative flex flex-col justify-between bg-gray-900 bg-gradient-to-b to-gray-800/90 w-full h-screen md:h-auto md:min-h-[600px] md:rounded-2xl shadow-md font-medium text-white print:border-2 print:border-black" style="background-color: {$paytoData.colorBackground};">
+<div class="relative flex flex-col justify-between bg-gray-900 bg-gradient-to-b to-gray-800/90 w-full h-screen sm:h-auto min-h-[600px] sm:rounded-2xl shadow-md font-medium text-white print:border-2 print:border-black" style="background-color: {$paytoData.colorBackground};">
 	<!-- Snow effect (now at the top) -->
 	<div class={`absolute top-0 left-0 w-full h-16 pointer-events-none z-0 overflow-hidden ${isExpiredPayment || noData ? 'hidden' : ''}`}>
-		<div class="w-full h-full animate-pulse bg-gradient-to-b from-white/20 to-transparent rounded-t-2xl "></div>
+		<div class="w-full h-full animate-pulse bg-gradient-to-b from-white/20 to-transparent sm:rounded-t-2xl"></div>
 	</div>
 
 	<!-- Top: NFC icon and message -->
@@ -654,7 +654,7 @@
 	<!-- Main Card (rotated if needed) -->
 	<div class="flex-1 flex items-center justify-center">
 		<div class={`relative transition-transform duration-500 ${isUpsideDown ? 'rotated' : ''}`}>
-			<div class="rounded-2xl bg-black/40 shadow-xl px-8 pb-4 flex flex-col items-center min-w-[300px] max-w-xs relative overflow-hidden">
+			<div class="rounded-2xl bg-black/40 shadow-xl px-8 pb-4 flex flex-col items-center min-w-[320px] max-w-xs relative overflow-hidden">
 				{#if $expirationTimeMs}
 					<div class="-mx-8 w-[calc(100%+4rem)] flex flex-col gap-1 mb-2">
 						<div class="w-full bg-black/20 rounded-t-2xl h-2 overflow-hidden">
