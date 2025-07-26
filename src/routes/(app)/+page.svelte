@@ -12,6 +12,7 @@
 	import { toast } from '$lib/components/toast';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
+	import { ChevronUp, ChevronDown } from 'lucide-svelte';
 
 	let type = writable<ITransitionType>('ican');
 	let designEnabled = writable(false);
@@ -19,6 +20,7 @@
 	let currentLink = writable('');
 	let currentShow = writable(false);
 	let authority = writable('');
+	let showInfoBox = $state(false);
 	const purpose = writable("pay");
 	const urlAuthority: string | undefined = page.data.authority;
 
@@ -92,7 +94,7 @@
 
 <Page classValue="space-y-6 lg:space-y-8">
 	<Row classValue="lg:flex-row gap-4">
-		<Box classValue="lg:basis-[calc(50%-2.5rem)]">
+		<Box classValue="sm:min-w-[480px] lg:basis-[calc(50%-2.5rem)]">
 			<a id="constructor" aria-hidden="true" aria-label="Constructor"></a>
 			<BoxTitle>
 				Payment Constructor
@@ -111,7 +113,7 @@
 
 		<Icon.Convert classValue="w-10 h-10 self-center text-green-500 rotate-90 lg:block lg:rotate-0" />
 
-		<Box classValue="lg:basis-[calc(50%-2.5rem)]">
+		<Box classValue="sm:min-w-[480px] lg:basis-[calc(50%-2.5rem)]">
 			<a id="integrations" aria-hidden="true" aria-label="Integrations"></a>
 			<BoxTitle>Integrations</BoxTitle>
 			<BoxContent>
@@ -258,40 +260,55 @@
 	<Row>
 		<a id="information" aria-hidden="true" aria-label="Information"></a>
 		<Box>
-			<h1 class="m-0 text-xl font-bold text-white">Information</h1>
-			<BoxContent>
-				<div class="flex flex-col gap-2">
-					<div>Expanded on the specification
-						<a
-							class="transition duration-200 visited:text-gray-200 hover:text-gray-300"
-							href="https://datatracker.ietf.org/doc/html/rfc8905"
-							target="_blank"
-							rel="noreferrer"
-						>RFC 8905</a>.
-						<a
-							class="transition duration-200 visited:text-gray-200 hover:text-gray-300"
-							href="https://github.com/core-laboratories/payto/blob/master/docs/scheme.md"
-							target="_blank"
-							rel="noreferrer"
-						>Documentation</a>.
-					</div>
-					{#if $currentShow}
-						<div>
-							<span class="mr-1">{$currentSentence}</span>
-							<span>Read more
-								<a
-									class="transition duration-200 visited:text-gray-200 hover:text-gray-300"
-									href={$currentLink}
-									target="_blank"
-									rel="noreferrer"
-								>here</a>.
-							</span>
-						</div>
+			<div>
+				<button
+					type="button"
+					onclick={() => showInfoBox = !showInfoBox}
+					class="flex items-center justify-between w-full p-0 text-left hover:text-gray-300 transition-colors duration-200 border-none bg-transparent"
+				>
+					<span class="text-lg font-bold">Information</span>
+					{#if showInfoBox}
+						<ChevronUp class="w-5 h-5" />
+					{:else}
+						<ChevronDown class="w-5 h-5" />
 					{/if}
-					<div>
-						Compatibility: Desktop - Chromium from version 121 & enabled flags (Experimental Web Platform Features); Opera; Safari. Mobile - All major browsers.
+				</button>
+			</div>
+			<BoxContent>
+				{#if showInfoBox}
+					<div class="flex flex-col gap-2">
+						<p>Expanded on the specification
+							<a
+								class="transition duration-200 visited:text-gray-200 hover:text-gray-300"
+								href="https://datatracker.ietf.org/doc/html/rfc8905"
+								target="_blank"
+								rel="noreferrer"
+							>RFC 8905</a>.
+							<a
+								class="transition duration-200 visited:text-gray-200 hover:text-gray-300"
+								href="https://github.com/core-laboratories/payto/blob/master/docs/scheme.md"
+								target="_blank"
+								rel="noreferrer"
+							>Documentation</a>.
+						</p>
+						{#if $currentShow}
+							<p>
+								<span class="mr-1">{$currentSentence}</span>
+								<span>Read more
+									<a
+										class="transition duration-200 visited:text-gray-200 hover:text-gray-300"
+										href={$currentLink}
+										target="_blank"
+										rel="noreferrer"
+									>here</a>.
+								</span>
+							</p>
+						{/if}
+						<p>
+							Compatibility: Desktop - Chromium from version 121 & enabled flags (Experimental Web Platform Features); Opera; Safari. Mobile - All major browsers.
+						</p>
 					</div>
-				</div>
+				{/if}
 			</BoxContent>
 		</Box>
 	</Row>
