@@ -157,7 +157,7 @@
 				</ul>
 			</div>
 			<footer class="p-6 text-sm text-center border-t border-emerald-800 bg-gray-700/75">
-				<a class="transition-colors duration-300 text-emerald-500 hover:text-emerald-600 focus:text-emerald-700" target="_blank" rel="noopener" href="https://app.ping.exchange/trade?market=ctn_usdc">On-Ramp CTN</a>
+				Passes for public use with extended features
 			</footer>
 		</div>
 	</div>
