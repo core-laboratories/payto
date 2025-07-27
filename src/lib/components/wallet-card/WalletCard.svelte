@@ -618,9 +618,8 @@
 			return prefix ? ` via ${paytoData.network.toString().toUpperCase()}` : `${paytoData.network.toString().toUpperCase()}`;
 		} else if (paytoData.paymentType) {
 			return prefix ? ` via ${paytoData.paymentType.toString().toUpperCase()}` : `${paytoData.paymentType.toString().toUpperCase()}`;
-		} else {
-			return prefix ? ` for ${paytoData.item}` : `${paytoData.item}`;
 		}
+		return '';
 	}
 
 	onMount(() => {
