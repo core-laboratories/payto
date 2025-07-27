@@ -9,7 +9,7 @@
 		FieldGroupRadioWithNumber,
 		ListBox
 	} from '$lib/components';
-	import { ChevronDown, ChevronUp } from 'lucide-svelte';
+	import { ChevronDown, ChevronUp, ArrowLeft } from 'lucide-svelte';
 
 	const isDebug = import.meta.env.MODE === 'development';
 
@@ -336,17 +336,7 @@
 							resetAddress();
 						}}
 					>
-						<svg
-							class="w-5"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="1.5"
-							viewBox="0 0 24 24"
-							xmlns="http://www.w3.org/2000/svg"
-							aria-hidden="true"
-						>
-							<path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-						</svg>
+						<ArrowLeft class="w-5 h-5" />
 					</button>
 					<input
 						class="w-full h-12 p-3 ps-14 text-start bg-gray-900 rounded-md border-0"
