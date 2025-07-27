@@ -4,8 +4,8 @@
 	import { page } from '$app/state';
 	import { writable } from 'svelte/store';
 	import { env } from '$env/dynamic/public';
+	import { AlertTriangle, Copy } from 'lucide-svelte';
 
-	let urlParam: string | undefined;
 	const originator = page.url.searchParams.get('originator');
 	const subscriber = page.url.searchParams.get('subscriber');
 	const destination = page.url.searchParams.get('destination');
@@ -192,14 +192,15 @@
 							disabled={isSubmitting}
 							class="w-full bg-blue-500 text-white py-2 px-4 mt-4 rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
 						>
-							{isSubmitting ? 'Activating...' : 'Activate Pro'}
+							{isSubmitting ? 'Requesting…' : 'Request Pro'}
 						</button>
 					</form>
 				{/if}
 			{:else}
 				<!-- Step 2: Payment -->
 				<div class="w-full flex flex-col gap-4">
-					<p class="text-center">Pay CTN Ƈ 400/month to address:</p>
+					<p class="text-center">Pay CTN Ƈ 400/month to address</p>
+					<p class="text-center text-sm text-gray-400">The equivalent will be calculated for the running of service - you can pay more or less. 400 CTN is per 30 days.</p>
 
 					<div class="flex items-center gap-2">
 						<input
@@ -213,8 +214,12 @@
 							class="px-4 py-3 bg-gray-600 hover:bg-gray-500 text-white rounded-md transition-colors"
 							title="Copy address"
 						>
-							📋
+							<Copy class="inline-block mr-2" size={16} />
 						</button>
+					</div>
+
+					<div class="p-3 bg-amber-900/50 border border-amber-700 rounded-md text-amber-200 text-sm">
+						<AlertTriangle class="inline-block mr-2" size={16} /> Make the payment from the same wallet (Core ID) you are using in this PayPass, otherwise the service will not be activated.
 					</div>
 
 					<div class="flex flex-col gap-3 mt-4">

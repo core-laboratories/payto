@@ -20,8 +20,8 @@
 						<span class="block text-sm font-normal text-slate-400">Ideal for PayTo:Merchants.</span>
 					</h3>
 					<h4>
-						<span class="text-2xl">USD</span>
-						<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500">$ 100</span>
+						<span class="text-2xl">EUR</span>
+						<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500">€ 100</span>
 						<span class="text-sm">/month</span>
 					</h4>
 					<a href="mailto:sales@payto.money?subject=Pro%20Plus&body=Core%20ID%3A%0AIcon%3A%0AIcon%202x%3A%0AIcon%203x%3A%0ALogo%3A%0ALogo%202x%3A%0AWebhook%3A" class="inline-flex items-center justify-center w-full h-12 gap-2 px-6 text-sm font-bold tracking-wide !text-white transition duration-300 rounded shadow-sm whitespace-nowrap bg-emerald-700 shadow-emerald-600 hover:bg-emerald-400 hover:shadow-md hover:shadow-emerald-400 focus:bg-emerald-700 focus:shadow-md focus:shadow-emerald-400 focus-visible:outline-none no-underline!">
@@ -62,8 +62,8 @@
 						<span class="block text-sm font-normal text-slate-400">Ideal for PayTo:Businesses.</span>
 					</h3>
 					<h4>
-						<span class="text-2xl">USD</span>
-						<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500">$ 2,000</span>
+						<span class="text-2xl">EUR</span>
+						<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500">€ 2,000</span>
 						<span class="text-sm">/month</span>
 					</h4>
 					<a href="mailto:sales@payto.money?subject=Pro%20Business&body=Name%3A%0AURL%3A%0AIcon%3A%0AIcon%202x%3A%0AIcon%203x%3A%0ALogo%3A%0ALogo%202x%3A%0AColor%20B%3A%0AColor%20F%3A%0AColor%20Txt%3A%0AForce%20Theme%3A%0ACustom%20Currency%3A" class="inline-flex items-center justify-center w-full h-12 gap-2 px-6 text-sm font-bold tracking-wide !text-white transition duration-300 rounded shadow-sm whitespace-nowrap bg-emerald-700 shadow-emerald-600 hover:bg-emerald-400 hover:shadow-md hover:shadow-emerald-400 focus:bg-emerald-700 focus:shadow-md focus:shadow-emerald-400 focus-visible:outline-none no-underline!">
@@ -91,10 +91,6 @@
 						<li class="flex items-start gap-2">
 							<CircleCheck class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
 							<div>Company URL included in Digital PayPass</div>
-						</li>
-						<li class="flex items-start gap-2">
-							<CircleCheck class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
-							<div>Webhook for PayPass to receive payment information for supported assets as defined in Pro plan</div>
 						</li>
 						<li class="flex items-start gap-2">
 							<CircleCheck class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />

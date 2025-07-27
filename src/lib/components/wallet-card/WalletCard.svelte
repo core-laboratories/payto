@@ -20,7 +20,6 @@
 	import Payto from 'payto-rl';
 	import { deviceSherlock } from 'device-sherlock';
 	import { writable } from 'svelte/store';
-	import { ASSETS_NAMES } from '$lib/constants/asset-names';
 	import { getCategoryByValue } from '$lib/helpers/get-category-by-value.helper';
 	import { onDestroy, onMount } from 'svelte';
 	import { blo } from "@blockchainhub/blo";
@@ -28,7 +27,6 @@
 
 	// @ts-expect-error: Module is untyped
 	import pkg from 'open-location-code/js/src/openlocationcode';
-	import ICAN from '@blockchainhub/ican';
 	const { decode } = pkg;
 
 	export let hostname: ITransitionType | undefined = undefined;
