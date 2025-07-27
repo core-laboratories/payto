@@ -1,6 +1,7 @@
 <script context="module" lang="ts">
 	declare class NDEFReader {
 		scan(options?: { signal?: AbortSignal }): Promise<void>;
+		write(data: any, options?: { signal?: AbortSignal }): Promise<void>;
 		addEventListener(type: string, callback: () => void): void;
 		removeAllListeners(): void;
 	}
@@ -23,7 +24,7 @@
 	import { getCategoryByValue } from '$lib/helpers/get-category-by-value.helper';
 	import { onDestroy, onMount } from 'svelte';
 	import { blo } from "@blockchainhub/blo";
-	import { ShoppingCart, X, QrCode, Nfc, Navigation2 } from 'lucide-svelte';
+	import { X, QrCode, Nfc, Navigation2 } from 'lucide-svelte';
 
 	// @ts-expect-error: Module is untyped
 	import pkg from 'open-location-code/js/src/openlocationcode';
@@ -39,7 +40,7 @@
 	const bareUrl = writable<string | null>(null);
 	let formatter: Readable<ExchNumberFormat> | undefined;
 	let mode: 'qr' | 'nfc' = 'qr';
-	let nfcScanController: AbortController | null = null;
+	let nfcWriteController: AbortController | null = null;
 	interface FlexiblePaytoData {
 		hostname: string;
 		paymentType: string;
@@ -418,30 +419,6 @@
 		}
 	});
 
-	let isStreaming = false;
-
-	async function handleNfcClick() {
-		if (!currentUrl) return;
-
-		const reader = await $nfcReader;
-		if (!reader) return;
-
-		isStreaming = !isStreaming;
-
-		if (isStreaming) {
-			try {
-				reader.addEventListener('reading', () => {
-					reader.scan({ signal: new AbortController().signal });
-				});
-			} catch (error) {
-				console.error('Failed to stream NFC:', error);
-				isStreaming = false;
-			}
-		} else {
-			reader.removeAllListeners();
-		}
-	}
-
 	function truncateToTwoDecimals(num: number) {
 		return parseFloat(num.toFixed(3).slice(0, -1));
 	}
@@ -665,9 +642,30 @@
 			if ($nfcSupported) {
 				try {
 					if ('NDEFReader' in window) {
-						nfcScanController = new AbortController();
+						nfcWriteController = new AbortController();
 						const ndef = new NDEFReader();
-						await ndef.scan({ signal: nfcScanController.signal });
+
+						// Write the PayTo link to NFC
+						await ndef.write({
+							records: [{
+								recordType: "url",
+								data: $currentUrl || ''
+							}]
+						}, { signal: nfcWriteController.signal });
+
+						// Continue writing in a loop for streaming
+						setInterval(async () => {
+							try {
+								await ndef.write({
+									records: [{
+										recordType: "url",
+										data: $currentUrl || ''
+									}]
+								});
+							} catch (error) {
+								console.warn('NFC write error:', error);
+							}
+						}, 1000); // Write every second
 					}
 				} catch (error) {
 					console.warn('NFC not supported or permission denied:', error);
@@ -676,9 +674,9 @@
 			}
 		} else {
 			mode = 'qr';
-			if (nfcScanController) {
-				nfcScanController.abort();
-				nfcScanController = null;
+			if (nfcWriteController) {
+				nfcWriteController.abort();
+				nfcWriteController = null;
 			}
 		}
 	}
