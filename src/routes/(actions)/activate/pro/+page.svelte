@@ -95,10 +95,7 @@
 	async function copyAddress() {
 		try {
 			await navigator.clipboard.writeText(ctnAddress);
-			// toast({ message: 'Address copied to clipboard', type: 'success' }); // Removed toast
-		} catch (error) {
-			// toast({ message: 'Failed to copy address', type: 'error' }); // Removed toast
-		}
+		} catch (error) {}
 	}
 </script>
 
