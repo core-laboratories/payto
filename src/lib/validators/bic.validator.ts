@@ -4,21 +4,23 @@ const BIC_REGEX = /^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/i;
 
 export const bicSchema = z.object({
 	bic: z.string()
-}).superRefine((data, ctx) => {
-	if (!data.bic) {
-		ctx.addIssue({
+}).check((ctx) => {
+	if (!ctx.value.bic) {
+		ctx.issues.push({
+			code: 'custom',
 			message: 'BIC is required',
 			path: ['bic'],
-			fatal: true
+			input: ctx.value
 		});
 		return;
 	}
 
-	if (!BIC_REGEX.test(data.bic)) {
-		ctx.addIssue({
-		   message: 'Invalid BIC format',
+	if (!BIC_REGEX.test(ctx.value.bic)) {
+		ctx.issues.push({
+			code: 'custom',
+			message: 'Invalid BIC format',
 			path: ['bic'],
-			fatal: true
+			input: ctx.value
 		});
 		return;
 	}

@@ -3,22 +3,24 @@ import ICAN from '@blockchainhub/ican';
 
 export const ibanSchema = z.object({
 	iban: z.string()
-}).superRefine((data, ctx) => {
-	if (!data.iban) {
-		ctx.addIssue({
+}).check((ctx) => {
+	if (!ctx.value.iban) {
+		ctx.issues.push({
+			code: 'custom',
 			message: 'IBAN is required',
 			path: ['iban'],
-			fatal: true
+			input: ctx.value
 		});
 		return;
 	}
 
-	const isValid = ICAN.isValid(data.iban, false);
+	const isValid = ICAN.isValid(ctx.value.iban, false);
 	if (!isValid) {
-		ctx.addIssue({
+		ctx.issues.push({
+			code: 'custom',
 			message: 'Invalid IBAN format',
 			path: ['iban'],
-			fatal: true
+			input: ctx.value
 		});
 	}
 });

@@ -24,6 +24,7 @@
 	let addressTestnet = $state<boolean>(false);
 	let addressEnterprise = $state<boolean>(false);
 	let addressMsg = $state<string>('');
+	let addressNetworkType = $state<'testnet' | 'enterprise' | 'mainnet' | undefined>(undefined);
 
 	let splitAddressValue = $state<string | undefined>(undefined);
 	let splitAddressValidated = $state<boolean>(false);
@@ -31,6 +32,7 @@
 	let splitAddressTestnet = $state<boolean>(false);
 	let splitAddressEnterprise = $state<boolean>(false);
 	let splitAddressMsg = $state<string>('');
+	let splitAddressNetworkType = $state<'testnet' | 'enterprise' | 'mainnet' | undefined>(undefined);
 
 	let timeDateValue = $state('');
 	let classUpperValue = $state('uppercase');
@@ -108,6 +110,7 @@
 		addressEnterprise = false;
 		addressMsg = '';
 		addressValue  = '';
+		addressNetworkType = undefined;
 		$constructor.networks.ican.destination = undefined;
 	}
 
@@ -120,17 +123,35 @@
 		try {
 			const result = addressSchema.safeParse({
 				network: network || $constructor.networks.ican.network,
-				destination: addressValue
+				destination: value
 			});
 
 			if (!result.success) {
 				const error = result.error.issues[0];
 				addressValidated = true;
-				addressError = false; // Soft fail
+				addressError = true;
 				addressTestnet = error.path.includes('testnet');
 				addressEnterprise = error.path.includes('enterprise');
 				addressMsg = error.message;
-				$constructor.networks.ican.destination = value;
+
+				// Check error type from params
+				const errorType = 'params' in error ? error.params?.errorType : undefined;
+				const isAllowed = 'params' in error ? error.params?.allowed : undefined;
+
+				if (errorType === 'testnet_warning' && isAllowed) {
+					addressError = false;
+					addressMsg = 'Testnet address detected';
+					addressNetworkType = 'testnet';
+					$constructor.networks.ican.destination = value;
+				} else if (errorType === 'enterprise_warning' && isAllowed) {
+					addressError = false;
+					addressMsg = 'Enterprise address detected';
+					addressNetworkType = 'enterprise';
+					$constructor.networks.ican.destination = value;
+				} else {
+					addressNetworkType = undefined;
+					$constructor.networks.ican.destination = undefined;
+				}
 
 				if (error.path.includes('testnet')) {
 					$constructor.networks.ican.other = $constructor.networks.ican.network;
@@ -142,6 +163,7 @@
 				addressTestnet = false;
 				addressEnterprise = false;
 				addressMsg = '';
+				addressNetworkType = 'mainnet';
 				$constructor.networks.ican.destination = value;
 			}
 		} catch (error: any) {
@@ -150,6 +172,7 @@
 			addressTestnet = false;
 			addressEnterprise = false;
 			addressMsg = isDebug ? error.message : 'Invalid address format';
+			addressNetworkType = undefined;
 			$constructor.networks.ican.destination = undefined;
 		}
 	}
@@ -186,6 +209,7 @@
 		splitAddressEnterprise = false;
 		splitAddressMsg = '';
 		splitAddressValue = '';
+		splitAddressNetworkType = undefined;
 		$constructor.networks.ican.params.split.address = undefined;
 	}
 
@@ -204,29 +228,66 @@
 			if (!result.success) {
 				const error = result.error.issues[0];
 				const isTestnet = error.path.includes('testnet');
-				if (isTestnet !== addressTestnet) {
+				const isEnterprise = error.path.includes('enterprise');
+
+				// Determine split address network type
+				let splitNetworkType: 'testnet' | 'enterprise' | 'mainnet' | undefined = undefined;
+
+				// Check error type from params
+				const errorType = 'params' in error ? error.params?.errorType : undefined;
+				const isAllowed = 'params' in error ? error.params?.allowed : undefined;
+
+				if (errorType === 'testnet_warning' && isAllowed) {
+					splitNetworkType = 'testnet';
+				} else if (errorType === 'enterprise_warning' && isAllowed) {
+					splitNetworkType = 'enterprise';
+				} else {
+					splitNetworkType = undefined; // Invalid address
+				}
+
+				// Compare network types
+				if (addressNetworkType && splitNetworkType && addressNetworkType !== splitNetworkType) {
 					splitAddressValidated = false;
 					splitAddressError = true;
 					splitAddressTestnet = false;
 					splitAddressEnterprise = false;
-					splitAddressMsg = `Split address network type (${isTestnet ? 'testnet' : 'mainnet'}) must match the main address (${addressTestnet ? 'testnet' : 'mainnet'})`;
+					splitAddressMsg = `Split address must be ${addressNetworkType} (same as main address)`;
+					splitAddressNetworkType = undefined;
 					$constructor.networks.ican.params.split.address = undefined;
 					return;
 				}
 
 				splitAddressValidated = true;
-				splitAddressError = false; // Soft fail
+				splitAddressError = true;
 				splitAddressTestnet = isTestnet;
-				splitAddressEnterprise = error.path.includes('enterprise');
+				splitAddressEnterprise = isEnterprise;
 				splitAddressMsg = error.message;
+				splitAddressNetworkType = splitNetworkType;
 				$constructor.networks.ican.params.split.address = undefined;
+
+				if (errorType === 'testnet_warning' && isAllowed) {
+					splitAddressError = false;
+					splitAddressMsg = 'Testnet address detected';
+					$constructor.networks.ican.params.split.address = value;
+				} else if (errorType === 'enterprise_warning' && isAllowed) {
+					splitAddressError = false;
+					splitAddressMsg = 'Enterprise address detected';
+					$constructor.networks.ican.params.split.address = value;
+				} else {
+					$constructor.networks.ican.params.split.address = undefined;
+				}
 			} else {
-				if (addressTestnet) {
+				// Valid mainnet address
+				const splitNetworkType: 'mainnet' = 'mainnet';
+
+				// Compare network types
+				if (addressNetworkType && addressNetworkType !== splitNetworkType) {
 					splitAddressValidated = false;
 					splitAddressError = true;
 					splitAddressTestnet = false;
 					splitAddressEnterprise = false;
-					splitAddressMsg = 'Split address network type (mainnet) must match the main address (testnet)';
+					splitAddressMsg = `Split address must be ${addressNetworkType} (same as main address)`;
+					splitAddressNetworkType = undefined;
 					$constructor.networks.ican.params.split.address = undefined;
 					return;
 				}
@@ -236,6 +297,7 @@
 				splitAddressTestnet = false;
 				splitAddressEnterprise = false;
 				splitAddressMsg = '';
+				splitAddressNetworkType = splitNetworkType;
 				$constructor.networks.ican.params.split.address = value;
 			}
 		} catch (error: any) {
@@ -244,6 +306,7 @@
 			splitAddressTestnet = false;
 			splitAddressEnterprise = false;
 			splitAddressMsg = isDebug ? error.message : 'Invalid address format';
+			splitAddressNetworkType = undefined;
 			$constructor.networks.ican.params.split.address = undefined;
 		}
 	}
