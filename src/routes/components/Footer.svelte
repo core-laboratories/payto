@@ -7,12 +7,12 @@
 			</strong>
 		</a>
 		<div class="text-sm print:hidden">
-			<div class="flex items-center justify-center gap-2">
+			<div class="flex items-center justify-center gap-1">
 				<a href="https://github.com/bchainhub/core-license#readme" target="_blank" rel="noreferrer" class="flex items-center">
 					<span class="text-xl mr-1 no-underline">⊛</span>2023</a>
 				<span>Blockchain Hub, a civic association</span>
 			</div>
-			<div class="flex items-center justify-center gap-2">A <a
+			<div class="flex items-center justify-center gap-1">A <a
 				class="transition-all duration-200"
 				href="https://payto.onl"
 				target="_blank"
