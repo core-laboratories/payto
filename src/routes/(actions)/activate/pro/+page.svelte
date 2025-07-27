@@ -196,8 +196,8 @@
 			{:else}
 				<!-- Step 2: Payment -->
 				<div class="w-full flex flex-col gap-4">
-					<p class="text-center">Pay CTN Ƈ 400/month to address</p>
-					<p class="text-center text-sm text-gray-400">The equivalent will be calculated for the running of service - you can pay more or less. 400 CTN is per 30 days.</p>
+					<p class="text-center">Pay EUR 4/month</p>
+					<p class="text-center text-sm text-gray-400">The payment will be automatically renewed every 30 days. Cancel anytime.</p>
 
 					<div class="flex items-center gap-2">
 						<input
@@ -215,16 +215,12 @@
 						</button>
 					</div>
 
-					<div class="p-3 bg-amber-900/50 border border-amber-700 rounded-md text-amber-200 text-sm">
-						<AlertTriangle class="inline-block mr-2" size={16} /> Make the payment from the same wallet (Core ID) you are using in this PayPass, otherwise the service will not be activated.
-					</div>
-
 					<div class="flex flex-col gap-3 mt-4">
 						<button
 							onclick={handlePayFromWallet}
 							class="w-full bg-emerald-600 text-white py-3 px-4 rounded-md hover:bg-emerald-700 transition-colors"
 						>
-							Pay from Wallet
+							Subscribe
 						</button>
 
 						<button

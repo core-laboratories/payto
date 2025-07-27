@@ -23,17 +23,14 @@
 				throw new Error('No URL parameter provided');
 			}
 
-			// Simulate async loading for UX (remove setTimeout in production)
-			setTimeout(() => {
-				if (!url || !url.startsWith('payto:')) {
-					hasError.set(true);
-					errorMessage.set('Invalid URL format');
-					loading.set(false);
-				} else {
-					urlParam.set(url);
-					loading.set(false);
-				}
-			}, 400); // 400ms for smooth loading animation
+			if (!url || !url.startsWith('payto:')) {
+				hasError.set(true);
+				errorMessage.set('Invalid URL format');
+				loading.set(false);
+			} else {
+				urlParam.set(url);
+				loading.set(false);
+			}
 		} catch (error) {
 			hasError.set(true);
 			errorMessage.set(error instanceof Error ? error.message : 'Invalid URL parameter');
@@ -44,10 +41,15 @@
 
 <div class="max-w-full w-[400px] w-full sm:max-w-[440px] mx-auto sm:py-8">
 	{#if $loading}
-		<div class="p-6 bg-zinc-800/60 border border-zinc-700 rounded-xl animate-pulse flex flex-col gap-4 shadow-lg">
-			<div class="h-8 w-2/3 bg-zinc-700 rounded mb-2"></div>
-			<div class="h-4 w-1/2 bg-zinc-700 rounded"></div>
-			<div class="h-10 w-full bg-zinc-700 rounded mt-4"></div>
+		<div class="p-6 bg-zinc-800/60 border border-zinc-700 rounded-xl animate-pulse flex flex-col gap-4 shadow-lg items-center w-full h-screen sm:h-auto min-h-[600px] sm:rounded-2xl shadow-md">
+			<div class="h-32 w-1/3 bg-zinc-700 rounded mb-1"></div>
+			<div class="h-4 w-1/2 bg-zinc-700 rounded mb-8"></div>
+			<div class="h-42 w-2/3 bg-zinc-700 rounded mb-6 flex flex-col items-center justify-center p-2">
+				<div class="h-14 w-14 bg-zinc-800/60 rounded-full mb-2"></div>
+				<div class="h-4 w-1/2 bg-zinc-800/60 rounded mb-4"></div>
+				<div class="h-6 w-2/3 bg-zinc-800/60 rounded"></div>
+			</div>
+			<div class="h-18 w-18 bg-zinc-700 rounded-full absolute bottom-8 sm:relative sm:top-6"></div>
 		</div>
 	{:else if $hasError}
 		<div class="p-4 bg-red-500/20 border border-red-500/30 rounded-lg text-red-200">

@@ -115,8 +115,8 @@
 					<span class="block text-sm font-normal text-slate-400">Ideal for PayTo:Money Daily Users.</span>
 				</h3>
 				<h4>
-					<span class="text-2xl">CTN</span>
-					<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500">Ƈ 400</span>
+					<span class="text-2xl">EUR</span>
+					<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500">€ 4</span>
 					<span class="text-sm">/month</span>
 				</h4>
 				<a href="/?pass=1#pass" class="inline-flex items-center justify-center w-full h-12 gap-2 px-6 text-sm font-bold tracking-wide !text-white transition duration-300 rounded shadow-sm whitespace-nowrap bg-emerald-700 shadow-emerald-600 hover:bg-emerald-400 hover:shadow-md hover:shadow-emerald-400 focus:bg-emerald-700 focus:shadow-md focus:shadow-emerald-400 focus-visible:outline-none no-underline!">
