@@ -1,9 +1,35 @@
 /**
 * Export main identifier
-* @param {ITransactionState} address - object with potential properties
+* @param {ITransactionState | string} address - object with potential properties or string address
 * @param {ITransitionType} type - string indicating the address type
+* @param {any} paytoData - additional PayTo data for string addresses
 */
-export const getAddress = (address: ITransactionState, type: ITransitionType): string | undefined => {
+export const getAddress = (address: ITransactionState | string | null | undefined, type: ITransitionType, paytoData?: any): string | undefined => {
+	if (!address) return undefined;
+
+	// Handle string case (from parsed PayTo)
+	if (typeof address === 'string') {
+		switch (type) {
+			case 'ican':
+				return address;
+			case 'iban':
+				return address;
+			case 'ach':
+				return address;
+			case 'upi':
+			case 'pix':
+				return address;
+			case 'bic':
+				return address;
+			case 'void':
+				// For void, use location from paytoData if available
+				return paytoData?.location || address;
+			default:
+				return address;
+		}
+	}
+
+	// Handle ITransactionState case (from constructor)
 	switch (type) {
 		case 'ican':
 			return address.destination || undefined;

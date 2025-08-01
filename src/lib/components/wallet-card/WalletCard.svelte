@@ -57,6 +57,7 @@
 		deadline: number | Readable<number> | undefined;
 		purpose: string | Readable<string> | undefined;
 		mode: string | Readable<string> | undefined;
+		language: string | Readable<string> | undefined;
 	}
 
 	const paytoData = writable<FlexiblePaytoData>({
@@ -76,7 +77,8 @@
 		recurring: undefined,
 		deadline: undefined,
 		purpose: 'Pay',
-		mode: undefined
+		mode: undefined,
+		language: undefined
 	});
 
 	const constructorStore = derived(constructor, $c => $c);
@@ -218,8 +220,12 @@
 			noData = false;
 			hasUrl = true;
 			bareUrl.set(url);
+			console.log('url', url);
 
-			const payto = new Payto(url).toJSONObject();
+			// Normalize URL to fix triple slash issue
+			const normalizedUrl = url.replace('payto:///', 'payto://');
+
+			const payto = new Payto(normalizedUrl).toJSONObject();
 			const { colorForeground, colorBackground } = defineColors(payto.colorForeground, payto.colorBackground);
 			const paytoParams = new URLSearchParams(payto.search);
 
@@ -227,7 +233,7 @@
 				hostname: payto.hostname || 'ican',
 				paymentType: getCategoryByValue(payto.hostname!) || 'ican',
 				value: payto.value ? Number(payto.value) : undefined,
-				address: payto.hostname === 'void' ? payto.location! : (payto.address || undefined),
+				address: getAddress(payto.address, payto.hostname as ITransitionType, payto),
 				colorBackground,
 				colorForeground,
 				organization: payto.organization || undefined,
@@ -244,8 +250,10 @@
 				rtl: payto.rtl || false,
 				deadline: payto.deadline || undefined,
 				purpose: paytoParams.get('donate') === '1' ? 'Donate' : 'Pay',
-				mode: paytoParams.get('mode') || undefined
+				mode: paytoParams.get('mode') || undefined,
+				language: paytoParams.get('lang') || undefined
 			});
+			console.log('paytoData', $paytoData);
 
 			formatter = derived(
 				[constructorStore, hostnameStore],
@@ -295,14 +303,15 @@
 					address: getAddress($store.networks[hostname], hostname),
 					organization: authority ? authority.toUpperCase() : $store.design.org,
 					organizationImage: undefined,
-					network: getNetwork($store.networks[hostname], hostname, true),
+					network: $store.networks[hostname].network === 'other' ? $store.networks[hostname].other : $store.networks[hostname].network,
 					item: $store.design.item,
 					location: $store.networks[hostname]?.params?.loc?.value,
 					recurring: $store.networks[hostname]?.params?.rc?.value ?? '',
 					rtl: $store.design.rtl || false,
 					deadline: $store.networks[hostname]?.params?.dl?.value,
 					purpose: paytoParams.get('donate') === '1' ? 'Donate' : 'Pay',
-					mode: paytoParams.get('mode') || undefined
+					mode: paytoParams.get('mode') || undefined,
+					language: paytoParams.get('lang') || undefined
 				};
 			});
 
