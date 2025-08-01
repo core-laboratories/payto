@@ -280,7 +280,7 @@
 				</button>
 			</form>
 			<p class="text-sm mt-2 text-gray-400 text-center">
-				Load PayPass into your Google Wallet or Apple Wallet.
+				Load PayPass into your Apple or Google Wallet.
 			</p>
 		</div>
 	</div>
