@@ -36,10 +36,6 @@
 						</li>
 						<li class="flex items-start gap-2">
 							<CircleCheck class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
-							<div>Get a verified checkmark for Digital PayPass if Core ID is KYC/KYB‑verified</div>
-						</li>
-						<li class="flex items-start gap-2">
-							<CircleCheck class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
 							<div>Webhook for PayPass to receive payment information for supported assets as defined in Pro plan</div>
 						</li>
 						<li class="flex items-start gap-2">
@@ -141,6 +137,10 @@
 					<li class="flex items-start gap-2">
 						<CircleCheck class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
 						<div>Blockies identicon</div>
+					</li>
+					<li class="flex items-start gap-2">
+						<CircleCheck class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
+						<div>A verified checkmark if Core ID is KYC/KYB‑verified</div>
 					</li>
 					{#if env.PUBLIC_COMMUNITY_URL}
 					<li class="flex items-start gap-2">
