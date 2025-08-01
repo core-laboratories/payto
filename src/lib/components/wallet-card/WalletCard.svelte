@@ -96,10 +96,32 @@
 	);
 
 	const formattedTimeRemaining = derived(timeRemaining, $timeRemaining => {
-		if ($timeRemaining <= 0) return '00:00';
-		const minutes = Math.floor($timeRemaining / 60000);
-		const seconds = Math.floor(($timeRemaining % 60000) / 1000);
-		return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+		if ($timeRemaining <= 0) return 'Expired';
+
+		const totalSeconds = Math.floor($timeRemaining / 1000);
+		const days = Math.floor(totalSeconds / 86400);
+		const hours = Math.floor((totalSeconds % 86400) / 3600);
+		const minutes = Math.floor((totalSeconds % 3600) / 60);
+		const seconds = totalSeconds % 60;
+
+		// Format time components with leading zeros
+		const formatTime = (h: number, m: number, s: number) => {
+			return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+		};
+
+		// Format minutes and seconds
+		const formatMinutes = (m: number, s: number) => {
+			return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+		};
+
+		if (days > 0) {
+			const dayText = days === 1 ? 'day' : 'days';
+			return `${days} ${dayText} ${formatTime(hours, minutes, seconds)}`;
+		} else if (hours > 0) {
+			return formatTime(hours, minutes, seconds);
+		} else {
+			return formatMinutes(minutes, seconds);
+		}
 	});
 
 	let timerInterval: ReturnType<typeof setInterval> | null = null;
@@ -480,7 +502,7 @@
 	function isPaymentExpired(deadline: number | Date | undefined): boolean {
 		if (!deadline) return false;
 
-		const deadlineValue = deadline instanceof Object ? Number(deadline) : Number(deadline);
+		const deadlineValue = Number(deadline);
 
 		// If it's a relative deadline (1-60 minutes), rely only on the timer
 		if (deadlineValue >= 1 && deadlineValue <= 60) {
@@ -496,29 +518,34 @@
 		typeof $paytoData.deadline === 'object' && 'subscribe' in $paytoData.deadline
 			? get($paytoData.deadline)
 			: $paytoData.deadline
-	);
+	) || $isExpired;
+
+	// Track previous deadline value to detect changes
+	let previousDeadlineValue: number | null = null;
 
 	// Check if already expired on initialization
 	$: if ($paytoData.deadline) {
 		let deadlineTimestamp: number;
-		const deadlineValue = $paytoData.deadline instanceof Object
-			? Number($paytoData.deadline)
-			: Number($paytoData.deadline);
+		const deadlineValue = Number($paytoData.deadline);
 
-		// Only recalculate the deadline if it hasn't been set yet or if the deadline value changed
-		if ($calculatedDeadlineMs === null) {
-			// Check if deadline is a one or two-digit number (1-60)
-			if (deadlineValue >= 1 && deadlineValue <= 60) {
-				// Treat as minutes from current time
-				deadlineTimestamp = Date.now() + (deadlineValue * 60 * 1000);
-				calculatedDeadlineMs.set(deadlineTimestamp);
-			} else {
-				// Treat as Unix timestamp in seconds
-				deadlineTimestamp = deadlineValue * 1000;
-				calculatedDeadlineMs.set(deadlineTimestamp);
-			}
+		// Check if deadline value has changed
+		const deadlineChanged = previousDeadlineValue !== null && previousDeadlineValue !== deadlineValue;
+
+		// If deadline changed, reset expired state to allow recalculation
+		if (deadlineChanged) {
+			isExpired.set(false);
+		}
+
+		// Recalculate the deadline whenever the deadline value changes
+		// Check if deadline is a one or two-digit number (1-60)
+		if (deadlineValue >= 1 && deadlineValue <= 60) {
+			// Treat as minutes from current time
+			deadlineTimestamp = Date.now() + (deadlineValue * 60 * 1000);
+			calculatedDeadlineMs.set(deadlineTimestamp);
 		} else {
-			deadlineTimestamp = $calculatedDeadlineMs;
+			// Treat as Unix timestamp in seconds
+			deadlineTimestamp = deadlineValue * 1000;
+			calculatedDeadlineMs.set(deadlineTimestamp);
 		}
 
 		const now = Date.now();
@@ -527,35 +554,33 @@
 		const isCurrentlyExpired = deadlineTimestamp <= now;
 		isExpired.set(isCurrentlyExpired);
 
-		// Only start timer if not already expired
+		// Check if we need to restart the timer (new deadline or different value)
+		const currentDeadlineMs = $calculatedDeadlineMs;
+		const needsTimerRestart = !timerInterval || currentDeadlineMs !== deadlineTimestamp || deadlineChanged;
+
+		// Only start/restart timer if not already expired
 		if (!isCurrentlyExpired) {
 			const timeUntilDeadline = deadlineTimestamp - now;
 
 			// For relative deadlines (1-60 minutes), always show the countdown
-			// regardless of the 30-minute limit
+			// For absolute timestamps, always show countdown
 			const isRelativeDeadline = deadlineValue >= 1 && deadlineValue <= 60;
 
-			if (timeUntilDeadline > 0 && (isRelativeDeadline || timeUntilDeadline <= 30 * 60 * 1000)) {
+			if (timeUntilDeadline > 0) {
 				expirationTimeMs.set(deadlineTimestamp);
 				timeRemaining.set(timeUntilDeadline);
 				initialTimeMs.set(timeUntilDeadline); // Store initial time for percentage calculation
 
-				// Start timer if it's not already running
-				if (!timerInterval) {
+				// Start/restart timer if needed
+				if (needsTimerRestart) {
+					if (timerInterval) {
+						clearInterval(timerInterval);
+						timerInterval = null;
+					}
 					startExpirationTimer();
 				}
-			} else if (timeUntilDeadline > 30 * 60 * 1000 && !isRelativeDeadline) {
-				// If deadline is more than 30 minutes away and not a relative deadline,
-				// hide countdown and stop timer
-				if (timerInterval) {
-					clearInterval(timerInterval);
-					timerInterval = null;
-				}
-				expirationTimeMs.set(null);
-				initialTimeMs.set(null);
-				timeRemaining.set(0);
 			}
-		} else {
+		} else if (isCurrentlyExpired) {
 			// If already expired, clear the timer and ensure expired state is true
 			if (timerInterval) {
 				clearInterval(timerInterval);
@@ -564,7 +589,10 @@
 			timeRemaining.set(0);
 			isExpired.set(true);
 		}
-	} else {
+
+		// Update previous deadline value
+		previousDeadlineValue = deadlineValue;
+	} else if (!$paytoData.deadline) {
 		// If deadline is removed, clear the timer and reset expired state
 		if (timerInterval) {
 			clearInterval(timerInterval);
@@ -575,6 +603,7 @@
 		timeRemaining.set(0);
 		isExpired.set(false);
 		calculatedDeadlineMs.set(null); // Reset the calculated deadline
+		previousDeadlineValue = null; // Reset previous deadline value
 	}
 
 	onDestroy(() => {
@@ -723,7 +752,7 @@
 	<div class="flex-1 flex items-center justify-center">
 		<div class={`relative transition-transform duration-500 ${isUpsideDown ? 'rotated' : ''}`}>
 			<div class="rounded-2xl bg-black/40 shadow-xl px-8 pb-4 flex flex-col items-center min-w-[320px] max-w-xs relative overflow-hidden print:shadow-none print:border-2 print:border-gray-400">
-				{#if $expirationTimeMs}
+				{#if $expirationTimeMs && !isExpiredPayment}
 					<div class="-mx-8 w-[calc(100%+4rem)] flex flex-col gap-1 mb-2">
 						<div class="w-full bg-black/20 rounded-t-2xl h-2 overflow-hidden">
 							<div

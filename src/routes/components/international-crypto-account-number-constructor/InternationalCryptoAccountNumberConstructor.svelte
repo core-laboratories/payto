@@ -219,9 +219,16 @@
 			return;
 		}
 
+		const splitNetwork = network || $constructor.networks.ican.network;
+		let currentNetwork = splitNetwork;
+
+		if (splitNetwork === 'other') {
+			currentNetwork = $constructor.networks.ican.other || '';
+		}
+
 		try {
 			const result = addressSchema.safeParse({
-				network: network || $constructor.networks.ican.network,
+				network: currentNetwork,
 				destination: value
 			});
 

@@ -44,7 +44,7 @@ export const addressSchema = z.object({
 					state.networks.ican.network = 'xcb';
 					return state;
 				});
-			} else if (icanResult.metadata?.isTestnet && icanResult.network === 'xab') {
+			} else if (icanResult.metadata?.isTestnet) {
 				ctx.issues.push({
 					code: 'custom',
 					message: 'CORE testnet address detected',
@@ -56,7 +56,7 @@ export const addressSchema = z.object({
 					}
 				});
 				constructor.update(state => {
-					state.networks.ican.network = 'xab';
+					state.networks.ican.network = icanResult.network || 'xab';
 					return state;
 				});
 			} else if (icanResult.network === 'xce') {

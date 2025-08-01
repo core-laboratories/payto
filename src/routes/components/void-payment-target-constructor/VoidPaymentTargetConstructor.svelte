@@ -123,7 +123,7 @@
 	}
 
 	function handlePlusCodeInput(event: Event) {
-		const value = (event.target as HTMLInputElement).value;
+		const value = (event.target as HTMLInputElement).value.toUpperCase();
 		plusCodeValue = value;
 		validatePlusCode(value);
 	}
@@ -254,7 +254,7 @@
 					placeholder="Plus Code, e.g. 8FWV26PJ+87"
 					bind:value={plusCodeValue}
 					oninput={handlePlusCodeInput}
-					classValue={`tracking-widest placeholder:tracking-normal uppercase [&:not(:placeholder-shown)]:font-code ${
+					classValue={`tracking-widest placeholder:tracking-normal [&:not(:placeholder-shown)]:font-code ${
 						plusCodeError
 							? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
 							: plusCodeValue
