@@ -5,9 +5,9 @@
 	"author": "Blockchain Hub",
 	"license": "CORE",
 	"bugs": {
-		"url": "https://github.com/core-laboratories/Payto/issues"
+		"url": "https://github.com/bchainhub/Payto/issues"
 	},
-	"homepage": "https://github.com/core-laboratories/Payto#readme",
+	"homepage": "https://github.com/bchainhub/Payto#readme",
 	"type": "module",
 	"scripts": {
 		"clear-cache": "rm -rf node_modules/.vite/",

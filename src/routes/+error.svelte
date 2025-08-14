@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Home, AlertCircle, HelpCircle, MessageCircleQuestion, ArrowRight } from 'lucide-svelte';
+	import { House, Bug, MessageCircleQuestionMark, ArrowRight, MailQuestionMark, LifeBuoy } from 'lucide-svelte';
 	import { page } from '$app/state';
 
 	export const data = {};
@@ -10,7 +10,7 @@
 	const getNavigations = () => {
 		const commonItems = [
 			{
-				icon: Home,
+				icon: House,
 				title: 'Go back home',
 				desc: 'Return to the main page of the website',
 				href: '/'
@@ -21,13 +21,13 @@
 			return [
 				...commonItems,
 				{
-					icon: MessageCircleQuestion,
+					icon: MessageCircleQuestionMark,
 					title: 'Community',
 					desc: 'Seek the right answers in our community',
 					href: 'https://coretalk.space/@payto'
 				},
 				{
-					icon: HelpCircle,
+					icon: MailQuestionMark,
 					title: 'Support',
 					desc: 'Contact our support team for assistance by email',
 					href: 'mailto:contact@payto.money'
@@ -37,14 +37,14 @@
 			return [
 				...commonItems,
 				{
-					icon: AlertCircle,
+					icon: Bug,
 					title: 'Report problem',
 					desc: 'Let us know about this issue so we can fix it',
-					href: 'https://github.com/core-laboratories/payto/issues',
+					href: 'https://github.com/bchainhub/payto/issues',
 					target: '_blank'
 				},
 				{
-					icon: HelpCircle,
+					icon: LifeBuoy,
 					title: 'Support',
 					desc: 'Contact our support team for assistance by email',
 					href: 'mailto:contact@payto.money'

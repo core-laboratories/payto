@@ -280,7 +280,7 @@
 							>RFC 8905</a>.
 							<a
 								class="transition duration-200 visited:text-gray-200 hover:text-gray-300"
-								href="https://github.com/core-laboratories/payto/blob/master/docs/scheme.md"
+								href="https://github.com/bchainhub/payto/blob/master/docs/scheme.md"
 								target="_blank"
 								rel="noreferrer"
 							>Documentation</a>.
