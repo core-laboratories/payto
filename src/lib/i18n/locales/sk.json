@@ -1,0 +1,26 @@
+{
+	"walletCard": {
+		"scan": "Skenuj",
+		"tap": "Dotkni sa",
+		"here": "tu pre",
+		"pay": "Platba",
+		"donate": "Darovanie",
+		"withCash": "s hotovosťou",
+		"via": "cez",
+		"expiresIn": "Vyprší za",
+		"expired": "Vypršané",
+		"noPayment": "Žiadna platba",
+		"amount": "Suma",
+		"for": "pre",
+		"customAmount": "Vlastná suma",
+		"day": "deň",
+		"days": "dní",
+		"loading": "Načítavam…",
+		"close": "Zatvoriť",
+		"switchMode": "Zmeniť režim",
+		"navigate": "Navigovať",
+		"nfcNotSupported": "NFC nie je podporované na vašom zariadení.",
+		"nfcPermissionDenied": "NFC povolenie zamietnuté.",
+		"nfcStreamError": "NFC chyba toku dát:"
+	}
+}

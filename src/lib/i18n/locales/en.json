@@ -1,0 +1,26 @@
+{
+	"walletCard": {
+		"scan": "Scan",
+		"tap": "Tap",
+		"here": "Here to",
+		"pay": "Pay",
+		"donate": "Donate",
+		"withCash": "with cash",
+		"via": "via",
+		"expiresIn": "Expires in",
+		"expired": "Expired",
+		"noPayment": "No Payment",
+		"amount": "Amount",
+		"for": "for",
+		"customAmount": "Custom Amount",
+		"day": "day",
+		"days": "days",
+		"loading": "Loading…",
+		"close": "Close",
+		"switchMode": "Switch Mode",
+		"navigate": "Navigate",
+		"nfcNotSupported": "NFC not supported on your device.",
+		"nfcPermissionDenied": "NFC permission denied.",
+		"nfcStreamError": "NFC stream error:"
+	}
+}

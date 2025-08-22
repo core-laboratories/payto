@@ -1,0 +1,26 @@
+{
+	"walletCard": {
+		"scan": "Scannen",
+		"tap": "Tippen",
+		"here": "hier für",
+		"pay": "Zahlen",
+		"donate": "Spenden",
+		"withCash": "mit Bargeld",
+		"via": "über",
+		"expiresIn": "Läuft ab in",
+		"expired": "Abgelaufen",
+		"noPayment": "Keine Zahlung",
+		"amount": "Betrag",
+		"for": "für",
+		"customAmount": "Eigener Betrag",
+		"day": "Tag",
+		"days": "Tage",
+		"loading": "Lädt…",
+		"close": "Schließen",
+		"switchMode": "Modus wechseln",
+		"navigate": "Navigieren",
+		"nfcNotSupported": "NFC wird auf Ihrem Gerät nicht unterstützt.",
+		"nfcPermissionDenied": "NFC-Berechtigung verweigert.",
+		"nfcStreamError": "NFC-Streaming-Fehler:"
+	}
+}
