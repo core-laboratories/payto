@@ -40,7 +40,7 @@
 					icon: Bug,
 					title: 'Report problem',
 					desc: 'Let us know about this issue so we can fix it',
-					href: 'https://github.com/bchainhub/payto/issues',
+					href: 'https://github.com/core-laboratories/payto/issues',
 					target: '_blank'
 				},
 				{

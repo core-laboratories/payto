@@ -12,7 +12,6 @@
 	import { constructor } from '$lib/store/constructor.store';
 	import { getAddress } from '$lib/helpers/get-address.helper';
 	import { getCurrency } from '$lib/helpers/get-currency.helper';
-	import { getNetwork } from '$lib/helpers/get-network.helper';
 	import { calculateColorDistance } from '$lib/helpers/euclidean-distance.helper';
 	import { getWebLink } from '$lib/helpers/generate.helper';
 	import { Qr } from '$lib/components';
@@ -215,6 +214,10 @@
 		return typeof $data.address === 'string' ? $data.address : $data.address.toString();
 	});
 
+	$: if ($paytoData.mode && ($paytoData.mode === 'qr' || $paytoData.mode === 'nfc')) {
+		mode = $paytoData.mode;
+	}
+
 	$: {
 		if (url && !hasUrl) {
 			noData = false;
@@ -228,6 +231,16 @@
 			const payto = new Payto(normalizedUrl).toJSONObject();
 			const { colorForeground, colorBackground } = defineColors(payto.colorForeground, payto.colorBackground);
 			const paytoParams = new URLSearchParams(payto.search);
+
+			// Validate mode parameter - only allow 'qr' or 'nfc' if NFC is supported
+			const requestedMode = paytoParams.get('mode');
+			let validMode: string | undefined = undefined;
+
+			if (requestedMode === 'qr') {
+				validMode = 'qr';
+			} else if (requestedMode === 'nfc' && $nfcSupported) {
+				validMode = 'nfc';
+			}
 
 			paytoData.set({
 				hostname: payto.hostname || 'ican',
@@ -250,7 +263,7 @@
 				rtl: payto.rtl || false,
 				deadline: payto.deadline || undefined,
 				purpose: paytoParams.get('donate') === '1' ? 'Donate' : 'Pay',
-				mode: paytoParams.get('mode') || undefined,
+				mode: validMode,
 				language: paytoParams.get('lang') || undefined
 			});
 			console.log('paytoData', $paytoData);
@@ -293,6 +306,16 @@
 			const paytoStore = derived(constructorStore, ($store) => {
 				const { colorForeground, colorBackground } = defineColors($store.design.colorF, $store.design.colorB);
 
+				// Validate mode parameter - only allow 'qr' or 'nfc' if NFC is supported
+				const requestedMode = paytoParams.get('mode');
+				let validMode: string | undefined = undefined;
+
+				if (requestedMode === 'qr') {
+					validMode = 'qr';
+				} else if (requestedMode === 'nfc' && $nfcSupported) {
+					validMode = 'nfc';
+				}
+
 				return {
 					hostname,
 					paymentType: $store.paymentType,
@@ -310,7 +333,7 @@
 					rtl: $store.design.rtl || false,
 					deadline: $store.networks[hostname]?.params?.dl?.value,
 					purpose: paytoParams.get('donate') === '1' ? 'Donate' : 'Pay',
-					mode: paytoParams.get('mode') || undefined,
+					mode: validMode,
 					language: paytoParams.get('lang') || undefined
 				};
 			});
