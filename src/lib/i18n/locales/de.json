@@ -22,5 +22,9 @@
 		"nfcNotSupported": "NFC wird auf Ihrem Gerät nicht unterstützt.",
 		"nfcPermissionDenied": "NFC-Berechtigung verweigert.",
 		"nfcStreamError": "NFC-Streaming-Fehler:"
+	},
+	"paymentButton": {
+		"via": "über",
+		"Recurring": "Wiederholend"
 	}
 }

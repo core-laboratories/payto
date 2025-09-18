@@ -12,6 +12,7 @@
 	import { constructor } from '$lib/store/constructor.store';
 	import { fade, fly } from 'svelte/transition';
 	import { coordinatesSchema, plusCodeSchema } from '$lib/validators/location.validator';
+	import { bicSchema } from '$lib/validators/bic.validator';
 
 	let latError = $state(false);
 	let latMsg = $state('');
@@ -25,6 +26,10 @@
 	let plusCodeMsg = $state('');
 	let plusCodeValue = $state<string | undefined>(undefined);
 
+	let bicError = $state(false);
+	let bicMsg = $state('');
+	let bicValue = $state<string | undefined>(undefined);
+
 	$effect(() => {
 		if ($constructor.isCleared) {
 			latValue = undefined;
@@ -36,6 +41,9 @@
 			plusCodeValue = undefined;
 			plusCodeError = false;
 			plusCodeMsg = '';
+			bicValue = undefined;
+			bicError = false;
+			bicMsg = '';
 		}
 	});
 
@@ -128,6 +136,39 @@
 		validatePlusCode(value);
 	}
 
+	function validateBic(value: string) {
+		if (value === '') {
+			bicError = false;
+			bicMsg = '';
+			$constructor.networks.void.bic = value;
+			return;
+		}
+
+		try {
+			const result = bicSchema.safeParse({ bic: value });
+
+			if (!result.success) {
+				bicError = true;
+				bicMsg = result.error.issues[0]?.message || 'Invalid BIC format';
+				$constructor.networks.void.bic = undefined;
+			} else {
+				bicError = false;
+				bicMsg = '';
+				$constructor.networks.void.bic = value.toUpperCase();
+			}
+		} catch (error: any) {
+			bicError = true;
+			bicMsg = error.message || 'Invalid BIC format';
+			$constructor.networks.void.bic = value;
+		}
+	}
+
+	function handleBicInput(event: Event) {
+		const value = (event.target as HTMLInputElement).value;
+		bicValue = value;
+		validateBic(value);
+	}
+
 	function handleOtherNetworkInput(event: Event) {
 		const otherNetworkValue = $constructor.networks.void.other;
 
@@ -194,8 +235,8 @@
 	</div>
 
 	<div class="flex flex-col items-stretch gap-2">
-		<label id="exchange-point-label" for="exchange-point">Location</label>
 		{#if $constructor.networks.void.transport === 'geo'}
+			<label id="exchange-point-label" for="latitude">Location *</label>
 			<div class="flex gap-4">
 				<FieldGroup>
 					<FieldGroupText
@@ -248,6 +289,7 @@
 		{/if}
 
 		{#if $constructor.networks.void.transport === 'plus'}
+			<label id="plus-code-label" for="plus-code">Plus Code *</label>
 			<FieldGroup>
 				<FieldGroupText
 					id="plus-code"
@@ -279,7 +321,44 @@
 			</small>
 		{/if}
 
+		{#if $constructor.networks.void.transport === 'intra'}
+
+			<label id="bic-label" for="bic">BIC / <span class="relative overflow-hidden cursor-help group hover:overflow-visible focus-visible:outline-none border-b border-dotted border-gray-400" aria-describedby="tooltip-oric">
+				ORIC
+				<span role="tooltip" id="tooltip-oric" class="invisible absolute bottom-full left-1/2 z-10 mb-2 w-48 -translate-x-1/2 rounded bg-slate-700 p-2 text-xs text-white opacity-0 transition-all before:invisible before:absolute before:left-1/2 before:top-full before:z-10 before:mb-2 before:-ml-1 before:border-x-4 before:border-t-4 before:border-x-transparent before:border-t-slate-700 before:opacity-0 before:transition-all before:content-[''] group-hover:visible group-hover:block group-hover:opacity-100 group-hover:before:visible group-hover:before:opacity-100">Organization Registry Identifier Code</span>
+			</span> *</label>
+			<FieldGroup classValue="mb-3">
+				<FieldGroupText
+					id="bic"
+					placeholder="e.g. PINGCHB2"
+					bind:value={bicValue}
+					on:input={handleBicInput}
+					on:change={handleBicInput}
+					classValue={`tracking-widest placeholder:tracking-normal uppercase [&:not(:placeholder-shown)]:font-code ${
+						bicError
+							? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
+							: bicValue
+								? 'border-2 border-emerald-500 focus:border-emerald-500 focus-visible:border-emerald-500'
+								: ''
+					}`}
+				/>
+				{#if bicError && bicMsg}
+					<span class="text-sm text-rose-500">{bicMsg}</span>
+				{/if}
+			</FieldGroup>
+
+			<label id="intra-account-number-label" for="intra-account-number">Account *</label>
+			<FieldGroup>
+				<FieldGroupText
+					id="intra-account-number"
+					placeholder="cb00…"
+					bind:value={$constructor.networks.void.params.id.value}
+				/>
+			</FieldGroup>
+		{/if}
+
 		{#if $constructor.networks.void.transport === 'other'}
+			<label id="exchange-point-label" for="exchange-point">Point *</label>
 			<input
 				class="w-full h-12 py-2 ps-3 text-start bg-gray-900 rounded-sm border-none caret-teal-500 text-sm tracking-widest placeholder:tracking-normal [&:not(:placeholder-shown)]:font-code"
 				type="text"

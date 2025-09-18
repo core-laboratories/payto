@@ -166,13 +166,6 @@
 						maxlength="25"
 					/>
 				</FieldGroup>
-
-				<div class="flex items-center gap-2">
-					<div class="flex items-center">
-						<a href="/pro#pro-plus" target="_blank" class="inline-flex items-center font-bold mr-2 px-2 py-0.5 text-xs rounded-sm bg-emerald-500 text-gray-700! no-underline! hover:bg-emerald-400">Pro+</a>
-						<span>Webhook</span>
-					</div>
-				</div>
 			{/if}
 
 			<div class="flex flex-col gap-6">
@@ -276,7 +269,7 @@
 					type="submit"
 					disabled={!hostname || $isGenerating}
 				>
-					{$isGenerating ? 'Generating…' : 'Download Digital PayPass'}
+					{$isGenerating ? 'Generating…' : 'Download PayPass'}
 				</button>
 			</form>
 			<p class="text-sm mt-2 text-gray-400 text-center">

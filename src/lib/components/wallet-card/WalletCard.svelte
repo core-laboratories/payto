@@ -684,7 +684,7 @@
 
 	function printType(paytoData: any, prefix: boolean) {
 		if (paytoData.paymentType === 'void') {
-			return prefix ? $_('walletCard.withCash') : `Cash`;
+			return prefix ? ` ${$_('walletCard.withCash')}` : `Cash`;
 		} else if (paytoData.paymentType === 'ican') {
 			return ``; // Default to ICAN
 		} else if (paytoData.network && paytoData.paymentType) {

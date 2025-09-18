@@ -134,7 +134,7 @@
 	</FieldGroup>
 
 	<FieldGroup>
-		<FieldGroupLabel>BIC / SWIFT</FieldGroupLabel>
+		<FieldGroupLabel>BIC</FieldGroupLabel>
 		<FieldGroupText
 			placeholder="e.g. DABADKKK"
 			bind:value={bicValue}

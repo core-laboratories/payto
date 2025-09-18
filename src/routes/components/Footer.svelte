@@ -8,7 +8,8 @@
 		</a>
 		<div class="text-sm print:hidden">
 			<div class="flex items-center justify-center gap-1">
-				<a href="https://github.com/core-laboratories/core-license#readme" target="_blank" rel="noreferrer" class="flex items-center"><span class="text-xl mr-1 no-underline">⊛</span>2023</a>
+				<a href="https://github.com/core-laboratories/core-license#readme" target="_blank" rel="noreferrer" class="flex items-center"><span class="text-xl no-underline">⊛</span></a>
+				<span>2023-{new Date().getFullYear()}</span>
 				<span>CORE Labs</span>
 			</div>
 			<div class="flex items-center justify-center gap-1">A <a

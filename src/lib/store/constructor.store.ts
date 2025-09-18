@@ -104,6 +104,8 @@ const INITIAL_STATE: IComplexState = {
 				loc: { value: undefined, lat: undefined, lon: undefined, plus: undefined, other: undefined },
 				currency: { value: undefined },
 				amount: { value: undefined },
+				id: { value: undefined },
+				bic: { value: undefined },
 				receiverName: { value: undefined },
 				message: { value: undefined },
 				rc: { value: undefined },
@@ -267,6 +269,7 @@ const BUILDER = {
 					design
 				}
 			};
+
 			if (fullProps.transport === 'geo' &&
 				fullProps.params &&
 				fullProps.params.loc &&
@@ -281,17 +284,29 @@ const BUILDER = {
 				fullProps.params.loc.value = fullProps.params.loc.plus.toUpperCase();
 			}
 			else if (fullProps.params &&
+				fullProps.params.bic.value &&
+				fullProps.transport === 'intra') {
+				fullProps.params.loc.value = fullProps.params.bic.value.toLowerCase();
+			}
+			else if (fullProps.params &&
 				fullProps.params.loc &&
 				fullProps.transport === 'other') {
 				fullProps.params.loc.value = fullProps.params.loc.other;
 			} else {
 				fullProps.params.loc.value = '';
 			}
+
 			const payload = [
 				{
 					placeholder: '',
 					value: fullProps.network
 				},
+				/*{
+					placeholder: '',
+					value: fullProps.transport === 'intra'
+						? (fullProps.params.bic.value ? encodeURIComponent(fullProps.params.bic.value) : undefined)
+						: undefined
+				},*/
 				{
 					placeholder: '',
 					value: fullProps.transport === 'other'
@@ -299,6 +314,7 @@ const BUILDER = {
 						: (fullProps.transport ? encodeURIComponent(fullProps.transport) : undefined)
 				}
 			];
+
 			return generate('void', fullProps, payload);
 		}
 	}

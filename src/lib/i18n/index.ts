@@ -1,10 +1,10 @@
 import { init, locale, addMessages } from 'svelte-i18n';
 import { locales } from './locales';
 
-// Initialize i18n with English as default (no browser detection)
+// Initialize i18n with browser locale detection
 init({
 	fallbackLocale: 'en',
-	initialLocale: 'en',
+	initialLocale: typeof window !== 'undefined' ? (navigator.language || 'en') : 'en',
 	loadingDelay: 200
 });
 
@@ -12,6 +12,11 @@ init({
 Object.entries(locales).forEach(([localeCode, messages]) => {
 	addMessages(localeCode, messages);
 });
+
+// Auto-detect and set browser locale on client side
+if (typeof window !== 'undefined') {
+	detectAndSetBrowserLocale();
+}
 
 // Function to get the best matching locale
 export function getBestLocale(requestedLocale: string | undefined): string {
@@ -38,6 +43,17 @@ export async function setLocaleFromPaytoData(language: string | undefined) {
 
 	const bestLocale = getBestLocale(language);
 	await locale.set(bestLocale);
+}
+
+// Function to detect and set browser locale
+export function detectAndSetBrowserLocale() {
+	if (typeof window !== 'undefined') {
+		const browserLocale = navigator.language || navigator.languages?.[0] || 'en';
+		const bestLocale = getBestLocale(browserLocale);
+		locale.set(bestLocale);
+		return bestLocale;
+	}
+	return 'en';
 }
 
 // Export the locale instance for use in components

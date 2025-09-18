@@ -51,6 +51,8 @@ export const getAddress = (address: ITransactionState | string | null | undefine
 				}
 			} else if (address.transport === 'plus') {
 				return address.params.loc.plus || undefined;
+			} else if (address.transport === 'intra') {
+				return address.params.id.value || undefined;
 			} else if (address.other) {
 				return address.other || undefined;
 			}

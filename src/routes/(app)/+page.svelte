@@ -14,10 +14,19 @@
 	import { onMount } from 'svelte';
 	import { ChevronUp, ChevronDown, Copy } from 'lucide-svelte';
 
+	interface ILink {
+		href: string;
+		label: string;
+	}
+
+	function isObject(value: any): value is ILink[] {
+		return Array.isArray(value) && value.length > 0 && typeof value[0] === 'object' && 'href' in value[0];
+	}
+
 	let type = writable<ITransitionType>('ican');
 	let designEnabled = writable(false);
 	let currentSentence = writable('');
-	let currentLink = writable('');
+	let currentLink = writable<string | ILink[]>([]);
 	let currentShow = writable(false);
 	let authority = writable('');
 	let showInfoBox = $state(false);
@@ -175,7 +184,7 @@
 							</div>
 
 							{#if output.previewable}
-								<div class="flex flex-col items-stretch gap-2 mb-2">
+								<div class="flex flex-col items-stretch gap-2">
 									<label class="text-gray-300 text-sm" for={'previewOf' + index}>
 										Preview
 									</label>
@@ -184,7 +193,7 @@
 							{/if}
 
 							{#if output.note}
-								<div class="flex flex-col items-stretch gap-2 mb-2">
+								<div class="flex flex-col items-stretch gap-2">
 									<small class="text-gray-400" id={'noteOf' + index}>
 										{output.note}
 									</small>
@@ -226,16 +235,20 @@
 								<div class="w-full px-4 py-3 text-sm border rounded border-gray-700 bg-gray-800 text-gray-300 flex flex-col gap-2" role="alert">
 									<div class="flex items-center justify-between">
 										<p class="m-0">Issuing authority is: <span class="font-bold">{$authority ? $authority.toUpperCase() : 'PAYTO'}</span></p>
-										<a href="/pro#pro-business" target="_blank" class="inline-flex items-center font-bold ml-2 px-2 py-0.5 text-xs rounded-sm bg-emerald-500 text-gray-700! no-underline! hover:bg-emerald-400">Business</a>
+										<a href="/pro#pro-business" target="_blank" class="font-semibold ml-2 px-2 py-0.5 text-xs rounded-sm bg-emerald-500 text-gray-700! no-underline! hover:bg-emerald-400">Business</a>
 									</div>
 								</div>
-								<div class="flex items-center gap-2">
-									<div class="flex items-center">
-										<a href="/pro#pro" target="_blank" class="inline-flex items-center font-bold mr-2 px-2 py-0.5 text-xs rounded-sm bg-emerald-500 text-gray-700! no-underline! hover:bg-emerald-400">Pro</a>
+								<div class="flex items-center gap-4">
+									<div>
+										<a href="/pro#pro" target="_blank" class="font-semibold mr-2 px-2 py-0.5 text-xs rounded-sm bg-emerald-500 text-gray-700! no-underline! hover:bg-emerald-400">Pro</a>
 										<span>Notifications</span>
 									</div>
+									<div>
+										<a href="/pro#pro-plus" target="_blank" class="font-semibold mr-2 px-2 py-0.5 text-xs rounded-sm bg-emerald-500 text-gray-700! no-underline! hover:bg-emerald-400">Pro+</a>
+										<span>FIAT</span>
+									</div>
 								</div>
-								<a href="/pro" target="_blank" rel="noreferrer" class="button is-full bs-12 py-2 px-3 text-center !text-white italic border border-gray-700 bg-gray-700 opacity-50 rounded-md text-sm hover:opacity-100 transition duration-200 font-bold">
+								<a href="/pro" target="_blank" rel="noreferrer" class="button is-full bs-12 py-2 px-3 text-center !text-white italic border border-gray-700 bg-gray-700 rounded-md text-sm hover:opacity-100 transition duration-200 font-bold">
 									Get <span class="text-green-300">Pay</span><span class="text-emerald-500">To</span><span class="text-green-300">:Pro</span> Plans
 								</a>
 							</div>
@@ -270,7 +283,7 @@
 			</div>
 			<BoxContent>
 				{#if showInfoBox}
-					<div class="flex flex-col gap-2">
+					<div class="flex flex-col gap-2 max-w-screen-md overflow-y-auto">
 						<p>Expanded on the specification
 							<a
 								class="transition duration-200 visited:text-gray-200 hover:text-gray-300"
@@ -286,17 +299,29 @@
 							>Documentation</a>.
 						</p>
 						{#if $currentShow}
-							<p>
-								<span class="mr-1">{$currentSentence}</span>
-								<span>Read more
-									<a
-										class="transition duration-200 visited:text-gray-200 hover:text-gray-300"
-										href={$currentLink}
-										target="_blank"
-										rel="noreferrer"
-									>here</a>.
-								</span>
-							</p>
+							<div class="flex inline-flex items-center gap-1">
+								<div class="mr-1">{$currentSentence}</div>
+								<div class="flex inline-flex items-center gap-1">Read more
+									{#if isObject($currentLink)}
+										about:
+										{#each $currentLink as link, index}
+										<a
+											class="transition duration-200 visited:text-gray-200 hover:text-gray-300"
+											href={link.href}
+												target="_blank"
+												rel="noreferrer"
+											>{link.label}{#if $currentLink.length > 1 && $currentLink.length - 1 !== index};{/if}</a>
+										{/each}
+									{:else}
+										<a
+											class="transition duration-200 visited:text-gray-200 hover:text-gray-300"
+											href={$currentLink}
+											target="_blank"
+											rel="noreferrer"
+										>here</a>
+									{/if}
+								</div>
+							</div>
 						{/if}
 						<p>
 							Compatibility: Desktop - Chromium from version 121 & enabled flags (Experimental Web Platform Features); Opera; Safari. Mobile - All major browsers.

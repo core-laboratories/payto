@@ -109,6 +109,7 @@ interface ILocValue extends IValue {
 	lat?: string;
 	lon?: string;
 	plus?: string;
+	intra?: string;
 	other?: string;
 }
 

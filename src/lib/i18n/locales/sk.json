@@ -22,5 +22,9 @@
 		"nfcNotSupported": "NFC nie je podporované na vašom zariadení.",
 		"nfcPermissionDenied": "NFC povolenie zamietnuté.",
 		"nfcStreamError": "NFC chyba toku dát:"
+	},
+	"paymentButton": {
+		"via": "cez",
+		"Recurring": "Opakované"
 	}
 }

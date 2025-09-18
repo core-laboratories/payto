@@ -31,9 +31,15 @@ export const TYPES: ITypesObject = {
 	},
 	bic: {
 		value: 'bic',
-		label: 'BIC',
-		description: 'Bank Identifier Code',
-		link: 'https://en.wikipedia.org/wiki/ISO_9362'
+		label: 'BIC / ORIC',
+		description: 'Bank/Organization Identifier Code',
+		link: [{
+			label: 'BIC',
+			href: 'https://en.wikipedia.org/wiki/ISO_9362'
+		}, {
+			label: 'ORIC',
+			href: 'https://payto.onl/solutions/oric'
+		}]
 	},
 	void: {
 		value: 'void',

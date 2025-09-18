@@ -1,6 +1,9 @@
 import { META_CONTENT } from '$lib/data/meta-content.data';
 import { checkValidity } from '$lib/helpers/check-validity.helper';
 import { calculateColorDistance } from '$lib/helpers/euclidean-distance.helper';
+import { setLocaleFromPaytoData } from '$lib/i18n';
+import { _ } from 'svelte-i18n';
+import { get } from 'svelte/store';
 
 /**
  * It takes a list of payloads and a set of props, and returns a link
@@ -147,7 +150,7 @@ const caseCurrency = (str: string | undefined) => (str && str.startsWith("0x")) 
  */
 const shortenTitle = (str: string | undefined) => (str && str.length > 10) ? `${str.slice(0,4)}…${str.slice(-4)}` : str;
 
-const recurringIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke-width="2"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 004 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>`;
+const recurringIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2h4"/><path d="M12 14v-4"/><path d="M4 13a8 8 0 0 1 8-7 8 8 0 1 1-5.3 14L4 17.6"/><path d="M9 17H4v5"/></svg>`;
 
 /**
  * It takes a prefix and a props object, and returns a title
@@ -177,7 +180,7 @@ const getTitle = (prefix: 'pay' | 'donate', props: Record<string, any>, code: st
 			} else if (code === 'tailwind') {
 				namePrefix = `${recurringIcon}&nbsp;<strong class="italic mr-1">Donate<span class="text-[#5675ff]">To:</span></strong>`;
 			} else {
-				namePrefix = `Recurring DonateTo:`;
+				namePrefix = `${get(_)('paymentButton.Recurring')} DonateTo:`;
 			}
 		} else {
 			if (code === 'html') {
@@ -185,7 +188,7 @@ const getTitle = (prefix: 'pay' | 'donate', props: Record<string, any>, code: st
 			} else if (code === 'tailwind') {
 				namePrefix = `${recurringIcon}&nbsp;<strong class="italic mr-1">Pay<span class="text-[#059669]">To:</span></strong>`;
 			} else {
-				namePrefix = `Recurring PayTo:`;
+				namePrefix = `${get(_)('paymentButton.Recurring')} PayTo:`;
 			}
 		}
 	} else {
@@ -208,7 +211,7 @@ const getTitle = (prefix: 'pay' | 'donate', props: Record<string, any>, code: st
 		}
 	}
 
-	let title = `${namePrefix} via ${network ? network.toUpperCase() : ''}`;
+	let title = composeTitle(namePrefix, network);
 	if (props.chain > 0 && (props.network === 'eth' || props.network === 'other')) {
 		title += `@${props.chain}`;
 	}
@@ -226,6 +229,15 @@ const getTitle = (prefix: 'pay' | 'donate', props: Record<string, any>, code: st
 	}
 
 	return title;
+};
+
+const composeTitle = (namePrefix: string | undefined, network: string | undefined) => {
+	if (!namePrefix) return '';
+
+	if (network === 'intra') {
+		return `${namePrefix} ${get(_)('paymentButton.via')} Intra-bank`;
+	}
+	return `${namePrefix} ${get(_)('paymentButton.via')} ${network ? network.toUpperCase() : ''}`;
 };
 
 /**
@@ -341,7 +353,7 @@ const generateTailwindDonationButton = (link: string, props: Record<string, any>
  * @param props - The props object that was used to initialized store.
  * @returns A string of HTML that will be used to create a meta tag.
  */
-const generateMetaTag = (type: ITransitionType, props: Record<string, any>) => {
+const generateMetaTag = (type: ITransitionType, props: Record<string, any>, wellKnown: boolean = false) => {
 	let property = `${type}`;
 	if (type === 'ican' && props.network) {
 		if (props.network !== 'other') {
@@ -364,7 +376,9 @@ const generateMetaTag = (type: ITransitionType, props: Record<string, any>) => {
 	} else if (type === 'ach' && props.routingNumber) {
 		property += `:${props.routingNumber}`;
 	} else if (type === 'void') {
-		if(props.transport !== 'other') {
+		if(props.transport === 'intra') {
+			property += props.bic ? `:${props.transport}:${props.bic.toLowerCase()}` : `:${props.transport}`;
+		} else if(props.transport !== 'other') {
 			property += `:${props.transport}`;
 		} else {
 			property += `:${props.other ? props.other.toLowerCase(): props.other}`;
@@ -380,7 +394,7 @@ const generateMetaTag = (type: ITransitionType, props: Record<string, any>) => {
 
 	const content = META_CONTENT[type](props);
 
-	return `<meta property="${property}" content="${content}" />`;
+	return wellKnown ? `{"${property}": "${content}"}` : `<meta property="${property}" content="${content}" />`;
 };
 
 /**
@@ -391,6 +405,7 @@ const generateMetaTag = (type: ITransitionType, props: Record<string, any>) => {
  */
 export const generate = (type: ITransitionType, props: any, payload: IPayload[]): IOutput[] => {
 	const link = generateLink(payload, props);
+	setLocaleFromPaytoData(props.language);
 
 	return [
 		{ label: 'Link', value: link, length: link.length },
@@ -410,7 +425,8 @@ export const generate = (type: ITransitionType, props: any, payload: IPayload[])
 		},
 		{ label: 'Tailwind Payment Button', value: generateTailwindPaymentButton(link, props), type: 'payment' },
 		{ label: 'Tailwind Donation Button', value: generateTailwindDonationButton(generateLink(payload, props, true), props), type: 'donation' },
-		{ label: 'FinTag (Meta Tag)', note: 'Basic payment instructions only.', value: generateMetaTag(type, props) }
+		{ label: 'FinTag (Meta Tag)', note: 'Basic payment instructions only.', value: generateMetaTag(type, props) },
+		{ label: 'FinTag (Well-Known)', note: '/.well-known/fintag.json file', value: generateMetaTag(type, props, true) }
 	];
 };
 

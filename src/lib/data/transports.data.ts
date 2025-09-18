@@ -86,6 +86,11 @@ export const TRANSPORT: ITransportTypes = {
 			ticker: ''
 		},
 		{
+			value: 'intra',
+			label: 'Intra-bank transfer',
+			ticker: ''
+		},
+		{
 			value: 'other',
 			label: 'Other',
 			ticker: ''
