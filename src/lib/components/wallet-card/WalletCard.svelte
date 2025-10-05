@@ -23,8 +23,7 @@
 	import { onDestroy, onMount } from 'svelte';
 	import { blo } from "@blockchainhub/blo";
 	import { X, QrCode, Nfc, Navigation2 } from 'lucide-svelte';
-	import { setLocaleFromPaytoData } from '$lib/i18n';
-	import { _ } from 'svelte-i18n';
+	import { LL, setLocale } from '$i18n';
 
 	// @ts-expect-error: Module is untyped
 	import pkg from 'open-location-code/js/src/openlocationcode';
@@ -99,7 +98,7 @@
 	);
 
 	const formattedTimeRemaining = derived(timeRemaining, $timeRemaining => {
-		if ($timeRemaining <= 0) return 'Expired';
+		if ($timeRemaining <= 0) return $LL.walletCard.expired();
 
 		const totalSeconds = Math.floor($timeRemaining / 1000);
 		const days = Math.floor(totalSeconds / 86400);
@@ -118,7 +117,7 @@
 		};
 
 		if (days > 0) {
-			const dayText = days === 1 ? $_('walletCard.day') : $_('walletCard.days');
+			const dayText = days === 1 ? $LL.walletCard.day() : $LL.walletCard.days();
 			return `${days} ${dayText} ${formatTime(hours, minutes, seconds)}`;
 		} else if (hours > 0) {
 			return formatTime(hours, minutes, seconds);
@@ -220,18 +219,6 @@
 		mode = $paytoData.mode;
 	}
 
-	// Update locale when paytoData language changes
-	$: if ($paytoData.language) {
-		const language = typeof $paytoData.language === 'string' ? $paytoData.language : get($paytoData.language);
-		setLocaleFromPaytoData(language);
-	}
-
-	// Initialize i18n when component first loads
-	onMount(() => {
-		// Import and initialize i18n only for this component
-		import('$lib/i18n');
-	});
-
 	$: {
 		if (url && !hasUrl) {
 			noData = false;
@@ -276,10 +263,16 @@
 				recurring: payto.recurring || undefined,
 				rtl: payto.rtl || false,
 				deadline: payto.deadline || undefined,
-				purpose: paytoParams.get('donate') === '1' ? 'Donate' : 'Pay',
+				purpose: paytoParams.get('donate') === '1' ? $LL.walletCard.donate() : $LL.walletCard.pay(),
 				mode: validMode,
 				language: paytoParams.get('lang') || undefined
 			});
+
+			// Set locale from language parameter
+			const language = paytoParams.get('lang');
+			if (language) {
+				setLocale(language as any);
+			}
 			console.log('paytoData', $paytoData);
 
 			formatter = derived(
@@ -346,7 +339,7 @@
 					recurring: $store.networks[hostname]?.params?.rc?.value ?? '',
 					rtl: $store.design.rtl || false,
 					deadline: $store.networks[hostname]?.params?.dl?.value,
-					purpose: paytoParams.get('donate') === '1' ? 'Donate' : 'Pay',
+					purpose: paytoParams.get('donate') === '1' ? $LL.walletCard.donate() : $LL.walletCard.pay(),
 					mode: validMode,
 					language: paytoParams.get('lang') || undefined
 				};
@@ -375,7 +368,7 @@
 		([$data]) => {
 			const value = $data?.value;
 
-			return value ? $formatter?.format(Number(value)) : $_('walletCard.customAmount');
+			return value ? $formatter?.format(Number(value)) : $LL.walletCard.customAmount();
 		}
 	);
 
@@ -684,13 +677,13 @@
 
 	function printType(paytoData: any, prefix: boolean) {
 		if (paytoData.paymentType === 'void') {
-			return prefix ? ` ${$_('walletCard.withCash')}` : `Cash`;
+			return prefix ? ` ${$LL.walletCard.withCash()}` : `Cash`;
 		} else if (paytoData.paymentType === 'ican') {
 			return ``; // Default to ICAN
 		} else if (paytoData.network && paytoData.paymentType) {
-			return prefix ? ` ${$_('walletCard.via')} ${paytoData.network.toString().toUpperCase()}` : `${paytoData.network.toString().toUpperCase()}`;
+			return prefix ? ` ${$LL.walletCard.via()} ${paytoData.network.toString().toUpperCase()}` : `${paytoData.network.toString().toUpperCase()}`;
 		} else if (paytoData.paymentType) {
-			return prefix ? ` ${$_('walletCard.via')} ${paytoData.paymentType.toString().toUpperCase()}` : `${paytoData.paymentType.toString().toUpperCase()}`;
+			return prefix ? ` ${$LL.walletCard.via()} ${paytoData.paymentType.toString().toUpperCase()}` : `${paytoData.paymentType.toString().toUpperCase()}`;
 		}
 		return '';
 	}
@@ -707,6 +700,14 @@
 		window.removeEventListener('orientationchange', updateRotationState);
 		screen.orientation?.removeEventListener?.('change', updateRotationState);
 	});
+
+	// Reactive statement to set locale when paytoData.language changes
+	$: if ($paytoData?.language) {
+		const language = typeof $paytoData.language === 'string' ? $paytoData.language : get($paytoData.language);
+		if (language) {
+			setLocale(language as any);
+		}
+	}
 
 	async function switchMode() {
 		if (mode === 'qr') {
@@ -735,12 +736,12 @@
 									}]
 								});
 							} catch (error) {
-								console.warn($_('walletCard.nfcStreamError'), error);
+								console.warn('NFC stream error', error);
 							}
 						}, 1000); // Stream every second
 					}
 				} catch (error) {
-					console.warn($_('walletCard.nfcPermissionDenied'), error);
+					console.warn('NFC permission denied', error);
 					mode = 'qr';
 				}
 			}
@@ -791,7 +792,7 @@
 				</div>
 			</div>
 		</div>
-		<div class={`text-lg font-medium drop-shadow print:drop-shadow-none ${isUpsideDown ? 'rotated' : ''}`}>{$nfcSupported && mode === 'nfc' ? $_('walletCard.tap') : $_('walletCard.scan')} {$_('walletCard.here')} {$paytoData.purpose}{printType($paytoData, true)}</div>
+		<div class={`text-lg font-medium drop-shadow print:drop-shadow-none ${isUpsideDown ? 'rotated' : ''}`}>{$nfcSupported && mode === 'nfc' ? $LL.walletCard.tap() : $LL.walletCard.scan()} {$LL.walletCard.here()} {$paytoData.purpose}{printType($paytoData, true)}</div>
 	</div>
 
 	<!-- Main Card (rotated if needed) -->
@@ -810,7 +811,7 @@
 							></div>
 						</div>
 						<div class="flex justify-between text-xs px-4">
-							<span class="text-gray-300">{$_('walletCard.expiresIn')}</span>
+							<span class="text-gray-300">{$LL.walletCard.expiresIn()}</span>
 							<span class="font-medium text-gray-100">{$formattedTimeRemaining}</span>
 						</div>
 					</div>
@@ -827,17 +828,17 @@
 						{#if $paytoData.organization}
 							<div class="text-lg font-medium mb-2">{$paytoData.organization}</div>
 						{/if}
-						<div class="text-lg font-medium mb-1">{$paytoData.purpose}{#if $paytoData.item}{` `}{$_('walletCard.for')}{` `}<span class="break-all">{$paytoData.item}</span>{/if}</div>
+						<div class="text-lg font-medium mb-1">{$paytoData.purpose}{#if $paytoData.item}{` `}{$LL.walletCard.for()}{` `}<span class="break-all">{$paytoData.item}</span>{/if}</div>
 						<div class="text-4xl font-bold tracking-tigh mt-1 mb-2">
 							{#if noData}
-								<span class="text-3xl">{$_('walletCard.noPayment')}</span>
+								<span class="text-3xl">{$LL.walletCard.noPayment()}</span>
 							{:else if isExpiredPayment}
-								<span class="text-3xl">{$_('walletCard.expired')}</span>
+								<span class="text-3xl">{$LL.walletCard.expired()}</span>
 							{:else}
 								{#if $paytoData.value && Number($paytoData.value)>0}
 									{$formattedValue}{#if $paytoData.recurring}<span class="text-2xl uppercase">{` / `}{$paytoData.recurring}</span>{/if}
 								{:else}
-									<span class="text-3xl">{$_('walletCard.amount')}</span>{#if $paytoData.recurring}<span class="text-2xl uppercase">{` / `}{$paytoData.recurring}</span>{/if}
+									<span class="text-3xl">{$LL.walletCard.amount()}</span>{#if $paytoData.recurring}<span class="text-2xl uppercase">{` / `}{$paytoData.recurring}</span>{/if}
 								{/if}
 							{/if}
 						</div>
@@ -848,11 +849,11 @@
 	</div>
 
 	<div class={`relative flex justify-center items-center gap-6 px-12 pb-8 mt-4 z-10 print:hidden ${$paytoData.rtl !== undefined && $paytoData.rtl === true ? 'flex-row-reverse' : ''}`}>
-		<button class="bg-black/40 rounded-full p-4 hover:bg-black/80 transition" aria-label={$_('walletCard.close')} on:click={handleCloseOrBack}>
+		<button class="bg-black/40 rounded-full p-4 hover:bg-black/80 transition" aria-label={$LL.walletCard.close()} on:click={handleCloseOrBack}>
 			<X class="w-7 h-7" />
 		</button>
 		{#if $nfcSupported}
-			<button class="bg-black/40 rounded-full p-4 hover:bg-black/80 transition" aria-label={$_('walletCard.switchMode')} on:click={switchMode}>
+			<button class="bg-black/40 rounded-full p-4 hover:bg-black/80 transition" aria-label={$LL.walletCard.switchMode()} on:click={switchMode}>
 				{#if mode === 'qr'}
 					<Nfc class="w-7 h-7" />
 				{:else}
@@ -863,7 +864,7 @@
 		{#if (($paytoData.network === 'geo' || $paytoData.network === 'plus') && $paytoData.location)}
 			<button
 				class="bg-black/40 rounded-full p-4 hover:bg-black/80 transition"
-				aria-label={$_('walletCard.navigate')}
+				aria-label={$LL.walletCard.navigate()}
 				on:click={() => {
 					window.open(linkLocation($paytoData.location), '_blank');
 				}}

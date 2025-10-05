@@ -1,9 +1,9 @@
 import { META_CONTENT } from '$lib/data/meta-content.data';
 import { checkValidity } from '$lib/helpers/check-validity.helper';
 import { calculateColorDistance } from '$lib/helpers/euclidean-distance.helper';
-import { setLocaleFromPaytoData } from '$lib/i18n';
-import { _ } from 'svelte-i18n';
-import { get } from 'svelte/store';
+import { setLocale } from '$i18n';
+import { i18nObject } from '$i18n/i18n-util';
+import type { Locales } from '$i18n/i18n-types';
 
 /**
  * It takes a list of payloads and a set of props, and returns a link
@@ -180,7 +180,8 @@ const getTitle = (prefix: 'pay' | 'donate', props: Record<string, any>, code: st
 			} else if (code === 'tailwind') {
 				namePrefix = `${recurringIcon}&nbsp;<strong class="italic mr-1">Donate<span class="text-[#5675ff]">To:</span></strong>`;
 			} else {
-				namePrefix = `${get(_)('paymentButton.Recurring')} DonateTo:`;
+				const LL = i18nObject(props.language as Locales || 'en');
+				namePrefix = `${LL.paymentButton.Recurring()} DonateTo:`;
 			}
 		} else {
 			if (code === 'html') {
@@ -188,7 +189,8 @@ const getTitle = (prefix: 'pay' | 'donate', props: Record<string, any>, code: st
 			} else if (code === 'tailwind') {
 				namePrefix = `${recurringIcon}&nbsp;<strong class="italic mr-1">Pay<span class="text-[#059669]">To:</span></strong>`;
 			} else {
-				namePrefix = `${get(_)('paymentButton.Recurring')} PayTo:`;
+				const LL = i18nObject(props.language as Locales || 'en');
+				namePrefix = `${LL.paymentButton.Recurring()} PayTo:`;
 			}
 		}
 	} else {
@@ -211,7 +213,7 @@ const getTitle = (prefix: 'pay' | 'donate', props: Record<string, any>, code: st
 		}
 	}
 
-	let title = composeTitle(namePrefix, network);
+	let title = composeTitle(namePrefix, network, props.language);
 	if (props.chain > 0 && (props.network === 'eth' || props.network === 'other')) {
 		title += `@${props.chain}`;
 	}
@@ -231,13 +233,16 @@ const getTitle = (prefix: 'pay' | 'donate', props: Record<string, any>, code: st
 	return title;
 };
 
-const composeTitle = (namePrefix: string | undefined, network: string | undefined) => {
+const composeTitle = (namePrefix: string | undefined, network: string | undefined, language?: string) => {
 	if (!namePrefix) return '';
 
+	const LL = i18nObject((language as Locales) || 'en');
+	const viaText = LL.paymentButton.via();
+
 	if (network === 'intra') {
-		return `${namePrefix} ${get(_)('paymentButton.via')} Intra-bank`;
+		return `${namePrefix} ${viaText} Intra-bank`;
 	}
-	return `${namePrefix} ${get(_)('paymentButton.via')} ${network ? network.toUpperCase() : ''}`;
+	return `${namePrefix} ${viaText} ${network ? network.toUpperCase() : ''}`;
 };
 
 /**
@@ -405,7 +410,9 @@ const generateMetaTag = (type: ITransitionType, props: Record<string, any>, well
  */
 export const generate = (type: ITransitionType, props: any, payload: IPayload[]): IOutput[] => {
 	const link = generateLink(payload, props);
-	setLocaleFromPaytoData(props.language);
+	if (props.language) {
+		setLocale(props.language as any);
+	}
 
 	return [
 		{ label: 'Link', value: link, length: link.length },
