@@ -376,13 +376,13 @@ const generateMetaTag = (type: ITransitionType, props: Record<string, any>, well
 	} else if (type === 'ach' && props.routingNumber) {
 		property += `:${props.routingNumber}`;
 	} else if (type === 'void') {
-		if(props.transport === 'intra') {
-			property += props.bic ? `:${props.transport}:${props.bic.toLowerCase()}` : `:${props.transport}`;
-		} else if(props.transport !== 'other') {
+		if(props.transport !== 'other') {
 			property += `:${props.transport}`;
 		} else {
 			property += `:${props.other ? props.other.toLowerCase(): props.other}`;
 		}
+	} else if (type === 'intra' && props.bic) {
+		property += `:${props.bic.toLowerCase()}`;
 	}
 
 	if (props.params.currency.value) {
