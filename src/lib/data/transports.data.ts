@@ -74,6 +74,13 @@ export const TRANSPORT: ITransportTypes = {
 			ticker: ''
 		}
 	],
+	intra: [
+		{
+			value: 'intra',
+			label: 'Intra-bank transfer',
+			ticker: ''
+		}
+	],
 	void: [
 		{
 			value: 'geo',
@@ -83,11 +90,6 @@ export const TRANSPORT: ITransportTypes = {
 		{
 			value: 'plus',
 			label: 'Plus Code',
-			ticker: ''
-		},
-		{
-			value: 'intra',
-			label: 'Intra-bank transfer',
 			ticker: ''
 		},
 		{

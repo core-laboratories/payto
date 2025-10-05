@@ -11,15 +11,12 @@ export const getAddress = (address: ITransactionState | string | null | undefine
 	if (typeof address === 'string') {
 		switch (type) {
 			case 'ican':
-				return address;
 			case 'iban':
-				return address;
 			case 'ach':
-				return address;
 			case 'upi':
 			case 'pix':
-				return address;
 			case 'bic':
+			case 'intra':
 				return address;
 			case 'void':
 				// For void, use location from paytoData if available
@@ -42,6 +39,8 @@ export const getAddress = (address: ITransactionState | string | null | undefine
 			return address.accountAlias || undefined;
 		case 'bic':
 			return address.bic || undefined;
+		case 'intra':
+			return address.id || undefined;
 		case 'void':
 			if (address.transport === 'geo') {
 				if(address.params.loc.lat && address.params.loc.lon) {
@@ -51,8 +50,6 @@ export const getAddress = (address: ITransactionState | string | null | undefine
 				}
 			} else if (address.transport === 'plus') {
 				return address.params.loc.plus || undefined;
-			} else if (address.transport === 'intra') {
-				return address.params.id.value || undefined;
 			} else if (address.other) {
 				return address.other || undefined;
 			}

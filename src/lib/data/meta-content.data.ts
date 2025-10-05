@@ -8,11 +8,6 @@ export const META_CONTENT = {
 		let account = /^\d+$/.test(props.accountNumber || '') ? props.accountNumber : '';
 		return account;
 	},
-	void: (props: Record<string, any>) => {
-		if(props.transport === 'intra') {
-			return props.bic && props.params.id.value ? props.params.id.value.toLowerCase() : '';
-		} else {
-			return props.params.loc.value || '';
-		}
-	},
+	intra: (props: Record<string, any>) => props.bic && props.id ? props.id.toLowerCase() : '',
+	void: (props: Record<string, any>) =>  props.params.loc.value || '',
 };

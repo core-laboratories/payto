@@ -13,7 +13,7 @@ declare namespace svelteHTML {
 	}
 }
 
-type ITransitionType = 'ican' | 'iban' | 'ach' | 'upi' | 'pix' | 'bic' | 'void';
+type ITransitionType = 'ican' | 'iban' | 'ach' | 'upi' | 'pix' | 'bic' | 'intra' | 'void';
 
 interface ITypesObject {
 	[K in ITransitionType]: ITypeDetails;
@@ -40,6 +40,7 @@ interface ITransportTypes {
 	pix: ITransportType[];
 	ach: ITransportType[];
 	bic: ITransportType[];
+	intra: ITransportType[];
 	void: ITransportType[];
 }
 
@@ -76,6 +77,7 @@ interface ITransactionState {
 	isId?: boolean;
 	isDesc?: boolean;
 	iban?: string;
+	id?: string;
 	bic?: string;
 	accountAlias?: string;
 	routingNumber?: string;

@@ -457,29 +457,6 @@
 				<div class="flex items-center">
 					<input
 						type="checkbox"
-						bind:checked={$constructor.networks.ican.isFiat}
-						id="fiatCheckbox"
-						onchange={handleFiatChange}
-					/>
-					<label for="fiatCheckbox" class="ml-2">Fiat quote for Digital Assets</label>
-				</div>
-			</FieldGroup>
-
-			{#if $constructor.networks.ican.isFiat}
-				<FieldGroup>
-					<FieldGroupLabel>Fiat Currency</FieldGroupLabel>
-					<FieldGroupText
-						placeholder="e.g. USD"
-						classValue="uppercase placeholder:normal-case"
-						bind:value={$constructor.networks.ican.params.fiat.value}
-					/>
-				</FieldGroup>
-			{/if}
-
-			<FieldGroup>
-				<div class="flex items-center">
-					<input
-						type="checkbox"
 						bind:checked={$constructor.networks.ican.isSwap}
 						id="swapCheckbox"
 						onchange={handleSwapChange}
@@ -492,9 +469,32 @@
 				<FieldGroup>
 					<FieldGroupLabel>Asset to receive</FieldGroupLabel>
 					<FieldGroupText
-						placeholder="e.g. USDC"
+						placeholder="e.g. XAU (Gold); USD (US Dollar)"
 						classValue="uppercase placeholder:normal-case"
 						bind:value={$constructor.networks.ican.params.swap.value}
+					/>
+				</FieldGroup>
+			{/if}
+
+			<FieldGroup>
+				<div class="flex items-center">
+					<input
+						type="checkbox"
+						bind:checked={$constructor.networks.ican.isFiat}
+						id="fiatCheckbox"
+						onchange={handleFiatChange}
+					/>
+					<label for="fiatCheckbox" class="ml-2">Quoted in Fiat</label>
+				</div>
+			</FieldGroup>
+
+			{#if $constructor.networks.ican.isFiat}
+				<FieldGroup>
+					<FieldGroupLabel>Fiat Currency</FieldGroupLabel>
+					<FieldGroupText
+						placeholder="e.g. USD"
+						classValue="uppercase placeholder:normal-case"
+						bind:value={$constructor.networks.ican.params.fiat.value}
 					/>
 				</FieldGroup>
 			{/if}

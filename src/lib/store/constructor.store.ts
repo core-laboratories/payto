@@ -95,6 +95,20 @@ const INITIAL_STATE: IComplexState = {
 			}
 		},
 
+		intra: {
+			network: TRANSPORT.intra[0].value,
+			id: undefined,
+			bic: undefined,
+			isRc: false,
+			params: {
+				currency: { value: undefined },
+				amount: { value: undefined },
+				receiverName: { value: undefined },
+				message: { value: undefined },
+				rc: { value: undefined },
+			}
+		},
+
 		void: {
 			network: 'void',
 			transport: TRANSPORT.void[0].value,
@@ -261,6 +275,22 @@ const BUILDER = {
 			];
 			return generate('bic', fullProps, payload);
 		},
+		intra: (props: typeof INITIAL_STATE.networks.intra, design: typeof INITIAL_STATE.design) => {
+			const fullProps = {
+				...props,
+				params: {
+					...props.params,
+					design
+				}
+			};
+			const payload = [
+				{
+					placeholder: '',
+					value: encodeURIComponent(fullProps.network)
+				},
+			];
+			return generate('intra', fullProps, payload);
+		},
 		void: (props: typeof INITIAL_STATE.networks.void, design: typeof INITIAL_STATE.design) => {
 			const fullProps = {
 				...props,
@@ -284,11 +314,6 @@ const BUILDER = {
 				fullProps.params.loc.value = fullProps.params.loc.plus.toUpperCase();
 			}
 			else if (fullProps.params &&
-				fullProps.params.bic.value &&
-				fullProps.transport === 'intra') {
-				fullProps.params.loc.value = fullProps.params.bic.value.toLowerCase();
-			}
-			else if (fullProps.params &&
 				fullProps.params.loc &&
 				fullProps.transport === 'other') {
 				fullProps.params.loc.value = fullProps.params.loc.other;
@@ -301,12 +326,6 @@ const BUILDER = {
 					placeholder: '',
 					value: fullProps.network
 				},
-				/*{
-					placeholder: '',
-					value: fullProps.transport === 'intra'
-						? (fullProps.params.bic.value ? encodeURIComponent(fullProps.params.bic.value) : undefined)
-						: undefined
-				},*/
 				{
 					placeholder: '',
 					value: fullProps.transport === 'other'
