@@ -288,6 +288,14 @@ const BUILDER = {
 					placeholder: '',
 					value: encodeURIComponent(fullProps.network)
 				},
+				{
+					placeholder: '',
+					value: fullProps.bic ? encodeURIComponent(fullProps.bic.toLowerCase()) : undefined
+				},
+				{
+					placeholder: '',
+					value: fullProps.id ? encodeURIComponent(fullProps.id.toLowerCase()) : undefined
+				}
 			];
 			return generate('intra', fullProps, payload);
 		},
