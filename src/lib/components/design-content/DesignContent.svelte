@@ -35,8 +35,8 @@
 	];
 
 	const languageOptions = [
-		{ label: 'English (default)', value: ''},
-		{ label: 'English (US)', value: 'en-US'},
+		{ label: 'App Setup (default)', value: ''},
+		{ label: 'English', value: 'en'},
 		{ label: 'Slovak', value: 'sk'},
 		{ label: 'German', value: 'de'}
 	];

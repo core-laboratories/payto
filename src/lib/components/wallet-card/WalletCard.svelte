@@ -56,8 +56,9 @@
 		recurring: string | Readable<string> | undefined;
 		deadline: number | Readable<number> | undefined;
 		purpose: string | Readable<string> | undefined;
+		purposeLabel: string | Readable<string> | undefined;
 		mode: string | Readable<string> | undefined;
-		language: string | Readable<string> | undefined;
+		lang: string | Readable<string> | undefined;
 	}
 
 	const paytoData = writable<FlexiblePaytoData>({
@@ -76,9 +77,10 @@
 		location: undefined,
 		recurring: undefined,
 		deadline: undefined,
-		purpose: 'Pay',
+		purpose: $LL.walletCard.purposePay(),
+		purposeLabel: $LL.walletCard.purposePay(),
 		mode: undefined,
-		language: undefined
+		lang: undefined
 	});
 
 	const constructorStore = derived(constructor, $c => $c);
@@ -264,14 +266,13 @@
 				rtl: payto.rtl || false,
 				deadline: payto.deadline || undefined,
 				purpose: paytoParams.get('donate') === '1' ? $LL.walletCard.donate() : $LL.walletCard.pay(),
+				purposeLabel: paytoParams.get('donate') === '1' ? $LL.walletCard.purposeDonate() : $LL.walletCard.purposePay(),
 				mode: validMode,
-				language: paytoParams.get('lang') || undefined
+				lang: payto.lang || undefined
 			});
 
 			// Set locale from language parameter
-			const language = paytoParams.get('lang');
-			setLocaleFromPaytoData(language || undefined);
-			console.log('paytoData', $paytoData);
+			setLocaleFromPaytoData(payto.lang || 'en');
 
 			formatter = derived(
 				[constructorStore, hostnameStore],
@@ -338,8 +339,9 @@
 					rtl: $store.design.rtl || false,
 					deadline: $store.networks[hostname]?.params?.dl?.value,
 					purpose: paytoParams.get('donate') === '1' ? $LL.walletCard.donate() : $LL.walletCard.pay(),
+					purposeLabel: paytoParams.get('donate') === '1' ? $LL.walletCard.purposeDonate() : $LL.walletCard.purposePay(),
 					mode: validMode,
-					language: paytoParams.get('lang') || undefined
+					lang: $store.design.lang || undefined
 				};
 			});
 
@@ -428,6 +430,7 @@
 		searchParams.delete('color-b');
 		searchParams.delete('barcode');
 		searchParams.delete('rtl');
+		searchParams.delete('lang');
 
 		const formattedParams = searchParams.toString();
 
@@ -702,10 +705,11 @@
 		screen.orientation?.removeEventListener?.('change', updateRotationState);
 	});
 
-	// Reactive statement to set locale when paytoData.language changes
-	$: if ($paytoData?.language) {
-		const language = typeof $paytoData.language === 'string' ? $paytoData.language : get($paytoData.language);
+	// Reactive statement to set locale when paytoData.lang changes
+	$: if ($paytoData?.lang) {
+		const language = typeof $paytoData.lang === 'string' ? $paytoData.lang : get($paytoData.lang);
 		setLocaleFromPaytoData(language);
+		$constructorStore.design.lang = language;
 	}
 
 	async function switchMode() {
@@ -791,7 +795,7 @@
 				</div>
 			</div>
 		</div>
-		<div class={`text-lg font-medium drop-shadow print:drop-shadow-none ${isUpsideDown ? 'rotated' : ''}`}>{$nfcSupported && mode === 'nfc' ? $LL.walletCard.tap() : $LL.walletCard.scan()} {$LL.walletCard.hereTo()} {$paytoData.purpose}{printType($paytoData, true)}</div>
+		<div class={`text-lg font-medium drop-shadow print:drop-shadow-none ${isUpsideDown ? 'rotated' : ''}`}>{$nfcSupported && mode === 'nfc' ? $LL.walletCard.tap() : $LL.walletCard.scan()} {$LL.walletCard.hereTo()} {$paytoData.purposeLabel}{printType($paytoData, true)}</div>
 	</div>
 
 	<!-- Main Card (rotated if needed) -->

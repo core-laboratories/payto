@@ -22,7 +22,9 @@ const skPartial: DeepPartial<Translation> = {
 		switchMode: 'Prepnúť režim',
 		navigate: 'Navigovať',
 		donate: 'Darovať',
-		pay: 'Zaplatiť'
+		pay: 'Zaplatiť',
+		purposePay: 'platbu',
+		purposeDonate: 'dar'
 	},
 	paymentButton: {
 		Recurring: 'Pravidelné',

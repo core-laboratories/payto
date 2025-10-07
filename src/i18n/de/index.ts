@@ -22,7 +22,9 @@ const dePartial: DeepPartial<Translation> = {
 		switchMode: 'Modus wechseln',
 		navigate: 'Navigieren',
 		donate: 'Spenden',
-		pay: 'Zahlen'
+		pay: 'Zahlen',
+		purposePay: 'Zahlen',
+		purposeDonate: 'Spenden'
 	},
 	paymentButton: {
 		Recurring: 'Wiederkehrend',

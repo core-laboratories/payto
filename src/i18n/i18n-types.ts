@@ -89,6 +89,14 @@ type RootTranslation = {
 		 * P​a​y
 		 */
 		pay: string
+		/**
+		 * P​a​y
+		 */
+		purposePay: string
+		/**
+		 * D​o​n​a​t​e
+		 */
+		purposeDonate: string
 	}
 	paymentButton: {
 		/**
@@ -176,6 +184,14 @@ export type TranslationFunctions = {
 		 * Pay
 		 */
 		pay: () => LocalizedString
+		/**
+		 * Pay
+		 */
+		purposePay: () => LocalizedString
+		/**
+		 * Donate
+		 */
+		purposeDonate: () => LocalizedString
 	}
 	paymentButton: {
 		/**

@@ -19,7 +19,9 @@ const en = {
 		switchMode: 'Switch mode',
 		navigate: 'Navigate',
 		donate: 'Donate',
-		pay: 'Pay'
+		pay: 'Pay',
+		purposePay: 'Pay',
+		purposeDonate: 'Donate'
 	},
 	paymentButton: {
 		Recurring: 'Recurring',

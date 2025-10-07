@@ -105,7 +105,7 @@ interface IDesignState {
 	barcode?: string;
 	rtl?: boolean;
 	mode?: string;
-	language?: string;
+	lang?: string;
 }
 
 interface ILocValue extends IValue {
