@@ -16,7 +16,6 @@
 	import { getAddress } from '$lib/helpers/get-address.helper';
 	import { toast } from '$lib/components/toast';
 	import { setLocaleFromPaytoData, locale } from '$i18n';
-	import type { Locales } from '$i18n/i18n-types';
 
 	export let hostname: ITransitionType | undefined = undefined;
 	export let authority: string | undefined = undefined;

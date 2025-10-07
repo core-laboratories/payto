@@ -1,5 +1,5 @@
 import { loadAllLocales } from './i18n-util.sync'
-import { detectLocale, i18nObject } from './i18n-util'
+import { detectLocale, i18nObject, locales } from './i18n-util'
 import { setLocale } from './i18n-svelte'
 import type { Locales } from './i18n-types'
 
@@ -14,7 +14,7 @@ function getBestLocale(requestedLocale: string): Locales {
 	const normalizedLocale = requestedLocale.replace('-', '_');
 
 	// If exact match found, use it
-	if (normalizedLocale === 'en_US' || normalizedLocale === 'en' || normalizedLocale === 'sk' || normalizedLocale === 'de') {
+	if (locales.includes(normalizedLocale as any)) {
 		return normalizedLocale as Locales;
 	}
 
@@ -22,7 +22,7 @@ function getBestLocale(requestedLocale: string): Locales {
 	const baseLanguage = requestedLocale.split(/[-_]/)[0];
 
 	// Check if base language exists (e.g., 'en' from 'en-US')
-	if (baseLanguage === 'en' || baseLanguage === 'sk' || baseLanguage === 'de') {
+	if (locales.includes(baseLanguage as any)) {
 		return baseLanguage as Locales;
 	}
 
@@ -74,7 +74,13 @@ export function detectAndSetBrowserLocale(): void {
 export function init(): void {
 	// Set initial locale based on browser language or default to English
 	if (typeof window !== 'undefined') {
-		detectAndSetBrowserLocale();
+		// For browser compatibility, always start with 'en' to avoid Intl.PluralRules errors
+		// Then detect and set the proper locale
+		setLocale('en');
+		// Small delay to ensure the initial locale is set before detecting browser locale
+		setTimeout(() => {
+			detectAndSetBrowserLocale();
+		}, 0);
 	} else {
 		setLocale('en');
 	}
