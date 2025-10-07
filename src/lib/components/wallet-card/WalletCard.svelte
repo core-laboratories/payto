@@ -709,7 +709,11 @@
 	$: if ($paytoData?.lang) {
 		const language = typeof $paytoData.lang === 'string' ? $paytoData.lang : get($paytoData.lang);
 		setLocaleFromPaytoData(language);
-		$constructorStore.design.lang = language;
+		// Update constructor store properly
+		constructor.update(c => ({
+			...c,
+			design: { ...c.design, lang: language }
+		}));
 	}
 
 	async function switchMode() {

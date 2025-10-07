@@ -10,7 +10,7 @@
 	const expanded = writable(false);
 	let dropdownElement: HTMLDivElement | null = null;
 
-	$: selectedLabel = value ? findSelectedLabel() : 'Select an option';
+	$: selectedLabel = (value !== undefined && value !== null) ? findSelectedLabel() : 'Select an option';
 
 	function toggle() {
 		expanded.update((e) => !e);
