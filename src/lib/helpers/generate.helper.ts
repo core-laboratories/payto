@@ -61,7 +61,7 @@ export const generateLink = (payload: IPayload[] = [], props: Record<string, any
 
 		// PayPass transformer
 		if (design) {
-			const { org, item, colorF, colorB, barcode, rtl, mode } = design;
+			const { org, item, colorF, colorB, barcode, rtl, lang, mode } = design;
 			if (org) searchParams.set('org', org);
 			if (item) searchParams.set('item', item);
 			if (colorB && colorF && colorB !== '#2A3950' && colorF !== '#9AB1D6') {
@@ -100,6 +100,9 @@ export const generateLink = (payload: IPayload[] = [], props: Record<string, any
 				} else {
 					searchParams.set('mode', mode);
 				}
+			}
+			if (lang) {
+				searchParams.set('lang', lang);
 			}
 		}
 	}
