@@ -8,7 +8,6 @@ export type BaseLocale = 'en'
 export type Locales =
 	| 'de'
 	| 'en'
-	| 'en_US'
 	| 'sk'
 
 export type Translation = RootTranslation

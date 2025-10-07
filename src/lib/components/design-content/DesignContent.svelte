@@ -15,7 +15,7 @@
 	import { generateWebLink, getWebLink } from '$lib/helpers/generate.helper';
 	import { getAddress } from '$lib/helpers/get-address.helper';
 	import { toast } from '$lib/components/toast';
-	import { setLocaleFromPaytoData, locale } from '$i18n';
+	import { setLocaleFromPaytoData } from '$i18n';
 
 	export let hostname: ITransitionType | undefined = undefined;
 	export let authority: string | undefined = undefined;
@@ -34,20 +34,16 @@
 	];
 
 	const languageOptions = [
-		{ label: 'App Setup (default)', value: ''},
+		{ label: 'App Setup (or English)', value: ''},
 		{ label: 'English', value: 'en'},
 		{ label: 'Slovak', value: 'sk'},
 		{ label: 'German', value: 'de'}
 	];
 
-	// Map internal locale to display format with hyphen (en-US)
-	// Default to empty string for "English (default)" option
-	const localeHyphen = derived(locale, ($l) => {
-		if ($l === 'en') return '';
-		return $l.replace('_', '-');
-	});
-
 	const constructorStore = derived(constructor, $c => $c);
+
+	// Default to empty string for "App Setup (or English)" option
+	const currentLanguageValue = derived(constructorStore, ($constructor) => $constructor.design.lang || '');
 
 	const distance = derived(constructorStore, $constructor =>
 		Math.floor(
@@ -213,9 +209,18 @@
 				<FieldGroupLabel>Language</FieldGroupLabel>
 				<ListBox
 					id="language-list"
-					value={$localeHyphen}
+					value={$currentLanguageValue}
 					items={languageOptions}
-					onChange={(val) => setLocaleFromPaytoData(String(val) || 'en')}
+					onChange={(val) => {
+						const selectedValue = String(val) || '';
+						constructor.update(c => ({
+							...c,
+							design: { ...c.design, lang: selectedValue }
+						}));
+						// Convert back to underscore format for setLocaleFromPaytoData if needed
+						const localeValue = selectedValue === '' ? 'en' : selectedValue.replace('-', '_');
+						setLocaleFromPaytoData(localeValue);
+					}}
 				/>
 			</FieldGroup>
 

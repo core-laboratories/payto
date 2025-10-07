@@ -134,7 +134,7 @@ const INITIAL_STATE: IComplexState = {
 		barcode: 'qr',
 		rtl: false,
 		mode: undefined,
-		lang: undefined,
+		lang: '',
 	},
 	isCleared: false,
 	paymentType: 'ican',

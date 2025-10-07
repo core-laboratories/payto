@@ -7,13 +7,11 @@ import { loadedFormatters, loadedLocales, locales } from './i18n-util'
 
 import de from './de'
 import en from './en'
-import en_US from './en_US'
 import sk from './sk'
 
 const localeTranslations = {
 	de,
 	en,
-	en_US,
 	sk,
 }
 

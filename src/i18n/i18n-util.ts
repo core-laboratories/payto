@@ -13,7 +13,6 @@ export const baseLocale: Locales = 'en'
 export const locales: Locales[] = [
 	'de',
 	'en',
-	'en_US',
 	'sk'
 ]
 
