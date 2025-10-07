@@ -3,20 +3,25 @@ import { detectLocale, i18nObject } from './i18n-util'
 import { setLocale } from './i18n-svelte'
 import type { Locales } from './i18n-types'
 
-// Load all locales synchronously
-loadAllLocales()
+// Load all locales synchronously (only on client side to avoid SSR issues)
+if (typeof window !== 'undefined') {
+	loadAllLocales()
+}
 
-// Language fallback logic: en_US -> en -> fallback to en
+// Language fallback logic: en-US -> en_US -> en -> fallback to en
 function getBestLocale(requestedLocale: string): Locales {
+	// Normalize hyphen to underscore for internal use
+	const normalizedLocale = requestedLocale.replace('-', '_');
+
 	// If exact match found, use it
-	if (requestedLocale === 'en_US' || requestedLocale === 'en' || requestedLocale === 'sk' || requestedLocale === 'de') {
-		return requestedLocale as Locales;
+	if (normalizedLocale === 'en_US' || normalizedLocale === 'en' || normalizedLocale === 'sk' || normalizedLocale === 'de') {
+		return normalizedLocale as Locales;
 	}
 
-	// Extract base language (e.g., 'en' from 'en_US')
-	const baseLanguage = requestedLocale.split('_')[0];
+	// Extract base language (e.g., 'en' from 'en-US' or 'en_US')
+	const baseLanguage = requestedLocale.split(/[-_]/)[0];
 
-	// Check if base language exists (e.g., 'en' from 'en_US')
+	// Check if base language exists (e.g., 'en' from 'en-US')
 	if (baseLanguage === 'en' || baseLanguage === 'sk' || baseLanguage === 'de') {
 		return baseLanguage as Locales;
 	}

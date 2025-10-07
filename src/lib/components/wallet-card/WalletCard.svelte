@@ -23,7 +23,7 @@
 	import { onDestroy, onMount } from 'svelte';
 	import { blo } from "@blockchainhub/blo";
 	import { X, QrCode, Nfc, Navigation2 } from 'lucide-svelte';
-	import { LL, setLocale } from '$i18n';
+	import { LL, setLocaleFromPaytoData, init } from '$i18n';
 
 	// @ts-expect-error: Module is untyped
 	import pkg from 'open-location-code/js/src/openlocationcode';
@@ -270,9 +270,7 @@
 
 			// Set locale from language parameter
 			const language = paytoParams.get('lang');
-			if (language) {
-				setLocale(language as any);
-			}
+			setLocaleFromPaytoData(language || undefined);
 			console.log('paytoData', $paytoData);
 
 			formatter = derived(
@@ -689,6 +687,9 @@
 	}
 
 	onMount(() => {
+		// Initialize i18n on client side
+		init();
+
 		updateRotationState(); // Initial check
 
 		// Listen for orientation change
@@ -704,9 +705,7 @@
 	// Reactive statement to set locale when paytoData.language changes
 	$: if ($paytoData?.language) {
 		const language = typeof $paytoData.language === 'string' ? $paytoData.language : get($paytoData.language);
-		if (language) {
-			setLocale(language as any);
-		}
+		setLocaleFromPaytoData(language);
 	}
 
 	async function switchMode() {
@@ -792,7 +791,7 @@
 				</div>
 			</div>
 		</div>
-		<div class={`text-lg font-medium drop-shadow print:drop-shadow-none ${isUpsideDown ? 'rotated' : ''}`}>{$nfcSupported && mode === 'nfc' ? $LL.walletCard.tap() : $LL.walletCard.scan()} {$LL.walletCard.here()} {$paytoData.purpose}{printType($paytoData, true)}</div>
+		<div class={`text-lg font-medium drop-shadow print:drop-shadow-none ${isUpsideDown ? 'rotated' : ''}`}>{$nfcSupported && mode === 'nfc' ? $LL.walletCard.tap() : $LL.walletCard.scan()} {$LL.walletCard.hereTo()} {$paytoData.purpose}{printType($paytoData, true)}</div>
 	</div>
 
 	<!-- Main Card (rotated if needed) -->

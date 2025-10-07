@@ -38,9 +38,9 @@ type RootTranslation = {
 		 */
 		scan: string
 		/**
-		 * h​e​r​e
+		 * h​e​r​e​ ​t​o
 		 */
-		here: string
+		hereTo: string
 		/**
 		 * w​i​t​h​ ​C​a​s​h
 		 */
@@ -125,9 +125,9 @@ export type TranslationFunctions = {
 		 */
 		scan: () => LocalizedString
 		/**
-		 * here
+		 * here to
 		 */
-		here: () => LocalizedString
+		hereTo: () => LocalizedString
 		/**
 		 * with Cash
 		 */

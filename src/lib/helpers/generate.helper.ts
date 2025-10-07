@@ -1,7 +1,7 @@
 import { META_CONTENT } from '$lib/data/meta-content.data';
 import { checkValidity } from '$lib/helpers/check-validity.helper';
 import { calculateColorDistance } from '$lib/helpers/euclidean-distance.helper';
-import { setLocale } from '$i18n';
+import { setLocaleFromPaytoData } from '$i18n';
 import { i18nObject } from '$i18n/i18n-util';
 import type { Locales } from '$i18n/i18n-types';
 
@@ -411,7 +411,7 @@ const generateMetaTag = (type: ITransitionType, props: Record<string, any>, well
 export const generate = (type: ITransitionType, props: any, payload: IPayload[]): IOutput[] => {
 	const link = generateLink(payload, props);
 	if (props.language) {
-		setLocale(props.language as any);
+		setLocaleFromPaytoData(props.language);
 	}
 
 	return [

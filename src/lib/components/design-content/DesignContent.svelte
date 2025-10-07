@@ -15,6 +15,8 @@
 	import { generateWebLink, getWebLink } from '$lib/helpers/generate.helper';
 	import { getAddress } from '$lib/helpers/get-address.helper';
 	import { toast } from '$lib/components/toast';
+	import { setLocaleFromPaytoData, locale } from '$i18n';
+	import type { Locales } from '$i18n/i18n-types';
 
 	export let hostname: ITransitionType | undefined = undefined;
 	export let authority: string | undefined = undefined;
@@ -31,6 +33,20 @@
 		{ label: 'Tap to Pay', value: 'tap', ticker: 'NFC mode' },
 		{ label: 'Code', value: 'code', ticker: 'QR Code mode' }
 	];
+
+	const languageOptions = [
+		{ label: 'English (default)', value: ''},
+		{ label: 'English (US)', value: 'en-US'},
+		{ label: 'Slovak', value: 'sk'},
+		{ label: 'German', value: 'de'}
+	];
+
+	// Map internal locale to display format with hyphen (en-US)
+	// Default to empty string for "English (default)" option
+	const localeHyphen = derived(locale, ($l) => {
+		if ($l === 'en') return '';
+		return $l.replace('_', '-');
+	});
 
 	const constructorStore = derived(constructor, $c => $c);
 
@@ -193,6 +209,16 @@
 					Minimum Euclidean distance of 100 is required.
 				</p>
 			</div>
+
+			<FieldGroup>
+				<FieldGroupLabel>Language</FieldGroupLabel>
+				<ListBox
+					id="language-list"
+					value={$localeHyphen}
+					items={languageOptions}
+					onChange={(val) => setLocaleFromPaytoData(String(val) || 'en')}
+				/>
+			</FieldGroup>
 
 			<FieldGroup>
 				<div class="flex items-center">

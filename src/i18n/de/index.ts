@@ -10,7 +10,7 @@ const dePartial: DeepPartial<Translation> = {
 		days: 'Tage',
 		tap: 'Antippen',
 		scan: 'Scannen',
-		here: 'hier',
+		hereTo: 'hier zu',
 		withCash: 'mit Bargeld',
 		via: 'über',
 		expiresIn: 'Läuft ab in',

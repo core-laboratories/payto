@@ -10,7 +10,7 @@ const skPartial: DeepPartial<Translation> = {
 		days: 'dni',
 		tap: 'Dotknite sa',
 		scan: 'Skenovať',
-		here: 'tu',
+		hereTo: 'tu pre',
 		withCash: 'v hotovosti',
 		via: 'cez',
 		expiresIn: 'Vyprší za',

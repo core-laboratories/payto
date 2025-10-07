@@ -83,11 +83,11 @@
 				</p>
 			</div>
 			<div class="mt-6">
-				<ul class="divide-y">
+				<ul class="divide-y divide-gray-400/50">
 					{#each navigations as item, idx (idx)}
 						<li class="flex gap-x-4 py-6">
 							<div
-								class="flex-none w-14 h-14 bg-gray-100 rounded-full text-gray-600 flex items-center justify-center"
+								class="flex-none w-14 h-14 bg-gray-600 rounded-full text-gray-400 flex items-center justify-center"
 							>
 								<svelte:component this={item.icon} class="w-6 h-6" />
 							</div>

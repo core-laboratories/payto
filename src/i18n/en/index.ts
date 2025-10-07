@@ -7,7 +7,7 @@ const en = {
 		days: 'days',
 		tap: 'Tap',
 		scan: 'Scan',
-		here: 'here',
+		hereTo: 'here to',
 		withCash: 'with Cash',
 		via: 'via',
 		expiresIn: 'Expires in',
