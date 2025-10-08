@@ -137,30 +137,33 @@ export async function load({ url }) {
 
 export const actions = {
 	generatePass: async ({ request, url }: RequestEvent) => {
-		const origin = request.headers.get('origin');
-		if (origin !== url.origin) {
-			throw error(403, 'Unauthorized request origin');
+		const formData = await request.formData();
+		const authorityField = (formData.get('authority') as string);
+		const authorityItem = authorityField ? authorityField.toLowerCase() : 'payto';
+		let kvData = null;
+		let authority = null;
+
+		if (authorityField) {
+			// Load KV values
+			kvData = await KV.get(authorityItem);
+			if (kvData && (!kvData.id || !kvData.identifier)) {
+				throw error(400, `Invalid or missing configuration for authority: ${authorityItem}`);
+			}
+			authority = kvData.id;
+		}
+
+		if (!authority) {
+			const origin = request.headers.get('origin');
+			if (origin !== url.origin) {
+				throw error(403, 'Unauthorized request origin');
+			}
 		}
 
 		try {
-			const formData = await request.formData();
 			const props = JSON.parse(formData.get('props') as string);
 			const design = JSON.parse(formData.get('design') as string);
 			const hostname = formData.get('hostname') as string;
 			const membership = formData.get('membership') as string;
-			const authorityField = (formData.get('authority') as string);
-			const authorityItem = authorityField ? authorityField.toLowerCase() : 'payto';
-			let kvData = null;
-			let authority = null;
-
-			if (authorityField) {
-				// Load KV values
-				kvData = await KV.get(authorityItem);
-				if (kvData && (!kvData.id || !kvData.identifier)) {
-					throw error(400, `Invalid or missing configuration for authority: ${authorityItem}`);
-				}
-				authority = kvData.id;
-			}
 
 			// Required fields
 			const requiredFields = ['props', 'hostname'];
