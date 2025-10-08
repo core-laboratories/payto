@@ -152,7 +152,7 @@ export const actions = {
 			authority = kvData.id;
 		}
 
-		if (!authority) {
+		if (!authority || !kvData || kvData.postForm !== true) {
 			const origin = request.headers.get('origin');
 			if (origin !== url.origin) {
 				throw error(403, 'Unauthorized request origin');
