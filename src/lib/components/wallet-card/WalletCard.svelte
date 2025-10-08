@@ -236,6 +236,9 @@
 			const { colorForeground, colorBackground } = defineColors(payto.colorForeground, payto.colorBackground);
 			const paytoParams = new URLSearchParams(payto.search);
 
+			// Set locale from language parameter BEFORE using translations
+			setLocaleFromPaytoData(payto.lang || 'en');
+
 			// Validate mode parameter - only allow 'qr' or 'nfc' if NFC is supported
 			const requestedMode = paytoParams.get('mode');
 			let validMode: string | undefined = undefined;
@@ -246,34 +249,34 @@
 				validMode = 'nfc';
 			}
 
-			paytoData.set({
-				hostname: payto.hostname || 'ican',
-				paymentType: getCategoryByValue(payto.hostname!) || 'ican',
-				value: payto.value ? Number(payto.value) : undefined,
-				address: getAddress(payto.address, payto.hostname as ITransitionType, payto),
-				colorBackground,
-				colorForeground,
-				organization: payto.organization || undefined,
-				organizationImage: undefined,
-				currency: payto.currency ?
-					payto.currency[1] ?
-						payto.currency[1] :
-						payto.currency[0] :
-					getCurrency($constructorStore.networks[getCategoryByValue(payto.hostname!) as ITransitionType], getCategoryByValue(payto.hostname!) as ITransitionType),
-				network: payto.hostname === 'void' ? payto.void! : payto.network,
-				item: payto.item || undefined,
-				location: payto.location || undefined,
-				recurring: payto.recurring || undefined,
-				rtl: payto.rtl || false,
-				deadline: payto.deadline || undefined,
-				purpose: paytoParams.get('donate') === '1' ? $LL.walletCard.donate() : $LL.walletCard.pay(),
-				purposeLabel: paytoParams.get('donate') === '1' ? $LL.walletCard.purposeDonate() : $LL.walletCard.purposePay(),
-				mode: validMode,
-				lang: payto.lang || undefined
-			});
-
-			// Set locale from language parameter
-			setLocaleFromPaytoData(payto.lang || 'en');
+			// Use setTimeout to ensure translations are loaded
+			setTimeout(() => {
+				paytoData.set({
+					hostname: payto.hostname || 'ican',
+					paymentType: getCategoryByValue(payto.hostname!) || 'ican',
+					value: payto.value ? Number(payto.value) : undefined,
+					address: getAddress(payto.address, payto.hostname as ITransitionType, payto),
+					colorBackground,
+					colorForeground,
+					organization: payto.organization || undefined,
+					organizationImage: undefined,
+					currency: payto.currency ?
+						payto.currency[1] ?
+							payto.currency[1] :
+							payto.currency[0] :
+						getCurrency($constructorStore.networks[getCategoryByValue(payto.hostname!) as ITransitionType], getCategoryByValue(payto.hostname!) as ITransitionType),
+					network: payto.hostname === 'void' ? payto.void! : payto.network,
+					item: payto.item || undefined,
+					location: payto.location || undefined,
+					recurring: payto.recurring || undefined,
+					rtl: payto.rtl || false,
+					deadline: payto.deadline || undefined,
+					purpose: paytoParams.get('donate') === '1' ? $LL.walletCard.donate() : $LL.walletCard.pay(),
+					purposeLabel: paytoParams.get('donate') === '1' ? $LL.walletCard.purposeDonate() : $LL.walletCard.purposePay(),
+					mode: validMode,
+					lang: payto.lang || undefined
+				});
+			}, 0);
 
 			formatter = derived(
 				[constructorStore, hostnameStore],
@@ -519,7 +522,7 @@
 		return finalAddress;
 	}
 
-	async function getInfoDisplay(paytoData: any): Promise<string> {
+	function getInfoDisplay(paytoData: any): string {
 		let infoDisplay = '';
 		if (paytoData.network) {
 			infoDisplay = paytoData.network.toString().toUpperCase();
@@ -691,9 +694,6 @@
 	}
 
 	onMount(() => {
-		// Initialize i18n on client side
-		init();
-
 		updateRotationState(); // Initial check
 
 		// Listen for orientation change
@@ -763,11 +763,16 @@
 	}
 
 	$: if (generateHead && $paytoData) {
+		const network = typeof $paytoData.network === 'string' ? $paytoData.network : ($paytoData.network ? get($paytoData.network) : '');
+		const currency = typeof $paytoData.currency === 'string' ? $paytoData.currency : '';
+		const value = typeof $paytoData.value === 'number' ? $paytoData.value : ($paytoData.value ? get($paytoData.value) : undefined);
+		const address = typeof $paytoData.address === 'string' ? $paytoData.address : ($paytoData.address ? get($paytoData.address) : '');
+
 		pageData = {
-			title: `${$paytoData.purpose} ${$paytoData.address} ${$paytoData.value} ${$paytoData.currency}`,
-			description: `${$paytoData.purpose} ${$paytoData.address} ${$paytoData.value} ${$paytoData.currency}`
+			title: `${$paytoData.purpose} ${value ? value + ' ' + (currency ? currency.toUpperCase() : '') : $LL.walletCard.customAmount()} ${$LL.walletCard.via()} ${network?.toUpperCase() || ''}`,
+			description: `${$paytoData.purpose} ${$LL.walletCard.for()} ${address}`
 		};
-	}
+	};
 </script>
 
 <style>
@@ -860,7 +865,7 @@
 								{#if $paytoData.value && Number($paytoData.value)>0}
 									{$formattedValue}{#if $paytoData.recurring}<span class="text-2xl uppercase">{` / `}{$paytoData.recurring}</span>{/if}
 								{:else}
-									<span class="text-3xl">{$LL.walletCard.amount()}</span>{#if $paytoData.recurring}<span class="text-2xl uppercase">{` / `}{$paytoData.recurring}</span>{/if}
+									<span class="text-3xl">{$LL.walletCard.customAmount()}</span>{#if $paytoData.recurring}<span class="text-2xl uppercase">{` / `}{$paytoData.recurring}</span>{/if}
 								{/if}
 							{/if}
 						</div>

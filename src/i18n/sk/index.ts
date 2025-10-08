@@ -5,7 +5,7 @@ import en from '../en/index'
 
 const skPartial: DeepPartial<Translation> = {
 	walletCard: {
-		customAmount: 'Vlastná suma',
+		customAmount: 'vlastná suma',
 		day: 'deň',
 		days: 'dni',
 		tap: 'Dotknite sa',
