@@ -5,7 +5,7 @@
 
 <svelte:head>
 	<title>PayTo:Money Pro</title>
-	<meta name="description" content="PayTo:Money Pro is a subscription service that allows you to create and manage PayPasses for your business. It includes a range of features to help you manage your PayPasses and payments." />
+	<meta name="description" content="PayTo:Money Pro is a subscription service that allows you to create and manage PayPasses for your organization. It includes a range of features to help you manage your PayPasses and payments." />
 </svelte:head>
 
 <div class="flex flex-col items-center gap-8 p-4">
@@ -17,7 +17,7 @@
 				<header class="flex flex-col gap-6 p-6 text-slate-400">
 					<h3 class="text-xl font-bold text-green-300">
 						Pro<span class="text-2xl text-emerald-500">+</span>
-						<span class="block text-sm font-normal text-slate-400">Ideal for PayTo:FIAT.</span>
+						<span class="block text-sm font-normal text-slate-400">Ideal for PayTo:FIAT</span>
 					</h3>
 					<a href="/pro/partners" class="inline-flex items-center justify-center gap-2 px-8 py-3 font-semibold text-white transition duration-300 rounded-lg bg-emerald-700 hover:bg-emerald-600 focus:bg-emerald-700 focus-visible:outline-none !no-underline">
 						<span>Register with partner</span>
@@ -45,19 +45,19 @@
 			</div>
 		</div>
 		<div class="w-full md:flex-1 lg:flex-1 rounded shadow-lg text-gray-100 bg-gray-800/75 h-fit">
-			<a id="pro-business" aria-hidden="true" aria-label="Pro Business"></a>
+			<a id="pro-org" aria-hidden="true" aria-label="Pro Organization"></a>
 			<div class="flex flex-col h-full">
 				<header class="flex flex-col gap-6 p-6 text-slate-400">
 					<h3 class="text-xl font-bold text-green-300">
-						Business
-						<span class="block text-sm font-normal text-slate-400">Ideal for PayTo:Businesses.</span>
+						Organization
+						<span class="block text-sm font-normal text-slate-400">Ideal for PayTo:Org</span>
 					</h3>
 					<h4>
 						<span class="text-2xl">EUR</span>
 						<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500">€ 5,000</span>
 						<span class="text-sm">/month</span>
 					</h4>
-					<a href="mailto:sales@payto.money?subject=Pro%20Business&body=Name%3A%0AURL%3A%0AIcon%3A%0AIcon%202x%3A%0AIcon%203x%3A%0ALogo%3A%0ALogo%202x%3A%0AColor%20B%3A%0AColor%20F%3A%0AColor%20Txt%3A%0AForce%20Theme%3A%0ACustom%20Currency%3A" class="inline-flex items-center justify-center gap-2 px-8 py-3 font-semibold text-white transition duration-300 rounded-lg bg-emerald-700 hover:bg-emerald-600 focus:bg-emerald-700 focus-visible:outline-none !no-underline">
+					<a href="mailto:sales@payto.money?subject=Pro%20Organization&body=Name%3A%0AURL%3A%0AIcon%3A%0AIcon%202x%3A%0AIcon%203x%3A%0ALogo%3A%0ALogo%202x%3A%0AColor%20B%3A%0AColor%20F%3A%0AColor%20Txt%3A%0AForce%20Theme%3A%0ACustom%20Currency%3A" class="inline-flex items-center justify-center gap-2 px-8 py-3 font-semibold text-white transition duration-300 rounded-lg bg-emerald-700 hover:bg-emerald-600 focus:bg-emerald-700 focus-visible:outline-none !no-underline">
 						<span>Enter Details by Email</span>
 					</a>
 				</header>
@@ -82,7 +82,7 @@
 					</ul>
 				</div>
 				<footer class="p-6 text-sm text-center border-t border-emerald-800 bg-gray-700/75 mt-auto">
-					Passes for Business customers
+					Passes for Organizations
 				</footer>
 			</div>
 		</div>
@@ -95,7 +95,7 @@
 			<header class="flex flex-col gap-6 p-6 text-slate-400">
 				<h3 class="text-xl font-bold text-green-300">
 					Pro
-					<span class="block text-sm font-normal text-slate-400">Ideal for PayTo:Money Daily Users.</span>
+					<span class="block text-sm font-normal text-slate-400">Ideal for PayTo:Money Daily Users</span>
 				</h3>
 				<h4>
 					<span class="text-2xl">CTN</span>

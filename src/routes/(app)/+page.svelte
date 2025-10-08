@@ -235,7 +235,7 @@
 								<div class="w-full px-4 py-3 text-sm border rounded border-gray-700 bg-gray-800 text-gray-300 flex flex-col gap-2" role="alert">
 									<div class="flex items-center justify-between">
 										<p class="m-0">Issuing authority is: <span class="font-bold">{$authority ? $authority.toUpperCase() : 'PAYTO'}</span></p>
-										<a href="/pro#pro-business" target="_blank" class="font-semibold ml-2 px-2 py-0.5 text-xs rounded-sm bg-emerald-500 text-gray-700! no-underline! hover:bg-emerald-400">Business</a>
+										<a href="/pro#pro-org" target="_blank" class="font-semibold ml-2 px-2 py-0.5 text-xs rounded-sm bg-emerald-500 text-gray-700! no-underline! hover:bg-emerald-400">Organization</a>
 									</div>
 								</div>
 								<div class="flex items-center gap-4">

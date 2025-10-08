@@ -32,6 +32,7 @@
 	export let hostname: ITransitionType | undefined = undefined;
 	export let url: string | null = null;
 	export let authority: string | undefined = undefined;
+	export let generateHead: boolean = false;
 
 	let hasUrl: boolean = false;
 	let noData: boolean = true;
@@ -39,6 +40,7 @@
 	let formatter: Readable<ExchNumberFormat> | undefined;
 	let mode: 'qr' | 'nfc' = 'qr';
 	let nfcWriteController: AbortController | null = null;
+	let pageData: { title: string; description: string } = { title: '', description: '' };
 	interface FlexiblePaytoData {
 		hostname: string;
 		paymentType: string;
@@ -226,7 +228,6 @@
 			noData = false;
 			hasUrl = true;
 			bareUrl.set(url);
-			console.log('url', url);
 
 			// Normalize URL to fix triple slash issue
 			const normalizedUrl = url.replace('payto:///', 'payto://');
@@ -518,7 +519,7 @@
 		return finalAddress;
 	}
 
-	function getInfoDisplay(paytoData: any): string {
+	async function getInfoDisplay(paytoData: any): Promise<string> {
 		let infoDisplay = '';
 		if (paytoData.network) {
 			infoDisplay = paytoData.network.toString().toUpperCase();
@@ -760,6 +761,13 @@
 			}
 		}
 	}
+
+	$: if (generateHead && $paytoData) {
+		pageData = {
+			title: `${$paytoData.purpose} ${$paytoData.address} ${$paytoData.value} ${$paytoData.currency}`,
+			description: `${$paytoData.purpose} ${$paytoData.address} ${$paytoData.value} ${$paytoData.currency}`
+		};
+	}
 </script>
 
 <style>
@@ -771,6 +779,13 @@
 		transform: rotate(180deg);
 	}
 </style>
+
+<svelte:head>
+	{#if generateHead}
+		<title>{pageData.title}</title>
+		<meta name="description" content={pageData.description} />
+	{/if}
+</svelte:head>
 
 <!-- Tap Design -->
 <div class="relative flex flex-col justify-between bg-gray-900 bg-gradient-to-b to-gray-800/90 w-full h-screen sm:h-auto min-h-[600px] sm:rounded-2xl shadow-md font-medium text-white print:border-2 print:border-black print:text-black print:shadow-none" style="background-color: {$paytoData.colorBackground};">

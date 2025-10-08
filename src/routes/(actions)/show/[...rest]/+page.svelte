@@ -57,6 +57,6 @@
 			<p>{$errorMessage}</p>
 		</div>
 	{:else if $urlParam}
-		<WalletCard url={$urlParam} />
+		<WalletCard url={$urlParam} generateHead={true} />
 	{/if}
 </div>
