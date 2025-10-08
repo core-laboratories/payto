@@ -764,12 +764,16 @@
 
 	$: if (generateHead && $paytoData) {
 		const network = typeof $paytoData.network === 'string' ? $paytoData.network : ($paytoData.network ? get($paytoData.network) : '');
-		const currency = typeof $paytoData.currency === 'string' ? $paytoData.currency : '';
 		const value = typeof $paytoData.value === 'number' ? $paytoData.value : ($paytoData.value ? get($paytoData.value) : undefined);
 		const address = typeof $paytoData.address === 'string' ? $paytoData.address : ($paytoData.address ? get($paytoData.address) : '');
+		const currencyValue = typeof $paytoData.currency === 'string' && value ? new ExchNumberFormat(undefined, {
+			style: 'currency',
+			currency: $paytoData.currency,
+			currencyDisplay: 'symbol'
+		}).format(value) : '';
 
 		pageData = {
-			title: `${$paytoData.purpose} ${value ? value + ' ' + (currency ? currency.toUpperCase() : '') : $LL.walletCard.customAmount()} ${$LL.walletCard.via()} ${network?.toUpperCase() || ''}`,
+			title: `${$paytoData.purpose} ${value ? currencyValue : $LL.walletCard.customAmount()} ${$LL.walletCard.via()} ${network?.toUpperCase() || ''}`,
 			description: `${$paytoData.purpose} ${$LL.walletCard.for()} ${address}`
 		};
 	};
