@@ -3,25 +3,41 @@ import { detectLocale, i18nObject, locales } from './i18n-util'
 import { setLocale as setLocaleSvelte } from './i18n-svelte'
 import type { Locales } from './i18n-types'
 
+// Monkey-patch Intl.PluralRules to accept underscore locales (only on client side)
+if (typeof window !== 'undefined' && typeof Intl !== 'undefined') {
+	const OriginalPluralRules = Intl.PluralRules;
+	(Intl as any).PluralRules = class extends OriginalPluralRules {
+		constructor(locales?: string | string[], options?: Intl.PluralRulesOptions) {
+			// Convert underscores to hyphens for locale tags
+			const normalizedLocales = locales
+				? (typeof locales === 'string' ? locales.replace(/_/g, '-') : locales.map(l => l.replace(/_/g, '-')))
+				: locales;
+			super(normalizedLocales, options);
+		}
+	};
+	// Preserve static methods
+	(Intl.PluralRules as any).supportedLocalesOf = OriginalPluralRules.supportedLocalesOf.bind(OriginalPluralRules);
+}
+
 // Load all locales synchronously (only on client side to avoid SSR issues)
 if (typeof window !== 'undefined') {
 	loadAllLocales()
 }
 
-// Language fallback logic: en-US -> en_US -> en -> fallback to en
+// Language fallback logic: ko-KR -> ko_KR -> ko -> en (fallback)
 function getBestLocale(requestedLocale: string): Locales {
-	// Normalize all hyphens to underscores for internal use
+	// Convert hyphens to underscores for internal locale lookup
 	const normalizedLocale = requestedLocale.replace(/-/g, '_');
 
-	// If exact match found, use it
+	// If exact match found, use it (e.g., ko_KR, zh_CN)
 	if (locales.includes(normalizedLocale as any)) {
 		return normalizedLocale as Locales;
 	}
 
-	// Extract base language (e.g., 'en' from 'en-US' or 'en_US')
+	// Extract base language (e.g., 'ko' from 'ko-KR' or 'ko_KR')
 	const baseLanguage = requestedLocale.split(/[-_]/)[0];
 
-	// Check if base language exists (e.g., 'en' from 'en-US')
+	// Check if base language exists (e.g., 'ko')
 	if (locales.includes(baseLanguage as any)) {
 		return baseLanguage as Locales;
 	}
@@ -30,11 +46,9 @@ function getBestLocale(requestedLocale: string): Locales {
 	return 'en';
 }
 
-// Wrapper for setLocale that converts underscore locales to hyphen format for Intl APIs
+// Wrapper for setLocale
 function setLocale(locale: Locales): void {
-	// Convert all underscores to hyphens for Intl.PluralRules compatibility
-	const intlLocale = (locale as string).replace(/_/g, '-') as Locales;
-	setLocaleSvelte(intlLocale);
+	setLocaleSvelte(locale);
 }
 
 // Function to get translation with fallback to English
