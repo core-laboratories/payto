@@ -10,8 +10,8 @@ if (typeof window !== 'undefined') {
 
 // Language fallback logic: en-US -> en_US -> en -> fallback to en
 function getBestLocale(requestedLocale: string): Locales {
-	// Normalize hyphen to underscore for internal use
-	const normalizedLocale = requestedLocale.replace('-', '_');
+	// Normalize all hyphens to underscores for internal use
+	const normalizedLocale = requestedLocale.replace(/-/g, '_');
 
 	// If exact match found, use it
 	if (locales.includes(normalizedLocale as any)) {
@@ -32,8 +32,8 @@ function getBestLocale(requestedLocale: string): Locales {
 
 // Wrapper for setLocale that converts underscore locales to hyphen format for Intl APIs
 function setLocale(locale: Locales): void {
-	// Convert underscore to hyphen for Intl.PluralRules compatibility
-	const intlLocale = (locale as string).replace('_', '-') as Locales;
+	// Convert all underscores to hyphens for Intl.PluralRules compatibility
+	const intlLocale = (locale as string).replace(/_/g, '-') as Locales;
 	setLocaleSvelte(intlLocale);
 }
 

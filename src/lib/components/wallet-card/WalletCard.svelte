@@ -694,6 +694,9 @@
 	}
 
 	onMount(() => {
+		// Initialize i18n with default locale
+		init();
+
 		updateRotationState(); // Initial check
 
 		// Listen for orientation change
