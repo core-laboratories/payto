@@ -23,6 +23,7 @@ const zh_CNPartial: DeepPartial<Translation> = {
 		navigate: '导航',
 		donate: '捐赠',
 		pay: '支付',
+		payment: '支付',
 		purposePay: '支付',
 		purposeDonate: '捐赠'
 	},

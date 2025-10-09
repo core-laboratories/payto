@@ -23,6 +23,7 @@ const jaPartial: DeepPartial<Translation> = {
 		navigate: 'ナビゲート',
 		donate: '寄付',
 		pay: '支払い',
+		payment: '支払い',
 		purposePay: '支払い',
 		purposeDonate: '寄付'
 	},

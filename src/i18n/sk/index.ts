@@ -23,6 +23,7 @@ const skPartial: DeepPartial<Translation> = {
 		navigate: 'Navigovať',
 		donate: 'Darovať',
 		pay: 'Zaplatiť',
+		payment: 'platba',
 		purposePay: 'platbu',
 		purposeDonate: 'dar'
 	},

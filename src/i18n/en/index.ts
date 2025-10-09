@@ -20,6 +20,7 @@ const en = {
 		navigate: 'Navigate',
 		donate: 'Donate',
 		pay: 'Pay',
+		payment: 'payment',
 		purposePay: 'Pay',
 		purposeDonate: 'Donate'
 	},

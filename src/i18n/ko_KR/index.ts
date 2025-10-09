@@ -23,6 +23,7 @@ const ko_KRPartial: DeepPartial<Translation> = {
 		navigate: '이동',
 		donate: '기부',
 		pay: '결제',
+		payment: '결제',
 		purposePay: '결제',
 		purposeDonate: '기부'
 	},

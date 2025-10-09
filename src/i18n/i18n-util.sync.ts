@@ -9,6 +9,7 @@ import de from './de'
 import en from './en'
 import ja from './ja'
 import ko_KR from './ko_KR'
+import ru from './ru'
 import sk from './sk'
 import zh_CN from './zh_CN'
 
@@ -17,6 +18,7 @@ const localeTranslations = {
 	en,
 	ja,
 	ko_KR,
+	ru,
 	sk,
 	zh_CN,
 }

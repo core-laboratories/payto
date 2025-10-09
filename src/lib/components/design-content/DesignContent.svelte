@@ -7,7 +7,7 @@
 		FieldGroupAppendix,
 		ListBox
 	} from '$lib/components';
-	import { ChevronDown, ChevronUp } from 'lucide-svelte';
+	import { ChevronDown, ChevronUp, Copy, Download } from 'lucide-svelte';
 
 	import { derived, get, writable } from 'svelte/store';
 	import { constructor } from '$lib/store/constructor.store';
@@ -41,6 +41,7 @@
 		{ label: 'German', value: 'de'},
 		{ label: 'Japanese', value: 'ja'},
 		{ label: 'Korean', value: 'ko-KR'},
+		{ label: 'Russian', value: 'ru'},
 		{ label: 'Slovak', value: 'sk'}
 	];
 
@@ -141,6 +142,15 @@
 	}
 
 	let showCustomization = false;
+
+	async function copyToClipboard() {
+		try {
+			await navigator.clipboard.writeText($link);
+			toast({ message: 'Link copied to clipboard', type: 'success' });
+		} catch (err) {
+			toast({ message: 'Failed to copy link', type: 'error' });
+		}
+	}
 </script>
 
 <div class="flex flex-col gap-6">
@@ -227,7 +237,7 @@
 				/>
 			</FieldGroup>
 
-			<FieldGroup>
+			<!--FieldGroup>
 				<div class="flex items-center">
 					<input
 						type="checkbox"
@@ -236,7 +246,7 @@
 					/>
 					<label for="rtlCheckbox" class="ml-2">Right-to-Left typing (RTL)</label>
 				</div>
-			</FieldGroup>
+			</FieldGroup-->
 
 			<FieldGroup>
 				<FieldGroupLabel>Barcode Type for digital PayPass</FieldGroupLabel>
@@ -263,14 +273,24 @@
 	<div class="flex flex-col gap-3">
 		<div class="flex flex-col lg:flex-row gap-3">
 			{#if hostname}
-				<a
-					href={$link}
-					target="_blank"
-					rel="noreferrer"
-					class="button is-full lg:basis-1/2 bs-12 py-2 px-3 text-center text-white border border-gray-700 bg-gray-700 hover:bg-gray-600 rounded-md transition duration-200 outline-none focus-visible:ring focus-visible:ring-green-800 focus-visible:ring-offset-2 active:scale-(0.99) text-sm"
-				>
-					Open Weblink
-				</a>
+				<div class="flex gap-3 lg:basis-1/2">
+					<button
+						type="button"
+						onclick={copyToClipboard}
+						class="bs-12 px-3 text-white border border-gray-700 bg-gray-700 hover:bg-gray-600 rounded-md transition duration-200 outline-none focus-visible:ring focus-visible:ring-green-800 focus-visible:ring-offset-2 active:scale-(0.99)"
+						aria-label="Copy link to clipboard"
+					>
+						<Copy class="w-5 h-5" />
+					</button>
+					<a
+						href={$link}
+						target="_blank"
+						rel="noreferrer"
+						class="button flex-1 bs-12 py-2 px-3 text-center text-white border border-gray-700 bg-gray-700 hover:bg-gray-600 rounded-md transition duration-200 outline-none focus-visible:ring focus-visible:ring-green-800 focus-visible:ring-offset-2 active:scale-(0.99) text-sm"
+					>
+						Open Weblink
+					</a>
+				</div>
 			{:else}
 				<div class="button is-full lg:basis-1/2 bs-12 py-2 px-3 text-center text-white border border-gray-700 bg-gray-700 opacity-50 cursor-not-allowed rounded-md text-sm">
 					Open Weblink
@@ -298,10 +318,13 @@
 				<input type="hidden" name="hostname" value={hostname} />
 				<input type="hidden" name="authority" value={authority} />
 				<button
-					class="w-full bs-12 py-2 px-3 text-center text-white border border-gray-700 bg-gray-700 hover:bg-gray-600 rounded-sm transition duration-200 outline-none focus-visible:ring focus-visible:ring-green-800 focus-visible:ring-offset-2 active:scale-(0.99) text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+					class="w-full bs-12 py-2 px-3 text-center text-white border border-gray-700 bg-gray-700 hover:bg-gray-600 rounded-sm transition duration-200 outline-none focus-visible:ring focus-visible:ring-green-800 focus-visible:ring-offset-2 active:scale-(0.99) text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
 					type="submit"
 					disabled={!hostname || $isGenerating}
 				>
+					{#if !$isGenerating}
+						<Download class="w-4 h-4" />
+					{/if}
 					{$isGenerating ? 'Generating…' : 'Download PayPass'}
 				</button>
 			</form>

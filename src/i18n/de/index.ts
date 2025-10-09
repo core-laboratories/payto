@@ -23,6 +23,7 @@ const dePartial: DeepPartial<Translation> = {
 		navigate: 'Navigieren',
 		donate: 'Spenden',
 		pay: 'Zahlen',
+		payment: 'Zahlung',
 		purposePay: 'Zahlen',
 		purposeDonate: 'Spenden'
 	},

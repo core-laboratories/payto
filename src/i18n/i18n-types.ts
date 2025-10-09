@@ -10,6 +10,7 @@ export type Locales =
 	| 'en'
 	| 'ja'
 	| 'ko_KR'
+	| 'ru'
 	| 'sk'
 	| 'zh_CN'
 
@@ -91,6 +92,10 @@ type RootTranslation = {
 		 * P​a​y
 		 */
 		pay: string
+		/**
+		 * p​a​y​m​e​n​t
+		 */
+		payment: string
 		/**
 		 * P​a​y
 		 */
@@ -186,6 +191,10 @@ export type TranslationFunctions = {
 		 * Pay
 		 */
 		pay: () => LocalizedString
+		/**
+		 * payment
+		 */
+		payment: () => LocalizedString
 		/**
 		 * Pay
 		 */
