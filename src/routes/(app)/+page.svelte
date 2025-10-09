@@ -238,7 +238,7 @@
 											{#if $authority}
 												Issuing authority ORIC: <span class="font-bold">{$authority.toUpperCase()}</span>
 											{:else}
-												Default issued by <span class="font-bold">PAYTO</span>
+												Default issued by <span class="font-bold">PayTo</span>
 											{/if}
 										</p>
 										<a href="/pro#org" target="_blank" class="font-semibold ml-2 px-2 py-0.5 text-xs rounded-sm bg-emerald-500 text-gray-700! no-underline! hover:bg-emerald-400">Organization</a>
