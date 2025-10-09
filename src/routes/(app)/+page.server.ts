@@ -158,8 +158,9 @@ export async function load({ url }) {
 
 export const actions = {
 	generatePass: async ({ request, url }: RequestEvent) => {
+		// Get authority first to load kvData
 		const formData = await request.formData();
-		const authorityField = (formData.get('authority') as string);
+		const authorityField = (formData.get('authority') as string) || url.searchParams.get('authority');
 		const authorityItem = authorityField ? authorityField.toLowerCase() : 'payto';
 		let kvData = null;
 		let authority = null;
@@ -172,6 +173,9 @@ export const actions = {
 			}
 			authority = kvData.id;
 		}
+
+		const contentType = request.headers.get('content-type') || '';
+		let data: any = {};
 
 		// Authorization flow
 		let isAuthorized = false;
@@ -187,6 +191,20 @@ export const actions = {
 					const payload = { authority: authorityItem };
 					if (verifyToken(bearerToken, payload, kvData.api.secret)) {
 						isAuthorized = true;
+
+						// Parse JSON body only if API is enabled and authorized
+						if (contentType.includes('application/json')) {
+							// Re-read the request body as JSON
+							const clonedRequest = request.clone();
+							data = await clonedRequest.json();
+						} else {
+							// Even with API enabled, support form data
+							data.hostname = formData.get('hostname') as string;
+							data.props = formData.get('props') ? JSON.parse(formData.get('props') as string) : null;
+							data.design = formData.get('design') ? JSON.parse(formData.get('design') as string) : null;
+							data.authority = formData.get('authority') as string;
+							data.membership = formData.get('membership') as string;
+						}
 					} else {
 						throw error(403, 'Invalid or expired API token');
 					}
@@ -209,18 +227,27 @@ export const actions = {
 			}
 		}
 
-		try {
-			const props = JSON.parse(formData.get('props') as string);
-			const design = JSON.parse(formData.get('design') as string);
-			const hostname = formData.get('hostname') as string;
-			const membership = formData.get('membership') as string;
+		// Parse form data for non-API requests or if not yet parsed
+		if (Object.keys(data).length === 0) {
+			data.hostname = formData.get('hostname') as string;
+			data.props = formData.get('props') ? JSON.parse(formData.get('props') as string) : null;
+			data.design = formData.get('design') ? JSON.parse(formData.get('design') as string) : null;
+			data.authority = formData.get('authority') as string;
+			data.membership = formData.get('membership') as string;
+		}
 
-			// Required fields
-			const requiredFields = ['props', 'hostname'];
-			for (const field of requiredFields) {
-				if (!formData.has(field)) {
-					throw error(400, `Missing required field: ${field}`);
-				}
+		try {
+			const props = data.props;
+			const design = data.design || {};
+			const hostname = data.hostname;
+			const membership = data.membership;
+
+			// Required fields validation
+			if (!hostname) {
+				throw error(400, 'Missing required field: hostname');
+			}
+			if (!props) {
+				throw error(400, 'Missing required field: props');
 			}
 
 			// Required fields in props
@@ -233,7 +260,7 @@ export const actions = {
 
 			// Basic pass data structure
 			const bareLink = getLink(hostname, props);
-			const org = kvData.name || (design.org || (authorityField.toUpperCase()) || 'PayTo');
+			const org = kvData.name || (design.org || (authorityField?.toUpperCase()) || 'PayTo');
 			const originator = kvData.id || 'payto';
 			const originatorName = kvData.name || 'PayTo';
 			const memberAddress = membership || props.destination;

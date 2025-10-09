@@ -14,7 +14,7 @@
 		<div class="w-full md:flex-1 lg:flex-1 rounded shadow-lg text-gray-100 bg-gray-800/75 h-fit">
 			<a id="plus" aria-hidden="true" aria-label="Pro Plus"></a>
 			<div class="flex flex-col h-full">
-				<header class="flex flex-col gap-6 p-6 text-slate-400">
+				<header class="flex flex-col gap-4 p-4 text-slate-400">
 					<h3 class="text-xl font-bold text-green-300">
 						Pro<span class="text-2xl text-emerald-500">+</span>
 						<span class="block text-sm font-normal text-slate-400">Ideal for PayTo:FIAT</span>
@@ -23,7 +23,7 @@
 						<span>Register with partner</span>
 					</a>
 				</header>
-				<div class="p-6 flex-1">
+				<div class="px-6 pt-2 pb-4 flex-1">
 					<ul class="space-y-4">
 						<li class="flex items-start gap-2">
 							<Plus class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
@@ -47,7 +47,7 @@
 		<div class="w-full md:flex-1 lg:flex-1 rounded shadow-lg text-gray-100 bg-gray-800/75 h-fit">
 			<a id="org" aria-hidden="true" aria-label="Pro Organization"></a>
 			<div class="flex flex-col h-full">
-				<header class="flex flex-col gap-6 p-6 text-slate-400">
+				<header class="flex flex-col gap-4 p-4 text-slate-400">
 					<h3 class="text-xl font-bold text-green-300">
 						Organization
 						<span class="block text-sm font-normal text-slate-400">Ideal for PayTo:Org</span>
@@ -57,11 +57,12 @@
 						<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500">€ 5,000</span>
 						<span class="text-sm">/month</span>
 					</h4>
-					<a href="mailto:sales@payto.money?subject=Pro%20Organization&body=Name%3A%0AURL%3A%0AIcon%3A%0AIcon%202x%3A%0AIcon%203x%3A%0ALogo%3A%0ALogo%202x%3A%0AColor%20B%3A%0AColor%20F%3A%0AColor%20Txt%3A%0AForce%20Theme%3A%0ACustom%20Currency%3A" class="inline-flex items-center justify-center gap-2 px-8 py-3 font-semibold text-white transition duration-300 rounded-lg bg-emerald-700 hover:bg-emerald-600 focus:bg-emerald-700 focus-visible:outline-none !no-underline">
+					<a href="mailto:sales@payto.money?subject=Pro%20Organization&body=ORIC%3A%20%0AMessage%3A%20%0A%0A%28Please%20attach%20the%20JSON%20file%20with%20the%20details%29%0A" class="inline-flex items-center justify-center gap-2 px-8 py-3 font-semibold text-white transition duration-300 rounded-lg bg-emerald-700 hover:bg-emerald-600 focus:bg-emerald-700 focus-visible:outline-none !no-underline">
 						<span>Enter Details by Email</span>
 					</a>
 				</header>
-				<div class="p-6 flex-1">
+				<div class="px-6 pt-2 pb-4 flex-1">
+					<div class="mb-4">Limited to <a href="https://payto.onl/solutions/oric" target="_blank" rel="noopener">ORIC holders</a>.</div>
 					<ul class="space-y-4">
 						<li class="flex items-start gap-2">
 							<Plus class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
@@ -92,7 +93,7 @@
 	<div class="w-full max-w-6xl rounded shadow-lg text-gray-100 bg-gray-800/75">
 		<a id="pro" aria-hidden="true" aria-label="Pro"></a>
 		<div class="flex flex-col">
-			<header class="flex flex-col gap-6 p-6 text-slate-400">
+			<header class="flex flex-col gap-4 p-4 text-slate-400">
 				<h3 class="text-xl font-bold text-green-300">
 					Pro
 					<span class="block text-sm font-normal text-slate-400">Ideal for PayTo:Money Daily Users</span>
@@ -106,7 +107,7 @@
 					<span>Create and Activate inside PayPass</span>
 				</a>
 			</header>
-			<div class="p-6">
+			<div class="px-6 pt-2 pb-4">
 				<ul class="space-y-4">
 					<li class="flex items-start gap-2">
 						<Plus class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
