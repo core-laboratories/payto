@@ -22,8 +22,10 @@
 	import { getCategoryByValue } from '$lib/helpers/get-category-by-value.helper';
 	import { onDestroy, onMount } from 'svelte';
 	import { blo } from "@blockchainhub/blo";
-	import { X, QrCode, Nfc, Navigation2 } from 'lucide-svelte';
+	import { X, QrCode, Nfc, Navigation2, BadgeCheck } from 'lucide-svelte';
 	import { LL, setLocaleFromPaytoData, init } from '$i18n';
+	import { bicSchema } from '$lib/validators/bic.validator';
+	import { KV } from '$lib/helpers/kv.helper';
 
 	// @ts-expect-error: Module is untyped
 	import pkg from 'open-location-code/js/src/openlocationcode';
@@ -41,6 +43,8 @@
 	let mode: 'qr' | 'nfc' = 'qr';
 	let nfcWriteController: AbortController | null = null;
 	let pageData: { title: string; description: string } = { title: '', description: '' };
+	let isVerifiedOrganization = writable<boolean>(false);
+	let verifiedOrgName = writable<string | null>(null);
 	interface FlexiblePaytoData {
 		hostname: string;
 		paymentType: string;
@@ -693,6 +697,46 @@
 		return '';
 	}
 
+	// Verify organization BIC and load authority data
+	async function verifyOrganization(org: string | Readable<string> | undefined) {
+		// Reset verification state
+		isVerifiedOrganization.set(false);
+		verifiedOrgName.set(null);
+
+		if (!org) {
+			return;
+		}
+
+		const orgString = typeof org === 'string' ? org : get(org);
+		if (!orgString) {
+			return;
+		}
+
+		// Validate BIC format first
+		const validation = bicSchema.safeParse({ bic: orgString });
+		if (!validation.success) {
+			// BIC is invalid, don't load KV
+			return;
+		}
+
+		// BIC is valid, try to load KV data
+		try {
+			const kvData = await KV.get(orgString.toLowerCase());
+			if (kvData && kvData.name) {
+				// Authority exists with a name - mark as verified
+				isVerifiedOrganization.set(true);
+				verifiedOrgName.set(kvData.name);
+			}
+			// If KV doesn't exist or has no name, keep verification false
+			// The original org name will be displayed without badge
+		} catch (error) {
+			// KV fetch failed, keep verification false
+		}
+	}
+
+	// Watch for organization changes
+	$: verifyOrganization($paytoData.organization);
+
 	onMount(() => {
 		// Initialize i18n with default locale
 		init();
@@ -860,7 +904,12 @@
 					{/if}
 					<div class="text-center">
 						{#if $paytoData.organization}
-							<div class="text-lg font-medium mb-2">{$paytoData.organization}</div>
+							<div class="text-lg font-medium mb-2 flex items-center justify-center gap-1">
+								{#if $isVerifiedOrganization}
+									<BadgeCheck class="w-5 h-5 text-sky-400" />
+								{/if}
+								<span>{$verifiedOrgName || $paytoData.organization}</span>
+							</div>
 						{/if}
 						<div class="text-lg font-medium mb-1">{$paytoData.purpose}{#if $paytoData.item}{` `}{$LL.walletCard.for()}{` `}<span class="break-all">{$paytoData.item}</span>{/if}</div>
 						<div class="text-4xl font-bold tracking-tigh mt-1 mb-2">
