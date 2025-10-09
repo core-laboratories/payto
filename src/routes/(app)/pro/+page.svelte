@@ -17,7 +17,7 @@
 				<header class="flex flex-col gap-4 p-4 text-slate-400">
 					<h3 class="text-xl font-bold text-green-300">
 						Pro<span class="text-2xl text-emerald-500">+</span>
-						<span class="block text-sm font-normal text-slate-400">Ideal for PayTo:FIAT</span>
+						<span class="block text-sm font-normal text-slate-400">PayTo:FIAT</span>
 					</h3>
 					<a href="/pro/partners" class="inline-flex items-center justify-center gap-2 px-8 py-3 font-semibold text-white transition duration-300 rounded-lg bg-emerald-700 hover:bg-emerald-600 focus:bg-emerald-700 focus-visible:outline-none !no-underline">
 						<span>Register with partner</span>
@@ -50,7 +50,7 @@
 				<header class="flex flex-col gap-4 p-4 text-slate-400">
 					<h3 class="text-xl font-bold text-green-300">
 						Organization
-						<span class="block text-sm font-normal text-slate-400">Ideal for PayTo:Org</span>
+						<span class="block text-sm font-normal text-slate-400">PayTo:Org</span>
 					</h3>
 					<h4>
 						<span class="text-2xl">EUR</span>
@@ -96,7 +96,7 @@
 			<header class="flex flex-col gap-4 p-4 text-slate-400">
 				<h3 class="text-xl font-bold text-green-300">
 					Pro
-					<span class="block text-sm font-normal text-slate-400">Ideal for PayTo:Money Daily Users</span>
+					<span class="block text-sm font-normal text-slate-400">PayTo:Money Daily Users</span>
 				</h3>
 				<h4>
 					<span class="text-2xl">CTN</span>

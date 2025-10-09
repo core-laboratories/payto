@@ -14,7 +14,7 @@ const skPartial: DeepPartial<Translation> = {
 		withCash: 'v hotovosti',
 		via: 'cez',
 		expiresIn: 'Vyprší za',
-		for: 'pre',
+		for: 'za',
 		noPayment: 'Žiadna platba',
 		expired: 'Vypršalo',
 		amount: 'Suma',

@@ -4,6 +4,7 @@
 		FieldGroupColorPicker,
 		FieldGroupLabel,
 		FieldGroupText,
+		FieldGroupAppendix,
 		ListBox
 	} from '$lib/components';
 	import { ChevronDown, ChevronUp } from 'lucide-svelte';
@@ -172,13 +173,14 @@
 			{#if !authority}
 				<FieldGroup>
 					<FieldGroupLabel>
-						Organization Name
+						Organization Name / ORIC
 					</FieldGroupLabel>
 					<FieldGroupText
-						placeholder="e.g. PayTo"
+						placeholder="e.g. PINGCHB2"
 						bind:value={$constructor.design.org}
 						maxlength="25"
 					/>
+					<FieldGroupAppendix>If organization has ORIC, it will be marked as verified.</FieldGroupAppendix>
 				</FieldGroup>
 			{/if}
 
