@@ -58,26 +58,27 @@ Issuing authorities[^authority] deliver an object like this example to the email
 
 ### Organization Plan
 
-```json
+```jsonc
 {
-    "id": "payto",
-    "name": "PayTo",
-    "identifier": "pass.money.payto",
-    "url": "https://payto.money",
-    "icons": {
-        "icon": "https://payto.money/icons/icon.png",
-        "icon2x": "https://payto.money/icons/icon@2x.png",
-        "icon3x": "https://payto.money/icons/icon@3x.png",
-        "logo": "https://payto.money/icons/logo.png",
-        "logo2x": "https://payto.money/icons/logo@2x.png"
+    "id": "pingchb2", // ORIC in lowercase, no spaces
+    "name": "Ping Exchange", // Organization name
+    "identifier": "pass.exchange.ping",
+    "url": "https://ping.exchange", // Organization website
+    "icons": { // Organization icons
+        "icon": "https://…/icons/icon.png", // Icon 29x29 px
+        "icon2x": "https://…/icons/icon@2x.png", // Icon 58x58 px
+        "icon3x": "https:/…/icons/icon@3x.png", // Icon 87x87 px
+        "logo": "https://…/icons/logo.png", // Logo 160x50 px
+        "logo2x": "https://…/icons/logo@2x.png", // Logo 320x100 px
+        "logo3x": "https://…/icons/logo@3x.png" // Logo 480x150 px
     },
-    "theme": {
-        "colorB": "#77bc65",
-        "colorF": "#192a14",
-        "colorTxt": "#192a14"
+    "theme": { // Organization theme
+        "colorB": "#77bc65", // Background color
+        "colorF": "#192a14", // Foreground color
+        "colorTxt": "#192a14" // Text/label color
     },
-    "forceTheme": false,
-    "customCurrency": {
+    "forceTheme": false, // If true, forces your theme even if users or system set their own custom colors
+    "customCurrency": { // Custom currency definitions for non-standard currencies or tokens
         "XCB": {
             "symbol": "₡",
             "narrowSymbol": "₡",
@@ -86,11 +87,11 @@ Issuing authorities[^authority] deliver an object like this example to the email
             "defaultDecimals": 2
         }
     },
-    "currencyLocale": "en-US",
-    "postForm": false,
-    "api": {
-        "allowed": false,
-        "secret": "your-api-secret-here"
+    "currencyLocale": "en-US", // The locale used for currency formatting (e.g., `"en-US"`, `"de-DE"`, `"sk-SK"`)
+    "postForm": false, // If true, allows Pass generation via HTML form submission from any origin
+    "api": { // API access configuration for programmatic Pass generation
+        "allowed": false, // Set to `true` to enable API access
+        "secret": "your-api-secret-here" // Your API secret key used to generate bearer tokens (HMAC-SHA256)
     }
 }
 ```
@@ -116,6 +117,7 @@ Issuing authorities[^authority] deliver an object like this example to the email
   - `icon3x`: 87x87 px
   - `logo`: 160x50 px
   - `logo2x`: 320x100 px
+  - `logo3x`: 480x150 px
   - Default: PayTo logo
 
 - **`theme`** (optional): Color theme for the Pass in hexadecimal format.
@@ -231,7 +233,7 @@ Both `postForm` and API accept the same payload structure for generating Passes.
 #### Example: Form Submission
 
 ```html
-<form method="POST" action="https://payto.money?/generatePass&authority=mycompany">
+<form method="POST" action="https://payto.money?/generatePass&authority=oric">
   <input type="hidden" name="hostname" value="ican" />
   <input type="hidden" name="props" value='{"network":"btc","destination":"bc1q...","params":{"amount":{"value":0.001}}}' />
   <input type="hidden" name="design" value='{"colorF":"#9AB1D6","colorB":"#2A3950","barcode":"qr"}' />
@@ -242,7 +244,7 @@ Both `postForm` and API accept the same payload structure for generating Passes.
 #### Example: API Request (JSON)
 
 ```bash
-curl -X POST https://payto.money?/generatePass&authority=mycompany \
+curl -X POST https://payto.money?/generatePass&authority=oric \
   -H "Authorization: Bearer YOUR_TOKEN_HERE" \
   -H "Content-Type: application/json" \
   -d '{

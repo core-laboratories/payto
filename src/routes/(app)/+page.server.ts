@@ -453,6 +453,10 @@ export const actions = {
 				fetch(kvData.icons.logo2x)
 					.then(res => res.ok ? res.arrayBuffer() : null)
 					.then(buffer => { if (buffer) defaultImages['logo@2x.png'] = buffer; })
+					.catch(() => {}),
+				fetch(kvData.icons.logo3x)
+					.then(res => res.ok ? res.arrayBuffer() : null)
+					.then(buffer => { if (buffer) defaultImages['logo@3x.png'] = buffer; })
 					.catch(() => {})
 			]);
 
