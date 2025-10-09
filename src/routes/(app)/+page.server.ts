@@ -58,16 +58,36 @@ function getLogoText(hostname: string, props: any) {
 	return `${(props.currency.value && props.currency.value.length < 6) ? props.currency.value.toUpperCase() : (props.network.toUpperCase() ? props.network.toUpperCase() : hostname.toUpperCase())} ${(props.destination.length > 8) ? props.destination.slice(0, 4).toUpperCase() + '…' + props.destination.slice(-4).toUpperCase() : props.destination.toUpperCase()}`;
 }
 
-/*function generateToken(json: string) {
-	const payload = JSON.stringify({
-		...JSON.parse(json),
-		timestamp: Date.now()
-	});
+function generateToken(payload: any, secret: string, expirationMinutes: number = 10): string {
+	const tokenData = {
+		...payload,
+		exp: Date.now() + (expirationMinutes * 60 * 1000)
+	};
 	const hmac = forge.hmac.create();
-	hmac.start('sha256', PRIVATE_AUTH_SECRET);
-	hmac.update(payload);
+	hmac.start('sha256', secret);
+	hmac.update(JSON.stringify(tokenData));
 	return hmac.digest().toHex();
-}*/
+}
+
+function verifyToken(token: string, payload: any, secret: string): boolean {
+	const tokenData = {
+		...payload,
+		exp: Date.now() + (10 * 60 * 1000)
+	};
+	const expectedToken = generateToken(payload, secret, 10);
+
+	// Check if token matches and is not expired
+	if (token !== expectedToken) {
+		return false;
+	}
+
+	// Check expiration (token includes timestamp in payload)
+	if (tokenData.exp < Date.now()) {
+		return false;
+	}
+
+	return true;
+}
 
 function getFormattedDateTime(includeTimezone: boolean = true) {
 	const now = new Date();
@@ -152,7 +172,36 @@ export const actions = {
 			authority = kvData.id;
 		}
 
-		if (!authority || !kvData || kvData.postForm !== true) {
+		// Authorization flow
+		let isAuthorized = false;
+
+		if (authority && kvData) {
+			// Check if API is allowed
+			if (kvData.api?.allowed === true) {
+				const authHeader = request.headers.get('authorization');
+				const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
+
+				if (bearerToken && kvData.api?.secret) {
+					// Verify bearer token
+					const payload = { authority: authorityItem };
+					if (verifyToken(bearerToken, payload, kvData.api.secret)) {
+						isAuthorized = true;
+					} else {
+						throw error(403, 'Invalid or expired API token');
+					}
+				} else if (!kvData.postForm) {
+					throw error(403, 'API access requires bearer token');
+				}
+			}
+
+			// Check if post form is allowed (can be allowed together with API)
+			if (!isAuthorized && kvData.postForm === true) {
+				isAuthorized = true;
+			}
+		}
+
+		// If no authority or not authorized by API/form, check origin
+		if (!isAuthorized) {
 			const origin = request.headers.get('origin');
 			if (origin !== url.origin) {
 				throw error(403, 'Unauthorized request origin');

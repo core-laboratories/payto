@@ -9,12 +9,6 @@ The 'payto' URI scheme builder supports payments as outlined in [RFC 8905](https
 - [Extended PayTo URI](docs/scheme.md)
 - [RFC 8905](https://datatracker.ietf.org/doc/rfc8905/)
 
-## PayTo Libraries
-
-**TypeScript / JavaScript:**
-
-- [PayTo resource locator](https://github.com/core-laboratories/payto-rl)
-
 ## Project Initialization
 
 If you're reading this, you've likely already initialized your project. Congratulations!
@@ -62,25 +56,7 @@ To customize the PayPass, you can become the authority of your own PayPass.
 
 Issuing authorities[^authority] deliver an object like this example to the email: [sales@payto.money](mailto:sales@payto.money?subject=PayTo%20Authority%20Request)
 
-### Pro+ Plan
-
-```json
-{
-    "id": "payto",
-    "name": "PayTo",
-    "coreid": "cb…",
-    "icons": {
-        "icon": "https://payto.money/icons/icon.png",
-        "icon2x": "https://payto.money/icons/icon@2x.png",
-        "icon3x": "https://payto.money/icons/icon@3x.png",
-        "logo": "https://payto.money/icons/logo.png",
-        "logo2x": "https://payto.money/icons/logo@2x.png"
-    },
-    "webhook": "https://…"
-}
-```
-
-### Business Plan
+### Organization Plan
 
 ```json
 {
@@ -101,7 +77,7 @@ Issuing authorities[^authority] deliver an object like this example to the email
         "colorTxt": "#192a14"
     },
     "forceTheme": false,
-    "customCurrencyData": {
+    "customCurrency": {
         "XCB": {
             "symbol": "₡",
             "narrowSymbol": "₡",
@@ -110,30 +86,95 @@ Issuing authorities[^authority] deliver an object like this example to the email
             "defaultDecimals": 2
         }
     },
-    "currencyLocale": "en-US"
+    "currencyLocale": "en-US",
+    "postForm": false,
+    "api": {
+        "allowed": false,
+        "secret": "your-api-secret-here"
+    }
 }
 ```
 
-Where:
+#### Authority Object Fields
 
-- `id`: The authority ID of the Pass. (Required, unique, lowercase, no spaces)
-- `name`: The organization name of the Pass. If set, it is forced on the Pass. (Default: PayTo)
-- `coreid`: The Core ID of the Pass.
-- `identifier`: The identifier of the Pass. (Required, unique, lowercase - reverse DNS example: `pass.money.payto`)
-- `url`: The URL of the Pass. (Default: none)
-- `icons`: The icons of the Pass. Accepted formats are URL or IPFS links. (Default: PayTo logo)
-- `theme`: The theme of the Pass. (Default: PayTo theme)
-- `forceTheme`: Whether to force the theme if the user has set their own. (Default: false)
-- `customCurrencyData`: The custom currency data of the Pass. (Default: none)
-- `currencyLocale`: The currency locale of the Pass. (Default: undefined - autodetect)
+- **`id`** (required): The unique authority ID of the Pass. Must be lowercase, no spaces. This is used to identify your organization. If organization has issued ORIC, it should be the same as the ORIC in lowercase.
+  - Example: `"payto"`, `"mycompany"`
 
-[^authority]: Available for the [Business plan](https://payto.money/pro).
+- **`name`** (required): The organization name displayed on the Pass. If set, it overrides the user's custom organization name.
+  - Example: `"PayTo"`, `"My Company Inc."`
 
-After successfully registering the authority, you need to append the `authority` parameter to the URL:
+- **`identifier`** (required): The unique Pass Type Identifier in reverse DNS format. This is required by Apple Wallet.
+  - Example: `"pass.money.payto"`, `"pass.com.mycompany.wallet"`
+
+- **`url`** (optional): Your organization's website URL. Displayed in the Pass details.
+  - Example: `"https://payto.money"`
+  - Default: none
+
+- **`icons`** (required): Icon URLs for the Pass. All formats must be PNG. Accepts standard URLs or IPFS links.
+  - `icon`: 29x29 px (87x87 px for @3x)
+  - `icon2x`: 58x58 px
+  - `icon3x`: 87x87 px
+  - `logo`: 160x50 px
+  - `logo2x`: 320x100 px
+  - Default: PayTo logo
+
+- **`theme`** (optional): Color theme for the Pass in hexadecimal format.
+  - `colorB`: Background color (e.g., `"#77bc65"`)
+  - `colorF`: Foreground color (e.g., `"#192a14"`)
+  - `colorTxt`: Text/label color (e.g., `"#192a14"`)
+  - Default: PayTo theme (`colorB: "#2A3950"`, `colorF: "#9AB1D6"`)
+
+- **`forceTheme`** (optional): If `true`, forces your theme even if users or system set their own custom colors.
+  - Example: `true` or `false`
+  - Default: `false`
+
+- **`customCurrency`** (optional): Custom currency definitions for non-standard currencies or tokens.
+  - Format: `{ "CURRENCY_CODE": { "symbol", "narrowSymbol", "code", "name", "defaultDecimals" } }`
+  - Example: CoreCoin (XCB) with ₡ symbol and 2 decimal places
+  - Default: none
+  - Library used: [exchange-rounding](https://github.com/bchainhub/exchange-rounding)
+
+- **`currencyLocale`** (optional): The locale used for currency formatting (e.g., `"en-US"`, `"de-DE"`, `"sk-SK"`).
+  - Default: undefined (auto-detected from user's browser)
+
+- **`postForm`** (optional): If `true`, allows Pass generation via HTML form submission from any origin.
+  - Example: `true` or `false`
+  - Default: `false`
+  - Note: When enabled, origin checks are bypassed for form submissions
+
+- **`api`** (optional): API access configuration for programmatic Pass generation.
+  - `allowed`: Set to `true` to enable API access
+  - `secret`: Your API secret key used to generate bearer tokens (HMAC-SHA256)
+  - Default: `{ "allowed": false, "secret": "" }`
+  - Note: When API is enabled, requests must include `Authorization: Bearer <token>` header
+  - Token format: HMAC-SHA256 hash of payload + 10-minute expiration timestamp
+
+#### API Access
+
+When `api.allowed` is `true`, you can generate Passes programmatically by:
+
+1. Creating a bearer token using HMAC-SHA256 with your `api.secret`
+2. Including the token in the `Authorization` header: `Bearer <token>`
+3. Token expires after 10 minutes
+
+Both `postForm` and `api.allowed` can be enabled simultaneously. The authorization flow checks:
+
+1. If API is allowed and valid bearer token is provided → authorized
+2. If postForm is allowed → authorized
+3. Otherwise → check origin (must match application origin)
+
+[^authority]: Available for the [Organization plan](https://payto.money/pro).
+
+After successfully registering the authority, to issue PayPass directly from payto UI you need to append the `authority` parameter to the URL:
 
 ```txt
 https://payto.money?authority={id}
 ```
+
+## PayTo Libraries
+
+- TypeScript/JavaScript: [payto-rl](https://github.com/bchainhub/payto-rl)
+- Flutter: [flutter_paytorl](https://github.com/bchainhub/flutter_paytorl)
 
 ## License
 
