@@ -730,7 +730,7 @@
 
 		// Verify ORIC matches the address
 		try {
-			const oricResponse = await fetch(`https://oric.payto.onl/${orgString.toLowerCase()}`);
+			const oricResponse = await fetch(`https://oric.payto.onl/${orgString.toUpperCase()}`);
 			if (!oricResponse.ok) {
 				// ORIC not found
 				return;
