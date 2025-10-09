@@ -171,20 +171,10 @@ Both `postForm` and API accept the same payload structure for generating Passes.
 
 #### Request Methods
 
-**Form Submission (`postForm: true`)**:
-
 - Method: `POST`
-- Content-Type: `application/x-www-form-urlencoded` or `multipart/form-data`
-- Endpoint: `https://payto.money?authority={id}`
-- Action: `?/generatePass`
-
-**API Request (`api.allowed: true`)**:
-
-- Method: `POST`
-- Content-Type: `application/json`
-- Endpoint: `https://payto.money?authority={id}`
-- Action: `?/generatePass`
-- Headers: `Authorization: Bearer <token>`
+- Endpoint: `https://payto.money/pass?authority={id}`
+- Content-Type: `application/json` (for API) or `application/x-www-form-urlencoded` (for forms)
+- Headers (for API): `Authorization: Bearer <token>`
 
 #### Payload Structure
 
@@ -227,48 +217,107 @@ Both `postForm` and API accept the same payload structure for generating Passes.
   - **`lang`** (string): Language code (e.g., `"en"`, `"de"`, `"sk"`, `"zh-CN"`, `"ko-KR"`)
   - **`item`** (string): Item description
 
+- **`destination`** (string, form data only): Payment destination address
+  - When provided as a **form field** (not in JSON API), this overrides `props.destination`
+  - Useful for dynamic destination addresses in HTML forms
+  - Only works with `application/x-www-form-urlencoded` requests, not JSON API requests
+
 - **`membership`** (string, optional): Member address for tracking
 - **`authority`** (string, optional): Authority ID (auto-populated from URL parameter)
 
-#### Example: Form Submission
+#### Example 1: ICAN Payment (HTML Form)
 
 ```html
-<form method="POST" action="https://payto.money?/generatePass&authority=oric">
+<!-- Form submission from external website -->
+<form method="POST" action="https://payto.money/pass?authority=oric">
   <input type="hidden" name="hostname" value="ican" />
-  <input type="hidden" name="props" value='{"network":"btc","destination":"bc1q...","params":{"amount":{"value":0.001}}}' />
-  <input type="hidden" name="design" value='{"colorF":"#9AB1D6","colorB":"#2A3950","barcode":"qr"}' />
-  <button type="submit">Generate Pass</button>
+
+  <input type="hidden" name="props" value='{
+    "network": "xcb",
+    "destination": "cb7147879011ea207df5b35a24ca6f0859dcfb145999",
+    "params": {
+      "amount": { "value": "10.50" },
+      "message": { "value": "Invoice #INV-2024-001" },
+      "id": { "value": "INV-2024-001" },
+      "rc": { "value": "monthly" }
+    }
+  }' />
+
+  <input type="hidden" name="design" value='{
+    "colorF": "#10B981",
+    "colorB": "#065F46",
+    "barcode": "qr",
+    "lang": "en",
+    "org": "My Company Inc.",
+    "item": "Premium Subscription"
+  }' />
+
+  <button type="submit">Download PayPass</button>
 </form>
 ```
 
-#### Example: API Request (JSON)
+#### Example 2: ICAN Payment (API Request)
 
 ```bash
-curl -X POST https://payto.money?/generatePass&authority=oric \
+curl -X POST https://payto.money/pass?authority=oric \
   -H "Authorization: Bearer YOUR_TOKEN_HERE" \
   -H "Content-Type: application/json" \
   -d '{
     "hostname": "ican",
     "props": {
-      "network": "btc",
-      "destination": "bc1q...",
+      "network": "core",
+      "destination": "cb7147879011ea207df5b35a24ca6f0859dcfb145999",
       "params": {
-        "amount": {
-          "value": 0.001
-        },
-        "message": {
-          "value": "Coffee payment"
-        }
+        "amount": { "value": "100.50" },
+        "message": { "value": "Invoice #INV-2024-001" },
+        "id": { "value": "INV-2024-001" },
+        "rc": { "value": "monthly" }
       }
     },
     "design": {
-      "colorF": "#9AB1D6",
-      "colorB": "#2A3950",
+      "colorF": "#10B981",
+      "colorB": "#065F46",
       "barcode": "qr",
-      "lang": "en"
+      "lang": "en",
+      "org": "My Company Inc.",
+      "item": "Premium Subscription"
     }
   }'
 ```
+
+#### Example 3: Form with Dynamic Destination Override
+
+```html
+<!-- Using destination field to override props.destination -->
+<form method="POST" action="https://payto.money/pass?authority=oric" enctype="application/x-www-form-urlencoded">
+  <input type="hidden" name="hostname" value="ican" />
+
+  <!-- User can input their own address -->
+  <label for="userAddress">Your Wallet Address:</label>
+  <input type="text" id="userAddress" name="destination" value="cb7147879011ea207df5b35a24ca6f0859dcfb145999" required />
+
+  <!-- Props contains default/fallback destination -->
+  <input type="hidden" name="props" value='{
+    "network": "xcb",
+    "destination": "default-address-will-be-overridden",
+    "params": {
+      "amount": { "value": "50" },
+      "message": { "value": "Donation" }
+    }
+  }' />
+
+  <input type="hidden" name="design" value='{
+    "colorF": "#10B981",
+    "colorB": "#065F46",
+    "barcode": "qr",
+    "lang": "en"
+  }' />
+
+  <button type="submit">Generate Pass for My Address</button>
+</form>
+```
+
+**Note:** The form field `destination` will override `props.destination`, allowing users to input their own wallet address dynamically.
 
 #### Example: Complete Payload
 
@@ -276,7 +325,7 @@ curl -X POST https://payto.money?/generatePass&authority=oric \
 {
   "hostname": "ican",
   "props": {
-    "network": "core",
+    "network": "xcb",
     "destination": "cb71...",
     "params": {
       "amount": {

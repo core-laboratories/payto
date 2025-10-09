@@ -316,14 +316,13 @@
 		<div class="is-full">
 			<form
 				method="POST"
-				action="?/generatePass"
+				action="/pass"
 				use:enhance={formEnhance}
 				class="w-full"
 			>
 				<input type="hidden" name="props" value={JSON.stringify($constructorStore.networks[hostname || 'ican'])} />
 				<input type="hidden" name="design" value={JSON.stringify($constructorStore.design)} />
 				<input type="hidden" name="hostname" value={hostname} />
-				<input type="hidden" name="authority" value={authority} />
 				<button
 					class="w-full bs-12 py-2 px-3 text-center text-white border border-gray-700 bg-gray-700 hover:bg-gray-600 rounded-sm transition duration-200 outline-none focus-visible:ring focus-visible:ring-green-800 focus-visible:ring-offset-2 active:scale-(0.99) text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
 					type="submit"
