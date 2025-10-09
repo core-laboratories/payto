@@ -61,7 +61,7 @@
 		<h2 class="text-2xl font-semibold mb-4">Want to become a partner?</h2>
 		<p class="text-slate-400 mb-6">Join PayTo:Money network of banking partners and offer your customers FIAT to FIAT instant settlement and digital assets support.</p>
 		<a
-			href="/pro#pro-business"
+			href="/pro#org"
 			class="inline-flex items-center justify-center gap-2 px-8 py-3 font-semibold text-white transition duration-300 rounded-lg bg-emerald-700 hover:bg-emerald-600 focus:bg-emerald-700 focus-visible:outline-none !no-underline"
 		>
 			Join Pro:Business

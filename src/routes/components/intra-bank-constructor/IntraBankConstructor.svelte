@@ -162,7 +162,7 @@
 	</FieldGroup>
 
 	<FieldGroup>
-		<FieldGroupLabel>Beneficiary Full Name *</FieldGroupLabel>
+		<FieldGroupLabel>Beneficiary Full Name</FieldGroupLabel>
 		<FieldGroupText
 			placeholder="e.g. John Doe"
 			bind:value={$constructor.networks.intra.params.receiverName.value}
@@ -170,7 +170,7 @@
 	</FieldGroup>
 
 	<FieldGroup>
-		<FieldGroupLabel>Amount *</FieldGroupLabel>
+		<FieldGroupLabel>Amount</FieldGroupLabel>
 		<FieldGroupNumber
 			placeholder="e.g. 3.14"
 			bind:value={$constructor.networks.intra.params.amount.value}

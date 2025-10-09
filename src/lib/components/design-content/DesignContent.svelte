@@ -35,9 +35,12 @@
 
 	const languageOptions = [
 		{ label: 'App Setup (or English)', value: ''},
+		{ label: 'Chinese', value: 'zh-CN'},
 		{ label: 'English', value: 'en'},
-		{ label: 'Slovak', value: 'sk'},
-		{ label: 'German', value: 'de'}
+		{ label: 'German', value: 'de'},
+		{ label: 'Japanese', value: 'ja'},
+		{ label: 'Korean', value: 'ko-KR'},
+		{ label: 'Slovak', value: 'sk'}
 	];
 
 	const constructorStore = derived(constructor, $c => $c);
@@ -217,9 +220,7 @@
 							...c,
 							design: { ...c.design, lang: selectedValue }
 						}));
-						// Convert back to underscore format for setLocaleFromPaytoData if needed
-						const localeValue = selectedValue === '' ? 'en' : selectedValue.replace('-', '_');
-						setLocaleFromPaytoData(localeValue);
+						setLocaleFromPaytoData(selectedValue || 'en');
 					}}
 				/>
 			</FieldGroup>

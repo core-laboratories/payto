@@ -2,7 +2,7 @@
 	"name": "payto",
 	"version": "2.1.5",
 	"description": "Decentralized transfer of assets.",
-	"author": "Blockchain Hub",
+	"author": "CORE Labs",
 	"license": "CORE",
 	"bugs": {
 		"url": "https://github.com/core-laboratories/Payto/issues"

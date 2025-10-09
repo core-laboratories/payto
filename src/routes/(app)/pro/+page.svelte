@@ -12,7 +12,7 @@
 	<!-- First row: Dynamic flex layout based on number of items -->
 	<div class="flex flex-wrap gap-8 w-full max-w-screen-lg">
 		<div class="w-full md:flex-1 lg:flex-1 rounded shadow-lg text-gray-100 bg-gray-800/75 h-fit">
-			<a id="pro-plus" aria-hidden="true" aria-label="Pro Plus"></a>
+			<a id="plus" aria-hidden="true" aria-label="Pro Plus"></a>
 			<div class="flex flex-col h-full">
 				<header class="flex flex-col gap-6 p-6 text-slate-400">
 					<h3 class="text-xl font-bold text-green-300">
@@ -45,7 +45,7 @@
 			</div>
 		</div>
 		<div class="w-full md:flex-1 lg:flex-1 rounded shadow-lg text-gray-100 bg-gray-800/75 h-fit">
-			<a id="pro-org" aria-hidden="true" aria-label="Pro Organization"></a>
+			<a id="org" aria-hidden="true" aria-label="Pro Organization"></a>
 			<div class="flex flex-col h-full">
 				<header class="flex flex-col gap-6 p-6 text-slate-400">
 					<h3 class="text-xl font-bold text-green-300">

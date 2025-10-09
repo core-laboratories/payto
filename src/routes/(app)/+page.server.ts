@@ -29,6 +29,7 @@ if (!privateKey) {
 // Optional environment variables with defaults
 const proUrl = publicEnv.PUBLIC_PRO_URL || 'https://payto.money/activate/pro';
 const enableStats = PUBLIC_ENABLE_STATS === 'true' ? true : false;
+const apiTokenTimeout = parseInt(env.PRIVATE_API_TOKEN_TIMEOUT || '1', 10); // Default: 1 minute
 
 type Actions = {
 	generatePass: (event: RequestEvent) => Promise<Response>;
@@ -58,7 +59,7 @@ function getLogoText(hostname: string, props: any) {
 	return `${(props.currency.value && props.currency.value.length < 6) ? props.currency.value.toUpperCase() : (props.network.toUpperCase() ? props.network.toUpperCase() : hostname.toUpperCase())} ${(props.destination.length > 8) ? props.destination.slice(0, 4).toUpperCase() + '…' + props.destination.slice(-4).toUpperCase() : props.destination.toUpperCase()}`;
 }
 
-function generateToken(payload: any, secret: string, expirationMinutes: number = 10): string {
+function generateToken(payload: any, secret: string, expirationMinutes: number = apiTokenTimeout): string {
 	const tokenData = {
 		...payload,
 		exp: Date.now() + (expirationMinutes * 60 * 1000)
@@ -69,12 +70,12 @@ function generateToken(payload: any, secret: string, expirationMinutes: number =
 	return hmac.digest().toHex();
 }
 
-function verifyToken(token: string, payload: any, secret: string): boolean {
+function verifyToken(token: string, payload: any, secret: string, expirationMinutes: number = apiTokenTimeout): boolean {
 	const tokenData = {
 		...payload,
-		exp: Date.now() + (10 * 60 * 1000)
+		exp: Date.now() + (expirationMinutes * 60 * 1000)
 	};
-	const expectedToken = generateToken(payload, secret, 10);
+	const expectedToken = generateToken(payload, secret, expirationMinutes);
 
 	// Check if token matches and is not expired
 	if (token !== expectedToken) {

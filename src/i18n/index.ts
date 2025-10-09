@@ -1,6 +1,6 @@
 import { loadAllLocales } from './i18n-util.sync'
 import { detectLocale, i18nObject, locales } from './i18n-util'
-import { setLocale } from './i18n-svelte'
+import { setLocale as setLocaleSvelte } from './i18n-svelte'
 import type { Locales } from './i18n-types'
 
 // Load all locales synchronously (only on client side to avoid SSR issues)
@@ -30,6 +30,13 @@ function getBestLocale(requestedLocale: string): Locales {
 	return 'en';
 }
 
+// Wrapper for setLocale that converts underscore locales to hyphen format for Intl APIs
+function setLocale(locale: Locales): void {
+	// Convert underscore to hyphen for Intl.PluralRules compatibility
+	const intlLocale = (locale as string).replace('_', '-') as Locales;
+	setLocaleSvelte(intlLocale);
+}
+
 // Function to get translation with fallback to English
 export function getTranslationWithFallback<T extends keyof any>(
 	locale: Locales,
@@ -51,7 +58,7 @@ export function getTranslationWithFallback<T extends keyof any>(
 
 // Set locale from paytoData
 export function setLocaleFromPaytoData(language?: string): void {
-	if (language) {
+	if (language && language !== '') {
 		const bestLocale = getBestLocale(language);
 		setLocale(bestLocale);
 	} else {
@@ -88,4 +95,5 @@ export function init(): void {
 
 // Export types and functions for use in components
 export type { Locales } from './i18n-types';
-export { LL, locale, setLocale } from './i18n-svelte';
+export { LL, locale } from './i18n-svelte';
+export { setLocale };

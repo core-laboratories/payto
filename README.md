@@ -147,7 +147,7 @@ Issuing authorities[^authority] deliver an object like this example to the email
   - `secret`: Your API secret key used to generate bearer tokens (HMAC-SHA256)
   - Default: `{ "allowed": false, "secret": "" }`
   - Note: When API is enabled, requests must include `Authorization: Bearer <token>` header
-  - Token format: HMAC-SHA256 hash of payload + 10-minute expiration timestamp
+  - Token format: HMAC-SHA256 hash of payload + expiration timestamp (default: 1 minute, configurable via `PRIVATE_API_TOKEN_TIMEOUT` env var)
 
 #### API Access
 
@@ -155,7 +155,7 @@ When `api.allowed` is `true`, you can generate Passes programmatically by:
 
 1. Creating a bearer token using HMAC-SHA256 with your `api.secret`
 2. Including the token in the `Authorization` header: `Bearer <token>`
-3. Token expires after 10 minutes
+3. Token expires after the configured timeout (default: 1 minute, set via `PRIVATE_API_TOKEN_TIMEOUT` environment variable)
 
 Both `postForm` and `api.allowed` can be enabled simultaneously. The authorization flow checks:
 
@@ -163,7 +163,7 @@ Both `postForm` and `api.allowed` can be enabled simultaneously. The authorizati
 2. If postForm is allowed → authorized
 3. Otherwise → check origin (must match application origin)
 
-[^authority]: Available for the [Organization plan](https://payto.money/pro).
+[^authority]: Available for the [Organization plan](https://payto.money/pro#org).
 
 After successfully registering the authority, to issue PayPass directly from payto UI you need to append the `authority` parameter to the URL:
 
