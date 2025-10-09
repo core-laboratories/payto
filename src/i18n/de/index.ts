@@ -5,7 +5,7 @@ import en from '../en/index'
 
 const dePartial: DeepPartial<Translation> = {
 	walletCard: {
-		customAmount: 'Benutzerdefinierter Betrag',
+		customAmount: 'Eigener Betrag',
 		day: 'Tag',
 		days: 'Tage',
 		tap: 'Antippen',
