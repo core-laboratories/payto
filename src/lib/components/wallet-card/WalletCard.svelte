@@ -341,7 +341,9 @@
 					address: getAddress($store.networks[hostname], hostname),
 					organization: authority ? authority.toUpperCase() : $store.design.org,
 					organizationImage: undefined,
-					network: $store.networks[hostname].network === 'other' ? $store.networks[hostname].other : $store.networks[hostname].network,
+					network: hostname === 'void'
+						? ($store.networks[hostname].transport === 'other' ? $store.networks[hostname].other : $store.networks[hostname].transport)
+						: ($store.networks[hostname].network === 'other' ? $store.networks[hostname].other : $store.networks[hostname].network),
 					item: $store.design.item,
 					location: $store.networks[hostname]?.params?.loc?.value,
 					recurring: $store.networks[hostname]?.params?.rc?.value ?? '',
@@ -989,7 +991,7 @@
 				{/if}
 			</button>
 		{/if}
-		{#if (($paytoData.network === 'geo' || $paytoData.network === 'plus') && $paytoData.location)}
+		{#if ($paytoData.hostname === 'void' && ($paytoData.network === 'geo' || $paytoData.network === 'plus') && $paytoData.location)}
 			<button
 				class="bg-black/40 rounded-full p-4 hover:bg-black/80 transition"
 				aria-label={$LL.walletCard.navigate()}
