@@ -66,7 +66,7 @@ Issuing authorities[^authority] deliver an object like this example to the email
     "url": "https://ping.exchange", // Organization website
     "icons": { // Organization icons
         "icon": "https://…/icons/icon.png", // Icon 29x29 px
-        "icon2x": "https://…/icons/icon@2x.png", // Icon 58x58 px
+        "icon2x": "https://…/icons/icon@2x.png", // Icon 58x58 px (default web icon)
         "icon3x": "https:/…/icons/icon@3x.png", // Icon 87x87 px
         "logo": "https://…/icons/logo.png", // Logo 160x50 px
         "logo2x": "https://…/icons/logo@2x.png", // Logo 320x100 px
@@ -113,7 +113,7 @@ Issuing authorities[^authority] deliver an object like this example to the email
 
 - **`icons`** (required): Icon URLs for the Pass. All formats must be PNG. Accepts standard URLs or IPFS links.
   - `icon`: 29x29 px (87x87 px for @3x)
-  - `icon2x`: 58x58 px
+  - `icon2x`: 58x58 px (default web icon)
   - `icon3x`: 87x87 px
   - `logo`: 160x50 px
   - `logo2x`: 320x100 px

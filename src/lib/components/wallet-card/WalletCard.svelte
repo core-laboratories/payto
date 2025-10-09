@@ -45,6 +45,7 @@
 	let pageData: { title: string; description: string } = { title: '', description: '' };
 	let isVerifiedOrganization = writable<boolean>(false);
 	let verifiedOrgName = writable<string | null>(null);
+	let verifiedOrgIcon = writable<string | null>(null);
 	interface FlexiblePaytoData {
 		hostname: string;
 		paymentType: string;
@@ -702,6 +703,7 @@
 		// Reset verification state
 		isVerifiedOrganization.set(false);
 		verifiedOrgName.set(null);
+		verifiedOrgIcon.set(null);
 
 		if (!org) {
 			return;
@@ -726,6 +728,18 @@
 				// Authority exists with a name - mark as verified
 				isVerifiedOrganization.set(true);
 				verifiedOrgName.set(kvData.name);
+
+				// Try to load the icon2x if available
+				if (kvData.icons?.icon2x) {
+					try {
+						const response = await fetch(kvData.icons.icon2x);
+						if (response.ok) {
+							verifiedOrgIcon.set(kvData.icons.icon2x);
+						}
+					} catch (iconError) {
+						// Icon fetch failed, keep it null (will use identicon)
+					}
+				}
 			}
 			// If KV doesn't exist or has no name, keep verification false
 			// The original org name will be displayed without badge
@@ -895,7 +909,13 @@
 					</div>
 				{/if}
 				<div class="pt-4">
-					{#if $paytoData.address}
+					{#if $verifiedOrgIcon}
+						<div class="flex items-center justify-center mb-2">
+							<div class="flex items-center justify-center">
+								<img src={$verifiedOrgIcon} alt="Organization" class="w-14 h-14 rounded-full" />
+							</div>
+						</div>
+					{:else if $paytoData.address}
 						<div class="flex items-center justify-center mb-2">
 							<div class="flex items-center justify-center">
 								<img src={getIdenticon($paytoData.address)} alt="ID" class="w-14 h-14 rounded-full" />
