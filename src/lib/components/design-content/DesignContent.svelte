@@ -35,19 +35,23 @@
 	];
 
 	const languageOptions = [
-		{ label: 'App Setup (or English)', value: ''},
+		{ label: 'Application Language (or English)', value: ''},
+		{ label: 'Arabic', value: 'ar'},
 		{ label: 'Chinese', value: 'zh-CN'},
 		{ label: 'English', value: 'en'},
+		{ label: 'French', value: 'fr'},
 		{ label: 'German', value: 'de'},
 		{ label: 'Japanese', value: 'ja'},
 		{ label: 'Korean', value: 'ko-KR'},
+		{ label: 'Portuguese (Brazil)', value: 'pt-BR'},
 		{ label: 'Russian', value: 'ru'},
-		{ label: 'Slovak', value: 'sk'}
+		{ label: 'Slovak', value: 'sk'},
+		{ label: 'Spanish', value: 'es'}
 	];
 
 	const constructorStore = derived(constructor, $c => $c);
 
-	// Default to empty string for "App Setup (or English)" option
+	// Default to empty string for "Application Language (or English)" option
 	const currentLanguageValue = derived(constructorStore, ($constructor) => $constructor.design.lang || '');
 
 	const distance = derived(constructorStore, $constructor =>
@@ -207,7 +211,7 @@
 
 			<FieldGroup flexType="row" itemPosition="items-center">
 				<FieldGroupColorPicker
-					label="Background Color (Online)"
+					label="Background Color (Online Payment)"
 					bind:value={$constructor.design.colorB}
 				/>
 			</FieldGroup>
@@ -249,7 +253,7 @@
 			</FieldGroup-->
 
 			<FieldGroup>
-				<FieldGroupLabel>Barcode Type for digital PayPass</FieldGroupLabel>
+				<FieldGroupLabel>Barcode Type for Wallets</FieldGroupLabel>
 				<ListBox
 					id="barcode-list"
 					value={$barcodeValue}
@@ -300,7 +304,10 @@
 			<button
 				class="is-full lg:basis-1/2 bs-12 py-2 px-3 text-center text-white border border-gray-700 bg-gray-700 hover:bg-gray-600 rounded-sm transition duration-200 outline-none focus-visible:ring focus-visible:ring-green-800 focus-visible:ring-offset-2 active:scale-(0.99) sm:text-sm"
 				type="button"
-				onclick={() => constructor.resetDesign()}
+				onclick={() => {
+					constructor.resetDesign();
+					setLocaleFromPaytoData('en');
+				}}
 			>
 				Clear PayPass Data
 			</button>
