@@ -714,15 +714,41 @@
 			return;
 		}
 
-		// Validate BIC format first
-		const validation = bicSchema.safeParse({ bic: orgString });
-		if (!validation.success) {
-			// BIC is invalid, don't load KV
+		// Check if address is filled
+		const address = typeof $paytoData.address === 'string' ? $paytoData.address : ($paytoData.address ? get($paytoData.address) : '');
+		if (!address || address.trim() === '') {
+			// No address to verify against
 			return;
 		}
 
-		// BIC is valid, try to load KV data
+		// Validate BIC format first
+		const validation = bicSchema.safeParse({ bic: orgString });
+		if (!validation.success) {
+			// BIC is invalid, don't proceed
+			return;
+		}
+
+		// Verify ORIC matches the address
 		try {
+			const oricResponse = await fetch(`https://oric.payto.onl/${orgString.toLowerCase()}`);
+			if (!oricResponse.ok) {
+				// ORIC not found
+				return;
+			}
+
+			const oricData = await oricResponse.json();
+			if (!oricData || !oricData.address) {
+				// Invalid ORIC response
+				return;
+			}
+
+			// Check if ORIC address matches the payment address
+			if (oricData.address.toLowerCase() !== address.toLowerCase()) {
+				// Address mismatch - not verified
+				return;
+			}
+
+			// ORIC verified, now load KV data
 			const kvData = await KV.get(orgString.toLowerCase());
 			if (kvData && kvData.name) {
 				// Authority exists with a name - mark as verified
@@ -742,9 +768,8 @@
 				}
 			}
 			// If KV doesn't exist or has no name, keep verification false
-			// The original org name will be displayed without badge
 		} catch (error) {
-			// KV fetch failed, keep verification false
+			// ORIC or KV fetch failed, keep verification false
 		}
 	}
 

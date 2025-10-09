@@ -111,7 +111,7 @@ Issuing authorities[^authority] deliver an object like this example to the email
   - Example: `"https://payto.money"`
   - Default: none
 
-- **`icons`** (required): Icon URLs for the Pass. All formats must be PNG. Accepts standard URLs or IPFS links.
+- **`icons`** (optional): Icon URLs for the Pass. All formats must be PNG. Accepts standard URLs or IPFS links.
   - `icon`: 29x29 px (87x87 px for @3x)
   - `icon2x`: 58x58 px (default web icon)
   - `icon3x`: 87x87 px
