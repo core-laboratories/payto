@@ -26,7 +26,7 @@
 	import { LL, setLocaleFromPaytoData, init } from '$i18n';
 	import { bicSchema } from '$lib/validators/bic.validator';
 	import { KV } from '$lib/helpers/kv.helper';
-	import { formatLocalizedNumber, formatRecurringSymbol, getNumberingSystem } from '$lib/helpers/i18n';
+	import { formatLocalizedNumber, formatRecurringSymbol, getNumberingSystem, isRtlLanguage } from '$lib/helpers/i18n';
 
 	// @ts-expect-error: Module is untyped
 	import pkg from 'open-location-code/js/src/openlocationcode';
@@ -863,10 +863,24 @@
 	$: if ($paytoData?.lang) {
 		const language = typeof $paytoData.lang === 'string' ? $paytoData.lang : get($paytoData.lang);
 		setLocaleFromPaytoData(language);
+
+		// Auto-set RTL flag based on language
+		const shouldBeRtl = isRtlLanguage(language);
+
 		// Update constructor store properly
 		constructor.update(c => ({
 			...c,
-			design: { ...c.design, lang: language }
+			design: {
+				...c.design,
+				lang: language,
+				rtl: shouldBeRtl || c.design.rtl // Keep manual RTL override if set
+			}
+		}));
+
+		// Update paytoData RTL flag reactively
+		paytoData.update(data => ({
+			...data,
+			rtl: shouldBeRtl || data.rtl
 		}));
 	}
 
@@ -1024,13 +1038,7 @@
 							</div>
 						{/if}
 						<div class="text-lg font-medium mb-1" dir={$paytoData.rtl ? 'rtl' : 'ltr'}>
-							{#if $paytoData.rtl}
-								<!-- RTL: Item first, then "for", then purpose -->
-								{#if $paytoData.item}<span class="break-all">{$paytoData.item}</span>{` `}{$LL.walletCard.for()}{` `}{/if}{$paytoData.purpose}
-							{:else}
-								<!-- LTR: Purpose first, then "for", then item -->
-								{$paytoData.purpose}{#if $paytoData.item}{` `}{$LL.walletCard.for()}{` `}<span class="break-all">{$paytoData.item}</span>{/if}
-							{/if}
+							{$paytoData.purpose}{#if $paytoData.item}{` `}{$LL.walletCard.for()}{` `}<span class="break-all">{$paytoData.item}</span>{/if}
 						</div>
 						<div class="text-4xl font-bold tracking-tigh mt-1 mb-2" dir={$paytoData.rtl ? 'rtl' : 'ltr'}>
 							{#if noData}
@@ -1039,17 +1047,9 @@
 								<span class="text-3xl">{$LL.walletCard.expired()}</span>
 							{:else}
 								{#if $paytoData.value && Number($paytoData.value)>0}
-									{#if $paytoData.rtl}
-										{#if $paytoData.recurring}<span class="text-2xl uppercase">{$formattedRecurring}{` / `}</span>{/if}{$formattedValue}
-									{:else}
-										{$formattedValue}{#if $paytoData.recurring}<span class="text-2xl uppercase">{` / `}{$formattedRecurring}</span>{/if}
-									{/if}
+									{$formattedValue}{#if $paytoData.recurring}<span class="text-2xl uppercase">{` / `}{$formattedRecurring}</span>{/if}
 								{:else}
-									{#if $paytoData.rtl}
-										{#if $paytoData.recurring}<span class="text-2xl uppercase">{$formattedRecurring}{` / `}</span>{/if}<span class="text-3xl">{$LL.walletCard.customAmount()}</span>
-									{:else}
-										<span class="text-3xl">{$LL.walletCard.customAmount()}</span>{#if $paytoData.recurring}<span class="text-2xl uppercase">{` / `}{$formattedRecurring}</span>{/if}
-									{/if}
+									<span class="text-3xl">{$LL.walletCard.customAmount()}</span>{#if $paytoData.recurring}<span class="text-2xl uppercase">{` / `}{$formattedRecurring}</span>{/if}
 								{/if}
 							{/if}
 						</div>

@@ -25,6 +25,17 @@ export function deepMergeDict<T extends Record<string, any>>(target: T, source: 
 	return result;
 }
 
+// Determine if a locale uses RTL (right-to-left) script direction
+export function isRtlLanguage(locale?: string): boolean {
+	const currentLocale = locale || (typeof navigator !== 'undefined' ? navigator.language : 'en');
+
+	// Languages that use RTL script direction
+	const rtlLanguages = ['ar', 'fa', 'ur', 'he', 'yi', 'ps', 'sd', 'ks', 'ku', 'dv'];
+
+	const languageCode = currentLocale.split('-')[0].toLowerCase();
+	return rtlLanguages.includes(languageCode);
+}
+
 // Determine the appropriate numbering system for a locale
 export function getNumberingSystem(locale?: string): 'arab' | 'latn' {
 	const currentLocale = locale || (typeof navigator !== 'undefined' ? navigator.language : 'en');
