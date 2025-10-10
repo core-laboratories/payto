@@ -52,7 +52,7 @@
 		"@types/qrcode": "^1.5.5",
 		"blockchain-wallet-validator": "^1.1.2",
 		"device-sherlock": "^0.2.1",
-		"exchange-rounding": "^1.1.6",
+		"exchange-rounding": "^1.1.8",
 		"jszip": "^3.10.1",
 		"lucide-svelte": "^0.545.0",
 		"node-forge": "^1.3.1",
