@@ -26,7 +26,7 @@
 	import { LL, setLocaleFromPaytoData, init } from '$i18n';
 	import { bicSchema } from '$lib/validators/bic.validator';
 	import { KV } from '$lib/helpers/kv.helper';
-	import { formatLocalizedNumber, formatRecurringSymbol } from '$lib/helpers/i18n';
+	import { formatLocalizedNumber, formatRecurringSymbol, getNumberingSystem } from '$lib/helpers/i18n';
 
 	// @ts-expect-error: Module is untyped
 	import pkg from 'open-location-code/js/src/openlocationcode';
@@ -120,16 +120,25 @@
 
 		// Format time components with leading zeros and localized numbers
 		const formatTime = (h: number, m: number, s: number) => {
-			const hStr = formatLocalizedNumber(h, lang).padStart(2, '0');
-			const mStr = formatLocalizedNumber(m, lang).padStart(2, '0');
-			const sStr = formatLocalizedNumber(s, lang).padStart(2, '0');
+			// Pad with zeros first, then localize
+			const hPadded = h.toString().padStart(2, '0');
+			const mPadded = m.toString().padStart(2, '0');
+			const sPadded = s.toString().padStart(2, '0');
+
+			// Localize each digit
+			const hStr = hPadded.split('').map(d => formatLocalizedNumber(parseInt(d), lang)).join('');
+			const mStr = mPadded.split('').map(d => formatLocalizedNumber(parseInt(d), lang)).join('');
+			const sStr = sPadded.split('').map(d => formatLocalizedNumber(parseInt(d), lang)).join('');
 			return `${hStr}:${mStr}:${sStr}`;
 		};
 
 		// Format minutes and seconds
 		const formatMinutes = (m: number, s: number) => {
-			const mStr = formatLocalizedNumber(m, lang).padStart(2, '0');
-			const sStr = formatLocalizedNumber(s, lang).padStart(2, '0');
+			const mPadded = m.toString().padStart(2, '0');
+			const sPadded = s.toString().padStart(2, '0');
+
+			const mStr = mPadded.split('').map(d => formatLocalizedNumber(parseInt(d), lang)).join('');
+			const sStr = sPadded.split('').map(d => formatLocalizedNumber(parseInt(d), lang)).join('');
 			return `${mStr}:${sStr}`;
 		};
 
@@ -299,7 +308,8 @@
 					return new ExchNumberFormat(lang, {
 						style: 'currency',
 						currency,
-						currencyDisplay: 'symbol'
+						currencyDisplay: 'symbol',
+						numberingSystem: getNumberingSystem(lang)
 					});
 				}
 			);
@@ -377,21 +387,34 @@
 					return new ExchNumberFormat(lang, {
 						style: 'currency',
 						currency,
-						currencyDisplay: 'symbol'
+						currencyDisplay: 'symbol',
+						numberingSystem: getNumberingSystem(lang)
 					});
 				}
 			);
 		}
 	}
 
-	const formattedValue = derived(
-		[paytoData],
-		([$data]) => {
-			const value = $data?.value;
-
-			return value ? $formatter?.format(Number(value)) : $LL.walletCard.customAmount();
+	// Use a reactive declaration for formattedValue to ensure it updates with formatter changes
+	let formattedValue: Readable<string>;
+	$: {
+		if (formatter) {
+			formattedValue = derived(
+				[paytoData, formatter],
+				([$data, $fmt]) => {
+					const value = $data?.value;
+					return value ? $fmt.format(Number(value)) : $LL.walletCard.customAmount();
+				}
+			);
+		} else {
+			formattedValue = derived(
+				[paytoData],
+				([$data]) => {
+					return $LL.walletCard.customAmount();
+				}
+			);
 		}
-	);
+	}
 
 	// Format recurring symbol with localized numbers
 	const formattedRecurring = derived(

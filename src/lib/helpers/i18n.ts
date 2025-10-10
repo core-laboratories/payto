@@ -25,10 +25,24 @@ export function deepMergeDict<T extends Record<string, any>>(target: T, source: 
 	return result;
 }
 
+// Determine the appropriate numbering system for a locale
+export function getNumberingSystem(locale?: string): 'arab' | 'latn' {
+	const currentLocale = locale || (typeof navigator !== 'undefined' ? navigator.language : 'en');
+
+	// Languages that use Arabic-Indic numerals
+	const arabicNumeralLanguages = ['ar', 'fa', 'ur', 'ps', 'sd', 'ks', 'ku', 'dv'];
+
+	const languageCode = currentLocale.split('-')[0].toLowerCase();
+	return arabicNumeralLanguages.includes(languageCode) ? 'arab' : 'latn';
+}
+
 // Format numbers into localized value
 export function formatLocalizedNumber(value: number, locale?: string): string {
 	const currentLocale = locale || (typeof navigator !== 'undefined' ? navigator.language : 'en');
-	return new Intl.NumberFormat(currentLocale).format(value);
+
+	return new Intl.NumberFormat(currentLocale, {
+		numberingSystem: getNumberingSystem(currentLocale)
+	}).format(value);
 }
 
 // Format recurring symbols with localized numbers
