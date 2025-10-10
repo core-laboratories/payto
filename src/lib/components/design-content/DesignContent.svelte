@@ -36,7 +36,7 @@
 
 	const languageOptions = [
 		{ label: 'Application Language (or English)', value: ''},
-		{ label: 'Arabic', value: 'ar'},
+		{ label: 'Arabic', value: 'ar', rtl: true},
 		{ label: 'Chinese', value: 'zh-CN'},
 		{ label: 'English', value: 'en'},
 		{ label: 'French', value: 'fr'},
@@ -232,25 +232,28 @@
 					items={languageOptions}
 					onChange={(val) => {
 						const selectedValue = String(val) || '';
+						const selectedLanguage = languageOptions.find(lang => lang.value === selectedValue);
+						const isRtl = selectedLanguage?.rtl || false;
+
 						constructor.update(c => ({
 							...c,
-							design: { ...c.design, lang: selectedValue }
+							design: { ...c.design, lang: selectedValue, rtl: isRtl }
 						}));
 						setLocaleFromPaytoData(selectedValue || 'en');
 					}}
 				/>
 			</FieldGroup>
 
-			<!--FieldGroup>
+			<FieldGroup>
 				<div class="flex items-center">
 					<input
 						type="checkbox"
 						bind:checked={$constructor.design.rtl}
 						id="rtlCheckbox"
 					/>
-					<label for="rtlCheckbox" class="ml-2">Right-to-Left typing (RTL)</label>
+					<label for="rtlCheckbox" class="ml-2 text-sm">Right-to-Left typing (RTL)</label>
 				</div>
-			</FieldGroup-->
+			</FieldGroup>
 
 			<FieldGroup>
 				<FieldGroupLabel>Barcode Type for Wallets</FieldGroupLabel>

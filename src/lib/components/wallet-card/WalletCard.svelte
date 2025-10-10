@@ -900,18 +900,18 @@
 				<div class="p-4 pb-1 rounded-lg flex justify-center items-center bg-white mb-2 print:hidden">
 					<div class="text-center">
 						<Qr param={$qrcodeValue} />
-						<div class="text-sm text-black mt-1">{getInfoDisplay($paytoData)}</div>
+						<div class="text-sm text-black mt-1" dir={$paytoData.rtl ? 'rtl' : 'ltr'}>{getInfoDisplay($paytoData)}</div>
 					</div>
 				</div>
 			{/if}
 			<div class="p-4 pb-1 rounded-lg flex justify-center items-center bg-white mb-2 hidden print:block">
 				<div class="text-center">
 					<Qr param={$qrcodeValue} />
-					<div class="text-sm text-black mt-1">{getInfoDisplay($paytoData)}</div>
+					<div class="text-sm text-black mt-1" dir={$paytoData.rtl ? 'rtl' : 'ltr'}>{getInfoDisplay($paytoData)}</div>
 				</div>
 			</div>
 		</div>
-		<div class={`text-lg font-medium drop-shadow print:drop-shadow-none ${isUpsideDown ? 'rotated' : ''}`}>{$nfcSupported && mode === 'nfc' ? $LL.walletCard.tap() : $LL.walletCard.scan()} {$LL.walletCard.hereTo()} {$paytoData.purposeLabel}{printType($paytoData, true)}</div>
+		<div class={`text-lg font-medium drop-shadow print:drop-shadow-none ${isUpsideDown ? 'rotated' : ''}`} dir={$paytoData.rtl ? 'rtl' : 'ltr'}>{$nfcSupported && mode === 'nfc' ? $LL.walletCard.tap() : $LL.walletCard.scan()} {$LL.walletCard.hereTo()} {$paytoData.purposeLabel}{printType($paytoData, true)}</div>
 	</div>
 
 	<!-- Main Card (rotated if needed) -->
@@ -920,7 +920,7 @@
 			<div class="rounded-2xl bg-black/40 shadow-xl px-8 pb-4 flex flex-col items-center min-w-[320px] max-w-xs relative overflow-hidden print:shadow-none print:border-2 print:border-gray-400">
 				{#if $expirationTimeMs && !isExpiredPayment}
 					<div class="-mx-8 w-[calc(100%+4rem)] flex flex-col gap-1 mb-2">
-						<div class="w-full bg-black/20 rounded-t-2xl h-2 overflow-hidden">
+						<div class="w-full bg-black/20 rounded-t-2xl h-2 overflow-hidden" dir={$paytoData.rtl ? 'rtl' : 'ltr'}>
 							<div
 								class="h-2 rounded-t-2xl transition-all duration-1000 ease-linear"
 								class:bg-emerald-500={$timePercentage > 50}
@@ -929,7 +929,7 @@
 								style="width: {$timePercentage}%"
 							></div>
 						</div>
-						<div class="flex justify-between text-xs px-4">
+						<div class={`flex justify-between text-xs px-4 ${$paytoData.rtl ? 'flex-row-reverse' : ''}`}>
 							<span class="text-gray-300">{$LL.walletCard.expiresIn()}</span>
 							<span class="font-medium text-gray-100">{$formattedTimeRemaining}</span>
 						</div>
@@ -951,24 +951,40 @@
 					{/if}
 					<div class="text-center">
 						{#if $paytoData.organization}
-							<div class="text-lg font-medium mb-2 flex items-center justify-center gap-1">
+							<div class="text-lg font-medium mb-2 flex items-center justify-center gap-1" dir={$paytoData.rtl ? 'rtl' : 'ltr'}>
 								{#if $isVerifiedOrganization}
 									<BadgeCheck class="w-5 h-5 text-sky-400" />
 								{/if}
 								<span>{$verifiedOrgName || $paytoData.organization}</span>
 							</div>
 						{/if}
-						<div class="text-lg font-medium mb-1">{$paytoData.purpose}{#if $paytoData.item}{` `}{$LL.walletCard.for()}{` `}<span class="break-all">{$paytoData.item}</span>{/if}</div>
-						<div class="text-4xl font-bold tracking-tigh mt-1 mb-2">
+						<div class="text-lg font-medium mb-1" dir={$paytoData.rtl ? 'rtl' : 'ltr'}>
+							{#if $paytoData.rtl}
+								<!-- RTL: Item first, then "for", then purpose -->
+								{#if $paytoData.item}<span class="break-all">{$paytoData.item}</span>{` `}{$LL.walletCard.for()}{` `}{/if}{$paytoData.purpose}
+							{:else}
+								<!-- LTR: Purpose first, then "for", then item -->
+								{$paytoData.purpose}{#if $paytoData.item}{` `}{$LL.walletCard.for()}{` `}<span class="break-all">{$paytoData.item}</span>{/if}
+							{/if}
+						</div>
+						<div class="text-4xl font-bold tracking-tigh mt-1 mb-2" dir={$paytoData.rtl ? 'rtl' : 'ltr'}>
 							{#if noData}
 								<span class="text-3xl">{$LL.walletCard.noPayment()}</span>
 							{:else if isExpiredPayment}
 								<span class="text-3xl">{$LL.walletCard.expired()}</span>
 							{:else}
 								{#if $paytoData.value && Number($paytoData.value)>0}
-									{$formattedValue}{#if $paytoData.recurring}<span class="text-2xl uppercase">{` / `}{$paytoData.recurring}</span>{/if}
+									{#if $paytoData.rtl}
+										{#if $paytoData.recurring}<span class="text-2xl uppercase">{$paytoData.recurring}{` / `}</span>{/if}{$formattedValue}
+									{:else}
+										{$formattedValue}{#if $paytoData.recurring}<span class="text-2xl uppercase">{` / `}{$paytoData.recurring}</span>{/if}
+									{/if}
 								{:else}
-									<span class="text-3xl">{$LL.walletCard.customAmount()}</span>{#if $paytoData.recurring}<span class="text-2xl uppercase">{` / `}{$paytoData.recurring}</span>{/if}
+									{#if $paytoData.rtl}
+										{#if $paytoData.recurring}<span class="text-2xl uppercase">{$paytoData.recurring}{` / `}</span>{/if}<span class="text-3xl">{$LL.walletCard.customAmount()}</span>
+									{:else}
+										<span class="text-3xl">{$LL.walletCard.customAmount()}</span>{#if $paytoData.recurring}<span class="text-2xl uppercase">{` / `}{$paytoData.recurring}</span>{/if}
+									{/if}
 								{/if}
 							{/if}
 						</div>
@@ -978,7 +994,7 @@
 		</div>
 	</div>
 
-	<div class={`relative flex justify-center items-center gap-6 px-12 pb-8 mt-4 z-10 print:hidden ${$paytoData.rtl !== undefined && $paytoData.rtl === true ? 'flex-row-reverse' : ''}`}>
+	<div class={`relative flex justify-center items-center gap-6 px-12 pb-8 mt-4 z-10 print:hidden ${$paytoData.rtl ? 'flex-row-reverse' : ''}`}>
 		<button class="bg-black/40 rounded-full p-4 hover:bg-black/80 transition" aria-label={$LL.walletCard.close()} on:click={handleCloseOrBack}>
 			<X class="w-7 h-7" />
 		</button>
