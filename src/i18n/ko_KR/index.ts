@@ -6,8 +6,6 @@ import en from '../en/index'
 const ko_KRPartial: DeepPartial<Translation> = {
 	walletCard: {
 		customAmount: '직접 입력',
-		day: '일',
-		days: '일',
 		tap: '탭하기',
 		scan: '스캔',
 		hereTo: '여기에서',
@@ -30,6 +28,29 @@ const ko_KRPartial: DeepPartial<Translation> = {
 	paymentButton: {
 		Recurring: '정기 결제',
 		via: '통해'
+	},
+	common: {
+		dates: {
+			day: '일',
+			days: '일'
+		},
+		recurring: {
+			day: '일',
+			month: '월',
+			year: '년'
+		},
+		numbers: {
+			0: '0',
+			1: '1',
+			2: '2',
+			3: '3',
+			4: '4',
+			5: '5',
+			6: '6',
+			7: '7',
+			8: '8',
+			9: '9'
+		}
 	}
 }
 

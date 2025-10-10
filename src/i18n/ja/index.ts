@@ -6,8 +6,6 @@ import en from '../en/index'
 const jaPartial: DeepPartial<Translation> = {
 	walletCard: {
 		customAmount: '金額を指定',
-		day: '日',
-		days: '日',
 		tap: 'タップ',
 		scan: 'スキャン',
 		hereTo: 'こちらで',
@@ -30,6 +28,29 @@ const jaPartial: DeepPartial<Translation> = {
 	paymentButton: {
 		Recurring: '定期',
 		via: '経由'
+	},
+	common: {
+		dates: {
+			day: '日',
+			days: '日'
+		},
+		recurring: {
+			day: '日',
+			month: '月',
+			year: '年'
+		},
+		numbers: {
+			0: '0',
+			1: '1',
+			2: '2',
+			3: '3',
+			4: '4',
+			5: '5',
+			6: '6',
+			7: '7',
+			8: '8',
+			9: '9'
+		}
 	}
 }
 

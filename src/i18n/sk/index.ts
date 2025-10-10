@@ -6,8 +6,6 @@ import en from '../en/index'
 const skPartial: DeepPartial<Translation> = {
 	walletCard: {
 		customAmount: 'vlastná suma',
-		day: 'deň',
-		days: 'dni',
 		tap: 'Dotknite sa',
 		scan: 'Skenovať',
 		hereTo: 'tu pre',
@@ -30,6 +28,29 @@ const skPartial: DeepPartial<Translation> = {
 	paymentButton: {
 		Recurring: 'Pravidelné',
 		via: 'cez'
+	},
+	common: {
+		dates: {
+			day: 'deň',
+			days: 'dni'
+		},
+		recurring: {
+			day: 'd',
+			month: 'm',
+			year: 'r'
+		},
+		numbers: {
+			0: '0',
+			1: '1',
+			2: '2',
+			3: '3',
+			4: '4',
+			5: '5',
+			6: '6',
+			7: '7',
+			8: '8',
+			9: '9'
+		}
 	}
 }
 

@@ -6,8 +6,6 @@ import en from '../en/index'
 const ptBRPartial: DeepPartial<Translation> = {
 	walletCard: {
 		customAmount: 'Valor próprio',
-		day: 'dia',
-		days: 'dias',
 		tap: 'Toque',
 		scan: 'Escanear',
 		hereTo: 'aqui para',
@@ -30,6 +28,29 @@ const ptBRPartial: DeepPartial<Translation> = {
 	paymentButton: {
 		Recurring: 'Recorrente',
 		via: 'via'
+	},
+	common: {
+		dates: {
+			day: 'dia',
+			days: 'dias'
+		},
+		recurring: {
+			day: 'd',
+			month: 'm',
+			year: 'a'
+		},
+		numbers: {
+			0: '0',
+			1: '1',
+			2: '2',
+			3: '3',
+			4: '4',
+			5: '5',
+			6: '6',
+			7: '7',
+			8: '8',
+			9: '9'
+		}
 	}
 }
 

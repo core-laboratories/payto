@@ -26,6 +26,7 @@
 	import { LL, setLocaleFromPaytoData, init } from '$i18n';
 	import { bicSchema } from '$lib/validators/bic.validator';
 	import { KV } from '$lib/helpers/kv.helper';
+	import { formatLocalizedNumber, formatRecurringSymbol } from '$lib/helpers/i18n';
 
 	// @ts-expect-error: Module is untyped
 	import pkg from 'open-location-code/js/src/openlocationcode';
@@ -106,7 +107,7 @@
 		}
 	);
 
-	const formattedTimeRemaining = derived(timeRemaining, $timeRemaining => {
+	const formattedTimeRemaining = derived([timeRemaining, paytoData], ([$timeRemaining, $data]) => {
 		if ($timeRemaining <= 0) return $LL.walletCard.expired();
 
 		const totalSeconds = Math.floor($timeRemaining / 1000);
@@ -115,19 +116,26 @@
 		const minutes = Math.floor((totalSeconds % 3600) / 60);
 		const seconds = totalSeconds % 60;
 
-		// Format time components with leading zeros
+		const lang = typeof $data.lang === 'string' ? $data.lang : (typeof $data.lang === 'object' && 'subscribe' in $data.lang ? get($data.lang) : 'en');
+
+		// Format time components with leading zeros and localized numbers
 		const formatTime = (h: number, m: number, s: number) => {
-			return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+			const hStr = formatLocalizedNumber(h, lang).padStart(2, '0');
+			const mStr = formatLocalizedNumber(m, lang).padStart(2, '0');
+			const sStr = formatLocalizedNumber(s, lang).padStart(2, '0');
+			return `${hStr}:${mStr}:${sStr}`;
 		};
 
 		// Format minutes and seconds
 		const formatMinutes = (m: number, s: number) => {
-			return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+			const mStr = formatLocalizedNumber(m, lang).padStart(2, '0');
+			const sStr = formatLocalizedNumber(s, lang).padStart(2, '0');
+			return `${mStr}:${sStr}`;
 		};
 
 		if (days > 0) {
-			const dayText = days === 1 ? $LL.walletCard.day() : $LL.walletCard.days();
-			return `${days} ${dayText} ${formatTime(hours, minutes, seconds)}`;
+			const dayText = days === 1 ? $LL.common.dates.day() : $LL.common.dates.days();
+			return `${formatLocalizedNumber(days, lang)} ${dayText} ${formatTime(hours, minutes, seconds)}`;
 		} else if (hours > 0) {
 			return formatTime(hours, minutes, seconds);
 		} else {
@@ -284,10 +292,11 @@
 			}, 0);
 
 			formatter = derived(
-				[constructorStore, hostnameStore],
-				([$constructor, $hostname]) => {
+				[constructorStore, hostnameStore, paytoData],
+				([$constructor, $hostname, $data]) => {
 					const currency = $paytoData?.currency || '';
-					return new ExchNumberFormat(undefined, {
+					const lang = typeof $data.lang === 'string' ? $data.lang : (typeof $data.lang === 'object' && 'subscribe' in $data.lang ? get($data.lang) : 'en');
+					return new ExchNumberFormat(lang, {
 						style: 'currency',
 						currency,
 						currencyDisplay: 'symbol'
@@ -361,10 +370,11 @@
 			});
 
 			formatter = derived(
-				[constructorStore, hostnameStore],
-				([$constructor, $hostname]) => {
+				[constructorStore, hostnameStore, paytoData],
+				([$constructor, $hostname, $data]) => {
 					const currency = $paytoData?.currency || '';
-					return new ExchNumberFormat(undefined, {
+					const lang = typeof $data.lang === 'string' ? $data.lang : (typeof $data.lang === 'object' && 'subscribe' in $data.lang ? get($data.lang) : 'en');
+					return new ExchNumberFormat(lang, {
 						style: 'currency',
 						currency,
 						currencyDisplay: 'symbol'
@@ -380,6 +390,26 @@
 			const value = $data?.value;
 
 			return value ? $formatter?.format(Number(value)) : $LL.walletCard.customAmount();
+		}
+	);
+
+	// Format recurring symbol with localized numbers
+	const formattedRecurring = derived(
+		[paytoData],
+		([$data]) => {
+			const recurring = $data?.recurring;
+			if (!recurring || typeof recurring !== 'string') return '';
+
+			const lang = typeof $data.lang === 'string' ? $data.lang : (typeof $data.lang === 'object' && 'subscribe' in $data.lang ? get($data.lang) : 'en');
+
+			// Get locale-specific translations for recurring symbols
+			const translations = {
+				day: $LL.common?.recurring?.day?.() || 'd',
+				month: $LL.common?.recurring?.month?.() || 'm',
+				year: $LL.common?.recurring?.year?.() || 'y'
+			};
+
+			return formatRecurringSymbol(recurring, lang, translations);
 		}
 	);
 
@@ -975,15 +1005,15 @@
 							{:else}
 								{#if $paytoData.value && Number($paytoData.value)>0}
 									{#if $paytoData.rtl}
-										{#if $paytoData.recurring}<span class="text-2xl uppercase">{$paytoData.recurring}{` / `}</span>{/if}{$formattedValue}
+										{#if $paytoData.recurring}<span class="text-2xl uppercase">{$formattedRecurring}{` / `}</span>{/if}{$formattedValue}
 									{:else}
-										{$formattedValue}{#if $paytoData.recurring}<span class="text-2xl uppercase">{` / `}{$paytoData.recurring}</span>{/if}
+										{$formattedValue}{#if $paytoData.recurring}<span class="text-2xl uppercase">{` / `}{$formattedRecurring}</span>{/if}
 									{/if}
 								{:else}
 									{#if $paytoData.rtl}
-										{#if $paytoData.recurring}<span class="text-2xl uppercase">{$paytoData.recurring}{` / `}</span>{/if}<span class="text-3xl">{$LL.walletCard.customAmount()}</span>
+										{#if $paytoData.recurring}<span class="text-2xl uppercase">{$formattedRecurring}{` / `}</span>{/if}<span class="text-3xl">{$LL.walletCard.customAmount()}</span>
 									{:else}
-										<span class="text-3xl">{$LL.walletCard.customAmount()}</span>{#if $paytoData.recurring}<span class="text-2xl uppercase">{` / `}{$paytoData.recurring}</span>{/if}
+										<span class="text-3xl">{$LL.walletCard.customAmount()}</span>{#if $paytoData.recurring}<span class="text-2xl uppercase">{` / `}{$formattedRecurring}</span>{/if}
 									{/if}
 								{/if}
 							{/if}

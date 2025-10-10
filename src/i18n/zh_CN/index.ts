@@ -6,8 +6,6 @@ import en from '../en/index'
 const zh_CNPartial: DeepPartial<Translation> = {
 	walletCard: {
 		customAmount: '自定义金额',
-		day: '天',
-		days: '天',
 		tap: '点击',
 		scan: '扫码',
 		hereTo: '此处以',
@@ -30,6 +28,29 @@ const zh_CNPartial: DeepPartial<Translation> = {
 	paymentButton: {
 		Recurring: '定期',
 		via: '通过'
+	},
+	common: {
+		dates: {
+			day: '日',
+			days: '日'
+		},
+		recurring: {
+			day: '日',
+			month: '月',
+			year: '年'
+		},
+		numbers: {
+			0: '0',
+			1: '1',
+			2: '2',
+			3: '3',
+			4: '4',
+			5: '5',
+			6: '6',
+			7: '7',
+			8: '8',
+			9: '9'
+		}
 	}
 }
 

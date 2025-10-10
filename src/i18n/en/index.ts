@@ -3,8 +3,6 @@ import type { BaseTranslation } from '../i18n-types'
 const en = {
 	walletCard: {
 		customAmount: 'Custom amount',
-		day: 'day',
-		days: 'days',
 		tap: 'Tap',
 		scan: 'Scan',
 		hereTo: 'here to',
@@ -27,6 +25,29 @@ const en = {
 	paymentButton: {
 		Recurring: 'Recurring',
 		via: 'via'
+	},
+	common: {
+		dates: {
+			day: 'Day',
+			days: 'Days'
+		},
+		recurring: {
+			day: 'd',
+			month: 'm',
+			year: 'y'
+		},
+		numbers: {
+			0: '0',
+			1: '1',
+			2: '2',
+			3: '3',
+			4: '4',
+			5: '5',
+			6: '6',
+			7: '7',
+			8: '8',
+			9: '9'
+		}
 	}
 } satisfies BaseTranslation
 

@@ -6,8 +6,6 @@ import en from '../en/index'
 const ruPartial: DeepPartial<Translation> = {
 	walletCard: {
 		customAmount: 'Своя сумма',
-		day: 'день',
-		days: 'дни',
 		tap: 'Нажмите',
 		scan: 'Сканировать',
 		hereTo: 'чтобы',
@@ -30,6 +28,29 @@ const ruPartial: DeepPartial<Translation> = {
 	paymentButton: {
 		Recurring: 'Регулярный',
 		via: 'через'
+	},
+	common: {
+		dates: {
+			day: 'день',
+			days: 'дни'
+		},
+		recurring: {
+			day: 'д',
+			month: 'м',
+			year: 'г'
+		},
+		numbers: {
+			0: '0',
+			1: '1',
+			2: '2',
+			3: '3',
+			4: '4',
+			5: '5',
+			6: '6',
+			7: '7',
+			8: '8',
+			9: '9'
+		}
 	}
 }
 

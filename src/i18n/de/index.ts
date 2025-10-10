@@ -6,8 +6,6 @@ import en from '../en/index'
 const dePartial: DeepPartial<Translation> = {
 	walletCard: {
 		customAmount: 'Eigener Betrag',
-		day: 'Tag',
-		days: 'Tage',
 		tap: 'Antippen',
 		scan: 'Scannen',
 		hereTo: 'hier zu',
@@ -30,6 +28,29 @@ const dePartial: DeepPartial<Translation> = {
 	paymentButton: {
 		Recurring: 'Wiederkehrend',
 		via: 'über'
+	},
+	common: {
+		dates: {
+			day: 'Tag',
+			days: 'Tage'
+		},
+		recurring: {
+			day: 'T',
+			month: 'M',
+			year: 'J'
+		},
+		numbers: {
+			0: '0',
+			1: '1',
+			2: '2',
+			3: '3',
+			4: '4',
+			5: '5',
+			6: '6',
+			7: '7',
+			8: '8',
+			9: '9'
+		}
 	}
 }
 

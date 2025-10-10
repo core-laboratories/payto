@@ -29,14 +29,6 @@ type RootTranslation = {
 		 */
 		customAmount: string
 		/**
-		 * d​a​y
-		 */
-		day: string
-		/**
-		 * d​a​y​s
-		 */
-		days: string
-		/**
 		 * T​a​p
 		 */
 		tap: string
@@ -119,6 +111,74 @@ type RootTranslation = {
 		 */
 		via: string
 	}
+	common: {
+		dates: {
+			/**
+			 * D​a​y
+			 */
+			day: string
+			/**
+			 * D​a​y​s
+			 */
+			days: string
+		}
+		recurring: {
+			/**
+			 * d
+			 */
+			day: string
+			/**
+			 * m
+			 */
+			month: string
+			/**
+			 * y
+			 */
+			year: string
+		}
+		numbers: {
+			/**
+			 * 0
+			 */
+			'0': string
+			/**
+			 * 1
+			 */
+			'1': string
+			/**
+			 * 2
+			 */
+			'2': string
+			/**
+			 * 3
+			 */
+			'3': string
+			/**
+			 * 4
+			 */
+			'4': string
+			/**
+			 * 5
+			 */
+			'5': string
+			/**
+			 * 6
+			 */
+			'6': string
+			/**
+			 * 7
+			 */
+			'7': string
+			/**
+			 * 8
+			 */
+			'8': string
+			/**
+			 * 9
+			 */
+			'9': string
+		}
+	}
 }
 
 export type TranslationFunctions = {
@@ -127,14 +187,6 @@ export type TranslationFunctions = {
 		 * Custom amount
 		 */
 		customAmount: () => LocalizedString
-		/**
-		 * day
-		 */
-		day: () => LocalizedString
-		/**
-		 * days
-		 */
-		days: () => LocalizedString
 		/**
 		 * Tap
 		 */
@@ -217,6 +269,74 @@ export type TranslationFunctions = {
 		 * via
 		 */
 		via: () => LocalizedString
+	}
+	common: {
+		dates: {
+			/**
+			 * Day
+			 */
+			day: () => LocalizedString
+			/**
+			 * Days
+			 */
+			days: () => LocalizedString
+		}
+		recurring: {
+			/**
+			 * d
+			 */
+			day: () => LocalizedString
+			/**
+			 * m
+			 */
+			month: () => LocalizedString
+			/**
+			 * y
+			 */
+			year: () => LocalizedString
+		}
+		numbers: {
+			/**
+			 * 0
+			 */
+			'0': () => LocalizedString
+			/**
+			 * 1
+			 */
+			'1': () => LocalizedString
+			/**
+			 * 2
+			 */
+			'2': () => LocalizedString
+			/**
+			 * 3
+			 */
+			'3': () => LocalizedString
+			/**
+			 * 4
+			 */
+			'4': () => LocalizedString
+			/**
+			 * 5
+			 */
+			'5': () => LocalizedString
+			/**
+			 * 6
+			 */
+			'6': () => LocalizedString
+			/**
+			 * 7
+			 */
+			'7': () => LocalizedString
+			/**
+			 * 8
+			 */
+			'8': () => LocalizedString
+			/**
+			 * 9
+			 */
+			'9': () => LocalizedString
+		}
 	}
 }
 
