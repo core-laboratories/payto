@@ -1047,9 +1047,9 @@
 								<span class="text-3xl">{$LL.walletCard.expired()}</span>
 							{:else}
 								{#if $paytoData.value && Number($paytoData.value)>0}
-									{$formattedValue}{#if $paytoData.recurring}<span class="text-2xl uppercase">{` / `}{$formattedRecurring}</span>{/if}
+									{$formattedValue}{#if $paytoData.recurring}<span class="text-2xl">{` / `}{$formattedRecurring}</span>{/if}
 								{:else}
-									<span class="text-3xl">{$LL.walletCard.customAmount()}</span>{#if $paytoData.recurring}<span class="text-2xl uppercase">{` / `}{$formattedRecurring}</span>{/if}
+									<span class="text-3xl">{$LL.walletCard.customAmount()}</span>{#if $paytoData.recurring}<span class="text-2xl">{` / `}{$formattedRecurring}</span>{/if}
 								{/if}
 							{/if}
 						</div>
