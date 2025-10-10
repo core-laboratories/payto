@@ -117,6 +117,7 @@
 		const seconds = totalSeconds % 60;
 
 		const lang = typeof $data.lang === 'string' ? $data.lang : (typeof $data.lang === 'object' && 'subscribe' in $data.lang ? get($data.lang) : 'en');
+		const isRtl = typeof $data.rtl === 'boolean' ? $data.rtl : (typeof $data.rtl === 'object' && 'subscribe' in $data.rtl ? get($data.rtl) : false);
 
 		// Format time components with leading zeros and localized numbers
 		const formatTime = (h: number, m: number, s: number) => {
@@ -124,11 +125,16 @@
 			const hPadded = h.toString().padStart(2, '0');
 			const mPadded = m.toString().padStart(2, '0');
 			const sPadded = s.toString().padStart(2, '0');
-
+			
 			// Localize each digit
 			const hStr = hPadded.split('').map(d => formatLocalizedNumber(parseInt(d), lang)).join('');
 			const mStr = mPadded.split('').map(d => formatLocalizedNumber(parseInt(d), lang)).join('');
 			const sStr = sPadded.split('').map(d => formatLocalizedNumber(parseInt(d), lang)).join('');
+			
+			// For RTL, reverse the order: seconds:minutes:hours
+			if (isRtl) {
+				return `${sStr}:${mStr}:${hStr}`;
+			}
 			return `${hStr}:${mStr}:${sStr}`;
 		};
 
@@ -136,9 +142,14 @@
 		const formatMinutes = (m: number, s: number) => {
 			const mPadded = m.toString().padStart(2, '0');
 			const sPadded = s.toString().padStart(2, '0');
-
+			
 			const mStr = mPadded.split('').map(d => formatLocalizedNumber(parseInt(d), lang)).join('');
 			const sStr = sPadded.split('').map(d => formatLocalizedNumber(parseInt(d), lang)).join('');
+			
+			// For RTL, reverse the order: seconds:minutes
+			if (isRtl) {
+				return `${sStr}:${mStr}`;
+			}
 			return `${mStr}:${sStr}`;
 		};
 
