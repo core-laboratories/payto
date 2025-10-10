@@ -984,7 +984,7 @@
 		<div class={`relative transition-transform duration-500 ${isUpsideDown ? 'rotated' : ''}`}>
 			<div class="rounded-2xl bg-black/40 shadow-xl px-2 pb-4 flex flex-col items-center min-w-[320px] max-w-xs relative overflow-hidden print:shadow-none print:border-2 print:border-gray-400">
 				{#if $expirationTimeMs && !isExpiredPayment}
-					<div class="-mx-8 w-[calc(100%+4rem)] flex flex-col gap-1 mb-2">
+					<div class="w-[calc(100%+1rem)] flex flex-col gap-1 mb-2">
 						<div class="w-full bg-black/20 rounded-t-2xl h-2 overflow-hidden" dir={$paytoData.rtl ? 'rtl' : 'ltr'}>
 							<div
 								class="h-2 rounded-t-2xl transition-all duration-1000 ease-linear"
