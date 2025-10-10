@@ -36,6 +36,7 @@ const jaPartial: DeepPartial<Translation> = {
 		},
 		recurring: {
 			day: '日',
+			week: '週',
 			month: '月',
 			year: '年'
 		}

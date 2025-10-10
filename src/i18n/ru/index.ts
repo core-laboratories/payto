@@ -36,6 +36,7 @@ const ruPartial: DeepPartial<Translation> = {
 		},
 		recurring: {
 			day: 'д',
+			week: 'н',
 			month: 'м',
 			year: 'г'
 		}

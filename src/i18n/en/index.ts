@@ -33,6 +33,7 @@ const en = {
 		},
 		recurring: {
 			day: 'd',
+			week: 'w',
 			month: 'm',
 			year: 'y'
 		}

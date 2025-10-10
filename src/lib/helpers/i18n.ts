@@ -51,13 +51,14 @@ export function formatLocalizedNumber(value: number, locale?: string): string {
 export function formatRecurringSymbol(
 	symbol: string,
 	locale?: string,
-	translations?: { day: string; month: string; year: string }
+	translations?: { day: string; week: string; month: string; year: string }
 ): string {
 	const currentLocale = locale || (typeof navigator !== 'undefined' ? navigator.language : 'en');
 
 	// Default translations (fallback to English abbreviations)
 	const defaultTranslations = {
 		day: 'd',
+		week: 'w',
 		month: 'm',
 		year: 'y'
 	};
@@ -65,7 +66,7 @@ export function formatRecurringSymbol(
 	const trans = translations || defaultTranslations;
 
 	// Extract number prefix and period type
-	const match = symbol.toLowerCase().match(/^(\d+)?([dmy])$/);
+	const match = symbol.toLowerCase().match(/^(\d+)?([dwmy])$/);
 
 	if (!match) {
 		return symbol; // Return as-is if format doesn't match
@@ -74,7 +75,7 @@ export function formatRecurringSymbol(
 	const [, numberPrefix, periodType] = match;
 
 	// Get the appropriate translation based on period type
-	const periodSymbol = periodType === 'd' ? trans.day : periodType === 'm' ? trans.month : trans.year;
+	const periodSymbol = periodType === 'd' ? trans.day : periodType === 'w' ? trans.week : periodType === 'm' ? trans.month : trans.year;
 
 	// If there's a number prefix, format it with locale
 	if (numberPrefix) {

@@ -36,6 +36,7 @@ const ko_KRPartial: DeepPartial<Translation> = {
 		},
 		recurring: {
 			day: '일',
+			week: '주',
 			month: '월',
 			year: '년'
 		}

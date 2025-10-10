@@ -128,6 +128,10 @@ type RootTranslation = {
 			 */
 			day: string
 			/**
+			 * w
+			 */
+			week: string
+			/**
 			 * m
 			 */
 			month: string
@@ -244,6 +248,10 @@ export type TranslationFunctions = {
 			 * d
 			 */
 			day: () => LocalizedString
+			/**
+			 * w
+			 */
+			week: () => LocalizedString
 			/**
 			 * m
 			 */

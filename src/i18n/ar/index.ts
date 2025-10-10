@@ -36,6 +36,7 @@ const arPartial: DeepPartial<Translation> = {
 		},
 		recurring: {
 			day: 'ي',
+			week: 'أ',
 			month: 'ش',
 			year: 'س'
 		}

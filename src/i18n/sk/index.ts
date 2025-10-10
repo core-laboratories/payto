@@ -36,6 +36,7 @@ const skPartial: DeepPartial<Translation> = {
 		},
 		recurring: {
 			day: 'd',
+			week: 't',
 			month: 'm',
 			year: 'r'
 		}

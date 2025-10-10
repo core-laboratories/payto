@@ -36,6 +36,7 @@ const zh_CNPartial: DeepPartial<Translation> = {
 		},
 		recurring: {
 			day: '日',
+			week: '周',
 			month: '月',
 			year: '年'
 		}

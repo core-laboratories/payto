@@ -125,12 +125,12 @@
 			const hPadded = h.toString().padStart(2, '0');
 			const mPadded = m.toString().padStart(2, '0');
 			const sPadded = s.toString().padStart(2, '0');
-			
+
 			// Localize each digit
 			const hStr = hPadded.split('').map(d => formatLocalizedNumber(parseInt(d), lang)).join('');
 			const mStr = mPadded.split('').map(d => formatLocalizedNumber(parseInt(d), lang)).join('');
 			const sStr = sPadded.split('').map(d => formatLocalizedNumber(parseInt(d), lang)).join('');
-			
+
 			// For RTL, reverse the order: seconds:minutes:hours
 			if (isRtl) {
 				return `${sStr}:${mStr}:${hStr}`;
@@ -142,10 +142,10 @@
 		const formatMinutes = (m: number, s: number) => {
 			const mPadded = m.toString().padStart(2, '0');
 			const sPadded = s.toString().padStart(2, '0');
-			
+
 			const mStr = mPadded.split('').map(d => formatLocalizedNumber(parseInt(d), lang)).join('');
 			const sStr = sPadded.split('').map(d => formatLocalizedNumber(parseInt(d), lang)).join('');
-			
+
 			// For RTL, reverse the order: seconds:minutes
 			if (isRtl) {
 				return `${sStr}:${mStr}`;
@@ -439,6 +439,7 @@
 			// Get locale-specific translations for recurring symbols
 			const translations = {
 				day: $LL.common?.recurring?.day?.() || 'd',
+				week: $LL.common?.recurring?.week?.() || 'w',
 				month: $LL.common?.recurring?.month?.() || 'm',
 				year: $LL.common?.recurring?.year?.() || 'y'
 			};
@@ -981,7 +982,7 @@
 	<!-- Main Card (rotated if needed) -->
 	<div class="flex-1 flex items-center justify-center">
 		<div class={`relative transition-transform duration-500 ${isUpsideDown ? 'rotated' : ''}`}>
-			<div class="rounded-2xl bg-black/40 shadow-xl px-8 pb-4 flex flex-col items-center min-w-[320px] max-w-xs relative overflow-hidden print:shadow-none print:border-2 print:border-gray-400">
+			<div class="rounded-2xl bg-black/40 shadow-xl px-2 pb-4 flex flex-col items-center min-w-[320px] max-w-xs relative overflow-hidden print:shadow-none print:border-2 print:border-gray-400">
 				{#if $expirationTimeMs && !isExpiredPayment}
 					<div class="-mx-8 w-[calc(100%+4rem)] flex flex-col gap-1 mb-2">
 						<div class="w-full bg-black/20 rounded-t-2xl h-2 overflow-hidden" dir={$paytoData.rtl ? 'rtl' : 'ltr'}>

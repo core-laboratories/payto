@@ -36,6 +36,7 @@ const ptBRPartial: DeepPartial<Translation> = {
 		},
 		recurring: {
 			day: 'd',
+			week: 's',
 			month: 'm',
 			year: 'a'
 		}
