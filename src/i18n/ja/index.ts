@@ -38,18 +38,6 @@ const jaPartial: DeepPartial<Translation> = {
 			day: '日',
 			month: '月',
 			year: '年'
-		},
-		numbers: {
-			0: '0',
-			1: '1',
-			2: '2',
-			3: '3',
-			4: '4',
-			5: '5',
-			6: '6',
-			7: '7',
-			8: '8',
-			9: '9'
 		}
 	}
 }

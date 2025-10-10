@@ -136,48 +136,6 @@ type RootTranslation = {
 			 */
 			year: string
 		}
-		numbers: {
-			/**
-			 * 0
-			 */
-			'0': string
-			/**
-			 * 1
-			 */
-			'1': string
-			/**
-			 * 2
-			 */
-			'2': string
-			/**
-			 * 3
-			 */
-			'3': string
-			/**
-			 * 4
-			 */
-			'4': string
-			/**
-			 * 5
-			 */
-			'5': string
-			/**
-			 * 6
-			 */
-			'6': string
-			/**
-			 * 7
-			 */
-			'7': string
-			/**
-			 * 8
-			 */
-			'8': string
-			/**
-			 * 9
-			 */
-			'9': string
-		}
 	}
 }
 
@@ -294,48 +252,6 @@ export type TranslationFunctions = {
 			 * y
 			 */
 			year: () => LocalizedString
-		}
-		numbers: {
-			/**
-			 * 0
-			 */
-			'0': () => LocalizedString
-			/**
-			 * 1
-			 */
-			'1': () => LocalizedString
-			/**
-			 * 2
-			 */
-			'2': () => LocalizedString
-			/**
-			 * 3
-			 */
-			'3': () => LocalizedString
-			/**
-			 * 4
-			 */
-			'4': () => LocalizedString
-			/**
-			 * 5
-			 */
-			'5': () => LocalizedString
-			/**
-			 * 6
-			 */
-			'6': () => LocalizedString
-			/**
-			 * 7
-			 */
-			'7': () => LocalizedString
-			/**
-			 * 8
-			 */
-			'8': () => LocalizedString
-			/**
-			 * 9
-			 */
-			'9': () => LocalizedString
 		}
 	}
 }
