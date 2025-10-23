@@ -38,15 +38,25 @@
 		{ label: 'Application Language (or English)', value: ''},
 		{ label: 'Arabic', value: 'ar', rtl: true},
 		{ label: 'Chinese', value: 'zh-CN'},
+		{ label: 'Czech', value: 'cs-CZ'},
 		{ label: 'English', value: 'en'},
 		{ label: 'French', value: 'fr'},
 		{ label: 'German', value: 'de'},
+		{ label: 'Hindi', value: 'hi-IN'},
+		{ label: 'Hungarian', value: 'hu'},
+		{ label: 'Italian', value: 'it'},
 		{ label: 'Japanese', value: 'ja'},
 		{ label: 'Korean', value: 'ko-KR'},
+		{ label: 'Persian', value: 'fa-IR', rtl: true},
+		{ label: 'Polish', value: 'pl'},
 		{ label: 'Portuguese (Brazil)', value: 'pt-BR'},
 		{ label: 'Russian', value: 'ru'},
 		{ label: 'Slovak', value: 'sk'},
-		{ label: 'Spanish', value: 'es'}
+		{ label: 'Spanish', value: 'es'},
+		{ label: 'Tagalog', value: 'tl-PH' },
+		{ label: 'Thai', value: 'th'},
+		{ label: 'Turkish', value: 'tr'},
+		{ label: 'Vietnamese', value: 'vi-VN'}
 	];
 
 	const constructorStore = derived(constructor, $c => $c);
