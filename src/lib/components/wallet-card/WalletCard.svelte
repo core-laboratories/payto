@@ -270,7 +270,7 @@
 			const paytoParams = new URLSearchParams(payto.search);
 
 			// Set locale from language parameter BEFORE using translations
-			setLocaleFromPaytoData(payto.lang || 'en');
+			setLocaleFromPaytoData(payto.lang || undefined);
 
 			// Validate mode parameter - only allow 'qr' or 'nfc' if NFC is supported
 			const requestedMode = paytoParams.get('mode');
@@ -846,8 +846,11 @@
 	$: verifyOrganization($paytoData.organization);
 
 	onMount(() => {
-		// Initialize i18n with default locale
-		init();
+		// Initialize i18n only if no language is set yet
+		// Don't call init() if paytoData already has a language set
+		if (!$paytoData?.lang) {
+			init();
+		}
 
 		updateRotationState(); // Initial check
 

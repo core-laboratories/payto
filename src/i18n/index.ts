@@ -72,6 +72,7 @@ export function getTranslationWithFallback<T extends keyof any>(
 
 // Set locale from paytoData
 export function setLocaleFromPaytoData(language?: string): void {
+	localeExplicitlySet = true; // Mark that locale was explicitly set
 	if (language && language !== '') {
 		const bestLocale = getBestLocale(language);
 		setLocale(bestLocale);
@@ -91,19 +92,29 @@ export function detectAndSetBrowserLocale(): void {
 	}
 }
 
+// Track if a locale was explicitly set (don't override with browser locale)
+let localeExplicitlySet = false;
+
 // Initialize i18n
 export function init(): void {
 	// Set initial locale based on browser language or default to English
 	if (typeof window !== 'undefined') {
-		// For browser compatibility, always start with 'en' to avoid Intl.PluralRules errors
-		// Then detect and set the proper locale
-		setLocale('en');
-		// Small delay to ensure the initial locale is set before detecting browser locale
-		setTimeout(() => {
-			detectAndSetBrowserLocale();
-		}, 0);
+		// Only set default locale if one wasn't explicitly set
+		if (!localeExplicitlySet) {
+			// For browser compatibility, always start with 'en' to avoid Intl.PluralRules errors
+			// Then detect and set the proper locale
+			setLocale('en');
+			// Small delay to ensure the initial locale is set before detecting browser locale
+			setTimeout(() => {
+				if (!localeExplicitlySet) {
+					detectAndSetBrowserLocale();
+				}
+			}, 0);
+		}
 	} else {
-		setLocale('en');
+		if (!localeExplicitlySet) {
+			setLocale('en');
+		}
 	}
 }
 
