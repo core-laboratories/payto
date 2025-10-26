@@ -815,11 +815,13 @@
 				return;
 			}
 
+			// Authority exists as ORIC, mark as verified
+			isVerifiedOrganization.set(true);
+
 			// ORIC verified, now load KV data
 			const kvData = await KV.get(orgString.toLowerCase());
 			if (kvData && kvData.name) {
-				// Authority exists with a name - mark as verified
-				isVerifiedOrganization.set(true);
+				// Authority exists with a name
 				verifiedOrgName.set(kvData.name);
 
 				// Try to load the icon2x if available
@@ -1032,7 +1034,9 @@
 						{#if $paytoData.organization}
 							<div class="text-lg font-medium mb-2 flex items-center justify-center gap-1" dir={$paytoData.rtl ? 'rtl' : 'ltr'}>
 								{#if $isVerifiedOrganization}
-									<BadgeCheck class="w-5 h-5 text-sky-400" />
+									<span title="Verified">
+										<BadgeCheck class={`w-5 h-5 text-sky-400 ${$paytoData.rtl ? 'ml-0.5' : 'mr-0.5'}`} />
+									</span>
 								{/if}
 								<span>{$verifiedOrgName || $paytoData.organization}</span>
 							</div>

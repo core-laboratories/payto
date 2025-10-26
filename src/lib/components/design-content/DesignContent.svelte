@@ -19,7 +19,6 @@
 	import { setLocaleFromPaytoData } from '$i18n';
 
 	export let hostname: ITransitionType | undefined = undefined;
-	export let authority: string | undefined = undefined;
 
 	const barcodeTypes = [
 		{ label: 'QR Code', value: 'qr', ticker: 'QR' },
@@ -168,16 +167,14 @@
 </script>
 
 <div class="flex flex-col gap-6">
-	{#if !authority}
-		<FieldGroup>
-			<FieldGroupLabel>Item Title</FieldGroupLabel>
-			<FieldGroupText
-				placeholder="e.g. Coffee ☕; Table №3"
-				bind:value={$constructor.design.item}
-				maxlength="40"
-			/>
-		</FieldGroup>
-	{/if}
+	<FieldGroup>
+		<FieldGroupLabel>Item Title</FieldGroupLabel>
+		<FieldGroupText
+			placeholder="e.g. Coffee ☕; Table №3"
+			bind:value={$constructor.design.item}
+			maxlength="40"
+		/>
+	</FieldGroup>
 
 	<button
 		type="button"
@@ -194,19 +191,17 @@
 
 	{#if showCustomization}
 		<div class="space-y-4">
-			{#if !authority}
-				<FieldGroup>
-					<FieldGroupLabel>
-						Organization Name / ORIC
-					</FieldGroupLabel>
-					<FieldGroupText
-						placeholder="e.g. PINGCHB2"
-						bind:value={$constructor.design.org}
-						maxlength="25"
-					/>
-					<FieldGroupAppendix>If organization has ORIC and matches receiving address, it will be marked as verified.</FieldGroupAppendix>
-				</FieldGroup>
-			{/if}
+			<FieldGroup>
+				<FieldGroupLabel>
+					Organization Name / ORIC
+				</FieldGroupLabel>
+				<FieldGroupText
+					placeholder="e.g. PINGCHB2"
+					bind:value={$constructor.design.org}
+					maxlength="25"
+				/>
+				<FieldGroupAppendix>If organization has ORIC and matches receiving address, it will be marked as verified.</FieldGroupAppendix>
+			</FieldGroup>
 
 			<div class="flex flex-col gap-6">
 				<h2 class="text-lg font-bold">Theme setup</h2>
