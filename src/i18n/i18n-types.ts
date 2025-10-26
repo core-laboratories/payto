@@ -110,6 +110,10 @@ type RootTranslation = {
 		 * D​o​n​a​t​e
 		 */
 		purposeDonate: string
+		/**
+		 * V​e​r​i​f​i​e​d
+		 */
+		verified: string
 	}
 	paymentButton: {
 		/**
@@ -231,6 +235,10 @@ export type TranslationFunctions = {
 		 * Donate
 		 */
 		purposeDonate: () => LocalizedString
+		/**
+		 * Verified
+		 */
+		verified: () => LocalizedString
 	}
 	paymentButton: {
 		/**

@@ -23,7 +23,8 @@ const hu_HUPartial: DeepPartial<Translation> = {
 		pay: 'Fizetés',
 		payment: 'fizetés',
 		purposePay: 'fizetés',
-		purposeDonate: 'adomány'
+		purposeDonate: 'adomány',
+		verified: 'Ellenőrzött'
 	},
 	paymentButton: {
 		Recurring: 'Ismétlődő',

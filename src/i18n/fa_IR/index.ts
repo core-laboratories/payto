@@ -23,7 +23,8 @@ const fa_IRPartial: DeepPartial<Translation> = {
 		pay: 'پرداخت',
 		payment: 'پرداخت',
 		purposePay: 'پرداخت',
-		purposeDonate: 'اهدا'
+		purposeDonate: 'اهدا',
+		verified: 'تایید شده'
 	},
 	paymentButton: {
 		Recurring: 'دوره‌ای',

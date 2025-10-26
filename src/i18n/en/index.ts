@@ -20,7 +20,8 @@ const en = {
 		pay: 'Pay',
 		payment: 'payment',
 		purposePay: 'Pay',
-		purposeDonate: 'Donate'
+		purposeDonate: 'Donate',
+		verified: 'Verified'
 	},
 	paymentButton: {
 		Recurring: 'Recurring',

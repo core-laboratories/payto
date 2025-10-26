@@ -23,7 +23,8 @@ const dePartial: DeepPartial<Translation> = {
 		pay: 'Zahlen',
 		payment: 'Zahlung',
 		purposePay: 'Zahlen',
-		purposeDonate: 'Spenden'
+		purposeDonate: 'Spenden',
+		verified: 'Verifiziert'
 	},
 	paymentButton: {
 		Recurring: 'Wiederkehrend',

@@ -23,7 +23,8 @@ const cs_CZPartial: DeepPartial<Translation> = {
 		pay: 'Zaplatit',
 		payment: 'platba',
 		purposePay: 'platbu',
-		purposeDonate: 'dar'
+		purposeDonate: 'dar',
+		verified: 'Ověřeno'
 	},
 	paymentButton: {
 		Recurring: 'Pravidelné',

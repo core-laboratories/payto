@@ -23,7 +23,8 @@ const zh_CNPartial: DeepPartial<Translation> = {
 		pay: '支付',
 		payment: '支付',
 		purposePay: '支付',
-		purposeDonate: '捐赠'
+		purposeDonate: '捐赠',
+		verified: '已验证'
 	},
 	paymentButton: {
 		Recurring: '定期',

@@ -23,7 +23,8 @@ const vi_VNPartial: DeepPartial<Translation> = {
 		pay: 'Thanh toán',
 		payment: 'thanh toán',
 		purposePay: 'thanh toán',
-		purposeDonate: 'quyên góp'
+		purposeDonate: 'quyên góp',
+		verified: 'Đã xác minh'
 	},
 	paymentButton: {
 		Recurring: 'Định kỳ',

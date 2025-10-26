@@ -23,7 +23,8 @@ const ruPartial: DeepPartial<Translation> = {
 		pay: 'Оплатить',
 		payment: 'платёж',
 		purposePay: 'оплату',
-		purposeDonate: 'пожертвование'
+		purposeDonate: 'пожертвование',
+		verified: 'Проверено'
 	},
 	paymentButton: {
 		Recurring: 'Регулярный',

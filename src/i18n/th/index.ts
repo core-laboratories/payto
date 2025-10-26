@@ -23,7 +23,8 @@ const th_THPartial: DeepPartial<Translation> = {
 		pay: 'ชำระเงิน',
 		payment: 'การชำระเงิน',
 		purposePay: 'การชำระเงิน',
-		purposeDonate: 'การบริจาค'
+		purposeDonate: 'การบริจาค',
+		verified: 'ยืนยันแล้ว'
 	},
 	paymentButton: {
 		Recurring: 'เป็นประจำ',
