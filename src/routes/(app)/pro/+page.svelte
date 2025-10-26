@@ -27,15 +27,15 @@
 					<ul class="space-y-4">
 						<li class="flex items-start gap-2">
 							<Plus class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
-							<div>FIAT to FIAT settlement</div>
+							<div>Fiat-to-fiat settlement</div>
 						</li>
 						<li class="flex items-start gap-2">
 							<Plus class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
-							<div>Digital Assets support</div>
+							<div>Digital asset support</div>
 						</li>
 						<li class="flex items-start gap-2">
 							<CircleCheck class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
-							<div>Partner's support</div>
+							<div>Dedicated partner support</div>
 						</li>
 					</ul>
 				</div>
@@ -66,15 +66,15 @@
 					<ul class="space-y-4">
 						<li class="flex items-start gap-2">
 							<Plus class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
-							<span>Issue PayPasses with POST form or API</span>
+							<span>Issue PayPasses via POST form or API</span>
 						</li>
 						<li class="flex items-start gap-2">
 							<Plus class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
-							<div>White-labelled PayPass</div>
+							<div>White-labeled PayPass</div>
 						</li>
 						<li class="flex items-start gap-2">
 							<Plus class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
-							<div>Up to 10 Custom Currencies for PayPass</div>
+							<div>Up to 10 custom currencies per PayPass</div>
 						</li>
 						<li class="flex items-start gap-2">
 							<CircleCheck class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
@@ -124,7 +124,7 @@
 					</li>
 					<li class="flex items-start gap-2">
 						<CircleCheck class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
-						<div>Blockies identicon</div>
+						<div>Blockies identicon avatar</div>
 					</li>
 					{#if env.PUBLIC_COMMUNITY_URL}
 					<li class="flex items-start gap-2">
@@ -138,7 +138,7 @@
 				</ul>
 			</div>
 			<footer class="p-6 text-sm text-center border-t border-emerald-800 bg-gray-700/75">
-				Passes for public use with extended features
+				Payment passes with advanced features
 			</footer>
 		</div>
 	</div>
