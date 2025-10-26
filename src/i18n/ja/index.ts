@@ -24,7 +24,7 @@ const jaPartial: DeepPartial<Translation> = {
 		payment: '支払い',
 		purposePay: '支払い',
 		purposeDonate: '寄付',
-		verified: '確認済み'
+		verifiedBusiness: '認証済みビジネス'
 	},
 	paymentButton: {
 		Recurring: '定期',

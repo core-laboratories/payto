@@ -24,7 +24,7 @@ const tr_TRPartial: DeepPartial<Translation> = {
 		payment: 'ödeme',
 		purposePay: 'ödeme',
 		purposeDonate: 'bağış',
-		verified: 'Doğrulandı'
+		verifiedBusiness: 'Doğrulanmış İşletme'
 	},
 	paymentButton: {
 		Recurring: 'Yinelenen',

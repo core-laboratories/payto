@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { PARTNERS } from '$lib/data/partners.data';
-	import { ExternalLink, UserPlus } from 'lucide-svelte';
+	const partners: any[] = PARTNERS;
 </script>
 
 <svelte:head>
@@ -11,13 +11,13 @@
 <div class="flex flex-col items-center gap-8 p-4">
 	<!-- Header Section -->
 	<div class="w-full max-w-6xl text-center">
-		<h1 class="text-3xl font-bold text-green-300 mb-4">PayTo Partners</h1>
-		<p class="text-slate-400 text-lg">List of PayTo partners to offer various services.</p>
+		<h1 class="text-3xl font-bold text-green-300 mb-4">Trusted Partners</h1>
+		<p class="text-slate-400 text-lg">Explore our network of verified financial service providers and blockchain partners.</p>
 	</div>
 
 	<!-- Partners Grid -->
 	<div class="w-full max-w-6xl space-y-6">
-		{#each PARTNERS as partner}
+		{#each partners as partner}
 			<div class="mx-auto gap-4 my-8 flex max-w-screen-sm rounded-xl border border-gray-600 bg-gray-800/75 p-4 text-left text-gray-300 shadow-lg sm:p-8">
 				<div class="mr-5 flex h-8 w-8 items-center justify-center sm:h-16 sm:w-16">
 					<img
@@ -59,12 +59,12 @@
 	<!-- Call to Action Section -->
 	<div class="w-full max-w-screen-sm rounded-xl border border-gray-600 bg-gray-800/75 p-8 text-center">
 		<h2 class="text-2xl font-semibold mb-4">Want to become a partner?</h2>
-		<p class="text-slate-400 mb-6">Join PayTo:Money network of banking partners and offer your customers FIAT to FIAT instant settlement and digital assets support.</p>
+		<p class="text-slate-400 mb-6">Join the PayTo:Money network of banking partners and offer your customers FIAT to FIAT instant settlement and digital assets support.</p>
 		<a
 			href="/pro#org"
 			class="inline-flex items-center justify-center gap-2 px-8 py-3 font-semibold text-white transition duration-300 rounded-lg bg-emerald-700 hover:bg-emerald-600 focus:bg-emerald-700 focus-visible:outline-none !no-underline"
 		>
-			Join Pro:Business
+			Join PayTo:Organization
 		</a>
 	</div>
 </div>

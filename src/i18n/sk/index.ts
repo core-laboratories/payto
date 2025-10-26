@@ -24,7 +24,7 @@ const skPartial: DeepPartial<Translation> = {
 		payment: 'platba',
 		purposePay: 'platbu',
 		purposeDonate: 'dar',
-		verified: 'Overené'
+		verifiedBusiness: 'Overená firma'
 	},
 	paymentButton: {
 		Recurring: 'Pravidelné',

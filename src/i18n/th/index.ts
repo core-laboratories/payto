@@ -24,7 +24,7 @@ const th_THPartial: DeepPartial<Translation> = {
 		payment: 'การชำระเงิน',
 		purposePay: 'การชำระเงิน',
 		purposeDonate: 'การบริจาค',
-		verified: 'ยืนยันแล้ว'
+		verifiedBusiness: 'ธุรกิจที่ยืนยันแล้ว'
 	},
 	paymentButton: {
 		Recurring: 'เป็นประจำ',

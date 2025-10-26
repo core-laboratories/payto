@@ -24,7 +24,7 @@ const hi_INPartial: DeepPartial<Translation> = {
 		payment: 'भुगतान',
 		purposePay: 'भुगतान',
 		purposeDonate: 'दान',
-		verified: 'सत्यापित'
+		verifiedBusiness: 'सत्यापित व्यवसाय'
 	},
 	paymentButton: {
 		Recurring: 'आवर्ती',

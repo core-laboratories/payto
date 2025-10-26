@@ -24,7 +24,7 @@ const arPartial: DeepPartial<Translation> = {
 		payment: 'دفعة',
 		purposePay: 'دفع',
 		purposeDonate: 'تبرع',
-		verified: 'متحقق منه'
+		verifiedBusiness: 'مؤسسة موثقة'
 	},
 	paymentButton: {
 		Recurring: 'متكرر',

@@ -24,7 +24,7 @@ const tl_PHPartial: DeepPartial<Translation> = {
 		payment: 'pagbabayad',
 		purposePay: 'pagbabayad',
 		purposeDonate: 'donasyon',
-		verified: 'Napatunayan'
+		verifiedBusiness: 'Napatunayang Negosyo'
 	},
 	paymentButton: {
 		Recurring: 'Paulit-ulit',
