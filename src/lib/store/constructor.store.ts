@@ -95,6 +95,20 @@ const INITIAL_STATE: IComplexState = {
 			}
 		},
 
+		intra: {
+			network: TRANSPORT.intra[0].value,
+			id: undefined,
+			bic: undefined,
+			isRc: false,
+			params: {
+				currency: { value: undefined },
+				amount: { value: undefined },
+				receiverName: { value: undefined },
+				message: { value: undefined },
+				rc: { value: undefined },
+			}
+		},
+
 		void: {
 			network: 'void',
 			transport: TRANSPORT.void[0].value,
@@ -104,6 +118,8 @@ const INITIAL_STATE: IComplexState = {
 				loc: { value: undefined, lat: undefined, lon: undefined, plus: undefined, other: undefined },
 				currency: { value: undefined },
 				amount: { value: undefined },
+				id: { value: undefined },
+				bic: { value: undefined },
 				receiverName: { value: undefined },
 				message: { value: undefined },
 				rc: { value: undefined },
@@ -113,14 +129,12 @@ const INITIAL_STATE: IComplexState = {
 	design: {
 		org: undefined,
 		item: undefined,
-		colorF: '#192a14',
-		colorB: '#77bc65',
+		colorF: '#9AB1D6',
+		colorB: '#2A3950',
 		barcode: 'qr',
 		rtl: false,
-		isEmail: false,
-		email: undefined,
-		isTelegram: false,
-		telegram: undefined,
+		mode: undefined,
+		lang: '',
 	},
 	isCleared: false,
 	paymentType: 'ican',
@@ -262,6 +276,30 @@ const BUILDER = {
 			];
 			return generate('bic', fullProps, payload);
 		},
+		intra: (props: typeof INITIAL_STATE.networks.intra, design: typeof INITIAL_STATE.design) => {
+			const fullProps = {
+				...props,
+				params: {
+					...props.params,
+					design
+				}
+			};
+			const payload = [
+				{
+					placeholder: '',
+					value: encodeURIComponent(fullProps.network)
+				},
+				{
+					placeholder: '',
+					value: fullProps.bic ? encodeURIComponent(fullProps.bic.toLowerCase()) : undefined
+				},
+				{
+					placeholder: '',
+					value: fullProps.id ? encodeURIComponent(fullProps.id.toLowerCase()) : undefined
+				}
+			];
+			return generate('intra', fullProps, payload);
+		},
 		void: (props: typeof INITIAL_STATE.networks.void, design: typeof INITIAL_STATE.design) => {
 			const fullProps = {
 				...props,
@@ -270,6 +308,7 @@ const BUILDER = {
 					design
 				}
 			};
+
 			if (fullProps.transport === 'geo' &&
 				fullProps.params &&
 				fullProps.params.loc &&
@@ -290,6 +329,7 @@ const BUILDER = {
 			} else {
 				fullProps.params.loc.value = '';
 			}
+
 			const payload = [
 				{
 					placeholder: '',
@@ -302,6 +342,7 @@ const BUILDER = {
 						: (fullProps.transport ? encodeURIComponent(fullProps.transport) : undefined)
 				}
 			];
+
 			return generate('void', fullProps, payload);
 		}
 	}

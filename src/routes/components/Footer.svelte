@@ -6,17 +6,20 @@
 				<span>Pay</span><span class="text-seagreen">To:</span>
 			</strong>
 		</a>
-		<div class="flex items-baseline gap-2 print:hidden">
-			<a href="https://github.com/bchainhub/core-license#readme" target="_blank" rel="noreferrer">
-				<span class="text-xl mr-1">⊛</span>2023</a>
-			<span>A <a
+		<div class="text-sm print:hidden">
+			<div class="flex items-center justify-center gap-1">
+				<a href="https://github.com/core-laboratories/core-license#readme" target="_blank" rel="noreferrer" class="flex items-center"><span class="text-xl no-underline">⊛</span></a>
+				<span>2023-{new Date().getFullYear()}</span>
+				<span>CORE Labs</span>
+			</div>
+			<div class="flex items-center justify-center gap-1">A <a
 				class="transition-all duration-200"
 				href="https://payto.onl"
 				target="_blank"
 				rel="noreferrer"
 			>PayTo:Alliance</a>
-			Initiative.
-			</span>
+			Initiative
+			</div>
 		</div>
 	</div>
 </footer>

@@ -18,7 +18,7 @@
 	{#each $toasts as { id, message, type = 'info' } (id)}
 		<div
 			in:fade
-			class={`toast p-4 rounded-lg shadow-lg text-white w-72 ${toastType(type)}`}
+			class={`toast p-4 rounded-lg shadow-lg text-slate-900 font-semibold w-72 ${toastType(type)}`}
 		>
 			{message}
 		</div>

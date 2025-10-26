@@ -14,6 +14,7 @@
 		InternationalBankAccountNumberConstructor,
 		UnifiedPaymentsInterfaceConstructor,
 		PixConstructor,
+		IntraBankConstructor,
 		VoidPaymentTargetConstructor
 	} from '../../../routes/components';
 	import { page } from '$app/state';
@@ -28,10 +29,17 @@
 		upi: { label: getObjectByType(TYPES, 'upi')?.label, ticker: getObjectByType(TYPES, 'upi')?.description, component: UnifiedPaymentsInterfaceConstructor },
 		pix: { label: getObjectByType(TYPES, 'pix')?.label, ticker: getObjectByType(TYPES, 'pix')?.description, component: PixConstructor },
 		bic: { label: getObjectByType(TYPES, 'bic')?.label, ticker: getObjectByType(TYPES, 'bic')?.description, component: BusinessIdentifierCodeConstructor },
+		intra: { label: getObjectByType(TYPES, 'intra')?.label, ticker: getObjectByType(TYPES, 'intra')?.description, component: IntraBankConstructor },
 		void: { label: getObjectByType(TYPES, 'void')?.label, ticker: getObjectByType(TYPES, 'void')?.description, component: VoidPaymentTargetConstructor }
 	};
 
 	const tabs = writable<string>(selectedTab);
+
+	$: {
+		if (selectedTab !== $tabs) {
+			tabs.set(selectedTab);
+		}
+	}
 
 	const listboxItems: Array<{ value: string; label: string; ticker: string }> = Object.keys(paymentTypes).map(key => ({
 		value: key,
@@ -63,7 +71,7 @@
 		<div in:fade>
 			<ListBox
 				id="payment-type"
-				bind:value={selectedTab}
+				value={$tabs}
 				items={listboxItems}
 				onChange={handleTabChange}
 			/>

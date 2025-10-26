@@ -5,7 +5,10 @@ const config = {
 	// Consult https://github.com/sveltejs/svelte-preprocess
 	// for more information about preprocessors
 	kit: {
-		adapter: adapter()
+		adapter: adapter(),
+		alias: {
+			'$i18n': './src/i18n'
+		}
 	}
 };
 

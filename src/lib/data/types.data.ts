@@ -32,8 +32,20 @@ export const TYPES: ITypesObject = {
 	bic: {
 		value: 'bic',
 		label: 'BIC',
-		description: 'Bank Identifier Code',
-		link: 'https://en.wikipedia.org/wiki/ISO_9362'
+		description: 'Bank/Organization Identifier Code',
+		link: [{
+			label: 'BIC',
+			href: 'https://en.wikipedia.org/wiki/ISO_9362'
+		}, {
+			label: 'ORIC',
+			href: 'https://payto.onl/solutions/oric'
+		}]
+	},
+	intra: {
+		value: 'intra',
+		label: 'Intra-bank transfer',
+		description: 'Intra-bank transfer',
+		link: 'https://www.lawinsider.com/dictionary/intrabank-transfer'
 	},
 	void: {
 		value: 'void',
