@@ -460,9 +460,12 @@ export async function POST({ request, url }: RequestEvent) {
 			throw error(500, 'Private key not found for pass signing');
 		}
 
+		// Normalize the key: replace \n with actual newlines if needed
+		const normalizedKey = keyToUse.replace(/\\n/g, '\n');
+
 		let privateKeyObj;
 		try {
-			privateKeyObj = forge.pki.privateKeyFromPem(keyToUse);
+			privateKeyObj = forge.pki.privateKeyFromPem(normalizedKey);
 		} catch (pemError) {
 			throw error(500, 'Invalid private key format.');
 		}
