@@ -18,7 +18,7 @@ import { PUBLIC_ENABLE_STATS } from '$env/static/public';
 // Required environment variables
 const teamIdentifier = env.PRIVATE_PASS_TEAM_IDENTIFIER;
 if (!teamIdentifier) {
-	throw new Error('PRIVATE_PASS_TEAM_IDENTIFIER is required');
+	throw new Error('Team identifier is required');
 }
 
 const privateKey = env.PRIVATE_PASS_PRIVATE_KEY;
@@ -257,12 +257,12 @@ export async function POST({ request, url }: RequestEvent) {
 			passTypeIdentifier: kvData?.identifier || 'pass.money.payto',
 			organizationName: org,
 			logoText: getLogoText(hostname, props, currency),
-			description: 'Wallet by ' + org,
+			description: 'PayPass by ' + org,
 			expirationDate: new Date((props.params.dl?.value || (kvData?.id ? (Date.now() + 2 * 365 * 24 * 60 * 60 * 1000) : (Date.now() + 365 * 24 * 60 * 60 * 1000)))).toISOString(),
 			backgroundColor: validColors(design.colorB, design.colorF) ? design.colorB : (kvData?.theme?.colorB || '#2A3950'),
 			foregroundColor: validColors(design.colorF, design.colorB) ? design.colorF : (kvData?.theme?.colorF || '#9AB1D6'),
 			labelColor: validColors(design.colorF, design.colorB) ? design.colorF : (kvData?.theme?.colorTxt || '#9AB1D6'),
-			url: bareLink,
+			appLaunchURL: bareLink,
 			...(hostname === 'void' && (props.network === 'geo' || props.network === 'plus') ? {
 				locations: [
 					{
@@ -271,9 +271,6 @@ export async function POST({ request, url }: RequestEvent) {
 						relevantText: props.params.message?.value ? props.params.message.value : 'Payment location'
 					}
 				]
-			} : {}),
-			...(kvData?.url ? {
-				orgUrl: kvData.url
 			} : {})
 		};
 
@@ -282,23 +279,16 @@ export async function POST({ request, url }: RequestEvent) {
 			formatVersion: 1,
 			teamIdentifier: teamIdentifier,
 
+			// Generic pass style (required by Apple Wallet)
+			// The empty object is valid - fields like headerFields, primaryFields, etc. are top-level properties
+			generic: {},
+
 			// NFC configuration
 			nfc: {
 				message: bareLink
 			},
 
-			// Primary barcode (selected type)
-			barcode: {
-				format: design.barcode === 'aztec'
-					? 'PKBarcodeFormatAztec'
-					: design.barcode === 'code128'
-						? 'PKBarcodeFormatCode128'
-						: `PKBarcodeFormat${design.barcode?.toUpperCase() || 'QR'}`,
-				message: bareLink,
-				messageEncoding: 'iso-8859-1'
-			},
-
-			// All supported barcodes
+			// Supported barcodes (array format - recommended by Apple)
 			barcodes: [
 				{
 					format: 'PKBarcodeFormatQR',
@@ -397,14 +387,14 @@ export async function POST({ request, url }: RequestEvent) {
 					key: 'issuer',
 					label: 'Issuer',
 					value: `This Pass is issued by: ${originatorName}`,
-					attributedValue: `${basicData.orgUrl ? basicData.orgUrl : (kvData?.name ? '' : 'https://payto.money')}`,
+					attributedValue: `${kvData?.url || (kvData?.name ? '' : 'https://payto.money')}`,
 					dataDetectorTypes: ["PKDataDetectorTypeLink"]
 				},
 			]
 		};
 
 		const zip = new JSZip();
-		zip.file('pass.json', JSON.stringify(passData, null, 2));
+		zip.file('paypass.json', JSON.stringify(passData, null, 2));
 
 		// Add default images (should be loaded from assets)
 		const defaultImages: Record<string, ArrayBuffer> = {};
@@ -432,6 +422,34 @@ export async function POST({ request, url }: RequestEvent) {
 					.then(buffer => { if (buffer) defaultImages['logo@2x.png'] = buffer; })
 					.catch(() => {}),
 				fetch(kvData.icons.logo3x)
+					.then(res => res.ok ? res.arrayBuffer() : null)
+					.then(buffer => { if (buffer) defaultImages['logo@3x.png'] = buffer; })
+					.catch(() => {})
+			]);
+		} else {
+			// Default images
+			await Promise.all([
+				fetch('/images/paypass/icon.png')
+					.then(res => res.ok ? res.arrayBuffer() : null)
+					.then(buffer => { if (buffer) defaultImages['icon.png'] = buffer; })
+					.catch(() => {}),
+				fetch('/images/paypass/icon@2x.png')
+					.then(res => res.ok ? res.arrayBuffer() : null)
+					.then(buffer => { if (buffer) defaultImages['icon@2x.png'] = buffer; })
+					.catch(() => {}),
+				fetch('/images/paypass/icon@3x.png')
+					.then(res => res.ok ? res.arrayBuffer() : null)
+					.then(buffer => { if (buffer) defaultImages['icon@3x.png'] = buffer; })
+					.catch(() => {}),
+				fetch('/images/paypass/logo.png')
+					.then(res => res.ok ? res.arrayBuffer() : null)
+					.then(buffer => { if (buffer) defaultImages['logo.png'] = buffer; })
+					.catch(() => {}),
+				fetch('/images/paypass/logo@2x.png')
+					.then(res => res.ok ? res.arrayBuffer() : null)
+					.then(buffer => { if (buffer) defaultImages['logo@2x.png'] = buffer; })
+					.catch(() => {}),
+				fetch('/images/paypass/logo@3x.png')
 					.then(res => res.ok ? res.arrayBuffer() : null)
 					.then(buffer => { if (buffer) defaultImages['logo@3x.png'] = buffer; })
 					.catch(() => {})

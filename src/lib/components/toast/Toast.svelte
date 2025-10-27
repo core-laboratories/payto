@@ -1,10 +1,10 @@
 <script lang="ts" context="module">
 	export function toastType(type: string): string {
 		return {
-			success: 'bg-green-500 text-green-200',
-			error: 'bg-red-500 text-red-200',
-			info: 'bg-blue-500 text-blue-200',
-			warning: 'bg-yellow-500 text-yellow-200'
+			success: 'bg-green-500 text-green-50',
+			error: 'bg-red-500 text-red-50',
+			info: 'bg-blue-500 text-blue-50',
+			warning: 'bg-yellow-500 text-yellow-50'
 		}[type] || 'bg-gray-800 text-gray-400';
 	}
 </script>

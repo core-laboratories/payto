@@ -146,6 +146,59 @@
 		};
 	};
 
+	async function downloadPass() {
+		if (!hostname) {
+			toast({ message: 'No hostname selected', type: 'error' });
+			return;
+		}
+
+		isGenerating.set(true);
+		const timeoutId = setTimeout(() => {
+			isGenerating.set(false);
+			toast({ message: 'Generation timed out. Please try again.', type: 'error' });
+		}, GENERATION_TIMEOUT);
+
+		try {
+			const formData = new FormData();
+			formData.append('hostname', hostname);
+			formData.append('props', JSON.stringify($constructorStore.networks[hostname]));
+			formData.append('design', JSON.stringify($constructorStore.design));
+
+			const response = await fetch('/pass', {
+				method: 'POST',
+				body: formData
+			});
+
+			clearTimeout(timeoutId);
+			isGenerating.set(false);
+
+			if (!response.ok) {
+				const errorData = await response.json().catch(() => ({ message: response.statusText }));
+				toast({ message: errorData.message || 'Failed to generate pass', type: 'error' });
+				return;
+			}
+
+			const blob = await response.blob();
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			const addr = $constructorStore.networks[hostname]?.destination || '';
+			const normalizedAddr = normalizeAddress(addr, hostname);
+			const timestamp = new Date().toISOString().replace(/[-:]/g, '').slice(2, 13);
+			a.download = `PayPass-${hostname.toUpperCase()}-${normalizedAddr}-${timestamp}.pkpass`;
+			document.body.appendChild(a);
+			a.click();
+			toast({ message: 'Pass downloaded successfully', type: 'success' });
+			document.body.removeChild(a);
+			URL.revokeObjectURL(url);
+		} catch (error) {
+			clearTimeout(timeoutId);
+			isGenerating.set(false);
+			const errorMessage = error instanceof Error ? error.message : String(error);
+			toast({ message: errorMessage, type: 'error' });
+		}
+	}
+
 	const link = derived(
 		[constructor],
 		([$constructor]) => {
@@ -173,6 +226,15 @@
 	}
 
 	let showCustomization = false;
+
+	function normalizeAddress(addr: string | undefined, host: string | undefined): string {
+		if (!addr) return '';
+		const cleanAddr = addr.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+		if (host === 'ican' && cleanAddr.length > 8) {
+			return `${cleanAddr.slice(0, 4)}${cleanAddr.slice(-4)}`;
+		}
+		return cleanAddr;
+	}
 
 	async function copyToClipboard() {
 		try {
@@ -340,26 +402,17 @@
 		</div>
 
 		<div class="is-full">
-			<form
-				method="POST"
-				action="/pass"
-				use:enhance={formEnhance}
-				class="w-full"
+			<button
+				class="w-full bs-12 py-2 px-3 text-center text-white border border-gray-700 bg-gray-700 hover:bg-gray-600 rounded-sm transition duration-200 outline-none focus-visible:ring focus-visible:ring-green-800 focus-visible:ring-offset-2 active:scale-(0.99) text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+				type="button"
+				onclick={downloadPass}
+				disabled={!hostname || $isGenerating}
 			>
-				<input type="hidden" name="hostname" value={hostname || 'ican'} />
-				<input type="hidden" name="props" value={JSON.stringify($constructorStore.networks[hostname || 'ican'])} />
-				<input type="hidden" name="design" value={JSON.stringify($constructorStore.design)} />
-				<button
-					class="w-full bs-12 py-2 px-3 text-center text-white border border-gray-700 bg-gray-700 hover:bg-gray-600 rounded-sm transition duration-200 outline-none focus-visible:ring focus-visible:ring-green-800 focus-visible:ring-offset-2 active:scale-(0.99) text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-					type="submit"
-					disabled={!hostname || $isGenerating}
-				>
-					{#if !$isGenerating}
-						<Download class="w-4 h-4" />
-					{/if}
-					{$isGenerating ? 'Generating…' : 'Download PayPass'}
-				</button>
-			</form>
+				{#if !$isGenerating}
+					<Download class="w-4 h-4" />
+				{/if}
+				{$isGenerating ? 'Generating…' : 'Download PayPass'}
+			</button>
 			<p class="text-sm mt-2 text-gray-400 text-center">
 				Load PayPass into your Apple or Google Wallet.
 			</p>
