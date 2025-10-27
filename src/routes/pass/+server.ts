@@ -498,7 +498,11 @@ export async function POST({ request, url }: RequestEvent) {
 		});
 	} catch (err) {
 		console.error('Failed to generate pass:', err);
-		throw error(500, 'Failed to generate pass');
+		if (err && typeof err === 'object' && 'status' in err && 'body' in err) {
+			const httpErr = err as { status: number; body: { message?: string } };
+			throw error(httpErr.status, httpErr.body?.message || 'Failed to generate pass');
+		}
+		throw error(500, err instanceof Error ? err.message : 'Failed to generate pass');
 	}
 }
 

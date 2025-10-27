@@ -99,16 +99,35 @@
 			toast({ message: 'Generation timed out. Please try again.', type: 'error' });
 		}, GENERATION_TIMEOUT);
 
-		return async ({ result }: { result: any }) => {
+		return async ({ result, update }: { result: any; update: any }) => {
 			clearTimeout(timeoutId);
-			try {
-				if (result.type === 'error') {
-					isGenerating.set(false);
-					toast({ message: result.error?.message || 'Failed to generate pass', type: 'error' });
-					return;
-				}
+			isGenerating.set(false);
 
-				if (result.type === 'success' && result.data instanceof Blob) {
+			// Handle different result formats
+			if (result.type === 'error') {
+				// Extract error message from different possible formats
+				let errorMessage = 'Failed to generate pass';
+				if (result.error) {
+					if (typeof result.error === 'string') {
+						errorMessage = result.error;
+					} else if (result.error.body?.message) {
+						errorMessage = result.error.body.message;
+					} else if (result.error.message) {
+						errorMessage = result.error.message;
+					}
+				}
+				toast({ message: errorMessage, type: 'error' });
+				return;
+			}
+
+			// Handle case where result might not have type property (500 error, etc.)
+			if (result.message && !result.type) {
+				toast({ message: result.message, type: 'error' });
+				return;
+			}
+
+			if (result.type === 'success' && result.data instanceof Blob) {
+				try {
 					const url = URL.createObjectURL(result.data);
 					const a = document.createElement('a');
 					a.href = url;
@@ -117,13 +136,12 @@
 					toast({ message: 'Pass downloaded successfully', type: 'success' });
 					document.body.removeChild(a);
 					URL.revokeObjectURL(url);
-				} else {
-					throw new Error('Invalid response format');
+				} catch (error) {
+					const errorMessage = error instanceof Error ? error.message : String(error);
+					toast({ message: errorMessage, type: 'error' });
 				}
-			} catch (error) {
-				toast({ message: 'An unexpected error occurred', type: 'error' });
-			} finally {
-				isGenerating.set(false);
+			} else {
+				toast({ message: 'Invalid response format', type: 'error' });
 			}
 		};
 	};
@@ -328,9 +346,9 @@
 				use:enhance={formEnhance}
 				class="w-full"
 			>
+				<input type="hidden" name="hostname" value={hostname || 'ican'} />
 				<input type="hidden" name="props" value={JSON.stringify($constructorStore.networks[hostname || 'ican'])} />
 				<input type="hidden" name="design" value={JSON.stringify($constructorStore.design)} />
-				<input type="hidden" name="hostname" value={hostname} />
 				<button
 					class="w-full bs-12 py-2 px-3 text-center text-white border border-gray-700 bg-gray-700 hover:bg-gray-600 rounded-sm transition duration-200 outline-none focus-visible:ring focus-visible:ring-green-800 focus-visible:ring-offset-2 active:scale-(0.99) text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
 					type="submit"
