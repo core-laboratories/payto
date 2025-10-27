@@ -51,8 +51,11 @@ function getLocationCode(plusCode: string): [number, number] {
 	return [codeArea.latitudeCenter, codeArea.longitudeCenter];
 }
 
-function getLogoText(hostname: string, props: any) {
-	return `${(props.currency.value && props.currency.value.length < 6) ? props.currency.value.toUpperCase() : (props.network.toUpperCase() ? props.network.toUpperCase() : hostname.toUpperCase())} ${(props.destination.length > 8) ? props.destination.slice(0, 4).toUpperCase() + '…' + props.destination.slice(-4).toUpperCase() : props.destination.toUpperCase()}`;
+function getLogoText(hostname: string, props: any, currency?: string) {
+	const currencyValue = props.currency?.value || currency || '';
+	const currencyText = (currencyValue && currencyValue.length < 6) ? currencyValue.toUpperCase() : (props.network?.toUpperCase() || hostname.toUpperCase());
+	const destinationText = (props.destination?.length > 8) ? props.destination.slice(0, 4).toUpperCase() + '…' + props.destination.slice(-4).toUpperCase() : (props.destination?.toUpperCase() || '');
+	return `${currencyText} ${destinationText}`;
 }
 
 function generateToken(payload: any, secret: string, expirationMinutes: number = apiTokenTimeout): string {
@@ -253,7 +256,7 @@ export async function POST({ request, url }: RequestEvent) {
 			serialNumber: serialId,
 			passTypeIdentifier: kvData?.identifier || 'pass.money.payto',
 			organizationName: org,
-			logoText: getLogoText(hostname, props),
+			logoText: getLogoText(hostname, props, currency),
 			description: 'Wallet by ' + org,
 			expirationDate: new Date((props.params.dl?.value || (kvData?.id ? (Date.now() + 2 * 365 * 24 * 60 * 60 * 1000) : (Date.now() + 365 * 24 * 60 * 60 * 1000)))).toISOString(),
 			backgroundColor: validColors(design.colorB, design.colorF) ? design.colorB : (kvData?.theme?.colorB || '#2A3950'),
@@ -451,8 +454,19 @@ export async function POST({ request, url }: RequestEvent) {
 		}
 		zip.file('manifest.json', JSON.stringify(manifest, null, 2));
 
-		// Create signature using KV private key
-		const privateKeyObj = forge.pki.privateKeyFromPem(privateKey);
+		// Create signature using KV private key or fallback to default
+		const keyToUse = kvData?.privateKey || privateKey;
+		if (!keyToUse) {
+			throw error(500, 'Private key not found for pass signing');
+		}
+
+		let privateKeyObj;
+		try {
+			privateKeyObj = forge.pki.privateKeyFromPem(keyToUse);
+		} catch (pemError) {
+			throw error(500, 'Invalid private key format.');
+		}
+
 		const manifestText = JSON.stringify(manifest, null, 2);
 		const signature = forge.util.encode64(
 			privateKeyObj.sign(forge.md.sha1.create().update(manifestText))
