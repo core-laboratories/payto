@@ -60,39 +60,45 @@ Issuing authorities[^authority] deliver an object like this example to the email
 
 ```jsonc
 {
-    "id": "pingchb2", // ORIC in lowercase, no spaces
-    "name": "Ping Exchange", // Organization name
-    "identifier": "pass.exchange.ping",
-    "url": "https://ping.exchange", // Organization website
-    "icons": { // Organization icons
-        "icon": "https://…/icons/icon.png", // Icon 29x29 px
-        "icon2x": "https://…/icons/icon@2x.png", // Icon 58x58 px (default web icon)
-        "icon3x": "https:/…/icons/icon@3x.png", // Icon 87x87 px
-        "logo": "https://…/icons/logo.png", // Logo 160x50 px
-        "logo2x": "https://…/icons/logo@2x.png", // Logo 320x100 px
-        "logo3x": "https://…/icons/logo@3x.png" // Logo 480x150 px
-    },
-    "theme": { // Organization theme
-        "colorB": "#77bc65", // Background color
-        "colorF": "#192a14", // Foreground color
-        "colorTxt": "#192a14" // Text/label color
-    },
-    "forceTheme": false, // If true, forces your theme even if users or system set their own custom colors
-    "customCurrency": { // Custom currency definitions for non-standard currencies or tokens
-        "XCB": {
-            "symbol": "₡",
-            "narrowSymbol": "₡",
-            "code": "XCB",
-            "name": "CoreCoin",
-            "defaultDecimals": 2
-        }
-    },
-    "currencyLocale": "en-US", // The locale used for currency formatting (e.g., `"en-US"`, `"de-DE"`, `"sk-SK"`)
-    "postForm": false, // If true, allows Pass generation via HTML form submission from any origin
-    "api": { // API access configuration for programmatic Pass generation
-        "allowed": false, // Set to `true` to enable API access
-        "secret": "your-api-secret-here" // Your API secret key used to generate bearer tokens (HMAC-SHA256)
+  "id": "pingchb2", // ORIC in lowercase, no spaces
+  "name": "Ping Exchange", // Organization name
+  "url": "https://ping.exchange", // Organization website
+  "icons": { // Organization icons
+    "icon": "https://…/icons/icon.png", // Icon 29x29 px
+    "icon2x": "https://…/icons/icon@2x.png", // Icon 58x58 px (default web icon)
+    "icon3x": "https:/…/icons/icon@3x.png", // Icon 87x87 px
+    "logo": "https://…/icons/logo.png", // Logo 160x50 px
+    "logo2x": "https://…/icons/logo@2x.png", // Logo 320x100 px
+    "logo3x": "https://…/icons/logo@3x.png" // Logo 480x150 px
+  },
+  "theme": { // Organization theme
+    "colorB": "#77bc65", // Background color
+    "colorF": "#192a14", // Foreground color
+    "colorTxt": "#192a14" // Text/label color
+  },
+  "forceTheme": false, // If true, forces your theme even if users or system set their own custom colors
+  "customCurrency": { // Custom currency definitions for non-standard currencies or tokens
+    "XCB": {
+      "symbol": "₡",
+      "narrowSymbol": "₡",
+      "code": "XCB",
+      "name": "CoreCoin",
+      "defaultDecimals": 2
     }
+  },
+  "currencyLocale": "en-US", // The locale used for currency formatting (e.g., `"en-US"`, `"de-DE"`, `"sk-SK"`)
+  "postForm": false, // If true, allows Pass generation via HTML form submission from any origin
+  "api": { // API access configuration for programmatic Pass generation
+    "allowed": false, // Set to `true` to enable API access
+    "secret": "your-api-secret-here" // Your API secret key used to generate bearer tokens (HMAC-SHA256)
+  },
+  "beacons": [ // Custom iBeacon proximity triggers to PayPasses
+    {
+      "proximityUUID": "F8F589E9-C07E-58B0-AEAB-A36BE4D48FAC", // The UUID of the iBeacon
+      "relevantText": "You're near my store", // The text displayed when the iBeacon is in range
+      "name": "My Store" // The name of the iBeacon
+    }
+  ]
 }
 ```
 
@@ -103,9 +109,6 @@ Issuing authorities[^authority] deliver an object like this example to the email
 
 - **`name`** (required): The organization name displayed on the Pass. If set, it overrides the user's custom organization name.
   - Example: `"PayTo"`, `"My Company Inc."`
-
-- **`identifier`** (required): The unique Pass Type Identifier in reverse DNS format. This is required by Apple Wallet.
-  - Example: `"pass.money.payto"`, `"pass.com.mycompany.wallet"`
 
 - **`url`** (optional): Your organization's website URL. Displayed in the Pass details.
   - Example: `"https://payto.money"`
@@ -150,6 +153,10 @@ Issuing authorities[^authority] deliver an object like this example to the email
   - Default: `{ "allowed": false, "secret": "" }`
   - Note: When API is enabled, requests must include `Authorization: Bearer <token>` header
   - Token format: HMAC-SHA256 hash of payload + expiration timestamp (default: 1 minute, configurable via `PRIVATE_API_TOKEN_TIMEOUT` env var)
+
+- **`beacons`** (optional): Custom iBeacon proximity triggers to PayPasses.
+  - Format: `[ { "proximityUUID": "F8F589E9-C07E-58B0-AEAB-A36BE4D48FAC", "relevantText": "You're near my store", "name": "My Store" } ]`
+  - Default: none
 
 #### API Access
 

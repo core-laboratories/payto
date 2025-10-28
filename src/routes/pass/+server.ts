@@ -135,7 +135,7 @@ if (enableStats) {
 	}
 }
 
-export async function POST({ request, url }: RequestEvent) {
+export async function POST({ request, url, fetch }: RequestEvent) {
 	const contentType = request.headers.get('content-type') || '';
 	let data: any = {};
 
@@ -236,7 +236,7 @@ export async function POST({ request, url }: RequestEvent) {
 
 		// Basic pass data structure
 		const bareLink = getLink(hostname, props);
-		const org = kvData?.name || (design.org || (authorityField?.toUpperCase()) || 'PayTo');
+		const org = kvData?.name ? 'PayPass · ' + kvData.name : (design.org ? 'PayPass · ' + design.org : 'PayPass');
 		const originator = kvData?.id || 'payto';
 		const originatorName = kvData?.name || 'PayTo';
 		const memberAddress = membership || props.destination;
@@ -254,7 +254,7 @@ export async function POST({ request, url }: RequestEvent) {
 
 		const basicData = {
 			serialNumber: serialId,
-			passTypeIdentifier: kvData?.identifier || 'pass.money.payto',
+			passTypeIdentifier: 'pass.money.payto',
 			organizationName: org,
 			logoText: getLogoText(hostname, props, currency),
 			description: 'PayPass by ' + org,
@@ -279,13 +279,13 @@ export async function POST({ request, url }: RequestEvent) {
 			formatVersion: 1,
 			teamIdentifier: teamIdentifier,
 
-			// Generic pass style (required by Apple Wallet)
-			// The empty object is valid - fields like headerFields, primaryFields, etc. are top-level properties
-			generic: {},
+			// Membership card style (required by Apple Wallet)
+			storeCard: {},
 
 			// NFC configuration
 			nfc: {
-				message: bareLink
+				message: bareLink,
+				requiresAuthentication: true
 			},
 
 			// Supported barcodes (array format - recommended by Apple)
@@ -386,15 +386,18 @@ export async function POST({ request, url }: RequestEvent) {
 				{
 					key: 'issuer',
 					label: 'Issuer',
-					value: `This Pass is issued by: ${originatorName}`,
+					value: `This PayPass is issued by: ${originatorName}`,
 					attributedValue: `${kvData?.url || (kvData?.name ? '' : 'https://payto.money')}`,
 					dataDetectorTypes: ["PKDataDetectorTypeLink"]
 				},
-			]
+			],
+			...(kvData?.beacons ? {
+				beacons: kvData.beacons
+			} : {})
 		};
 
 		const zip = new JSZip();
-		zip.file('paypass.json', JSON.stringify(passData, null, 2));
+		zip.file('pass.json', JSON.stringify(passData, null, 2));
 
 		// Add default images (should be loaded from assets)
 		const defaultImages: Record<string, ArrayBuffer> = {};
