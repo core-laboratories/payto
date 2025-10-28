@@ -64,12 +64,19 @@ Issuing authorities[^authority] deliver an object like this example to the email
   "name": "Ping Exchange", // Organization name
   "url": "https://ping.exchange", // Organization website
   "icons": { // Organization icons
-    "icon": "https://…/icons/icon.png", // Icon 29x29 px
-    "icon2x": "https://…/icons/icon@2x.png", // Icon 58x58 px (default web icon)
-    "icon3x": "https:/…/icons/icon@3x.png", // Icon 87x87 px
-    "logo": "https://…/icons/logo.png", // Logo 160x50 px
-    "logo2x": "https://…/icons/logo@2x.png", // Logo 320x100 px
-    "logo3x": "https://…/icons/logo@3x.png" // Logo 480x150 px
+    "apple": { // Apple Wallet icons
+      "icon": "https://…/icons/apple/icon.png", // Icon 29x29 px
+      "icon2x": "https://…/icons/apple/icon@2x.png", // Icon 58x58 px
+      "icon3x": "https://…/icons/apple/icon@3x.png", // Icon 87x87 px
+      "logo": "https://…/icons/apple/logo.png", // Logo 160x50 px
+      "logo2x": "https://…/icons/apple/logo@2x.png", // Logo 320x100 px
+      "logo3x": "https://…/icons/apple/logo@3x.png" // Logo 480x150 px
+    },
+    "google": { // Google Wallet icons
+      "logo": "https://…/icons/google/logo.png", // Logo 160x50 px
+      "icon": "https://…/icons/google/icon.png", // Icon 29x29 px
+      "hero": "https://…/icons/google/hero.png", // Hero image
+    }
   },
   "theme": { // Organization theme
     "colorB": "#77bc65", // Background color
@@ -114,14 +121,20 @@ Issuing authorities[^authority] deliver an object like this example to the email
   - Example: `"https://payto.money"`
   - Default: none
 
-- **`icons`** (optional): Icon URLs for the Pass. All formats must be PNG. Accepts standard URLs or IPFS links.
-  - `icon`: 29x29 px (87x87 px for @3x)
-  - `icon2x`: 58x58 px (default web icon)
-  - `icon3x`: 87x87 px
-  - `logo`: 160x50 px
-  - `logo2x`: 320x100 px
-  - `logo3x`: 480x150 px
-  - Default: PayTo logo
+- **`icons`** (optional): Icon URLs for the Pass organized by platform. All formats must be PNG. Accepts standard URLs or IPFS links.
+  - **`apple`** (object): Apple Wallet icons
+    - `icon`: 29x29 px
+    - `icon2x`: 58x58 px
+    - `icon3x`: 87x87 px
+    - `logo`: 160x50 px
+    - `logo2x`: 320x100 px
+    - `logo3x`: 480x150 px
+  - **`google`** (object): Google Wallet icons
+    - `logo`: 160x50 px
+    - `icon`: 29x29 px
+    - `hero`: Hero image
+  - **Unified**: Same icons are used for both platforms when available, with platform-specific fallbacks
+  - Default: PayTo logo with automatic dev/prod URL resolution
 
 - **`theme`** (optional): Color theme for the Pass in hexadecimal format.
   - `colorB`: Background color (e.g., `"#77bc65"`)
@@ -231,6 +244,9 @@ Both `postForm` and API accept the same payload structure for generating Passes.
 
 - **`membership`** (string, optional): Member address for tracking
 - **`authority`** (string, optional): Authority ID (auto-populated from URL parameter)
+- **`os`** (string, optional): Target operating system (`"ios"`, `"android"`, or `"unknown"`)
+  - Auto-detected from user agent if not specified
+  - Determines which wallet integration to use
 
 #### Example 1: ICAN Payment (HTML Form)
 
@@ -375,8 +391,29 @@ curl -X POST https://payto.money/pass?authority=oric \
 
 **Response:**
 
-- Success: `.pkpass` file download (binary)
-- Error: JSON with error message and HTTP status code
+- **iOS/Apple Wallet**: `.pkpass` file download (binary)
+- **Android/Google Wallet**: JSON response with `saveUrl` for Google Wallet integration
+- **Error**: JSON with error message and HTTP status code
+
+#### OS Detection and Wallet Integration
+
+The PayPass generation system automatically detects the user's operating system and provides appropriate wallet integration:
+
+- **iOS Detection**: Shows "Add PayPass to Apple Wallet" button, generates `.pkpass` file
+- **Android Detection**: Shows "Add PayPass to Google Wallet" button, generates Google Wallet save link
+- **Unknown/Desktop**: Shows both wallet options for maximum compatibility
+
+The system uses `navigator.userAgent` to detect iOS (`iphone|ipad|ipod`) and Android (`android`) devices, providing a seamless user experience across all platforms.
+
+#### UI Enhancements
+
+The PayPass generation interface includes:
+
+- **Responsive Design**: Buttons adapt to screen size (half-width on desktop, full-width stacked on mobile)
+- **OS-Aware Interface**: Shows only relevant wallet button when OS is detected, both buttons when unknown
+- **Consistent Styling**: Unified button design with proper icon sizing and spacing
+- **Accessibility**: Proper focus states, ARIA labels, and keyboard navigation support
+- **Visual Feedback**: Loading states, disabled states, and hover effects for better UX
 
 [^authority]: Available for the [Organization plan](https://payto.money/pro#org).
 

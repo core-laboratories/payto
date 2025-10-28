@@ -53,6 +53,7 @@
 		"blockchain-wallet-validator": "^1.1.2",
 		"device-sherlock": "^0.2.1",
 		"exchange-rounding": "^1.1.8",
+		"jose": "^6.1.0",
 		"jszip": "^3.10.1",
 		"lucide-svelte": "^0.546.0",
 		"node-forge": "^1.3.1",
