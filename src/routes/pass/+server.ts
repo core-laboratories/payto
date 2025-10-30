@@ -52,7 +52,6 @@ const p12Base64 = env.PRIVATE_PASS_P12_BASE64;
 const p12Password = env.PRIVATE_PASS_P12_PASSWORD;
 const wwdrPem = env.PRIVATE_WWDR_PEM;
 
-
 // Google Wallet
 const gwIssuerId = env.PRIVATE_GW_ISSUER_ID || '';
 const gwSaEmail = env.PRIVATE_GW_SA_EMAIL || '';
@@ -267,6 +266,8 @@ async function buildGoogleWalletSaveLink({
 	logoUrl,
 	iconUrl,
 	heroUrl,
+	subheaderText,
+	hexBackgroundColor,
 	payload
 }: {
 	issuerId: string;
@@ -275,6 +276,8 @@ async function buildGoogleWalletSaveLink({
 	logoUrl: string;
 	iconUrl: string;
 	heroUrl?: string;
+	subheaderText?: string;
+	hexBackgroundColor?: string;
 	payload: {
 		id: string;              // unique object id: `${issuerId}.${serial}`
 		title: string;           // title at the top
@@ -289,10 +292,11 @@ async function buildGoogleWalletSaveLink({
 	// Generate dynamic class ID
 	const classId = `${issuerId}.generic_paypass`;
 
-	// Create generic class dynamically (Google Wallet will auto-create this)
+	// Create generic class dynamically (Google Wallet will auto-create this via JWT)
 	const gwClass: any = {
 		id: classId,
-		issuerName: payload.title || 'PayPass'
+		issuerName: payload.title || 'PayPass',
+		...(hexBackgroundColor ? { hexBackgroundColor } : {})
 	};
 
 	let textModules: Array<{ header: string; body: string }> = [
@@ -300,58 +304,57 @@ async function buildGoogleWalletSaveLink({
 		...(payload.typeText ? [{ header: 'Type', body: payload.typeText }] : []),
 		...(payload.extraBlocks || [])
 	];
-	// Normalize: ensure non-empty header/body for all modules
+
+	// Normalize: ensure non-empty header/body for all modules, include primary block
 	textModules = textModules
 		.map(m => ({
 			header: (m.header && String(m.header).trim()) || 'Details',
 			body: (m.body && String(m.body).trim()) || (payload.title || 'PayPass')
 		}))
 		.filter(m => m.header.length > 0 && m.body.length > 0);
-	// Always include a primary block to satisfy Google's header requirement
-	textModules.unshift({ header: 'PayPass', body: payload.title || 'PayPass' });
 
-	const plainTextModules = textModules.map((m) => ({ header: m.header, body: m.body }));
+	textModules.unshift({ header: 'PayPass', body: payload.title || 'PayPass' });
 
 	const gwObject: any = {
 		id: payload.id,
 		classId,
-		state: 'ACTIVE',
-		title: payload.title,
-		cardTitle: { defaultValue: { language: 'en-US', value: payload.title } },
+		state: 'active',
+
+		// REQUIRED presentation fields
+		cardTitle: { defaultValue: { language: 'en-US', value: payload.title || 'PayPass' } },
+		header:    { defaultValue: { language: 'en-US', value: 'PayPass' } },
+		...(subheaderText
+			? { subheader: { defaultValue: { language: 'en-US', value: subheaderText } } }
+			: {}),
+
+		// Primary visuals (top-level)
+		logo: { sourceUri: { uri: logoUrl } },
+		...(heroUrl ? { heroImage: { sourceUri: { uri: heroUrl } } } : {}),
+
 		barcode: {
-			type: 'QR_CODE',
+			type: 'qrCode',
 			value: payload.qrValue,
 			alternateText: 'Scan to pay'
 		},
-		textModulesData: plainTextModules,
+
+		textModulesData: textModules.map(m => ({ header: m.header, body: m.body })),
+
 		linksModuleData: {
-			links: [
-				...(payload.explorerUrl ? [{ uri: payload.explorerUrl, description: 'View transactions' }] : []),
-				...(payload.proUrl ? [{ uri: payload.proUrl, description: 'Activate Pro' }] : [])
+			uris: [
+				...(payload.explorerUrl ? [{ kind: 'walletobjects#uri', uri: payload.explorerUrl, description: 'View transactions' }] : []),
+				...(payload.proUrl ? [{ kind: 'walletobjects#uri', uri: payload.proUrl, description: 'Activate Pro' }] : [])
 			]
 		},
+
+		// Extra imagery kept here
 		imageModulesData: [
-			{
-				id: 'logo',
-				mainImage: {
-					sourceUri: { uri: logoUrl },
-					contentDescription: { defaultValue: { language: 'en-US', value: 'Logo' } }
-				}
-			},
 			{
 				id: 'icon',
 				mainImage: {
 					sourceUri: { uri: iconUrl },
 					contentDescription: { defaultValue: { language: 'en-US', value: 'Icon' } }
 				}
-			},
-			...(heroUrl ? [{
-				id: 'hero',
-				mainImage: {
-					sourceUri: { uri: heroUrl },
-					contentDescription: { defaultValue: { language: 'en-US', value: 'Hero Image' } }
-				}
-			}] : [])
+			}
 		]
 	};
 
@@ -599,19 +602,22 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 					: 'Custom Amount';
 
 			const typeText = props.params.rc?.value ? `Recurring ${props.params.rc.value.toUpperCase()}` : 'One-time';
+			const subheaderText = `${typeText} · ${amountText}`;
 
 			const objectId = `${gwIssuerId}.${serialId.replace(/[^a-zA-Z0-9._-]/g, '-')}`.slice(0, 100); // ensure valid id & length
 
 			// Get unified image URLs
 			const imageUrls = getImageUrls(kvData, isDev, devServerUrl);
 
-			const { saveUrl, classId } = await buildGoogleWalletSaveLink({
+			const { saveUrl, classId, gwObject, gwClass } = await buildGoogleWalletSaveLink({
 				issuerId: gwIssuerId,
 				saEmail: gwSaEmail,
 				saPrivateKeyPem: gwSaKeyPem,
 				logoUrl: imageUrls.google.logo,
 				iconUrl: imageUrls.google.icon,
 				heroUrl: imageUrls.google.hero,
+				subheaderText,
+				hexBackgroundColor: (kvData?.theme?.colorB || '#2A3950'),
 				payload: {
 					id: objectId,
 					title: org,
@@ -644,7 +650,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				}
 			}
 
-			return json({ saveUrl, id: objectId, classId });
+			return json({ saveUrl, id: objectId, classId, gwObject, gwClass });
 		}
 
 		// Default / iOS: Build .pkpass with proper PKCS#7 signature

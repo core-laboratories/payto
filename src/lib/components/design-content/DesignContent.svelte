@@ -125,7 +125,8 @@
 			const selectedOs = osOverride ?? get(userOS);
 			formData.append('os', selectedOs);
 
-			const response = await fetch('/pass', {
+			const endpoint = '/pass';
+			const response = await fetch(endpoint, {
 				method: 'POST',
 				body: formData
 			});
