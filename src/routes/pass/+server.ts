@@ -17,10 +17,10 @@ import { PUBLIC_ENABLE_STATS } from '$env/static/public';
 import * as jose from 'jose';
 
 /* ----------------------------------------------------------------
- * Env vars you must set
+ * Env vars
  * ----------------------------------------------------------------
  * Apple (iOS)
- *   PRIVATE_PASS_TEAM_IDENTIFIER           -> Apple Team ID (e.g., XNG2XKLCQG)
+ *   PRIVATE_PASS_TEAM_IDENTIFIER           -> Apple Team ID
  *   PRIVATE_PASS_P12_BASE64                -> base64-encoded Pass Type ID .p12
  *   PRIVATE_PASS_P12_PASSWORD              -> password for the .p12
  *   PRIVATE_WWDR_PEM                       -> Apple WWDR certificate (PEM text)
@@ -28,15 +28,17 @@ import * as jose from 'jose';
  *
  * Google Wallet (Android)
  *   PRIVATE_GW_ISSUER_ID                   -> your Google Wallet issuerId
- *   PRIVATE_GW_CLASS_ID                    -> your Google Wallet generic classId (e.g., issuerId.yourClass)
  *   PRIVATE_GW_SA_EMAIL                    -> service account email
  *   PRIVATE_GW_SA_PRIVATE_KEY              -> service account private key (PEM)
+ *   Note: Class is created dynamically, no PRIVATE_GW_CLASS_ID needed
  *
  * Optional
  *   PRIVATE_SUPABASE_URL
  *   PRIVATE_SUPABASE_KEY
  *   PRIVATE_API_TOKEN_TIMEOUT              -> default minutes (string int)
- *   PUBLIC_PRO_URL                         -> public pro URL (can come from $env/dynamic/public)
+ *   PUBLIC_ENABLE_STATS                    -> enable stats (boolean)
+ *   PUBLIC_PRO_URL                         -> public pro URL
+ *   PUBLIC_DEV_SERVER_URL                  -> development server URL (default: http://localhost:5173)
  * ---------------------------------------------------------------- */
 
 const teamIdentifier = env.PRIVATE_PASS_TEAM_IDENTIFIER;
@@ -56,7 +58,6 @@ if (!p12Base64 || !p12Password || !wwdrPem) {
 
 // Google Wallet
 const gwIssuerId = env.PRIVATE_GW_ISSUER_ID || '';
-const gwClassId = env.PRIVATE_GW_CLASS_ID || (gwIssuerId ? `${gwIssuerId}.generic` : '');
 const gwSaEmail = env.PRIVATE_GW_SA_EMAIL || '';
 const gwSaKeyPem = env.PRIVATE_GW_SA_PRIVATE_KEY || '';
 const isDev = process.env.NODE_ENV === 'development';
@@ -264,7 +265,6 @@ function signAppleManifestPKCS7({
 
 async function buildGoogleWalletSaveLink({
 	issuerId,
-	classId,
 	saEmail,
 	saPrivateKeyPem,
 	logoUrl,
@@ -273,7 +273,6 @@ async function buildGoogleWalletSaveLink({
 	payload
 }: {
 	issuerId: string;
-	classId: string;
 	saEmail: string;
 	saPrivateKeyPem: string;
 	logoUrl: string;
@@ -289,7 +288,15 @@ async function buildGoogleWalletSaveLink({
 		proUrl?: string;
 		extraBlocks?: Array<{ header: string; body: string }>;
 	}
-}): Promise<{ saveUrl: string }> {
+}): Promise<{ saveUrl: string; classId: string }> {
+	// Generate dynamic class ID
+	const classId = `${issuerId}.generic_paypass`;
+
+	// Create generic class dynamically (Google Wallet will auto-create this)
+	const gwClass: any = {
+		id: classId
+	};
+
 	const gwObject: any = {
 		id: payload.id,
 		classId,
@@ -343,7 +350,10 @@ async function buildGoogleWalletSaveLink({
 		aud: 'google',
 		typ: 'savetowallet',
 		iat: now,
-		payload: { genericObjects: [gwObject] }
+		payload: {
+			genericClasses: [gwClass],
+			genericObjects: [gwObject]
+		}
 	};
 
 	const alg = 'RS256';
@@ -352,7 +362,7 @@ async function buildGoogleWalletSaveLink({
 		.setProtectedHeader({ alg, typ: 'JWT' })
 		.sign(privateKey);
 
-	return { saveUrl: `https://pay.google.com/gp/v/save/${jwt}` };
+	return { saveUrl: `https://pay.google.com/gp/v/save/${jwt}`, classId };
 }
 
 /* ----------------------------------------------------------------
@@ -580,9 +590,8 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			// Get unified image URLs
 			const imageUrls = getImageUrls(kvData, isDev, devServerUrl);
 
-			const { saveUrl } = await buildGoogleWalletSaveLink({
+			const { saveUrl, classId } = await buildGoogleWalletSaveLink({
 				issuerId: gwIssuerId,
-				classId: gwClassId,
 				saEmail: gwSaEmail,
 				saPrivateKeyPem: gwSaKeyPem,
 				logoUrl: imageUrls.google.logo,
@@ -620,7 +629,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				}
 			}
 
-			return json({ saveUrl, id: objectId, classId: gwClassId });
+			return json({ saveUrl, id: objectId, classId });
 		}
 
 		// Default / iOS: Build .pkpass with proper PKCS#7 signature
@@ -666,7 +675,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 		const pkpassBlob = await zip.generateAsync({ type: 'blob' });
 
 		// Optional stats
-		if (pkpassBlob && enableStats && supabase) {
+		if (enableStats && pkpassBlob && supabase) {
 			try {
 				// @ts-ignore
 				await (supabase as any).from('passes_stats')
