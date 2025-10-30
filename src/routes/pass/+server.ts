@@ -285,32 +285,34 @@ async function buildGoogleWalletSaveLink({
 		proUrl?: string;
 		extraBlocks?: Array<{ header: string; body: string }>;
 	}
-}): Promise<{ saveUrl: string; classId: string }> {
+}): Promise<{ saveUrl: string; classId: string; gwObject: any; gwClass: any }> {
 	// Generate dynamic class ID
 	const classId = `${issuerId}.generic_paypass`;
 
 	// Create generic class dynamically (Google Wallet will auto-create this)
-    const gwClass: any = {
-        id: classId,
-        issuerName: payload.title || 'PayPass'
-    };
+	const gwClass: any = {
+		id: classId,
+		issuerName: payload.title || 'PayPass'
+	};
 
-    let textModules: Array<{ header: string; body: string }> = [
-        ...(payload.amountText ? [{ header: 'Amount', body: payload.amountText }] : []),
-        ...(payload.typeText ? [{ header: 'Type', body: payload.typeText }] : []),
-        ...(payload.extraBlocks || [])
-    ];
-    // Normalize: ensure non-empty header/body for all modules
-    textModules = textModules
-        .map(m => ({
-            header: (m.header && String(m.header).trim()) || 'Details',
-            body: (m.body && String(m.body).trim()) || (payload.title || 'PayPass')
-        }))
-        .filter(m => m.header.length > 0 && m.body.length > 0);
-    // Always include a primary block to satisfy Google's header requirement
-    textModules.unshift({ header: 'PayPass', body: payload.title || 'PayPass' });
+	let textModules: Array<{ header: string; body: string }> = [
+		...(payload.amountText ? [{ header: 'Amount', body: payload.amountText }] : []),
+		...(payload.typeText ? [{ header: 'Type', body: payload.typeText }] : []),
+		...(payload.extraBlocks || [])
+	];
+	// Normalize: ensure non-empty header/body for all modules
+	textModules = textModules
+		.map(m => ({
+			header: (m.header && String(m.header).trim()) || 'Details',
+			body: (m.body && String(m.body).trim()) || (payload.title || 'PayPass')
+		}))
+		.filter(m => m.header.length > 0 && m.body.length > 0);
+	// Always include a primary block to satisfy Google's header requirement
+	textModules.unshift({ header: 'PayPass', body: payload.title || 'PayPass' });
 
-    const gwObject: any = {
+	const plainTextModules = textModules.map((m) => ({ header: m.header, body: m.body }));
+
+	const gwObject: any = {
 		id: payload.id,
 		classId,
 		state: 'ACTIVE',
@@ -321,7 +323,7 @@ async function buildGoogleWalletSaveLink({
 			value: payload.qrValue,
 			alternateText: 'Scan to pay'
 		},
-        textModulesData: textModules,
+		textModulesData: plainTextModules,
 		linksModuleData: {
 			links: [
 				...(payload.explorerUrl ? [{ uri: payload.explorerUrl, description: 'View transactions' }] : []),
@@ -372,7 +374,7 @@ async function buildGoogleWalletSaveLink({
 		.setProtectedHeader({ alg, typ: 'JWT' })
 		.sign(privateKey);
 
-	return { saveUrl: `https://pay.google.com/gp/v/save/${jwt}`, classId };
+	return { saveUrl: `https://pay.google.com/gp/v/save/${jwt}`, classId, gwObject, gwClass };
 }
 
 /* ----------------------------------------------------------------
