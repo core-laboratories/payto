@@ -52,9 +52,6 @@ const p12Base64 = env.PRIVATE_PASS_P12_BASE64;
 const p12Password = env.PRIVATE_PASS_P12_PASSWORD;
 const wwdrPem = env.PRIVATE_WWDR_PEM;
 
-if (!p12Base64 || !p12Password || !wwdrPem) {
-	console.warn('Apple signing env vars missing. iOS pass generation will fail until provided.');
-}
 
 // Google Wallet
 const gwIssuerId = env.PRIVATE_GW_ISSUER_ID || '';
@@ -293,25 +290,38 @@ async function buildGoogleWalletSaveLink({
 	const classId = `${issuerId}.generic_paypass`;
 
 	// Create generic class dynamically (Google Wallet will auto-create this)
-	const gwClass: any = {
-		id: classId
-	};
+    const gwClass: any = {
+        id: classId,
+        issuerName: payload.title || 'PayPass'
+    };
 
-	const gwObject: any = {
+    let textModules: Array<{ header: string; body: string }> = [
+        ...(payload.amountText ? [{ header: 'Amount', body: payload.amountText }] : []),
+        ...(payload.typeText ? [{ header: 'Type', body: payload.typeText }] : []),
+        ...(payload.extraBlocks || [])
+    ];
+    // Normalize: ensure non-empty header/body for all modules
+    textModules = textModules
+        .map(m => ({
+            header: (m.header && String(m.header).trim()) || 'Details',
+            body: (m.body && String(m.body).trim()) || (payload.title || 'PayPass')
+        }))
+        .filter(m => m.header.length > 0 && m.body.length > 0);
+    // Always include a primary block to satisfy Google's header requirement
+    textModules.unshift({ header: 'PayPass', body: payload.title || 'PayPass' });
+
+    const gwObject: any = {
 		id: payload.id,
 		classId,
 		state: 'ACTIVE',
 		title: payload.title,
+		cardTitle: { defaultValue: { language: 'en-US', value: payload.title } },
 		barcode: {
 			type: 'QR_CODE',
 			value: payload.qrValue,
 			alternateText: 'Scan to pay'
 		},
-		textModulesData: [
-			...(payload.amountText ? [{ header: 'Amount', body: payload.amountText }] : []),
-			...(payload.typeText ? [{ header: 'Type', body: payload.typeText }] : []),
-			...(payload.extraBlocks || [])
-		],
+        textModulesData: textModules,
 		linksModuleData: {
 			links: [
 				...(payload.explorerUrl ? [{ uri: payload.explorerUrl, description: 'View transactions' }] : []),
@@ -577,6 +587,9 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 		/* ---------------- OS switch ---------------- */
 
 		if (os === 'android') {
+			if (!gwIssuerId || !gwSaEmail || !gwSaKeyPem) {
+				throw error(500, 'Google signing configuration missing (issuer/service account).');
+			}
 			// Build Google Wallet Generic Object -> Save to Wallet link
 			const amountText =
 				(props.params.amount?.value && Number(props.params.amount.value) > 0)
