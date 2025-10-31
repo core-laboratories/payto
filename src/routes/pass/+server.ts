@@ -124,7 +124,8 @@ function getTitleText(hostname: string, props: any, currency?: string) {
 
 /**
  * Get barcode configuration for Apple and Google Wallet based on selected type
- * Maps user selection (qr, pdf417, aztec, code128) to wallet-specific format requirements
+ * Maps user selection to wallet-specific format requirements
+ * For Google-only formats, falls back to QR Code for Apple
  */
 function getBarcodeConfig(barcodeType: string, message: string) {
 	const appleFormatMap: Record<string, string> = {
@@ -138,14 +139,20 @@ function getBarcodeConfig(barcodeType: string, message: string) {
 		'qr': 'qrCode',
 		'pdf417': 'pdf417',
 		'aztec': 'aztec',
-		'code128': 'code128'
+		'code128': 'code128',
+		'upca': 'upcA',
+		'ean13': 'ean13',
+		'code39': 'code39'
 	};
 
 	const normalizedType = barcodeType?.toLowerCase() || 'qr';
 
+	// For Apple, fallback to QR if barcode not supported
+	const appleFormat = appleFormatMap[normalizedType] || 'PKBarcodeFormatQR';
+
 	return {
 		apple: {
-			format: appleFormatMap[normalizedType] || 'PKBarcodeFormatQR',
+			format: appleFormat,
 			message,
 			messageEncoding: 'iso-8859-1'
 		},
@@ -314,7 +321,7 @@ async function buildGoogleWalletSaveLink({
 	heroUrl?: string;
 	subheaderText?: string;
 	hexBackgroundColor?: string;
-	barcode?: any;
+	barcode: any;
 	payload: {
 		id: string;              // unique object id: `${issuerId}.${serial}`
 		title: string;           // title at the top
@@ -328,7 +335,7 @@ async function buildGoogleWalletSaveLink({
 }): Promise<{ saveUrl: string; classId: string; gwObject: any; gwClass: any }> {
 	// Generate unique class ID for each pass
 	const randomId = crypto.randomUUID().replace(/-/g, '');
-	const classId = `${issuerId}.paypass_${randomId}`;
+	const classId = `${issuerId}.paypass.${randomId}`;
 
 	// Create generic class dynamically (Google Wallet will auto-create this via JWT)
 	const gwClass: any = {
@@ -440,6 +447,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 		const jsonData = await request.json();
 		authorityField = jsonData.authority || null;
 		data = jsonData;
+		data.os = data.os || '';
 	} else {
 		const formData = await request.formData();
 		authorityField = (formData.get('authority') as string) || url.searchParams.get('authority');
@@ -448,7 +456,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 		data.design = formData.get('design') ? JSON.parse(formData.get('design') as string) : null;
 		data.authority = formData.get('authority') as string;
 		data.membership = formData.get('membership') as string;
-		data.os = (formData.get('os') as string) || url.searchParams.get('os') || 'ios';
+		data.os = (formData.get('os') as string) || url.searchParams.get('os') || '';
 
 		const formDestination = formData.get('destination') as string;
 		if (formDestination && data.props) data.props.destination = formDestination;
@@ -493,16 +501,17 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 		const design = data.design || {};
 		const hostname = data.hostname;
 		const membership = data.membership;
-		const os = (data.os || url.searchParams.get('os') || 'ios').toLowerCase();
+		const os = (data.os || url.searchParams.get('os') || '').toLowerCase();
 
 		if (!hostname) throw error(400, 'Missing required field: hostname');
 		if (!props) throw error(400, 'Missing required field: props');
+		if (!os || (os !== 'ios' && os !== 'android')) throw error(400, 'Missing or invalid required field: os (must be "ios" or "android")');
 
 		for (const field of ['network', 'params', 'destination']) {
 			if (!props[field]) throw error(400, `Missing required field in props: ${field}`);
 		}
 
-		// Build business data
+		// Build shared business data
 		const bareLink = getLink(hostname, props);
 		const org = kvData?.name ? 'PayPass · ' + kvData.name : (design.org ? 'PayPass · ' + design.org : 'PayPass');
 		const originator = kvData?.id || 'payto';
@@ -519,6 +528,79 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			const plusCoordinates = getLocationCode(props.params.loc?.value || '');
 			props.params.lat = { value: plusCoordinates[0] };
 			props.params.lon = { value: plusCoordinates[1] };
+		}
+
+		const selectedBarcode = getBarcodeConfig(design.barcode || 'qr', bareLink);
+
+		/* ---------------- OS switch ---------------- */
+
+		if (os === 'android') {
+			if (!gwIssuerId || !gwSaEmail || !gwSaKeyPem) {
+				throw error(500, 'Google signing configuration missing (issuer/service account).');
+			}
+			// Build Google Wallet Generic Object -> Save to Wallet link
+			const amountText =
+				(props.params.amount?.value && Number(props.params.amount.value) > 0)
+					? formatter(currency, (kvData?.currencyLocale || undefined), customCurrencyData).format(Number(props.params.amount.value))
+					: 'Custom Amount';
+
+			const typeText = props.params.rc?.value ? `Recurring ${props.params.rc.value.toUpperCase()}` : 'One-time';
+			const subheaderText = `${typeText} · ${amountText}`;
+
+			const objectId = `${gwIssuerId}.${serialId.replace(/[^a-zA-Z0-9._-]/g, '-')}`.slice(0, 100); // ensure valid id & length
+
+			// Get unified image URLs
+			const imageUrls = getImageUrls(kvData, isDev, devServerUrl);
+			const titleText = getTitleText(hostname, props, currency);
+
+			const { saveUrl, classId, gwObject, gwClass } = await buildGoogleWalletSaveLink({
+				issuerId: gwIssuerId,
+				saEmail: gwSaEmail,
+				saPrivateKeyPem: gwSaKeyPem,
+				logoUrl: imageUrls.google.logo,
+				iconUrl: imageUrls.google.icon,
+				heroUrl: imageUrls.google.hero,
+				subheaderText,
+				hexBackgroundColor: (kvData?.theme?.colorB || '#2A3950'),
+				barcode: selectedBarcode.google,
+				payload: {
+					id: objectId,
+					title: titleText,
+					qrValue: getLink(hostname, props),
+					amountText,
+					typeText,
+					explorerUrl: explorerUrl || undefined,
+					proUrl: `${proUrl}?originator=${originator}&subscriber=${memberAddress}&destination=${props.destination}&network=${props.network}`,
+					extraBlocks: (design.item ? [{ header: 'Item', body: design.item }] : [])
+				}
+			});
+
+			// Optionally log stats (non-blocking)
+			if (enableStats && supabase) {
+				try {
+					// @ts-ignore
+					await (supabase as any).from('passes_stats')
+						.insert([{
+							hostname, network: props.network, currency,
+							...(props.params.amount?.value ? { amount: props.params.amount.value } : {}),
+							...(design.org ? { custom_org: true } : {}),
+							...(props.params.donate?.value ? { donate: true } : {}),
+							...(props.params.rc?.value ? { recurring: true } : {}),
+							os: 'android',
+							...(authority ? { authority } : {})
+						}])
+						.select();
+				} catch (e) {
+					console.warn('Failed to insert stats:', e);
+				}
+			}
+
+			return json({ saveUrl, id: objectId, classId, gwObject, gwClass });
+		}
+
+		// iOS: Build .pkpass with proper PKCS#7 signature
+		if (!p12Base64 || !p12Password || !wwdrPem) {
+			throw error(500, 'Apple signing configuration missing (P12/WWDR).');
 		}
 
 		const basicData = {
@@ -545,8 +627,6 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			} : {})
 		};
 
-		// Common fields for iOS pass.json
-		const selectedBarcode = getBarcodeConfig(design.barcode || 'qr', bareLink);
 		const passData = {
 			...basicData,
 			formatVersion: 1,
@@ -625,79 +705,6 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			],
 			...(kvData?.beacons ? { beacons: kvData.beacons } : {})
 		};
-
-		/* ---------------- OS switch ---------------- */
-
-		if (os === 'android') {
-			if (!gwIssuerId || !gwSaEmail || !gwSaKeyPem) {
-				throw error(500, 'Google signing configuration missing (issuer/service account).');
-			}
-			// Build Google Wallet Generic Object -> Save to Wallet link
-			const amountText =
-				(props.params.amount?.value && Number(props.params.amount.value) > 0)
-					? formatter(currency, (kvData?.currencyLocale || undefined), customCurrencyData).format(Number(props.params.amount.value))
-					: 'Custom Amount';
-
-			const typeText = props.params.rc?.value ? `Recurring ${props.params.rc.value.toUpperCase()}` : 'One-time';
-			const subheaderText = `${typeText} · ${amountText}`;
-
-			const objectId = `${gwIssuerId}.${serialId.replace(/[^a-zA-Z0-9._-]/g, '-')}`.slice(0, 100); // ensure valid id & length
-
-			// Get unified image URLs
-			const imageUrls = getImageUrls(kvData, isDev, devServerUrl);
-
-		const selectedBarcode = getBarcodeConfig(design.barcode || 'qr', bareLink);
-		const titleText = getTitleText(hostname, props, currency);
-
-		const { saveUrl, classId, gwObject, gwClass } = await buildGoogleWalletSaveLink({
-				issuerId: gwIssuerId,
-				saEmail: gwSaEmail,
-				saPrivateKeyPem: gwSaKeyPem,
-				logoUrl: imageUrls.google.logo,
-				iconUrl: imageUrls.google.icon,
-				heroUrl: imageUrls.google.hero,
-				subheaderText,
-				hexBackgroundColor: (kvData?.theme?.colorB || '#2A3950'),
-				barcode: selectedBarcode.google,
-				payload: {
-					id: objectId,
-					title: titleText,
-					qrValue: getLink(hostname, props),
-					amountText,
-					typeText,
-					explorerUrl: explorerUrl || undefined,
-					proUrl: `${proUrl}?originator=${originator}&subscriber=${memberAddress}&destination=${props.destination}&network=${props.network}`,
-					extraBlocks: (design.item ? [{ header: 'Item', body: design.item }] : [])
-				}
-			});
-
-			// Optionally log stats (non-blocking)
-			if (enableStats && supabase) {
-				try {
-					// @ts-ignore
-					await (supabase as any).from('passes_stats')
-						.insert([{
-							hostname, network: props.network, currency,
-							...(props.params.amount?.value ? { amount: props.params.amount.value } : {}),
-							...(design.org ? { custom_org: true } : {}),
-							...(props.params.donate?.value ? { donate: true } : {}),
-							...(props.params.rc?.value ? { recurring: true } : {}),
-							os: 'android',
-							...(authority ? { authority } : {})
-						}])
-						.select();
-				} catch (e) {
-					console.warn('Failed to insert stats:', e);
-				}
-			}
-
-			return json({ saveUrl, id: objectId, classId, gwObject, gwClass });
-		}
-
-		// Default / iOS: Build .pkpass with proper PKCS#7 signature
-		if (!p12Base64 || !p12Password || !wwdrPem) {
-			throw error(500, 'Apple signing configuration missing (P12/WWDR).');
-		}
 
 		// 1) Prepare files: pass.json + images
 		const files: Record<string, ArrayBuffer> = {};
