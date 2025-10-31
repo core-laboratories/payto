@@ -109,7 +109,7 @@ function getLocationCode(plusCode: string): [number, number] {
 	return [codeArea.latitudeCenter, codeArea.longitudeCenter];
 }
 
-function getLogoText(hostname: string, props: any, currency?: string) {
+function getTitleText(hostname: string, props: any, currency?: string) {
 	const currencyValue = props.currency?.value || currency || '';
 	const currencyText =
 		currencyValue && currencyValue.length < 6
@@ -120,6 +120,41 @@ function getLogoText(hostname: string, props: any, currency?: string) {
 			? props.destination.slice(0, 4).toUpperCase() + '…' + props.destination.slice(-4).toUpperCase()
 			: (props.destination?.toUpperCase() || '');
 	return `${currencyText} ${destinationText}`;
+}
+
+/**
+ * Get barcode configuration for Apple and Google Wallet based on selected type
+ * Maps user selection (qr, pdf417, aztec, code128) to wallet-specific format requirements
+ */
+function getBarcodeConfig(barcodeType: string, message: string) {
+	const appleFormatMap: Record<string, string> = {
+		'qr': 'PKBarcodeFormatQR',
+		'pdf417': 'PKBarcodeFormatPDF417',
+		'aztec': 'PKBarcodeFormatAztec',
+		'code128': 'PKBarcodeFormatCode128'
+	};
+
+	const googleTypeMap: Record<string, string> = {
+		'qr': 'qrCode',
+		'pdf417': 'pdf417',
+		'aztec': 'aztec',
+		'code128': 'code128'
+	};
+
+	const normalizedType = barcodeType?.toLowerCase() || 'qr';
+
+	return {
+		apple: {
+			format: appleFormatMap[normalizedType] || 'PKBarcodeFormatQR',
+			message,
+			messageEncoding: 'iso-8859-1'
+		},
+		google: {
+			type: googleTypeMap[normalizedType] || 'qrCode',
+			value: message,
+			alternateText: 'Scan to pay'
+		}
+	};
 }
 
 function generateToken(payload: any, secret: string, expirationMinutes: number = apiTokenTimeout): string {
@@ -268,6 +303,8 @@ async function buildGoogleWalletSaveLink({
 	heroUrl,
 	subheaderText,
 	hexBackgroundColor,
+	barcode,
+	originatorName,
 	payload
 }: {
 	issuerId: string;
@@ -278,6 +315,8 @@ async function buildGoogleWalletSaveLink({
 	heroUrl?: string;
 	subheaderText?: string;
 	hexBackgroundColor?: string;
+	barcode?: any;
+	originatorName?: string;
 	payload: {
 		id: string;              // unique object id: `${issuerId}.${serial}`
 		title: string;           // title at the top
@@ -289,8 +328,9 @@ async function buildGoogleWalletSaveLink({
 		extraBlocks?: Array<{ header: string; body: string }>;
 	}
 }): Promise<{ saveUrl: string; classId: string; gwObject: any; gwClass: any }> {
-	// Generate dynamic class ID
-	const classId = `${issuerId}.generic_paypass`;
+	// Generate dynamic class ID with random component for uniqueness
+	const randomId = crypto.randomUUID().replace(/-/g, '');
+	const classId = `${originatorName || 'payto'}.paypass.${randomId}`;
 
 	// Create generic class dynamically (Google Wallet will auto-create this via JWT)
 	const gwClass: any = {
@@ -331,11 +371,14 @@ async function buildGoogleWalletSaveLink({
 		logo: { sourceUri: { uri: logoUrl } },
 		...(heroUrl ? { heroImage: { sourceUri: { uri: heroUrl } } } : {}),
 
-		barcode: {
+		barcode: barcode || {
 			type: 'qrCode',
 			value: payload.qrValue,
 			alternateText: 'Scan to pay'
 		},
+
+		// Smart Tap (NFC) support
+		smartTapRedemptionValue: payload.qrValue,
 
 		textModulesData: textModules.map(m => ({ header: m.header, body: m.body })),
 
@@ -484,7 +527,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			serialNumber: serialId,
 			passTypeIdentifier,           // fixed value from env
 			organizationName: org,
-			logoText: getLogoText(hostname, props, currency),
+			logoText: getTitleText(hostname, props, currency),
 			description: 'PayPass by ' + org,
 			expirationDate: new Date(
 				props.params.dl?.value || (kvData?.id ? (Date.now() + 2 * 365 * 24 * 60 * 60 * 1000) : (Date.now() + 365 * 24 * 60 * 60 * 1000))
@@ -505,6 +548,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 		};
 
 		// Common fields for iOS pass.json
+		const selectedBarcode = getBarcodeConfig(design.barcode || 'qr', bareLink);
 		const passData = {
 			...basicData,
 			formatVersion: 1,
@@ -514,12 +558,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				message: bareLink,
 				requiresAuthentication: true
 			},
-			barcodes: [
-				{ format: 'PKBarcodeFormatQR',     message: bareLink, messageEncoding: 'iso-8859-1' },
-				{ format: 'PKBarcodeFormatPDF417', message: bareLink, messageEncoding: 'iso-8859-1' },
-				{ format: 'PKBarcodeFormatAztec',  message: bareLink, messageEncoding: 'iso-8859-1' },
-				{ format: 'PKBarcodeFormatCode128',message: bareLink, messageEncoding: 'iso-8859-1' }
-			],
+			barcodes: [selectedBarcode.apple],
 			headerFields: [
 				{
 					key: 'payment',
@@ -609,6 +648,9 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			// Get unified image URLs
 			const imageUrls = getImageUrls(kvData, isDev, devServerUrl);
 
+			const selectedBarcode = getBarcodeConfig(design.barcode || 'qr', bareLink);
+			const titleText = getTitleText(hostname, props, currency);
+
 			const { saveUrl, classId, gwObject, gwClass } = await buildGoogleWalletSaveLink({
 				issuerId: gwIssuerId,
 				saEmail: gwSaEmail,
@@ -618,9 +660,11 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				heroUrl: imageUrls.google.hero,
 				subheaderText,
 				hexBackgroundColor: (kvData?.theme?.colorB || '#2A3950'),
+				barcode: selectedBarcode.google,
+				originatorName: originator,
 				payload: {
 					id: objectId,
-					title: org,
+					title: titleText,
 					qrValue: getLink(hostname, props),
 					amountText,
 					typeText,
