@@ -304,7 +304,6 @@ async function buildGoogleWalletSaveLink({
 	subheaderText,
 	hexBackgroundColor,
 	barcode,
-	originatorName,
 	payload
 }: {
 	issuerId: string;
@@ -316,7 +315,6 @@ async function buildGoogleWalletSaveLink({
 	subheaderText?: string;
 	hexBackgroundColor?: string;
 	barcode?: any;
-	originatorName?: string;
 	payload: {
 		id: string;              // unique object id: `${issuerId}.${serial}`
 		title: string;           // title at the top
@@ -328,9 +326,9 @@ async function buildGoogleWalletSaveLink({
 		extraBlocks?: Array<{ header: string; body: string }>;
 	}
 }): Promise<{ saveUrl: string; classId: string; gwObject: any; gwClass: any }> {
-	// Generate dynamic class ID with random component for uniqueness
+	// Generate unique class ID for each pass
 	const randomId = crypto.randomUUID().replace(/-/g, '');
-	const classId = `${originatorName || 'payto'}.paypass.${randomId}`;
+	const classId = `${issuerId}.paypass_${randomId}`;
 
 	// Create generic class dynamically (Google Wallet will auto-create this via JWT)
 	const gwClass: any = {
@@ -648,10 +646,10 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			// Get unified image URLs
 			const imageUrls = getImageUrls(kvData, isDev, devServerUrl);
 
-			const selectedBarcode = getBarcodeConfig(design.barcode || 'qr', bareLink);
-			const titleText = getTitleText(hostname, props, currency);
+		const selectedBarcode = getBarcodeConfig(design.barcode || 'qr', bareLink);
+		const titleText = getTitleText(hostname, props, currency);
 
-			const { saveUrl, classId, gwObject, gwClass } = await buildGoogleWalletSaveLink({
+		const { saveUrl, classId, gwObject, gwClass } = await buildGoogleWalletSaveLink({
 				issuerId: gwIssuerId,
 				saEmail: gwSaEmail,
 				saPrivateKeyPem: gwSaKeyPem,
@@ -661,7 +659,6 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				subheaderText,
 				hexBackgroundColor: (kvData?.theme?.colorB || '#2A3950'),
 				barcode: selectedBarcode.google,
-				originatorName: originator,
 				payload: {
 					id: objectId,
 					title: titleText,
@@ -710,7 +707,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 		const imageUrls = getImageUrls(kvData, isDev, devServerUrl);
 		const defaultImages: Record<string, ArrayBuffer> = {};
 
-		await Promise.all([
+			await Promise.all([
 			fetch(imageUrls.apple.icon).then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) defaultImages['icon.png'] = b; }).catch(() => {}),
 			fetch(imageUrls.apple.icon2x).then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) defaultImages['icon@2x.png'] = b; }).catch(() => {}),
 			fetch(imageUrls.apple.icon3x).then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) defaultImages['icon@3x.png'] = b; }).catch(() => {}),
