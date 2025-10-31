@@ -117,7 +117,7 @@
 			toast({ message: 'Generation timed out. Please try again.', type: 'error' });
 		}, GENERATION_TIMEOUT);
 
-	try {
+		try {
 			const formData = new FormData();
 			formData.append('hostname', hostname);
 			formData.append('props', JSON.stringify($constructorStore.networks[hostname]));
@@ -125,8 +125,7 @@
 			const selectedOs = osOverride ?? get(userOS);
 			formData.append('os', selectedOs);
 
-			const endpoint = '/pass';
-			const response = await fetch(endpoint, {
+			const response = await fetch('/pass', {
 				method: 'POST',
 				body: formData
 			});
@@ -156,14 +155,8 @@
 			const url = URL.createObjectURL(blob);
 			const a = document.createElement('a');
 			a.href = url;
-			const addr = $constructorStore.networks[hostname]?.destination || '';
-			const normalizedAddr = normalizeAddress(addr, hostname);
-			const timestamp = new Date().toISOString().replace(/[-:]/g, '').slice(2, 13);
-			a.download = `PayPass-${hostname.toUpperCase()}-${normalizedAddr}-${timestamp}.pkpass`;
-			document.body.appendChild(a);
 			a.click();
 			toast({ message: 'Pass downloaded successfully', type: 'success' });
-			document.body.removeChild(a);
 			URL.revokeObjectURL(url);
 		} catch (error) {
 			clearTimeout(timeoutId);
