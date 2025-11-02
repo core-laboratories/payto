@@ -259,15 +259,15 @@
 
 			<FieldGroup flexType="row" itemPosition="items-center">
 				<FieldGroupColorPicker
-					label="Foreground Color"
-					bind:value={$constructor.design.colorF}
+					label="Background Color"
+					bind:value={$constructor.design.colorB}
 				/>
 			</FieldGroup>
 
 			<FieldGroup flexType="row" itemPosition="items-center">
 				<FieldGroupColorPicker
-					label="Background Color (Online Payment)"
-					bind:value={$constructor.design.colorB}
+					label="Foreground Color"
+					bind:value={$constructor.design.colorF}
 				/>
 			</FieldGroup>
 

@@ -375,6 +375,7 @@ async function buildGoogleWalletSaveLink({
 
 		logo: { sourceUri: { uri: logoUrl } },
 		...(heroUrl ? { heroImage: { sourceUri: { uri: heroUrl } } } : {}),
+		...(hexBackgroundColor ? { hexBackgroundColor } : {}),
 
 		barcode: barcode || {
 			type: 'qrCode',
@@ -577,7 +578,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				iconUrl: imageUrls.google.icon,
 				heroUrl: imageUrls.google.hero,
 				subheaderText,
-				hexBackgroundColor: (kvData?.theme?.colorB || '#2A3950'),
+				hexBackgroundColor: validColors(design.colorB, design.colorF) ? design.colorB : (kvData?.theme?.colorB || '#2A3950'),
 				barcode: selectedBarcode.google,
 				payload: {
 					id: objectId,
