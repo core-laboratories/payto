@@ -219,14 +219,26 @@
 	function defineColors(colorF: string | null | undefined, colorB: string | null | undefined) {
 		let colorForeground = '#9AB1D6';
 		let colorBackground = '#2A3950';
+
+		// Only calculate distance if both colors are provided
+		const hasBothColors = colorF && colorB;
+
 		if (colorF) {
-			const colorDistance = Math.floor(calculateColorDistance(colorF, colorB || colorBackground));
-			colorForeground = colorDistance > 100 ? colorF.startsWith('#') ? colorF : `#${colorF}` : '#9AB1D6';
+			if (hasBothColors) {
+				const colorDistance = Math.floor(calculateColorDistance(colorF, colorB!));
+				colorForeground = colorDistance > 100 ? (colorF.startsWith('#') ? colorF : `#${colorF}`) : '#9AB1D6';
+			} else {
+				colorForeground = colorF.startsWith('#') ? colorF : `#${colorF}`;
+			}
 		}
 
 		if (colorB) {
-			const colorDistance = Math.floor(calculateColorDistance(colorF || colorForeground, colorB));
-			colorBackground = colorDistance > 100 ? colorB.startsWith('#') ? colorB : `#${colorB}` : '#2A3950';
+			if (hasBothColors) {
+				const colorDistance = Math.floor(calculateColorDistance(colorF || colorForeground, colorB));
+				colorBackground = colorDistance > 100 ? (colorB.startsWith('#') ? colorB : `#${colorB}`) : '#2A3950';
+			} else {
+				colorBackground = colorB.startsWith('#') ? colorB : `#${colorB}`;
+			}
 		}
 
 		return { colorForeground, colorBackground };

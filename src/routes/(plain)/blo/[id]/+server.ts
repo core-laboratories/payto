@@ -11,7 +11,7 @@ export async function GET({ params }: { params: { id: string } }) {
 
 	try {
 		// Validate the address using blockchain-wallet-validator
-		const validation = validateWalletAddress(address, { testnet: true });
+		const validation = validateWalletAddress(address);
 
 		if (!validation.isValid) {
 			throw error(400, 'Invalid blockchain address');

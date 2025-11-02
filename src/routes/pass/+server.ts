@@ -66,7 +66,7 @@ const apiTokenTimeout = parseInt(env.PRIVATE_API_TOKEN_TIMEOUT || '1', 10); // D
 
 /* ------------------ helpers ------------------ */
 
-function getImageUrls(kvData: any, isDev: boolean, devServerUrl: string) {
+function getImageUrls(kvData: any, address: string, isDev: boolean, devServerUrl: string) {
 	const baseUrl = isDev ? devServerUrl : 'https://payto.money';
 
 	return {
@@ -82,7 +82,7 @@ function getImageUrls(kvData: any, isDev: boolean, devServerUrl: string) {
 		// Google Wallet images (URLs)
 		google: {
 			logo: kvData?.icons?.google?.logo || `${baseUrl}/images/paypass/google-wallet/logo.png`,
-			icon: kvData?.icons?.google?.icon || `${baseUrl}/images/paypass/google-wallet/icon.png`,
+			icon: kvData?.icons?.google?.icon || (address && !isDev ? `${baseUrl}/blo/${address}` : `${baseUrl}/images/paypass/google-wallet/icon.png`),
 			hero: kvData?.icons?.google?.hero || `${baseUrl}/images/paypass/google-wallet/hero.png`,
 			fullWidth: kvData?.icons?.google?.fullWidth || `${baseUrl}/images/paypass/google-wallet/full-width.png`
 		}
@@ -90,11 +90,13 @@ function getImageUrls(kvData: any, isDev: boolean, devServerUrl: string) {
 }
 
 function validColors(colorF: string, colorB: string) {
+	// Only validate if both colors are provided
+	if (!colorF || !colorB) return false;
 	const distance = calculateColorDistance(colorF, colorB);
 	return distance >= 100;
 }
 
-function getLink(hostname: string, props: any) {
+function getBasicLink(hostname: string, props: any) {
 	return getWebLink({
 		network: hostname as ITransitionType,
 		networkData: props,
@@ -103,6 +105,14 @@ function getLink(hostname: string, props: any) {
 	});
 }
 
+function getFullLink(hostname: string, props: any) {
+	return getWebLink({
+		network: hostname as ITransitionType,
+		networkData: props,
+		design: true,
+		transform: true
+	});
+}
 function getLocationCode(plusCode: string): [number, number] {
 	// @ts-ignore
 	const codeArea = OpenLocationCode.decode(plusCode);
@@ -120,6 +130,14 @@ function getTitleText(hostname: string, props: any, currency?: string) {
 			? props.destination.slice(0, 4).toUpperCase() + '…' + props.destination.slice(-4).toUpperCase()
 			: (props.destination?.toUpperCase() || '');
 	return `${currencyText} ${destinationText}`;
+}
+
+function getSubheaderText(hostname: string, props: any, design: any) {
+	const purpose = props.params?.donate?.value === '1' ? 'Donate' : 'Pay';
+	if (design?.item) {
+		return `${purpose} for ${design.item}`;
+	}
+	return purpose;
 }
 
 /**
@@ -308,7 +326,7 @@ async function buildGoogleWalletSaveLink({
 	issuerId,
 	saEmail,
 	saPrivateKeyPem,
-	classId, // <- new: stable class id injected from caller
+	classId,
 	logoUrl,
 	iconUrl,
 	heroUrl,
@@ -327,16 +345,7 @@ async function buildGoogleWalletSaveLink({
 	subheaderText?: string;
 	hexBackgroundColor?: string;
 	barcode: any;
-	payload: {
-		id: string;              // unique object id (<=64 chars): `${issuerId}.paypass.<...>`
-		title: string;           // title at the top
-		qrValue: string;         // QR payload
-		amountText?: string;     // "Amount ..." (text, already formatted)
-		typeText?: string;       // e.g., "One-time" / "Recurring"
-		explorerUrl?: string;
-		proUrl?: string;
-		extraBlocks?: Array<{ header: string; body: string }>;
-	}
+	payload: any;  // Full payload with all data
 }): Promise<{ saveUrl: string; classId: string; gwObject: any; gwClass: any }> {
 	// Reuse a stable class (create once; reuse forever). If it doesn't exist,
 	// Google will auto-create it via the Save-to-Wallet JWT.
@@ -347,9 +356,8 @@ async function buildGoogleWalletSaveLink({
 	};
 
 	let textModules: Array<{ header: string; body: string }> = [
-		...(payload.amountText ? [{ header: 'Amount', body: payload.amountText }] : []),
-		...(payload.typeText ? [{ header: 'Type', body: payload.typeText }] : []),
-		...(payload.extraBlocks || [])
+		...(payload.amountText ? [{ header: 'Amount', body: '20' }] : []),
+		...(payload.typeText ? [{ header: 'Type', body: 'Type' }] : [])
 	];
 
 	// Normalize text modules
@@ -360,12 +368,36 @@ async function buildGoogleWalletSaveLink({
 		}))
 		.filter(m => m.header.length > 0 && m.body.length > 0);
 
-	textModules.unshift({ header: 'PayPass', body: payload.title || 'PayPass' });
-
 	const gwObject: any = {
 		id: payload.id,
 		classId: classId,
 		state: 'active',
+
+		appLinkData: {
+			displayText: {
+				defaultValue: { language: 'en-US', value: 'Pay' }
+			},
+
+			webAppLinkInfo: {
+				appTarget: {
+					targetUri: {
+						uri: payload.fullLink,
+						description: 'Pay'
+					}
+				}
+			}
+
+			// If instead you want to open your Android app, use this block
+			// (and remove webAppLinkInfo above):
+			// androidAppLinkInfo: {
+			// 	appTarget: {
+			// 		// Prefer packageName when it’s your own app
+			// 		packageName: 'com.yourcompany.yourapp'
+			// 		// or deep link to a specific screen:
+			// 		// targetUri: { uri: 'yourapp://rate', description: 'Open app' }
+			// 	}
+			// }
+		},
 
 		cardTitle: { defaultValue: { language: 'en-US', value: payload.title || 'PayPass' } },
 		header:    { defaultValue: { language: 'en-US', value: 'Pay' } },
@@ -379,19 +411,20 @@ async function buildGoogleWalletSaveLink({
 
 		barcode: barcode || {
 			type: 'qrCode',
-			value: payload.qrValue,
+			value: payload.basicLink,
 			alternateText: 'Scan to pay'
 		},
 
-		smartTapRedemptionValue: payload.qrValue,
+		smartTapRedemptionValue: payload.basicLink,
 
 		textModulesData: textModules.map(m => ({ header: m.header, body: m.body })),
 
 		linksModuleData: {
 			uris: [
-				{ kind: 'walletobjects#uri', uri: payload.qrValue, description: 'Online PayPass' },
+				{ kind: 'walletobjects#uri', uri: payload.fullLink?.replace(/^payto\/\//, 'https://payto.money/') || '', description: 'Online PayPass' },
 				...(payload.explorerUrl ? [{ kind: 'walletobjects#uri', uri: payload.explorerUrl, description: 'View transactions' }] : []),
-				...(payload.proUrl ? [{ kind: 'walletobjects#uri', uri: payload.proUrl, description: 'Activate Pro' }] : [])
+				...(payload.proUrl ? [{ kind: 'walletobjects#uri', uri: payload.proUrl, description: 'Activate Pro' }] : []),
+				...(payload.props.network === 'xcb' ? [{ kind: 'walletobjects#uri', uri: 'sms:+12019715152', description: 'Send Offline Transaction' }] : [])
 			]
 		},
 
@@ -519,7 +552,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 		}
 
 		// Build shared business data
-		const bareLink = getLink(hostname, props);
+		const bareLink = getBasicLink(hostname, props);
 		const org = kvData?.name ? 'PayPass FF1 · ' + kvData.name : (design.org ? 'PayPass FF2 · ' + design.org : 'PayPass FF3');
 		const originator = kvData?.id || 'payto';
 		const originatorName = kvData?.name || 'PayTo';
@@ -552,9 +585,6 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 					? formatter(currency, (kvData?.currencyLocale || undefined), customCurrencyData).format(Number(props.params.amount.value))
 					: 'Custom Amount';
 
-			const typeText = props.params.rc?.value ? `Recurring ${props.params.rc.value.toUpperCase()}` : 'One-time';
-			const subheaderText = `${typeText} · ${amountText}`;
-
 			// ---------- MINIMAL CHANGES FOR "NEW COPY EACH TIME" ----------
 			// Use a STABLE class id and a UNIQUE object id (<= 64 chars)
 			const classId = `${gwIssuerId}.paypass`; // stable class (create once, then reuse)
@@ -566,31 +596,31 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			// --------------------------------------------------------------
 
 			// Get unified image URLs
-			const imageUrls = getImageUrls(kvData, isDev, devServerUrl);
+			const imageUrls = getImageUrls(kvData, memberAddress, isDev, devServerUrl);
 			const titleText = getTitleText(hostname, props, currency);
+			const subheaderText = getSubheaderText(hostname, props, design);
 
-			const { saveUrl, classId: finalClassId, gwObject, gwClass } = await buildGoogleWalletSaveLink({
-				issuerId: gwIssuerId,
-				saEmail: gwSaEmail,
-				saPrivateKeyPem: gwSaKeyPem,
-				classId, // pass stable class id into builder
-				logoUrl: imageUrls.google.logo,
-				iconUrl: imageUrls.google.icon,
-				heroUrl: imageUrls.google.hero,
-				subheaderText,
-				hexBackgroundColor: validColors(design.colorB, design.colorF) ? design.colorB : (kvData?.theme?.colorB || '#2A3950'),
-				barcode: selectedBarcode.google,
-				payload: {
-					id: objectId,
-					title: titleText,
-					qrValue: getLink(hostname, props),
-					amountText,
-					typeText,
-					explorerUrl: explorerUrl || undefined,
-					proUrl: `${proUrl}?originator=${originator}&subscriber=${memberAddress}&destination=${props.destination}&network=${props.network}`,
-					extraBlocks: (design.item ? [{ header: 'Item', body: design.item }] : [])
-				}
-			});
+		const { saveUrl, classId: finalClassId, gwObject, gwClass } = await buildGoogleWalletSaveLink({
+			issuerId: gwIssuerId,
+			saEmail: gwSaEmail,
+			saPrivateKeyPem: gwSaKeyPem,
+			classId, // pass stable class id into builder
+			logoUrl: imageUrls.google.logo,
+			iconUrl: imageUrls.google.icon,
+			heroUrl: imageUrls.google.hero,
+			subheaderText,
+			hexBackgroundColor: validColors(design.colorB, design.colorF) ? design.colorB : (kvData?.theme?.colorB || '#2A3950'),
+			barcode: selectedBarcode.google,
+			payload: {
+				id: objectId,
+				title: titleText,
+				basicLink: getBasicLink(hostname, props),
+				fullLink: getFullLink(hostname, props),
+				explorerUrl: explorerUrl || undefined,
+				proUrl: `${proUrl}?originator=${originator}&subscriber=${memberAddress}&destination=${props.destination}&network=${props.network}`,
+				props
+			}
+		});
 
 			// Optionally log stats (non-blocking)
 			if (enableStats && supabase) {
@@ -613,179 +643,183 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			}
 
 			return json({ saveUrl, id: objectId, classId: finalClassId, gwObject, gwClass });
-		}
+		} else if (os === 'ios') {
 
-		// iOS: Build .pkpass with proper PKCS#7 signature
-		if (!p12Base64 || !p12Password || !wwdrPem) {
-			throw error(500, 'Apple signing configuration missing (P12/WWDR).');
-		}
+			// iOS: Build .pkpass with proper PKCS#7 signature
+			if (!p12Base64 || !p12Password || !wwdrPem) {
+				throw error(500, 'Apple signing configuration missing (P12/WWDR).');
+			}
 
-		const basicData = {
-			serialNumber: serialId,
-			passTypeIdentifier,           // fixed value from env
-			organizationName: org,
-			logoText: getTitleText(hostname, props, currency),
-			description: 'PayPass GG by ' + org,
-			expirationDate: new Date(
-				props.params.dl?.value || (kvData?.id ? (Date.now() + 2 * 365 * 24 * 60 * 60 * 1000) : (Date.now() + 365 * 24 * 60 * 60 * 1000))
-			).toISOString(),
-			backgroundColor: validColors(design.colorB, design.colorF) ? design.colorB : (kvData?.theme?.colorB || '#2A3950'),
-			foregroundColor: validColors(design.colorF, design.colorB) ? design.colorF : (kvData?.theme?.colorF || '#9AB1D6'),
-			labelColor: validColors(design.colorF, design.colorB) ? design.colorF : (kvData?.theme?.colorTxt || '#9AB1D6'),
-			appLaunchURL: bareLink,
-			...(hostname === 'void' && (props.network === 'geo' || props.network === 'plus') ? {
-				locations: [
+			const basicData = {
+				serialNumber: serialId,
+				passTypeIdentifier,           // fixed value from env
+				organizationName: org,
+				logoText: getTitleText(hostname, props, currency),
+				description: 'PayPass GG by ' + org,
+				expirationDate: new Date(
+					props.params.dl?.value || (kvData?.id ? (Date.now() + 2 * 365 * 24 * 60 * 60 * 1000) : (Date.now() + 365 * 24 * 60 * 60 * 1000))
+				).toISOString(),
+				backgroundColor: validColors(design.colorB, design.colorF) ? design.colorB : (kvData?.theme?.colorB || '#2A3950'),
+				foregroundColor: validColors(design.colorF, design.colorB) ? design.colorF : (kvData?.theme?.colorF || '#9AB1D6'),
+				labelColor: validColors(design.colorF, design.colorB) ? design.colorF : (kvData?.theme?.colorTxt || '#9AB1D6'),
+				appLaunchURL: bareLink,
+				...(hostname === 'void' && (props.network === 'geo' || props.network === 'plus') ? {
+					locations: [
+						{
+							latitude: props.params.lat?.value,
+							longitude: props.params.lon?.value,
+							relevantText: props.params.message?.value ? props.params.message.value : 'Payment location'
+						}
+					]
+				} : {})
+			};
+
+			const passData = {
+				...basicData,
+				formatVersion: 1,
+				teamIdentifier: teamIdentifier,
+				storeCard: {},  // Apple Wallet requires top-level style
+				nfc: {
+					message: bareLink,
+					requiresAuthentication: true
+				},
+				barcodes: [selectedBarcode.apple],
+				headerFields: [
 					{
-						latitude: props.params.lat?.value,
-						longitude: props.params.lon?.value,
-						relevantText: props.params.message?.value ? props.params.message.value : 'Payment location'
+						key: 'payment',
+						label: props.params.donate?.value !== 0 ? 'Donation' : 'Payment',
+						value: hostname && hostname === 'void' ? 'CASH' : hostname.toUpperCase() + (props.network ? ': ' + props.network.toUpperCase() : '')
 					}
-				]
-			} : {})
-		};
+				],
+				primaryFields: [
+					{
+						key: 'amount',
+						label: 'Amount',
+						value:
+							props.params.amount?.value && Number(props.params.amount.value) > 0
+								? formatter(currency, (kvData?.currencyLocale || undefined), customCurrencyData).format(Number(props.params.amount.value))
+								: 'Custom Amount'
+					}
+				],
+				secondaryFields: [
+					...(design.item ? [{ key: 'item', label: 'Item', value: design.item }] : []),
+					{ key: 'type', label: 'Type', value: props.params.rc?.value ? `Recurring ${props.params.rc.value.toUpperCase()}` : 'One-time' },
+					...(hostname === 'ican' ? [{
+						key: 'received',
+						label: 'Received',
+						value: 'Click to view transactions',
+						attributedValue: explorerUrl || '',
+						dataDetectorTypes: ['PKDataDetectorTypeLink']
+					}] : [])
+				],
+				auxiliaryFields: [
+					...(props.params.amount?.value && Number(props.params.amount.value) > 0 && props.split?.value ? [{
+						key: 'split',
+						label: 'Split',
+						value: props.split.isPercent
+							? `${Number(props.split.value)}%`
+							: formatter(currency, (kvData?.currencyLocale || undefined), customCurrencyData).format(Number(props.split.value))
+					}] : []),
+					...(props.params.message?.value ? [{ key: 'message', label: 'Message', value: props.params.message.value }] : []),
+					...(props.params.amount?.value && Number(props.params.amount.value) > 0 && props.split?.value && props.split?.address ? [{
+						key: 'split-address',
+						label: 'Split Receiving Address',
+						value: props.split.address
+					}] : []),
+					{
+						key: 'pro',
+						label: 'Pro',
+						value: `Activate Pro`,
+						attributedValue: `${proUrl}?originator=${originator}&subscriber=${memberAddress}&destination=${props.destination}&network=${props.network}`,
+						dataDetectorTypes: ['PKDataDetectorTypeLink']
+					}
+				],
+				backFields: [
+					...(hostname === 'ican' ? [{
+						key: 'balance',
+						label: 'Balances',
+						value: 'Click to view',
+						attributedValue: explorerUrl || '',
+						dataDetectorTypes: ['PKDataDetectorTypeLink']
+					}] : []),
+					{
+						key: 'issuer',
+						label: 'Issuer',
+						value: `This PayPass HH is issued by: ${originatorName}`,
+						attributedValue: `${kvData?.url || (kvData?.name ? '' : 'https://payto.money')}`,
+						dataDetectorTypes: ['PKDataDetectorTypeLink']
+					}
+				],
+				...(kvData?.beacons ? { beacons: kvData.beacons } : {})
+			};
 
-		const passData = {
-			...basicData,
-			formatVersion: 1,
-			teamIdentifier: teamIdentifier,
-			storeCard: {},  // Apple Wallet requires top-level style
-			nfc: {
-				message: bareLink,
-				requiresAuthentication: true
-			},
-			barcodes: [selectedBarcode.apple],
-			headerFields: [
-				{
-					key: 'payment',
-					label: props.params.donate?.value !== 0 ? 'Donation' : 'Payment',
-					value: hostname && hostname === 'void' ? 'CASH' : hostname.toUpperCase() + (props.network ? ': ' + props.network.toUpperCase() : '')
+			// 1) Prepare files: pass.json + images
+			const files: Record<string, ArrayBuffer> = {};
+			files['pass.json'] = new TextEncoder().encode(JSON.stringify(passData, null, 2)).buffer;
+
+			// Load images using unified image URLs
+			const imageUrls = getImageUrls(kvData, memberAddress, isDev, devServerUrl);
+			const defaultImages: Record<string, ArrayBuffer> = {};
+
+			await Promise.all([
+				fetch(imageUrls.apple.icon).then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) defaultImages['icon.png'] = b; }).catch(() => {}),
+				fetch(imageUrls.apple.icon2x).then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) defaultImages['icon@2x.png'] = b; }).catch(() => {}),
+				fetch(imageUrls.apple.icon3x).then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) defaultImages['icon@3x.png'] = b; }).catch(() => {}),
+				fetch(imageUrls.apple.logo).then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) defaultImages['logo.png'] = b; }).catch(() => {}),
+				fetch(imageUrls.apple.logo2x).then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) defaultImages['logo@2x.png'] = b; }).catch(() => {}),
+				fetch(imageUrls.apple.logo3x).then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) defaultImages['logo@3x.png'] = b; }).catch(() => {})
+			]);
+			for (const [name, ab] of Object.entries(defaultImages)) files[name] = ab;
+
+			// 2) manifest.json (SHA-1)
+			const manifestText = await buildAppleManifest(files);
+
+			// 3) signature (PKCS#7 DER detached)
+			const signatureBytes = signAppleManifestPKCS7({
+				manifestText,
+				p12Base64,
+				p12Password,
+				wwdrPem
+			});
+
+			// 4) package zip
+			const zip = new JSZip();
+			for (const [name, ab] of Object.entries(files)) zip.file(name, ab);
+			zip.file('manifest.json', manifestText);
+			zip.file('signature', signatureBytes);
+
+			const pkpassBlob = await zip.generateAsync({ type: 'blob' });
+
+			// Optional stats
+			if (enableStats && pkpassBlob && supabase) {
+				try {
+					// @ts-ignore
+					await (supabase as any).from('passes_stats')
+						.insert([{
+							hostname, network: props.network, currency,
+							...(props.params.amount?.value ? { amount: props.params.amount.value } : {}),
+							...(design.org ? { custom_org: true } : {}),
+							...(props.params.donate?.value ? { donate: true } : {}),
+							...(props.params.rc?.value ? { recurring: true } : {}),
+							os: 'ios',
+							...(authority ? { authority } : {})
+						}])
+						.select();
+				} catch (e) {
+					console.warn('Failed to insert stats:', e);
 				}
-			],
-			primaryFields: [
-				{
-					key: 'amount',
-					label: 'Amount',
-					value:
-						props.params.amount?.value && Number(props.params.amount.value) > 0
-							? formatter(currency, (kvData?.currencyLocale || undefined), customCurrencyData).format(Number(props.params.amount.value))
-							: 'Custom Amount'
-				}
-			],
-			secondaryFields: [
-				...(design.item ? [{ key: 'item', label: 'Item', value: design.item }] : []),
-				{ key: 'type', label: 'Type', value: props.params.rc?.value ? `Recurring ${props.params.rc.value.toUpperCase()}` : 'One-time' },
-				...(hostname === 'ican' ? [{
-					key: 'received',
-					label: 'Received',
-					value: 'Click to view transactions',
-					attributedValue: explorerUrl || '',
-					dataDetectorTypes: ['PKDataDetectorTypeLink']
-				}] : [])
-			],
-			auxiliaryFields: [
-				...(props.params.amount?.value && Number(props.params.amount.value) > 0 && props.split?.value ? [{
-					key: 'split',
-					label: 'Split',
-					value: props.split.isPercent
-						? `${Number(props.split.value)}%`
-						: formatter(currency, (kvData?.currencyLocale || undefined), customCurrencyData).format(Number(props.split.value))
-				}] : []),
-				...(props.params.message?.value ? [{ key: 'message', label: 'Message', value: props.params.message.value }] : []),
-				...(props.params.amount?.value && Number(props.params.amount.value) > 0 && props.split?.value && props.split?.address ? [{
-					key: 'split-address',
-					label: 'Split Receiving Address',
-					value: props.split.address
-				}] : []),
-				{
-					key: 'pro',
-					label: 'Pro',
-					value: `Activate Pro`,
-					attributedValue: `${proUrl}?originator=${originator}&subscriber=${memberAddress}&destination=${props.destination}&network=${props.network}`,
-					dataDetectorTypes: ['PKDataDetectorTypeLink']
-				}
-			],
-			backFields: [
-				...(hostname === 'ican' ? [{
-					key: 'balance',
-					label: 'Balances',
-					value: 'Click to view',
-					attributedValue: explorerUrl || '',
-					dataDetectorTypes: ['PKDataDetectorTypeLink']
-				}] : []),
-				{
-					key: 'issuer',
-					label: 'Issuer',
-					value: `This PayPass HH is issued by: ${originatorName}`,
-					attributedValue: `${kvData?.url || (kvData?.name ? '' : 'https://payto.money')}`,
-					dataDetectorTypes: ['PKDataDetectorTypeLink']
-				}
-			],
-			...(kvData?.beacons ? { beacons: kvData.beacons } : {})
-		};
-
-		// 1) Prepare files: pass.json + images
-		const files: Record<string, ArrayBuffer> = {};
-		files['pass.json'] = new TextEncoder().encode(JSON.stringify(passData, null, 2)).buffer;
-
-		// Load images using unified image URLs
-		const imageUrls = getImageUrls(kvData, isDev, devServerUrl);
-		const defaultImages: Record<string, ArrayBuffer> = {};
-
-		await Promise.all([
-			fetch(imageUrls.apple.icon).then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) defaultImages['icon.png'] = b; }).catch(() => {}),
-			fetch(imageUrls.apple.icon2x).then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) defaultImages['icon@2x.png'] = b; }).catch(() => {}),
-			fetch(imageUrls.apple.icon3x).then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) defaultImages['icon@3x.png'] = b; }).catch(() => {}),
-			fetch(imageUrls.apple.logo).then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) defaultImages['logo.png'] = b; }).catch(() => {}),
-			fetch(imageUrls.apple.logo2x).then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) defaultImages['logo@2x.png'] = b; }).catch(() => {}),
-			fetch(imageUrls.apple.logo3x).then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) defaultImages['logo@3x.png'] = b; }).catch(() => {})
-		]);
-		for (const [name, ab] of Object.entries(defaultImages)) files[name] = ab;
-
-		// 2) manifest.json (SHA-1)
-		const manifestText = await buildAppleManifest(files);
-
-		// 3) signature (PKCS#7 DER detached)
-		const signatureBytes = signAppleManifestPKCS7({
-			manifestText,
-			p12Base64,
-			p12Password,
-			wwdrPem
-		});
-
-		// 4) package zip
-		const zip = new JSZip();
-		for (const [name, ab] of Object.entries(files)) zip.file(name, ab);
-		zip.file('manifest.json', manifestText);
-		zip.file('signature', signatureBytes);
-
-		const pkpassBlob = await zip.generateAsync({ type: 'blob' });
-
-		// Optional stats
-		if (enableStats && pkpassBlob && supabase) {
-			try {
-				// @ts-ignore
-				await (supabase as any).from('passes_stats')
-					.insert([{
-						hostname, network: props.network, currency,
-						...(props.params.amount?.value ? { amount: props.params.amount.value } : {}),
-						...(design.org ? { custom_org: true } : {}),
-						...(props.params.donate?.value ? { donate: true } : {}),
-						...(props.params.rc?.value ? { recurring: true } : {}),
-						os: 'ios',
-						...(authority ? { authority } : {})
-					}])
-					.select();
-			} catch (e) {
-				console.warn('Failed to insert stats:', e);
 			}
+
+			return new Response(pkpassBlob, {
+				headers: {
+					'Content-Type': 'application/vnd.apple.pkpass',
+					'Content-Disposition': `attachment; filename="${fileId}.pkpass"`
+				}
+			});
+
+		} else {
+			throw error(400, 'Invalid OS');
 		}
-
-		return new Response(pkpassBlob, {
-			headers: {
-				'Content-Type': 'application/vnd.apple.pkpass',
-				'Content-Disposition': `attachment; filename="${fileId}.pkpass"`
-			}
-		});
 	} catch (err: any) {
 		console.error('Failed to generate pass:', err);
 		if (err && typeof err === 'object' && 'status' in err && 'body' in err) {

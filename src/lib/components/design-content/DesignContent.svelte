@@ -66,11 +66,25 @@
 	// Default to empty string for "Application Language (or English)" option
 	const currentLanguageValue = derived(constructorStore, ($constructor) => $constructor.design.lang || '');
 
-	const distance = derived(constructorStore, $constructor =>
-		Math.floor(
-			calculateColorDistance($constructor.design.colorF || '#9AB1D6', $constructor.design.colorB || '#2A3950')
-		)
-	);
+	const enableDistanceCheck = writable(false);
+	const distance = derived([constructorStore, enableDistanceCheck], ([$constructor, $enableDistanceCheck]) => {
+		if (!$enableDistanceCheck) return 0;
+
+		// Only calculate distance if both colors are provided
+		const hasBothColors = $constructor.design.colorF && $constructor.design.colorB;
+		if (!hasBothColors) return 0;
+
+		return Math.floor(
+			calculateColorDistance($constructor.design.colorF!, $constructor.design.colorB!)
+		);
+	});
+
+	$: if (!$enableDistanceCheck) {
+		constructor.update(c => ({
+			...c,
+			design: { ...c.design, colorF: '#9AB1D6' }
+		}));
+	}
 
 	const barcodeValue = derived(constructorStore, $constructor => $constructor.design.barcode ?? 'qr');
 	const passMode = derived(constructorStore, $constructor => $constructor.design.mode ?? 'auto');
@@ -264,20 +278,34 @@
 				/>
 			</FieldGroup>
 
-			<FieldGroup flexType="row" itemPosition="items-center">
-				<FieldGroupColorPicker
-					label="Foreground Color"
-					bind:value={$constructor.design.colorF}
-				/>
+			<FieldGroup>
+				<div class="flex items-center">
+					<input
+						type="checkbox"
+						bind:checked={$enableDistanceCheck}
+						id="distanceCheckbox"
+					/>
+					<label for="distanceCheckbox" class="ml-2 text-sm">Define foreground color</label>
+				</div>
 			</FieldGroup>
 
-			<div>
-				Current Color Euclidean distance:
-				<span class:text-red-500={$distance < 100}>{$distance}</span>
-				<p class="-mb-1 text-gray-400 text-sm">
-					Minimum Euclidean distance of 100 is required.
-				</p>
-			</div>
+			{#if $enableDistanceCheck}
+
+				<FieldGroup flexType="row" itemPosition="items-center">
+					<FieldGroupColorPicker
+						label="Foreground Color"
+						bind:value={$constructor.design.colorF}
+					/>
+				</FieldGroup>
+
+				<div>
+					Current Color Euclidean distance:
+					<span class:text-red-500={$distance < 100}>{$distance}</span>
+					<p class="-mb-1 text-gray-400 text-sm">
+						Minimum Euclidean distance of 100 is required.
+					</p>
+				</div>
+			{/if}
 
 			<FieldGroup>
 				<FieldGroupLabel>Language</FieldGroupLabel>

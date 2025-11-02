@@ -64,6 +64,8 @@ export const generateLink = (payload: IPayload[] = [], props: Record<string, any
 			const { org, item, colorF, colorB, barcode, rtl, lang, mode } = design;
 			if (org) searchParams.set('org', org);
 			if (item) searchParams.set('item', item);
+
+			// Handle colors: only validate distance if BOTH colors are provided
 			if (colorB && colorF && colorB !== '#2A3950' && colorF !== '#9AB1D6') {
 				const similar = calculateColorDistance(colorB, colorF);
 				if (similar >= 100) {
@@ -74,19 +76,11 @@ export const generateLink = (payload: IPayload[] = [], props: Record<string, any
 					searchParams.delete('color-b');
 				}
 			} else if (colorF && colorF !== '#9AB1D6') {
-				const similar = calculateColorDistance('#2A3950', colorF);
-				if (similar >= 100) {
-					searchParams.set('color-f', colorF.substring(1));
-				} else {
-					searchParams.delete('color-f');
-				}
+				// Only foreground provided, use it without distance check
+				searchParams.set('color-f', colorF.substring(1));
 			} else if (colorB && colorB !== '#2A3950') {
-				const similar = calculateColorDistance('#9AB1D6', colorB);
-				if (similar >= 100) {
-					searchParams.set('color-b', colorB.substring(1));
-				} else {
-					searchParams.delete('color-b');
-				}
+				// Only background provided, use it without distance check
+				searchParams.set('color-b', colorB.substring(1));
 			}
 			if (rtl) {
 				searchParams.set('rtl', '1');
