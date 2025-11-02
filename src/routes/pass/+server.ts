@@ -335,11 +335,11 @@ async function buildGoogleWalletSaveLink({
 }): Promise<{ saveUrl: string; classId: string; gwObject: any; gwClass: any }> {
 	// Generate unique class ID for each pass
 	const randomId = crypto.randomUUID().replace(/-/g, '');
-	const classId = `${issuerId}.paypass.${randomId}`;
+	const customId = `${issuerId}.paypass.${randomId}`;
 
 	// Create generic class dynamically (Google Wallet will auto-create this via JWT)
 	const gwClass: any = {
-		id: classId,
+		id: customId,
 		issuerName: payload.title || 'PayPass',
 		...(hexBackgroundColor ? { hexBackgroundColor } : {})
 	};
@@ -362,7 +362,7 @@ async function buildGoogleWalletSaveLink({
 
 	const gwObject: any = {
 		id: payload.id,
-		classId,
+		classId: customId,
 		state: 'active',
 
 		// REQUIRED presentation fields
@@ -425,7 +425,7 @@ async function buildGoogleWalletSaveLink({
 		.setProtectedHeader({ alg, typ: 'JWT' })
 		.sign(privateKey);
 
-	return { saveUrl: `https://pay.google.com/gp/v/save/${jwt}`, classId, gwObject, gwClass };
+	return { saveUrl: `https://pay.google.com/gp/v/save/${jwt}`, classId: customId, gwObject, gwClass };
 }
 
 /* ----------------------------------------------------------------
@@ -553,7 +553,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			const imageUrls = getImageUrls(kvData, isDev, devServerUrl);
 			const titleText = getTitleText(hostname, props, currency);
 
-			const { saveUrl, classId, gwObject, gwClass } = await buildGoogleWalletSaveLink({
+			const { saveUrl, classId: customId, gwObject, gwClass } = await buildGoogleWalletSaveLink({
 				issuerId: gwIssuerId,
 				saEmail: gwSaEmail,
 				saPrivateKeyPem: gwSaKeyPem,
@@ -595,7 +595,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				}
 			}
 
-			return json({ saveUrl, id: objectId, classId, gwObject, gwClass });
+			return json({ saveUrl, id: objectId, classId: customId, gwObject, gwClass });
 		}
 
 		// iOS: Build .pkpass with proper PKCS#7 signature
