@@ -60,7 +60,7 @@ const isDev = process.env.NODE_ENV === 'development';
 const devServerUrl = publicEnv.PUBLIC_DEV_SERVER_URL || 'http://localhost:5173';
 
 // Optional
-const proUrl = publicEnv.PUBLIC_PRO_URL || 'https://payto.money/activate/pro';
+const proUrlLink = publicEnv.PUBLIC_PRO_URL || 'https://payto.money/activate/pro';
 const enableStats = PUBLIC_ENABLE_STATS === 'true' ? true : false;
 const apiTokenTimeout = parseInt(env.PRIVATE_API_TOKEN_TIMEOUT || '1', 10); // Default: 1 minute
 
@@ -145,7 +145,7 @@ function getSubheaderText(hostname: string, props: any, design: any) {
  * Maps user selection to wallet-specific format requirements
  * For Google-only formats, falls back to QR Code for Apple
  */
-function getBarcodeConfig(barcodeType: string, message: string) {
+function getBarcodeConfig(barcodeType: string, message: string, alternateText: string = 'Scan to pay') {
 	const appleFormatMap: Record<string, string> = {
 		'qr': 'PKBarcodeFormatQR',
 		'pdf417': 'PKBarcodeFormatPDF417',
@@ -177,7 +177,7 @@ function getBarcodeConfig(barcodeType: string, message: string) {
 		google: {
 			type: googleTypeMap[normalizedType] || 'qrCode',
 			value: message,
-			alternateText: 'Scan to pay'
+			alternateText: alternateText
 		}
 	};
 }
@@ -330,6 +330,7 @@ async function buildGoogleWalletSaveLink({
 	logoUrl,
 	iconUrl,
 	heroUrl,
+	titleText,
 	subheaderText,
 	hexBackgroundColor,
 	barcode,
@@ -342,6 +343,7 @@ async function buildGoogleWalletSaveLink({
 	logoUrl: string;
 	iconUrl: string;
 	heroUrl?: string;
+	titleText?: string;
 	subheaderText?: string;
 	hexBackgroundColor?: string;
 	barcode: any;
@@ -351,20 +353,20 @@ async function buildGoogleWalletSaveLink({
 	// Google will auto-create it via the Save-to-Wallet JWT.
 	const gwClass: any = {
 		id: classId,
-		issuerName: payload.title || 'PayPass',
+		issuerName: payload.companyName || 'PayPass',
 		...(hexBackgroundColor ? { hexBackgroundColor } : {})
 	};
 
 	let textModules: Array<{ header: string; body: string }> = [
-		...(payload.amountText ? [{ header: 'Amount', body: '20' }] : []),
-		...(payload.typeText ? [{ header: 'Type', body: 'Type' }] : [])
+		...(payload.props.destination ? [{ header: 'Address', body: payload.props.network === 'xcb' || payload.props.network === 'xab' ? payload.props.destination.toUpperCase() : payload.props.destination }] : []),
+		...(payload.props.network ? [{ header: 'Network', body: payload.props.network.toUpperCase() }] : [])
 	];
 
 	// Normalize text modules
 	textModules = textModules
 		.map(m => ({
-			header: (m.header && String(m.header).trim()) || 'Details',
-			body: (m.body && String(m.body).trim()) || (payload.title || 'PayPass')
+			header: (m.header && String(m.header).trim()),
+			body: (m.body && String(m.body).trim())
 		}))
 		.filter(m => m.header.length > 0 && m.body.length > 0);
 
@@ -372,6 +374,11 @@ async function buildGoogleWalletSaveLink({
 		id: payload.id,
 		classId: classId,
 		state: 'active',
+		...(payload.expirationDate ? {
+			validTimeInterval: {
+				end: payload.expirationDate
+			}
+		} : {}),
 
 		appLinkData: {
 			displayText: {
@@ -399,8 +406,8 @@ async function buildGoogleWalletSaveLink({
 			// }
 		},
 
-		cardTitle: { defaultValue: { language: 'en-US', value: payload.title || 'PayPass' } },
-		header:    { defaultValue: { language: 'en-US', value: 'Pay' } },
+		cardTitle: { defaultValue: { language: 'en-US', value: payload.companyName || 'PayPass'} },
+		header:    { defaultValue: { language: 'en-US', value: titleText } },
 		...(subheaderText
 			? { subheader: { defaultValue: { language: 'en-US', value: subheaderText } } }
 			: {}),
@@ -417,13 +424,24 @@ async function buildGoogleWalletSaveLink({
 
 		smartTapRedemptionValue: payload.basicLink,
 
+
+		locations: payload.props.params.lat?.value && payload.props.params.lon?.value ? [
+			{
+				latitude: payload.props.params.lat?.value,
+				longitude: payload.props.params.lon?.value,
+				relevantText: payload.props.params.message?.value ? payload.props.params.message.value : 'Payment location'
+			}
+		] : [],
+
 		textModulesData: textModules.map(m => ({ header: m.header, body: m.body })),
 
 		linksModuleData: {
 			uris: [
-				{ kind: 'walletobjects#uri', uri: payload.fullLink?.replace(/^payto\/\//, 'https://payto.money/') || '', description: 'Online PayPass' },
 				...(payload.explorerUrl ? [{ kind: 'walletobjects#uri', uri: payload.explorerUrl, description: 'View transactions' }] : []),
+				...(payload.props.params.lat?.value && payload.props.params.lon?.value ? [{ kind: 'walletobjects#uri', uri: `geo:${payload.props.params.lat?.value},${payload.props.params.lon?.value}`, description: 'Navigate to location' }] : []),
+				{ kind: 'walletobjects#uri', uri: payload.fullLink?.replace(/^payto\/\//, 'https://payto.money/') || '', description: 'Online PayPass' },
 				...(payload.proUrl ? [{ kind: 'walletobjects#uri', uri: payload.proUrl, description: 'Activate Pro' }] : []),
+				{ kind: 'walletobjects#uri', uri: `https://payto.money/exchange`, description: 'Exchange Currency' },
 				...(payload.props.network === 'xcb' ? [{ kind: 'walletobjects#uri', uri: 'sms:+12019715152', description: 'Send Offline Transaction' }] : [])
 			]
 		},
@@ -553,9 +571,9 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 
 		// Build shared business data
 		const bareLink = getBasicLink(hostname, props);
-		const org = kvData?.name ? 'PayPass FF1 · ' + kvData.name : (design.org ? 'PayPass FF2 · ' + design.org : 'PayPass FF3');
+		const org = kvData?.name ? kvData.name : (design.org ? design.org : null);
 		const originator = kvData?.id || 'payto';
-		const originatorName = kvData?.name || 'PayTo';
+		const originatorName = kvData?.name;
 		const memberAddress = membership || props.destination;
 
 		const serialId = getFileId([originator, memberAddress, props.destination, hostname, props.network]);
@@ -563,14 +581,14 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 		const explorerUrl = getExplorerUrl(props.network, { address: props.destination });
 		const customCurrencyData = kvData?.customCurrency || {};
 		const currency = getCurrency(props.network, hostname as ITransitionType);
+		const proUrl = `${proUrlLink}?originator=${originator}&subscriber=${memberAddress}&destination=${props.destination}&network=${props.network}`;
+		const expirationDate = props.params.dl?.value ? (props.params.dl?.value > 60 ? new Date(props.params.dl?.value).toISOString() : new Date(Date.now() + props.params.dl?.value * 60 * 1000).toISOString()) : null;
 
 		if (hostname === 'void' && props.network === 'plus') {
 			const plusCoordinates = getLocationCode(props.params.loc?.value || '');
 			props.params.lat = { value: plusCoordinates[0] };
 			props.params.lon = { value: plusCoordinates[1] };
 		}
-
-		const selectedBarcode = getBarcodeConfig(design.barcode || 'qr', bareLink);
 
 		/* ---------------- OS switch ---------------- */
 
@@ -598,7 +616,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			// Get unified image URLs
 			const imageUrls = getImageUrls(kvData, memberAddress, isDev, devServerUrl);
 			const titleText = getTitleText(hostname, props, currency);
-			const subheaderText = getSubheaderText(hostname, props, design);
+			const purposeText = getSubheaderText(hostname, props, design);
 
 		const { saveUrl, classId: finalClassId, gwObject, gwClass } = await buildGoogleWalletSaveLink({
 			issuerId: gwIssuerId,
@@ -608,17 +626,20 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			logoUrl: imageUrls.google.logo,
 			iconUrl: imageUrls.google.icon,
 			heroUrl: imageUrls.google.hero,
-			subheaderText,
+			titleText,
+			subheaderText: org || 'Address',
 			hexBackgroundColor: validColors(design.colorB, design.colorF) ? design.colorB : (kvData?.theme?.colorB || '#2A3950'),
-			barcode: selectedBarcode.google,
+			barcode: getBarcodeConfig(design.barcode || 'qr', bareLink, purposeText || 'Scan to pay').google,
 			payload: {
 				id: objectId,
-				title: titleText,
+				companyName: kvData?.name,
+				amountText,
 				basicLink: getBasicLink(hostname, props),
 				fullLink: getFullLink(hostname, props),
 				explorerUrl: explorerUrl || undefined,
-				proUrl: `${proUrl}?originator=${originator}&subscriber=${memberAddress}&destination=${props.destination}&network=${props.network}`,
-				props
+				proUrl,
+				props,
+				expirationDate
 			}
 		});
 
@@ -655,10 +676,8 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				passTypeIdentifier,           // fixed value from env
 				organizationName: org,
 				logoText: getTitleText(hostname, props, currency),
-				description: 'PayPass GG by ' + org,
-				expirationDate: new Date(
-					props.params.dl?.value || (kvData?.id ? (Date.now() + 2 * 365 * 24 * 60 * 60 * 1000) : (Date.now() + 365 * 24 * 60 * 60 * 1000))
-				).toISOString(),
+				description: 'PayPass by ' + org,
+				expirationDate,
 				backgroundColor: validColors(design.colorB, design.colorF) ? design.colorB : (kvData?.theme?.colorB || '#2A3950'),
 				foregroundColor: validColors(design.colorF, design.colorB) ? design.colorF : (kvData?.theme?.colorF || '#9AB1D6'),
 				labelColor: validColors(design.colorF, design.colorB) ? design.colorF : (kvData?.theme?.colorTxt || '#9AB1D6'),
@@ -683,7 +702,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 					message: bareLink,
 					requiresAuthentication: true
 				},
-				barcodes: [selectedBarcode.apple],
+				barcodes: [getBarcodeConfig(design.barcode || 'qr', bareLink).apple],
 				headerFields: [
 					{
 						key: 'payment',
@@ -730,7 +749,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 						key: 'pro',
 						label: 'Pro',
 						value: `Activate Pro`,
-						attributedValue: `${proUrl}?originator=${originator}&subscriber=${memberAddress}&destination=${props.destination}&network=${props.network}`,
+						attributedValue: proUrl,
 						dataDetectorTypes: ['PKDataDetectorTypeLink']
 					}
 				],
