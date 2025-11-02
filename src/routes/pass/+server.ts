@@ -299,12 +299,16 @@ function signAppleManifestPKCS7({
 
 /* ----------------------------------------------------------------
  * Google Wallet: build Generic Object + sign JWT (Save link)
+ *	Minimal-change version that:
+ *	- Uses a STABLE classId (do not create a random class each time)
+ *	- Uses a UNIQUE objectId per issuance to get a fresh pass every time
  * ---------------------------------------------------------------- */
 
 async function buildGoogleWalletSaveLink({
 	issuerId,
 	saEmail,
 	saPrivateKeyPem,
+	classId, // <- new: stable class id injected from caller
 	logoUrl,
 	iconUrl,
 	heroUrl,
@@ -316,6 +320,7 @@ async function buildGoogleWalletSaveLink({
 	issuerId: string;
 	saEmail: string;
 	saPrivateKeyPem: string;
+	classId: string;
 	logoUrl: string;
 	iconUrl: string;
 	heroUrl?: string;
@@ -323,7 +328,7 @@ async function buildGoogleWalletSaveLink({
 	hexBackgroundColor?: string;
 	barcode: any;
 	payload: {
-		id: string;              // unique object id: `${issuerId}.${serial}`
+		id: string;              // unique object id (<=64 chars): `${issuerId}.paypass.<...>`
 		title: string;           // title at the top
 		qrValue: string;         // QR payload
 		amountText?: string;     // "Amount ..." (text, already formatted)
@@ -333,13 +338,10 @@ async function buildGoogleWalletSaveLink({
 		extraBlocks?: Array<{ header: string; body: string }>;
 	}
 }): Promise<{ saveUrl: string; classId: string; gwObject: any; gwClass: any }> {
-	// Generate unique class ID for each pass
-	const randomId = crypto.randomUUID().replace(/-/g, '');
-	const customId = `${issuerId}.paypass.${randomId}`;
-
-	// Create generic class dynamically (Google Wallet will auto-create this via JWT)
+	// Reuse a stable class (create once; reuse forever). If it doesn't exist,
+	// Google will auto-create it via the Save-to-Wallet JWT.
 	const gwClass: any = {
-		id: customId,
+		id: classId,
 		issuerName: payload.title || 'PayPass',
 		...(hexBackgroundColor ? { hexBackgroundColor } : {})
 	};
@@ -350,7 +352,7 @@ async function buildGoogleWalletSaveLink({
 		...(payload.extraBlocks || [])
 	];
 
-	// Normalize: ensure non-empty header/body for all modules, include primary block
+	// Normalize text modules
 	textModules = textModules
 		.map(m => ({
 			header: (m.header && String(m.header).trim()) || 'Details',
@@ -362,17 +364,15 @@ async function buildGoogleWalletSaveLink({
 
 	const gwObject: any = {
 		id: payload.id,
-		classId: customId,
+		classId: classId,
 		state: 'active',
 
-		// REQUIRED presentation fields
 		cardTitle: { defaultValue: { language: 'en-US', value: payload.title || 'PayPass' } },
-		header:    { defaultValue: { language: 'en-US', value: 'PayPass' } },
+		header:    { defaultValue: { language: 'en-US', value: 'Pay' } },
 		...(subheaderText
 			? { subheader: { defaultValue: { language: 'en-US', value: subheaderText } } }
 			: {}),
 
-		// Primary visuals (top-level)
 		logo: { sourceUri: { uri: logoUrl } },
 		...(heroUrl ? { heroImage: { sourceUri: { uri: heroUrl } } } : {}),
 
@@ -382,19 +382,18 @@ async function buildGoogleWalletSaveLink({
 			alternateText: 'Scan to pay'
 		},
 
-		// Smart Tap (NFC) support
 		smartTapRedemptionValue: payload.qrValue,
 
 		textModulesData: textModules.map(m => ({ header: m.header, body: m.body })),
 
 		linksModuleData: {
 			uris: [
+				{ kind: 'walletobjects#uri', uri: payload.qrValue, description: 'Online PayPass' },
 				...(payload.explorerUrl ? [{ kind: 'walletobjects#uri', uri: payload.explorerUrl, description: 'View transactions' }] : []),
 				...(payload.proUrl ? [{ kind: 'walletobjects#uri', uri: payload.proUrl, description: 'Activate Pro' }] : [])
 			]
 		},
 
-		// Extra imagery kept here
 		imageModulesData: [
 			{
 				id: 'icon',
@@ -419,13 +418,20 @@ async function buildGoogleWalletSaveLink({
 		}
 	};
 
+	console.log('Google Wallet Debug:', {
+		classId: classId,
+		objectId: gwObject.id,
+		gwClass,
+		gwObject: JSON.stringify(gwObject, null, 2)
+	});
+
 	const alg = 'RS256';
 	const privateKey = await jose.importPKCS8(saPrivateKeyPem, alg);
 	const jwt = await new jose.SignJWT(jwtPayload as any)
 		.setProtectedHeader({ alg, typ: 'JWT' })
 		.sign(privateKey);
 
-	return { saveUrl: `https://pay.google.com/gp/v/save/${jwt}`, classId: customId, gwObject, gwClass };
+	return { saveUrl: `https://pay.google.com/gp/v/save/${jwt}`, classId, gwObject, gwClass };
 }
 
 /* ----------------------------------------------------------------
@@ -513,7 +519,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 
 		// Build shared business data
 		const bareLink = getLink(hostname, props);
-		const org = kvData?.name ? 'PayPass · ' + kvData.name : (design.org ? 'PayPass · ' + design.org : 'PayPass');
+		const org = kvData?.name ? 'PayPass FF1 · ' + kvData.name : (design.org ? 'PayPass FF2 · ' + design.org : 'PayPass FF3');
 		const originator = kvData?.id || 'payto';
 		const originatorName = kvData?.name || 'PayTo';
 		const memberAddress = membership || props.destination;
@@ -538,7 +544,8 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			if (!gwIssuerId || !gwSaEmail || !gwSaKeyPem) {
 				throw error(500, 'Google signing configuration missing (issuer/service account).');
 			}
-			// Build Google Wallet Generic Object -> Save to Wallet link
+
+			// Amount & labels
 			const amountText =
 				(props.params.amount?.value && Number(props.params.amount.value) > 0)
 					? formatter(currency, (kvData?.currencyLocale || undefined), customCurrencyData).format(Number(props.params.amount.value))
@@ -547,16 +554,25 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			const typeText = props.params.rc?.value ? `Recurring ${props.params.rc.value.toUpperCase()}` : 'One-time';
 			const subheaderText = `${typeText} · ${amountText}`;
 
-			const objectId = `${gwIssuerId}.${serialId.replace(/[^a-zA-Z0-9._-]/g, '-')}`.slice(0, 100); // ensure valid id & length
+			// ---------- MINIMAL CHANGES FOR "NEW COPY EACH TIME" ----------
+			// Use a STABLE class id and a UNIQUE object id (<= 64 chars)
+			const classId = `${gwIssuerId}.paypass`; // stable class (create once, then reuse)
+			const base = `${gwIssuerId}.paypass`;
+			const ts = Math.floor(Date.now() / 1000);
+			const nonce = crypto.randomUUID().split('-')[0]; // short 8-12 chars
+			const uniquePart = `${serialId}`.replace(/[^a-zA-Z0-9]/g, '').slice(0, 16);
+			const objectId = `${base}.${uniquePart}-${ts}-${nonce}`.replace(/[^a-zA-Z0-9._-]/g, '').slice(0, 64);
+			// --------------------------------------------------------------
 
 			// Get unified image URLs
 			const imageUrls = getImageUrls(kvData, isDev, devServerUrl);
 			const titleText = getTitleText(hostname, props, currency);
 
-			const { saveUrl, classId: customId, gwObject, gwClass } = await buildGoogleWalletSaveLink({
+			const { saveUrl, classId: finalClassId, gwObject, gwClass } = await buildGoogleWalletSaveLink({
 				issuerId: gwIssuerId,
 				saEmail: gwSaEmail,
 				saPrivateKeyPem: gwSaKeyPem,
+				classId, // pass stable class id into builder
 				logoUrl: imageUrls.google.logo,
 				iconUrl: imageUrls.google.icon,
 				heroUrl: imageUrls.google.hero,
@@ -595,7 +611,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				}
 			}
 
-			return json({ saveUrl, id: objectId, classId: customId, gwObject, gwClass });
+			return json({ saveUrl, id: objectId, classId: finalClassId, gwObject, gwClass });
 		}
 
 		// iOS: Build .pkpass with proper PKCS#7 signature
@@ -608,7 +624,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			passTypeIdentifier,           // fixed value from env
 			organizationName: org,
 			logoText: getTitleText(hostname, props, currency),
-			description: 'PayPass by ' + org,
+			description: 'PayPass GG by ' + org,
 			expirationDate: new Date(
 				props.params.dl?.value || (kvData?.id ? (Date.now() + 2 * 365 * 24 * 60 * 60 * 1000) : (Date.now() + 365 * 24 * 60 * 60 * 1000))
 			).toISOString(),
@@ -698,7 +714,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				{
 					key: 'issuer',
 					label: 'Issuer',
-					value: `This PayPass is issued by: ${originatorName}`,
+					value: `This PayPass HH is issued by: ${originatorName}`,
 					attributedValue: `${kvData?.url || (kvData?.name ? '' : 'https://payto.money')}`,
 					dataDetectorTypes: ['PKDataDetectorTypeLink']
 				}
@@ -714,7 +730,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 		const imageUrls = getImageUrls(kvData, isDev, devServerUrl);
 		const defaultImages: Record<string, ArrayBuffer> = {};
 
-			await Promise.all([
+		await Promise.all([
 			fetch(imageUrls.apple.icon).then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) defaultImages['icon.png'] = b; }).catch(() => {}),
 			fetch(imageUrls.apple.icon2x).then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) defaultImages['icon@2x.png'] = b; }).catch(() => {}),
 			fetch(imageUrls.apple.icon3x).then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) defaultImages['icon@3x.png'] = b; }).catch(() => {}),
