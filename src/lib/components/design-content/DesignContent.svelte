@@ -102,6 +102,14 @@
 		}
 	});
 
+	// Reset colorF when enableDistanceCheck is unchecked
+	$: if (!$enableDistanceCheck && $constructor.design.colorF) {
+		constructor.update(c => ({
+			...c,
+			design: { ...c.design, colorF: undefined }
+		}));
+	}
+
 	function updateBarcode(value: string | number) {
 		constructor.update(c => ({
 			...c,
