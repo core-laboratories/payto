@@ -35,7 +35,7 @@ function getBestLocale(requestedLocale: string): Locales {
 	}
 
 	// Extract base language (e.g., 'ko' from 'ko-KR' or 'ko_KR')
-	const baseLanguage = requestedLocale.split(/[-_]/)[0];
+	const baseLanguage = normalizedLocale.split('_')[0];
 
 	// Check if base language exists (e.g., 'ko')
 	if (locales.includes(baseLanguage as any)) {
