@@ -89,11 +89,50 @@ function getImageUrls(kvData: any, address: string, isDev: boolean, devServerUrl
 	};
 }
 
-function validColors(colorF: string, colorB: string) {
-	// Only validate if both colors are provided
-	if (!colorF || !colorB) return false;
-	const distance = calculateColorDistance(colorF, colorB);
-	return distance >= 100;
+function getValidBackgroundColor(design: any, kvData: any, defaultColor: string): string {
+	const colorB = design.colorB;
+	const colorF = design.colorF;
+
+	// If both colors provided, validate distance
+	if (colorB && colorF && colorB !== '#2A3950' && colorF !== '#9AB1D6') {
+		const distance = calculateColorDistance(colorB, colorF);
+		if (distance >= 100) {
+			return colorB;
+		}
+		// Distance too low, use KV or default
+		return kvData?.theme?.colorB || defaultColor;
+	}
+
+	// Only background provided, use it without distance check
+	if (colorB && colorB !== '#2A3950') {
+		return colorB;
+	}
+
+	// Fall back to KV or default
+	return kvData?.theme?.colorB || defaultColor;
+}
+
+function getValidForegroundColor(design: any, kvData: any, defaultColor: string): string {
+	const colorB = design.colorB;
+	const colorF = design.colorF;
+
+	// If both colors provided, validate distance
+	if (colorB && colorF && colorB !== '#2A3950' && colorF !== '#9AB1D6') {
+		const distance = calculateColorDistance(colorB, colorF);
+		if (distance >= 100) {
+			return colorF;
+		}
+		// Distance too low, use KV or default
+		return kvData?.theme?.colorF || defaultColor;
+	}
+
+	// Only foreground provided, use it without distance check
+	if (colorF && colorF !== '#9AB1D6') {
+		return colorF;
+	}
+
+	// Fall back to KV or default
+	return kvData?.theme?.colorF || defaultColor;
 }
 
 function getBasicLink(hostname: string, props: any) {
@@ -658,7 +697,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				heroUrl: imageUrls.google.hero,
 				titleText,
 				subheaderText: standardizeOrg(org) || 'Address',
-				hexBackgroundColor: validColors(design.colorB, design.colorF) ? design.colorB : (kvData?.theme?.colorB || '#2A3950'),
+				hexBackgroundColor: getValidBackgroundColor(design, kvData, '#2A3950'),
 				barcode: getBarcodeConfig(design.barcode || 'qr', bareLink, purposeText).google,
 				donate,
 				payload: {
@@ -711,9 +750,9 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				logoText: getTitleText(hostname, props, currency),
 				description: 'PayPass by ' + org,
 				expirationDate,
-				backgroundColor: validColors(design.colorB, design.colorF) ? design.colorB : (kvData?.theme?.colorB || '#2A3950'),
-				foregroundColor: validColors(design.colorF, design.colorB) ? design.colorF : (kvData?.theme?.colorF || '#9AB1D6'),
-				labelColor: validColors(design.colorF, design.colorB) ? design.colorF : (kvData?.theme?.colorTxt || '#9AB1D6'),
+				backgroundColor: getValidBackgroundColor(design, kvData, '#2A3950'),
+				foregroundColor: getValidForegroundColor(design, kvData, '#9AB1D6'),
+				labelColor: getValidForegroundColor(design, kvData, '#9AB1D6'),
 				appLaunchURL: bareLink,
 				...(hostname === 'void' && (props.network === 'geo' || props.network === 'plus') ? {
 					locations: [

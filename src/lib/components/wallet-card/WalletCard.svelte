@@ -223,20 +223,20 @@
 		// Only calculate distance if both colors are provided
 		const hasBothColors = colorF && colorB;
 
-		if (colorF) {
-			if (hasBothColors) {
-				const colorDistance = Math.floor(calculateColorDistance(colorF, colorB!));
-				colorForeground = colorDistance > 100 ? (colorF.startsWith('#') ? colorF : `#${colorF}`) : '#9AB1D6';
-			} else {
+		if (hasBothColors) {
+			// If both colors provided, validate distance and apply both or neither
+			const colorDistance = Math.floor(calculateColorDistance(colorF!, colorB!));
+			if (colorDistance > 100) {
+				colorForeground = colorF!.startsWith('#') ? colorF! : `#${colorF}`;
+				colorBackground = colorB!.startsWith('#') ? colorB! : `#${colorB}`;
+			}
+			// else keep defaults
+		} else {
+			// If only one color provided, apply it without distance check
+			if (colorF) {
 				colorForeground = colorF.startsWith('#') ? colorF : `#${colorF}`;
 			}
-		}
-
-		if (colorB) {
-			if (hasBothColors) {
-				const colorDistance = Math.floor(calculateColorDistance(colorF || colorForeground, colorB));
-				colorBackground = colorDistance > 100 ? (colorB.startsWith('#') ? colorB : `#${colorB}`) : '#2A3950';
-			} else {
+			if (colorB) {
 				colorBackground = colorB.startsWith('#') ? colorB : `#${colorB}`;
 			}
 		}
