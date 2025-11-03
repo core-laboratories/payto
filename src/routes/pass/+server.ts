@@ -5,6 +5,7 @@ import { getWebLink } from '$lib/helpers/generate.helper';
 import { getCurrency } from '$lib/helpers/get-currency.helper';
 import { getExplorerUrl } from '$lib/helpers/tx-explorer.helper';
 import { KV } from '$lib/helpers/kv.helper';
+import { standardizeOrg } from '$lib/helpers/standardize.helper';
 import ExchNumberFormat from 'exchange-rounding';
 import JSZip from 'jszip';
 import forge from 'node-forge';
@@ -179,14 +180,6 @@ function getTitleText(hostname: string, props: any, currency?: string) {
 			? props.destination.slice(0, 4).toUpperCase() + '…' + props.destination.slice(-4).toUpperCase()
 			: (props.destination?.toUpperCase() || '');
 	return `${currencyText} ${destinationText}`;
-}
-
-function standardizeOrg(org: string | null) {
-	if (!org) return null;
-	// Remove emojis using comprehensive Unicode ranges
-	const withoutEmojis = org.replace(/[\u{1F600}-\u{1F64F}|\u{1F300}-\u{1F5FF}|\u{1F680}-\u{1F6FF}|\u{2600}-\u{26FF}|\u{2700}-\u{27BF}|\u{1F900}-\u{1F9FF}|\u{1FA00}-\u{1FAFF}]/gu, '');
-	// Keep original string, just slice to 16 characters
-	return withoutEmojis || null;
 }
 
 function getPurposeText(design: any, donate: boolean, scan: boolean) {

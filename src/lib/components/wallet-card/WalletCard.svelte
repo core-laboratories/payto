@@ -24,9 +24,9 @@
 	import { blo } from "@blockchainhub/blo";
 	import { X, QrCode, Nfc, Navigation2, BadgeCheck } from 'lucide-svelte';
 	import { LL, setLocaleFromPaytoData, init } from '$i18n';
-	import { bicSchema } from '$lib/validators/bic.validator';
-	import { KV } from '$lib/helpers/kv.helper';
 	import { formatLocalizedNumber, formatRecurringSymbol, getNumberingSystem, isRtlLanguage } from '$lib/helpers/i18n';
+	import { verifyOrganization } from '$lib/helpers/oric.helper';
+	import { standardizeOrg } from '$lib/helpers/standardize.helper';
 
 	// @ts-expect-error: Module is untyped
 	import pkg from 'open-location-code/js/src/openlocationcode';
@@ -45,7 +45,6 @@
 	let nfcWriteController: AbortController | null = null;
 	let pageData: { title: string; description: string } = { title: '', description: '' };
 	let isVerifiedOrganization = writable<boolean>(false);
-	let verifiedOrgName = writable<string | null>(null);
 	let verifiedOrgIcon = writable<string | null>(null);
 	interface FlexiblePaytoData {
 		hostname: string;
@@ -778,10 +777,9 @@
 	}
 
 	// Verify organization BIC and load authority data
-	async function verifyOrganization(org: string | Readable<string> | undefined) {
+	async function handleVerifyOrganization(org: string | Readable<string> | undefined) {
 		// Reset verification state
 		isVerifiedOrganization.set(false);
-		verifiedOrgName.set(null);
 		verifiedOrgIcon.set(null);
 
 		if (!org) {
@@ -800,62 +798,16 @@
 			return;
 		}
 
-		// Validate BIC format first
-		const validation = bicSchema.safeParse({ bic: orgString });
-		if (!validation.success) {
-			// BIC is invalid, don't proceed
-			return;
-		}
+		// Call the helper function
+		const result = await verifyOrganization(orgString, address);
 
-		// Verify ORIC matches the address
-		try {
-			const oricResponse = await fetch(`https://oric.payto.onl/${orgString.toUpperCase()}`);
-			if (!oricResponse.ok) {
-				// ORIC not found
-				return;
-			}
-
-			const oricData = await oricResponse.json();
-			if (!oricData || !oricData.address) {
-				// Invalid ORIC response
-				return;
-			}
-
-			// Check if ORIC address matches the payment address
-			if (oricData.address.toLowerCase() !== address.toLowerCase()) {
-				// Address mismatch - not verified
-				return;
-			}
-
-			// Authority exists as ORIC, mark as verified
-			isVerifiedOrganization.set(true);
-
-			// ORIC verified, now load KV data
-			const kvData = await KV.get(orgString.toLowerCase());
-			if (kvData && kvData.name) {
-				// Authority exists with a name
-				verifiedOrgName.set(kvData.name);
-
-				// Try to load the icon2x if available
-				if (kvData.icons?.icon2x) {
-					try {
-						const response = await fetch(kvData.icons.icon2x);
-						if (response.ok) {
-							verifiedOrgIcon.set(kvData.icons.icon2x);
-						}
-					} catch (iconError) {
-						// Icon fetch failed, keep it null (will use identicon)
-					}
-				}
-			}
-			// If KV doesn't exist or has no name, keep verification false
-		} catch (error) {
-			// ORIC or KV fetch failed, keep verification false
-		}
+		// Update stores with results
+		isVerifiedOrganization.set(result.isVerified);
+		verifiedOrgIcon.set(result.orgIcon);
 	}
 
 	// Watch for organization changes
-	$: verifyOrganization($paytoData.organization);
+	$: handleVerifyOrganization($paytoData.organization);
 
 	onMount(() => {
 		// Initialize i18n only if no language is set yet
@@ -1046,16 +998,16 @@
 						</div>
 					{/if}
 					<div class="text-center">
-						{#if $paytoData.organization}
-							<div class="text-lg font-medium mb-2 flex items-center justify-center gap-1" dir={$paytoData.rtl ? 'rtl' : 'ltr'}>
-								{#if $isVerifiedOrganization}
-									<span class="cursor-help" title={$LL.walletCard.verifiedBusiness()}>
-										<BadgeCheck class={`w-5 h-5 text-amber-400 ${$paytoData.rtl ? 'ml-0.5' : 'mr-0.5'}`} />
-									</span>
-								{/if}
-								<span>{$verifiedOrgName || $paytoData.organization}</span>
-							</div>
-						{/if}
+					{#if $paytoData.organization}
+						<div class="text-lg font-medium mb-2 flex items-center justify-center gap-1" dir={$paytoData.rtl ? 'rtl' : 'ltr'}>
+							{#if $isVerifiedOrganization}
+								<span class="cursor-help" title={$LL.walletCard.verifiedBusiness()}>
+									<BadgeCheck class={`w-5 h-5 text-amber-400 ${$paytoData.rtl ? 'ml-0.5' : 'mr-0.5'}`} />
+								</span>
+							{/if}
+							<span>{typeof $paytoData.organization === 'string' ? standardizeOrg($paytoData.organization) : null}</span>
+						</div>
+					{/if}
 						<div class="text-lg font-medium mb-1" dir={$paytoData.rtl ? 'rtl' : 'ltr'}>
 							{$paytoData.purpose}{#if $paytoData.item}{` `}{$LL.walletCard.for()}{` `}<span class="break-all">{$paytoData.item}</span>{/if}
 						</div>
