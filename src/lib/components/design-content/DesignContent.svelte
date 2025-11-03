@@ -68,23 +68,17 @@
 
 	const enableDistanceCheck = writable(false);
 	const distance = derived([constructorStore, enableDistanceCheck], ([$constructor, $enableDistanceCheck]) => {
-		if (!$enableDistanceCheck) return 0;
+
+		if (!$enableDistanceCheck) return;
 
 		// Only calculate distance if both colors are provided
 		const hasBothColors = $constructor.design.colorF && $constructor.design.colorB;
-		if (!hasBothColors) return 0;
+		if (!hasBothColors) return;
 
 		return Math.floor(
 			calculateColorDistance($constructor.design.colorF!, $constructor.design.colorB!)
 		);
 	});
-
-	$: if (!$enableDistanceCheck) {
-		constructor.update(c => ({
-			...c,
-			design: { ...c.design, colorF: '#9AB1D6' }
-		}));
-	}
 
 	const barcodeValue = derived(constructorStore, $constructor => $constructor.design.barcode ?? 'qr');
 	const passMode = derived(constructorStore, $constructor => $constructor.design.mode ?? 'auto');
@@ -300,7 +294,7 @@
 
 				<div>
 					Current Color Euclidean distance:
-					<span class:text-red-500={$distance < 100}>{$distance}</span>
+					<span class:text-red-500={$distance && $distance < 100}>{$distance}</span>
 					<p class="-mb-1 text-gray-400 text-sm">
 						Minimum Euclidean distance of 100 is required.
 					</p>

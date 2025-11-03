@@ -134,7 +134,7 @@
 					</li>
 					<li class="flex items-start gap-2">
 						<Plus class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
-						<div>Dynamic PayPass class creation for Google Wallet</div>
+						<div>Assign custom Android App for Payment Button</div>
 					</li>
 					<li class="flex items-start gap-2">
 						<Plus class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />

@@ -1047,9 +1047,9 @@
 					{/if}
 					<div class="text-center">
 						{#if $paytoData.organization}
-							<div class="text-lg font-medium mb-2 flex items-center justify-center gap-1 cursor-help" dir={$paytoData.rtl ? 'rtl' : 'ltr'}>
+							<div class="text-lg font-medium mb-2 flex items-center justify-center gap-1" dir={$paytoData.rtl ? 'rtl' : 'ltr'}>
 								{#if $isVerifiedOrganization}
-									<span title={$LL.walletCard.verifiedBusiness()}>
+									<span class="cursor-help" title={$LL.walletCard.verifiedBusiness()}>
 										<BadgeCheck class={`w-5 h-5 text-amber-400 ${$paytoData.rtl ? 'ml-0.5' : 'mr-0.5'}`} />
 									</span>
 								{/if}

@@ -65,15 +65,12 @@ export const generateLink = (payload: IPayload[] = [], props: Record<string, any
 			if (org) searchParams.set('org', org);
 			if (item) searchParams.set('item', item);
 
-			// Handle colors: only validate distance if BOTH colors are provided
+			// Handle colors: validate distance if BOTH colors are provided
 			if (colorB && colorF && colorB !== '#2A3950' && colorF !== '#9AB1D6') {
-				const similar = calculateColorDistance(colorB, colorF);
-				if (similar >= 100) {
+				const distance = calculateColorDistance(colorB, colorF);
+				if (distance >= 100) {
 					searchParams.set('color-f', colorF.substring(1));
 					searchParams.set('color-b', colorB.substring(1));
-				} else {
-					searchParams.delete('color-f');
-					searchParams.delete('color-b');
 				}
 			} else if (colorF && colorF !== '#9AB1D6') {
 				// Only foreground provided, use it without distance check

@@ -388,7 +388,7 @@ async function buildGoogleWalletSaveLink({
 			}
 			return addr;
 		})() }] : []),
-		...(payload.props.network ? [{ header: 'Network', body: payload.props.network.toUpperCase() }] : [])
+		...(payload.props.network ? [{ header: 'Network', body: payload.props.network.toUpperCase() + (payload.chainId ? ` / Chain: ${payload.chainId}` : '') }] : [])
 	];
 
 	// Normalize text modules
@@ -469,7 +469,7 @@ async function buildGoogleWalletSaveLink({
 				...(payload.props.params.lat?.value && payload.props.params.lon?.value ? [{ kind: 'walletobjects#uri', uri: `geo:${payload.props.params.lat?.value},${payload.props.params.lon?.value}`, description: 'Navigate to location' }] : []),
 				...(payload.externalLink ? [{ kind: 'walletobjects#uri', uri: payload.externalLink, description: 'Online PayPass' }] : []),
 				...(payload.proUrl ? [{ kind: 'walletobjects#uri', uri: payload.proUrl, description: 'Activate Pro' }] : []),
-				{ kind: 'walletobjects#uri', uri: `https://payto.money/exchange`, description: 'Exchange Currency' },
+				{ kind: 'walletobjects#uri', uri: `https://exchange.payto.money`, description: 'Exchange Currency' },
 				...(payload.props.network === 'xcb' ? [{ kind: 'walletobjects#uri', uri: 'sms:+12019715152', description: 'Send Offline Transaction' }] : [])
 			]
 		},
@@ -611,6 +611,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 		const currency = getCurrency(props.network, hostname as ITransitionType);
 		const proUrl = `${proUrlLink}?originator=${originator}&subscriber=${memberAddress}&destination=${props.destination}&network=${props.network}`;
 		const expirationDate = props.params.dl?.value ? (props.params.dl?.value > 60 ? new Date(props.params.dl?.value).toISOString() : new Date(Date.now() + props.params.dl?.value * 60 * 1000).toISOString()) : null;
+		const chainId = props.params.chainId?.value;
 
 		if (hostname === 'void' && props.network === 'plus') {
 			const plusCoordinates = getLocationCode(props.params.loc?.value || '');
@@ -670,7 +671,8 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 					explorerUrl: explorerUrl || undefined,
 					proUrl,
 					props,
-					expirationDate
+					expirationDate,
+					chainId
 				}
 			});
 
