@@ -60,7 +60,7 @@ const isDev = process.env.NODE_ENV === 'development';
 const devServerUrl = publicEnv.PUBLIC_DEV_SERVER_URL || 'http://localhost:5173';
 
 // Optional
-const proUrlLink = publicEnv.PUBLIC_PRO_URL || 'https://payto.money/activate/pro';
+const proUrlLink = publicEnv.PUBLIC_PRO_URL || (isDev ? devServerUrl + '/activate/pro' : 'https://payto.money/activate/pro');
 const enableStats = PUBLIC_ENABLE_STATS === 'true' ? true : false;
 const apiTokenTimeout = parseInt(env.PRIVATE_API_TOKEN_TIMEOUT || '1', 10); // Default: 1 minute
 
@@ -81,10 +81,10 @@ function getImageUrls(kvData: any, address: string, isDev: boolean, devServerUrl
 		},
 		// Google Wallet images (URLs)
 		google: {
-			logo: kvData?.icons?.google?.logo || `${baseUrl}/images/paypass/google-wallet/logo.png`,
-			icon: kvData?.icons?.google?.icon || (address && !isDev ? `${baseUrl}/blo/${address}` : `${baseUrl}/images/paypass/google-wallet/icon.png`),
-			hero: kvData?.icons?.google?.hero || `${baseUrl}/images/paypass/google-wallet/hero.png`,
-			fullWidth: kvData?.icons?.google?.fullWidth || `${baseUrl}/images/paypass/google-wallet/full-width.png`
+			logo: kvData?.icons?.google?.logo || (address && !isDev ? `${baseUrl}/blo/${address}` : `${baseUrl}/images/paypass/google-wallet/logo.png`), //logo beside the title text
+			icon: kvData?.icons?.google?.icon, // icon - additional decorative image in the top left corner
+			hero: kvData?.icons?.google?.hero || `${baseUrl}/images/paypass/google-wallet/hero.png`, // hero image
+			fullWidth: kvData?.icons?.google?.fullWidth || `${baseUrl}/images/paypass/google-wallet/full-width.png` // full-width image - displayed at the top of the card
 		}
 	};
 }
@@ -110,9 +110,19 @@ function getFullLink(hostname: string, props: any) {
 		network: hostname as ITransitionType,
 		networkData: props,
 		design: true,
+		transform: false
+	});
+}
+
+function getExternalLink(hostname: string, props: any) {
+	return getWebLink({
+		network: hostname as ITransitionType,
+		networkData: props,
+		design: true,
 		transform: true
 	});
 }
+
 function getLocationCode(plusCode: string): [number, number] {
 	// @ts-ignore
 	const codeArea = OpenLocationCode.decode(plusCode);
@@ -132,10 +142,21 @@ function getTitleText(hostname: string, props: any, currency?: string) {
 	return `${currencyText} ${destinationText}`;
 }
 
-function getSubheaderText(hostname: string, props: any, design: any) {
-	const purpose = props.params?.donate?.value === '1' ? 'Donate' : 'Pay';
+function standardizeOrg(org: string | null) {
+	if (!org) return null;
+	// Remove emojis using comprehensive Unicode ranges
+	const withoutEmojis = org.replace(/[\u{1F600}-\u{1F64F}|\u{1F300}-\u{1F5FF}|\u{1F680}-\u{1F6FF}|\u{2600}-\u{26FF}|\u{2700}-\u{27BF}|\u{1F900}-\u{1F9FF}|\u{1FA00}-\u{1FAFF}]/gu, '');
+	// Keep original string, just slice to 16 characters
+	return withoutEmojis || null;
+}
+
+function getPurposeText(design: any, donate: boolean, scan: boolean) {
+	const purpose = donate ? 'Donate' : 'Pay';
 	if (design?.item) {
 		return `${purpose} for ${design.item}`;
+	}
+	if (scan) {
+		return `Scan to ${purpose.toLowerCase()}`;
 	}
 	return purpose;
 }
@@ -334,6 +355,7 @@ async function buildGoogleWalletSaveLink({
 	subheaderText,
 	hexBackgroundColor,
 	barcode,
+	donate,
 	payload
 }: {
 	issuerId: string;
@@ -347,6 +369,7 @@ async function buildGoogleWalletSaveLink({
 	subheaderText?: string;
 	hexBackgroundColor?: string;
 	barcode: any;
+	donate?: boolean;
 	payload: any;  // Full payload with all data
 }): Promise<{ saveUrl: string; classId: string; gwObject: any; gwClass: any }> {
 	// Reuse a stable class (create once; reuse forever). If it doesn't exist,
@@ -358,7 +381,13 @@ async function buildGoogleWalletSaveLink({
 	};
 
 	let textModules: Array<{ header: string; body: string }> = [
-		...(payload.props.destination ? [{ header: 'Address', body: payload.props.network === 'xcb' || payload.props.network === 'xab' ? payload.props.destination.toUpperCase() : payload.props.destination }] : []),
+		...(payload.props.destination ? [{ header: 'Address', body: (() => {
+			const addr = payload.props.destination;
+			if (payload.props.network === 'xcb' || payload.props.network === 'xab') {
+				return addr.match(/.{1,4}/g)?.join(' ').toUpperCase() || addr.toUpperCase();
+			}
+			return addr;
+		})() }] : []),
 		...(payload.props.network ? [{ header: 'Network', body: payload.props.network.toUpperCase() }] : [])
 	];
 
@@ -412,18 +441,17 @@ async function buildGoogleWalletSaveLink({
 			? { subheader: { defaultValue: { language: 'en-US', value: subheaderText } } }
 			: {}),
 
-		logo: { sourceUri: { uri: logoUrl } },
+		...(logoUrl ? { logo: { sourceUri: { uri: logoUrl } } } : {}),
 		...(heroUrl ? { heroImage: { sourceUri: { uri: heroUrl } } } : {}),
 		...(hexBackgroundColor ? { hexBackgroundColor } : {}),
 
 		barcode: barcode || {
 			type: 'qrCode',
 			value: payload.basicLink,
-			alternateText: 'Scan to pay'
+			alternateText: donate ? 'Scan to donate' : 'Scan to pay'
 		},
 
 		smartTapRedemptionValue: payload.basicLink,
-
 
 		locations: payload.props.params.lat?.value && payload.props.params.lon?.value ? [
 			{
@@ -439,7 +467,7 @@ async function buildGoogleWalletSaveLink({
 			uris: [
 				...(payload.explorerUrl ? [{ kind: 'walletobjects#uri', uri: payload.explorerUrl, description: 'View transactions' }] : []),
 				...(payload.props.params.lat?.value && payload.props.params.lon?.value ? [{ kind: 'walletobjects#uri', uri: `geo:${payload.props.params.lat?.value},${payload.props.params.lon?.value}`, description: 'Navigate to location' }] : []),
-				{ kind: 'walletobjects#uri', uri: payload.fullLink?.replace(/^payto\/\//, 'https://payto.money/') || '', description: 'Online PayPass' },
+				...(payload.externalLink ? [{ kind: 'walletobjects#uri', uri: payload.externalLink, description: 'Online PayPass' }] : []),
 				...(payload.proUrl ? [{ kind: 'walletobjects#uri', uri: payload.proUrl, description: 'Activate Pro' }] : []),
 				{ kind: 'walletobjects#uri', uri: `https://payto.money/exchange`, description: 'Exchange Currency' },
 				...(payload.props.network === 'xcb' ? [{ kind: 'walletobjects#uri', uri: 'sms:+12019715152', description: 'Send Offline Transaction' }] : [])
@@ -447,13 +475,13 @@ async function buildGoogleWalletSaveLink({
 		},
 
 		imageModulesData: [
-			{
+			...(iconUrl ? [{
 				id: 'icon',
 				mainImage: {
 					sourceUri: { uri: iconUrl },
 					contentDescription: { defaultValue: { language: 'en-US', value: 'Icon' } }
 				}
-			}
+			}] : []),
 		]
 	};
 
@@ -616,32 +644,35 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			// Get unified image URLs
 			const imageUrls = getImageUrls(kvData, memberAddress, isDev, devServerUrl);
 			const titleText = getTitleText(hostname, props, currency);
-			const purposeText = getSubheaderText(hostname, props, design);
+			const donate = props.params.donate?.value === '1';
+			const purposeText = getPurposeText(design, donate, true);
 
-		const { saveUrl, classId: finalClassId, gwObject, gwClass } = await buildGoogleWalletSaveLink({
-			issuerId: gwIssuerId,
-			saEmail: gwSaEmail,
-			saPrivateKeyPem: gwSaKeyPem,
-			classId, // pass stable class id into builder
-			logoUrl: imageUrls.google.logo,
-			iconUrl: imageUrls.google.icon,
-			heroUrl: imageUrls.google.hero,
-			titleText,
-			subheaderText: org || 'Address',
-			hexBackgroundColor: validColors(design.colorB, design.colorF) ? design.colorB : (kvData?.theme?.colorB || '#2A3950'),
-			barcode: getBarcodeConfig(design.barcode || 'qr', bareLink, purposeText || 'Scan to pay').google,
-			payload: {
-				id: objectId,
-				companyName: kvData?.name,
-				amountText,
-				basicLink: getBasicLink(hostname, props),
-				fullLink: getFullLink(hostname, props),
-				explorerUrl: explorerUrl || undefined,
-				proUrl,
-				props,
-				expirationDate
-			}
-		});
+			const { saveUrl, classId: finalClassId, gwObject, gwClass } = await buildGoogleWalletSaveLink({
+				issuerId: gwIssuerId,
+				saEmail: gwSaEmail,
+				saPrivateKeyPem: gwSaKeyPem,
+				classId, // pass stable class id into builder
+				logoUrl: imageUrls.google.logo,
+				iconUrl: imageUrls.google.icon,
+				heroUrl: imageUrls.google.hero,
+				titleText,
+				subheaderText: standardizeOrg(org) || 'Address',
+				hexBackgroundColor: validColors(design.colorB, design.colorF) ? design.colorB : (kvData?.theme?.colorB || '#2A3950'),
+				barcode: getBarcodeConfig(design.barcode || 'qr', bareLink, purposeText).google,
+				donate,
+				payload: {
+					id: objectId,
+					companyName: kvData?.name,
+					amountText,
+					basicLink: getBasicLink(hostname, props),
+					fullLink: getFullLink(hostname, props),
+					externalLink: getExternalLink(hostname, props),
+					explorerUrl: explorerUrl || undefined,
+					proUrl,
+					props,
+					expirationDate
+				}
+			});
 
 			// Optionally log stats (non-blocking)
 			if (enableStats && supabase) {
