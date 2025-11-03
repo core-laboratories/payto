@@ -106,7 +106,7 @@
 	$: if (!$enableDistanceCheck && $constructor.design.colorF) {
 		constructor.update(c => ({
 			...c,
-			design: { ...c.design, colorF: '#9AB1D6' }
+			design: { ...c.design, colorF: undefined }
 		}));
 	}
 
