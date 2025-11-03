@@ -106,7 +106,7 @@
 	$: if (!$enableDistanceCheck && $constructor.design.colorF) {
 		constructor.update(c => ({
 			...c,
-			design: { ...c.design, colorF: undefined }
+			design: { ...c.design, colorF: '#9AB1D6' }
 		}));
 	}
 
@@ -302,7 +302,7 @@
 
 				<div>
 					Current Color Euclidean distance:
-					<span class:text-red-500={$distance && $distance < 100}>{$distance}</span>
+					<span class:text-red-500={$distance !== undefined && $distance < 100}>{$distance !== undefined ? $distance : '—'}</span>
 					<p class="-mb-1 text-gray-400 text-sm">
 						Minimum Euclidean distance of 100 is required.
 					</p>

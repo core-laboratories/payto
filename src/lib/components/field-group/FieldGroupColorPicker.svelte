@@ -12,7 +12,6 @@
 	function handleInput(event: Event) {
 		const input = event.target as HTMLInputElement;
 		value = input.value;
-		dispatchEvent(new CustomEvent('colorchange', { detail: value }));
 	}
 </script>
 
@@ -26,7 +25,6 @@
 			aria-describedby={ctx.descriptionId}
 			{value}
 			on:input={handleInput}
-			on:change={handleInput}
 			{...$$restProps}
 		/>
 	</div>
