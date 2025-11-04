@@ -190,11 +190,6 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 		/* ---------------- OS switch ---------------- */
 
 		if (os === 'android') {
-			// Amount & labels
-			const amountText =
-				(props.params.amount?.value && Number(props.params.amount.value) > 0)
-					? formatter(currency, (kvData?.currencyLocale || undefined), customCurrencyData).format(Number(props.params.amount.value))
-					: 'Custom Amount';
 
 			// ---------- MINIMAL CHANGES FOR "NEW COPY EACH TIME" ----------
 			// Use a STABLE class id and a UNIQUE object id (<= 64 chars)
@@ -206,6 +201,11 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			const objectId = `${base}.${uniquePart}-${ts}-${nonce}`.replace(/[^a-zA-Z0-9._-]/g, '').slice(0, 64);
 			// --------------------------------------------------------------
 
+			// Amount & labels
+			const amountText =
+				(props.params.amount?.value && Number(props.params.amount.value) > 0)
+					? formatter(currency, (kvData?.currencyLocale || undefined), customCurrencyData).format(Number(props.params.amount.value))
+					: null;
 			// Get unified image URLs
 			const imageUrls = getImageUrls(kvData, memberAddress, isDev, devServerUrl);
 			const titleText = getTitleText(hostname, props, currency);
@@ -221,6 +221,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				iconUrl: imageUrls.google.icon,
 				heroUrl: imageUrls.google.hero,
 				titleText,
+				amountText,
 				subheaderText: standardizeOrg(org) || 'Address',
 				hexBackgroundColor: getValidBackgroundColor(design, kvData, '#2A3950'),
 				barcode: getBarcodeConfig(design.barcode || 'qr', bareLink, purposeText).google,
@@ -228,7 +229,6 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				payload: {
 					id: objectId,
 					companyName: kvData?.name,
-					amountText,
 					basicLink: getBasicLink(hostname, props),
 					fullLink: getFullLink(hostname, props),
 					externalLink: getExternalLink(hostname, props),

@@ -9,6 +9,7 @@ export interface GoogleWalletPayPassConfig {
 	iconUrl: string;
 	heroUrl?: string;
 	titleText?: string;
+	amountText?: string | null;
 	subheaderText?: string;
 	hexBackgroundColor?: string;
 	barcode: any;
