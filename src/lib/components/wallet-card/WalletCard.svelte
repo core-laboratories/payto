@@ -26,6 +26,7 @@
 	import { LL, setLocaleFromPaytoData, init } from '$i18n';
 	import { formatLocalizedNumber, formatRecurringSymbol, getNumberingSystem, isRtlLanguage } from '$lib/helpers/i18n';
 	import { verifyOrganization } from '$lib/helpers/oric.helper';
+	import { verifyWebsite } from '$lib/helpers/fintag.helper';
 	import { standardizeOrg } from '$lib/helpers/standardize.helper';
 
 	// @ts-expect-error: Module is untyped
@@ -46,6 +47,7 @@
 	let pageData: { title: string; description: string } = { title: '', description: '' };
 	let isVerifiedOrganization = writable<boolean>(false);
 	let verifiedOrgIcon = writable<string | null>(null);
+	let isVerifiedWebsite = writable<boolean>(false);
 	interface FlexiblePaytoData {
 		hostname: string;
 		paymentType: string;
@@ -780,7 +782,7 @@
 	async function handleVerifyOrganization(org: string | Readable<string> | undefined) {
 		// Reset verification state
 		isVerifiedOrganization.set(false);
-		verifiedOrgIcon.set(null);
+		isVerifiedWebsite.set(false);
 
 		if (!org) {
 			return;
@@ -798,12 +800,21 @@
 			return;
 		}
 
-		// Call the helper function
+		// Get network for website verification
+		const network = typeof $paytoData.network === 'string' ? $paytoData.network : ($paytoData.network ? get($paytoData.network) : undefined);
+
+		// First, try ORIC verification
 		const result = await verifyOrganization(orgString, address);
 
-		// Update stores with results
+		// Update stores with ORIC results
 		isVerifiedOrganization.set(result.isVerified);
 		verifiedOrgIcon.set(result.orgIcon);
+
+		// If ORIC verification failed, try website verification
+		if (!result.isVerified) {
+			const websiteResult = await verifyWebsite(orgString, address, network);
+			isVerifiedWebsite.set(websiteResult.isVerified);
+		}
 	}
 
 	// Watch for organization changes
@@ -1003,6 +1014,10 @@
 							{#if $isVerifiedOrganization}
 								<span class="cursor-help" title={$LL.walletCard.verifiedBusiness()}>
 									<BadgeCheck class={`w-5 h-5 text-amber-400 ${$paytoData.rtl ? 'ml-0.5' : 'mr-0.5'}`} />
+								</span>
+							{:else if $isVerifiedWebsite}
+								<span class="cursor-help" title={$LL.walletCard.verifiedWebsite()}>
+									<BadgeCheck class={`w-5 h-5 text-blue-400 ${$paytoData.rtl ? 'ml-0.5' : 'mr-0.5'}`} />
 								</span>
 							{/if}
 							<span>{typeof $paytoData.organization === 'string' ? standardizeOrg($paytoData.organization) : null}</span>

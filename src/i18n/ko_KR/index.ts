@@ -24,7 +24,8 @@ const ko_KRPartial: DeepPartial<Translation> = {
 		payment: '결제',
 		purposePay: '결제',
 		purposeDonate: '기부',
-		verifiedBusiness: '인증된 비즈니스'
+		verifiedBusiness: '인증된 비즈니스',
+		verifiedWebsite: '인증된 웹사이트'
 	},
 	paymentButton: {
 		Recurring: '정기 결제',
