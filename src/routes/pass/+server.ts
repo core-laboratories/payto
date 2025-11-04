@@ -1,21 +1,29 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestEvent } from '@sveltejs/kit';
-import { calculateColorDistance } from '$lib/helpers/euclidean-distance.helper';
-import { getWebLink } from '$lib/helpers/generate.helper';
+import { getValidBackgroundColor } from '$lib/helpers/color-validation.helper';
+import { getBasicLink, getFullLink, getExternalLink } from '$lib/helpers/get-link.helper';
 import { getCurrency } from '$lib/helpers/get-currency.helper';
 import { getExplorerUrl } from '$lib/helpers/tx-explorer.helper';
 import { KV } from '$lib/helpers/kv.helper';
 import { standardizeOrg } from '$lib/helpers/standardize.helper';
-import ExchNumberFormat from 'exchange-rounding';
-import JSZip from 'jszip';
-import forge from 'node-forge';
-// @ts-ignore
-import OpenLocationCode from 'open-location-code/js/src/openlocationcode';
+import {
+	getImageUrls,
+	getLocationCode,
+	getTitleText,
+	getPurposeText,
+	getBarcodeConfig,
+	generateToken,
+	verifyToken,
+	getFormattedDateTime,
+	getFileId,
+	formatter
+} from '$lib/helpers/paypass-operator.helper';
+import { buildGoogleWalletPayPassSaveLink } from '$lib/helpers/paypass-android.helper';
+import { buildAppleWalletPayPass } from '$lib/helpers/paypass-ios.helper';
 import { createClient } from '@supabase/supabase-js';
 import { env } from '$env/dynamic/private';
 import { env as publicEnv } from '$env/dynamic/public';
 import { PUBLIC_ENABLE_STATS } from '$env/static/public';
-import * as jose from 'jose';
 
 /* ----------------------------------------------------------------
  * Env vars
@@ -43,20 +51,16 @@ import * as jose from 'jose';
  * ---------------------------------------------------------------- */
 
 const teamIdentifier = env.PRIVATE_PASS_TEAM_IDENTIFIER;
-if (!teamIdentifier) {
-	throw new Error('Team identifier is required');
-}
-
-const passTypeIdentifier = env.PRIVATE_PASS_TYPE_IDENTIFIER || 'pass.money.payto';
+const passTypeIdentifier = env.PRIVATE_PASS_TYPE_IDENTIFIER;
 
 const p12Base64 = env.PRIVATE_PASS_P12_BASE64;
 const p12Password = env.PRIVATE_PASS_P12_PASSWORD;
 const wwdrPem = env.PRIVATE_WWDR_PEM;
 
 // Google Wallet
-const gwIssuerId = env.PRIVATE_GW_ISSUER_ID || '';
-const gwSaEmail = env.PRIVATE_GW_SA_EMAIL || '';
-const gwSaKeyPem = env.PRIVATE_GW_SA_PRIVATE_KEY || '';
+const gwIssuerId = env.PRIVATE_GW_ISSUER_ID;
+const gwSaEmail = env.PRIVATE_GW_SA_EMAIL;
+const gwSaKeyPem = env.PRIVATE_GW_SA_PRIVATE_KEY;
 const isDev = process.env.NODE_ENV === 'development';
 const devServerUrl = publicEnv.PUBLIC_DEV_SERVER_URL || 'http://localhost:5173';
 
@@ -64,227 +68,6 @@ const devServerUrl = publicEnv.PUBLIC_DEV_SERVER_URL || 'http://localhost:5173';
 const proUrlLink = publicEnv.PUBLIC_PRO_URL || (isDev ? devServerUrl + '/activate/pro' : 'https://payto.money/activate/pro');
 const enableStats = PUBLIC_ENABLE_STATS === 'true' ? true : false;
 const apiTokenTimeout = parseInt(env.PRIVATE_API_TOKEN_TIMEOUT || '1', 10); // Default: 1 minute
-
-/* ------------------ helpers ------------------ */
-
-function getImageUrls(kvData: any, address: string, isDev: boolean, devServerUrl: string) {
-	const baseUrl = isDev ? devServerUrl : 'https://payto.money';
-
-	return {
-		// Apple Wallet images (packed in zip)
-		apple: {
-			icon: kvData?.icons?.apple?.icon || `${baseUrl}/images/paypass/apple-wallet/icon.png`,
-			icon2x: kvData?.icons?.apple?.icon2x || `${baseUrl}/images/paypass/apple-wallet/icon@2x.png`,
-			icon3x: kvData?.icons?.apple?.icon3x || `${baseUrl}/images/paypass/apple-wallet/icon@3x.png`,
-			logo: kvData?.icons?.apple?.logo || `${baseUrl}/images/paypass/apple-wallet/logo.png`,
-			logo2x: kvData?.icons?.apple?.logo2x || `${baseUrl}/images/paypass/apple-wallet/logo@2x.png`,
-			logo3x: kvData?.icons?.apple?.logo3x || `${baseUrl}/images/paypass/apple-wallet/logo@3x.png`
-		},
-		// Google Wallet images (URLs)
-		google: {
-			logo: kvData?.icons?.google?.logo || (address && !isDev ? `${baseUrl}/blo/${address}` : `${baseUrl}/images/paypass/google-wallet/logo.png`), //logo beside the title text
-			icon: kvData?.icons?.google?.icon, // icon - additional decorative image in the top left corner
-			hero: kvData?.icons?.google?.hero || `${baseUrl}/images/paypass/google-wallet/hero.png`, // hero image
-			fullWidth: kvData?.icons?.google?.fullWidth || `${baseUrl}/images/paypass/google-wallet/full-width.png` // full-width image - displayed at the top of the card
-		}
-	};
-}
-
-function getValidBackgroundColor(design: any, kvData: any, defaultColor: string): string {
-	const colorB = design.colorB;
-	const colorF = design.colorF;
-
-	// If both colors provided, validate distance
-	if (colorB && colorF && colorB !== '#2A3950' && colorF !== '#9AB1D6') {
-		const distance = calculateColorDistance(colorB, colorF);
-		if (distance >= 100) {
-			return colorB;
-		}
-		// Distance too low, use KV or default
-		return kvData?.theme?.colorB || defaultColor;
-	}
-
-	// Only background provided, use it without distance check
-	if (colorB && colorB !== '#2A3950') {
-		return colorB;
-	}
-
-	// Fall back to KV or default
-	return kvData?.theme?.colorB || defaultColor;
-}
-
-function getValidForegroundColor(design: any, kvData: any, defaultColor: string): string {
-	const colorB = design.colorB;
-	const colorF = design.colorF;
-
-	// If both colors provided, validate distance
-	if (colorB && colorF && colorB !== '#2A3950' && colorF !== '#9AB1D6') {
-		const distance = calculateColorDistance(colorB, colorF);
-		if (distance >= 100) {
-			return colorF;
-		}
-		// Distance too low, use KV or default
-		return kvData?.theme?.colorF || defaultColor;
-	}
-
-	// Only foreground provided, use it without distance check
-	if (colorF && colorF !== '#9AB1D6') {
-		return colorF;
-	}
-
-	// Fall back to KV or default
-	return kvData?.theme?.colorF || defaultColor;
-}
-
-function getBasicLink(hostname: string, props: any) {
-	return getWebLink({
-		network: hostname as ITransitionType,
-		networkData: props,
-		design: false,
-		transform: false
-	});
-}
-
-function getFullLink(hostname: string, props: any) {
-	return getWebLink({
-		network: hostname as ITransitionType,
-		networkData: props,
-		design: true,
-		transform: false
-	});
-}
-
-function getExternalLink(hostname: string, props: any) {
-	return getWebLink({
-		network: hostname as ITransitionType,
-		networkData: props,
-		design: true,
-		transform: true
-	});
-}
-
-function getLocationCode(plusCode: string): [number, number] {
-	// @ts-ignore
-	const codeArea = OpenLocationCode.decode(plusCode);
-	return [codeArea.latitudeCenter, codeArea.longitudeCenter];
-}
-
-function getTitleText(hostname: string, props: any, currency?: string) {
-	const currencyValue = props.currency?.value || currency || '';
-	const currencyText =
-		currencyValue && currencyValue.length < 6
-			? currencyValue.toUpperCase()
-			: (props.network?.toUpperCase() || hostname.toUpperCase());
-	const destinationText =
-		props.destination?.length > 8
-			? props.destination.slice(0, 4).toUpperCase() + '…' + props.destination.slice(-4).toUpperCase()
-			: (props.destination?.toUpperCase() || '');
-	return `${currencyText} ${destinationText}`;
-}
-
-function getPurposeText(design: any, donate: boolean, scan: boolean) {
-	const purpose = donate ? 'Donate' : 'Pay';
-	if (design?.item) {
-		return `${purpose} for ${design.item}`;
-	}
-	if (scan) {
-		return `Scan to ${purpose.toLowerCase()}`;
-	}
-	return purpose;
-}
-
-/**
- * Get barcode configuration for Apple and Google Wallet based on selected type
- * Maps user selection to wallet-specific format requirements
- * For Google-only formats, falls back to QR Code for Apple
- */
-function getBarcodeConfig(barcodeType: string, message: string, alternateText: string = 'Scan to pay') {
-	const appleFormatMap: Record<string, string> = {
-		'qr': 'PKBarcodeFormatQR',
-		'pdf417': 'PKBarcodeFormatPDF417',
-		'aztec': 'PKBarcodeFormatAztec',
-		'code128': 'PKBarcodeFormatCode128'
-	};
-
-	const googleTypeMap: Record<string, string> = {
-		'qr': 'qrCode',
-		'pdf417': 'pdf417',
-		'aztec': 'aztec',
-		'code128': 'code128',
-		'upca': 'upcA',
-		'ean13': 'ean13',
-		'code39': 'code39'
-	};
-
-	const normalizedType = barcodeType?.toLowerCase() || 'qr';
-
-	// For Apple, fallback to QR if barcode not supported
-	const appleFormat = appleFormatMap[normalizedType] || 'PKBarcodeFormatQR';
-
-	return {
-		apple: {
-			format: appleFormat,
-			message,
-			messageEncoding: 'iso-8859-1'
-		},
-		google: {
-			type: googleTypeMap[normalizedType] || 'qrCode',
-			value: message,
-			alternateText: alternateText
-		}
-	};
-}
-
-function generateToken(payload: any, secret: string, expirationMinutes: number = apiTokenTimeout): string {
-	const tokenData = {
-		...payload,
-		exp: Date.now() + (expirationMinutes * 60 * 1000)
-	};
-	const hmac = forge.hmac.create();
-	hmac.start('sha256', secret);
-	hmac.update(JSON.stringify(tokenData));
-	return hmac.digest().toHex();
-}
-
-function verifyToken(token: string, payload: any, secret: string, expirationMinutes: number = apiTokenTimeout): boolean {
-	const tokenData = {
-		...payload,
-		exp: Date.now() + (expirationMinutes * 60 * 1000)
-	};
-	const expectedToken = generateToken(payload, secret, expirationMinutes);
-
-	if (token !== expectedToken) return false;
-	if (tokenData.exp < Date.now()) return false;
-
-	return true;
-}
-
-function getFormattedDateTime(includeTimezone: boolean = true) {
-	const now = new Date();
-	const formattedDateTime = now.toISOString().replace(/[-T:]/g, '').slice(2, 12);
-	if (includeTimezone) {
-		const offsetMinutes = now.getTimezoneOffset();
-		const hours = String(Math.abs(Math.floor(offsetMinutes / 60))).padStart(2, '0');
-		const minutes = String(Math.abs(offsetMinutes % 60)).padStart(2, '0');
-		const sign = offsetMinutes > 0 ? '-' : '+';
-		const timezoneOffset = `${sign}${hours}${minutes}`;
-		return `${formattedDateTime}${timezoneOffset}`;
-	}
-	return formattedDateTime;
-}
-
-function getFileId(arr: string[], delimiter: string = '_', includeDate: boolean = true, includeTimezone: boolean = true) {
-	return arr.join(delimiter) + (includeDate ? (includeTimezone ? `${delimiter}${getFormattedDateTime()}` : `${delimiter}${getFormattedDateTime(false)}`) : '');
-}
-
-const formatter = (currency: string | undefined, format: string | undefined, customCurrencyData = {}) => {
-	return new ExchNumberFormat(format, {
-		style: 'currency',
-		currency: currency || '',
-		currencyDisplay: 'symbol',
-		customCurrency: customCurrencyData
-	});
-};
 
 /* ------------------ optional Supabase stats ------------------ */
 
@@ -297,253 +80,6 @@ if (enableStats) {
 	} else {
 		supabase = createClient(supabaseUrl, supabaseKey);
 	}
-}
-
-/* ----------------------------------------------------------------
- * Apple: manifest (SHA-1) + PKCS#7 (CMS) detached signature helpers
- * ---------------------------------------------------------------- */
-
-async function buildAppleManifest(files: Record<string, ArrayBuffer>): Promise<string> {
-	const manifest: Record<string, string> = {};
-	for (const [name, content] of Object.entries(files)) {
-		const u8 = new Uint8Array(content);
-		const b = forge.util.createBuffer(u8 as unknown as string);
-		const md = forge.md.sha1.create();
-		md.update(b.getBytes());
-		manifest[name] = md.digest().toHex();
-	}
-	return JSON.stringify(manifest, null, 2);
-}
-
-function signAppleManifestPKCS7({
-	manifestText,
-	p12Base64,
-	p12Password,
-	wwdrPem
-}: {
-	manifestText: string;
-	p12Base64: string;
-	p12Password: string;
-	wwdrPem: string;
-}): Uint8Array {
-	const p12Der = forge.util.decode64(p12Base64);
-	const p12Asn1 = forge.asn1.fromDer(p12Der);
-	const p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, p12Password);
-
-	let privateKey: forge.pki.PrivateKey | null = null;
-	let cert: forge.pki.Certificate | null = null;
-
-	for (const safeContent of p12.safeContents) {
-		for (const safeBag of safeContent.safeBags) {
-			if (safeBag.type === forge.pki.oids.pkcs8ShroudedKeyBag) {
-				privateKey = safeBag.key || null;
-			} else if (safeBag.type === forge.pki.oids.certBag) {
-				cert = safeBag.cert || cert;
-			}
-		}
-	}
-	if (!privateKey || !cert) throw new Error('Failed to extract key/cert from P12');
-
-	const wwdrCert = forge.pki.certificateFromPem(wwdrPem);
-
-	const p7 = forge.pkcs7.createSignedData();
-	p7.content = forge.util.createBuffer(manifestText, 'utf8');
-	p7.addCertificate(cert);
-	p7.addCertificate(wwdrCert);
-	p7.addSigner({
-		key: privateKey,
-		certificate: cert,
-		digestAlgorithm: forge.pki.oids.sha256,
-		authenticatedAttributes: [
-			{ type: forge.pki.oids.contentType, value: forge.pki.oids.data },
-			{ type: forge.pki.oids.messageDigest },
-			{ type: forge.pki.oids.signingTime, value: new Date().toISOString() }
-		]
-	});
-	p7.sign({ detached: true });
-
-	const derBytes = forge.asn1.toDer(p7.toAsn1()).getBytes();
-	const out = new Uint8Array(derBytes.length);
-	for (let i = 0; i < derBytes.length; i++) out[i] = derBytes.charCodeAt(i);
-	return out;
-}
-
-/* ----------------------------------------------------------------
- * Google Wallet: build Generic Object + sign JWT (Save link)
- *	Minimal-change version that:
- *	- Uses a STABLE classId (do not create a random class each time)
- *	- Uses a UNIQUE objectId per issuance to get a fresh pass every time
- * ---------------------------------------------------------------- */
-
-async function buildGoogleWalletSaveLink({
-	issuerId,
-	saEmail,
-	saPrivateKeyPem,
-	classId,
-	logoUrl,
-	iconUrl,
-	heroUrl,
-	titleText,
-	subheaderText,
-	hexBackgroundColor,
-	barcode,
-	donate,
-	payload
-}: {
-	issuerId: string;
-	saEmail: string;
-	saPrivateKeyPem: string;
-	classId: string;
-	logoUrl: string;
-	iconUrl: string;
-	heroUrl?: string;
-	titleText?: string;
-	subheaderText?: string;
-	hexBackgroundColor?: string;
-	barcode: any;
-	donate?: boolean;
-	payload: any;  // Full payload with all data
-}): Promise<{ saveUrl: string; classId: string; gwObject: any; gwClass: any }> {
-	// Reuse a stable class (create once; reuse forever). If it doesn't exist,
-	// Google will auto-create it via the Save-to-Wallet JWT.
-	const gwClass: any = {
-		id: classId,
-		issuerName: payload.companyName || 'PayPass',
-		...(hexBackgroundColor ? { hexBackgroundColor } : {})
-	};
-
-	let textModules: Array<{ header: string; body: string }> = [
-		...(payload.props.destination ? [{ header: 'Address', body: (() => {
-			const addr = payload.props.destination;
-			if (payload.props.network === 'xcb' || payload.props.network === 'xab') {
-				return addr.match(/.{1,4}/g)?.join(' ').toUpperCase() || addr.toUpperCase();
-			}
-			return addr;
-		})() }] : []),
-		...(payload.props.network ? [{ header: 'Network', body: payload.props.network.toUpperCase() + (payload.chainId ? ` / Chain: ${payload.chainId}` : '') }] : [])
-	];
-
-	// Normalize text modules
-	textModules = textModules
-		.map(m => ({
-			header: (m.header && String(m.header).trim()),
-			body: (m.body && String(m.body).trim())
-		}))
-		.filter(m => m.header.length > 0 && m.body.length > 0);
-
-	const gwObject: any = {
-		id: payload.id,
-		classId: classId,
-		state: 'active',
-		...(payload.expirationDate ? {
-			validTimeInterval: {
-				end: payload.expirationDate
-			}
-		} : {}),
-
-		appLinkData: {
-			displayText: {
-				defaultValue: { language: 'en-US', value: 'Pay' }
-			},
-
-			webAppLinkInfo: {
-				appTarget: {
-					targetUri: {
-						uri: payload.fullLink,
-						description: 'Pay'
-					}
-				}
-			}
-
-			// If instead you want to open your Android app, use this block
-			// (and remove webAppLinkInfo above):
-			// androidAppLinkInfo: {
-			// 	appTarget: {
-			// 		// Prefer packageName when it’s your own app
-			// 		packageName: 'com.yourcompany.yourapp'
-			// 		// or deep link to a specific screen:
-			// 		// targetUri: { uri: 'yourapp://rate', description: 'Open app' }
-			// 	}
-			// }
-		},
-
-		cardTitle: { defaultValue: { language: 'en-US', value: payload.companyName || 'PayPass'} },
-		header:    { defaultValue: { language: 'en-US', value: titleText } },
-		...(subheaderText
-			? { subheader: { defaultValue: { language: 'en-US', value: subheaderText } } }
-			: {}),
-
-		...(logoUrl ? { logo: { sourceUri: { uri: logoUrl } } } : {}),
-		...(heroUrl ? { heroImage: { sourceUri: { uri: heroUrl } } } : {}),
-		...(hexBackgroundColor ? { hexBackgroundColor } : {}),
-
-		barcode: barcode || {
-			type: 'qrCode',
-			value: payload.basicLink,
-			alternateText: donate ? 'Scan to donate' : 'Scan to pay'
-		},
-
-		smartTapRedemptionValue: payload.basicLink,
-
-		locations: payload.props.params.lat?.value && payload.props.params.lon?.value ? [
-			{
-				latitude: payload.props.params.lat?.value,
-				longitude: payload.props.params.lon?.value,
-				relevantText: payload.props.params.message?.value ? payload.props.params.message.value : 'Payment location'
-			}
-		] : [],
-
-		textModulesData: textModules.map(m => ({ header: m.header, body: m.body })),
-
-		linksModuleData: {
-			uris: [
-				...(payload.explorerUrl ? [{ kind: 'walletobjects#uri', uri: payload.explorerUrl, description: 'View transactions' }] : []),
-				...(payload.props.params.lat?.value && payload.props.params.lon?.value ? [{ kind: 'walletobjects#uri', uri: `geo:${payload.props.params.lat?.value},${payload.props.params.lon?.value}`, description: 'Navigate to location' }] : []),
-				...(payload.externalLink ? [{ kind: 'walletobjects#uri', uri: payload.externalLink, description: 'Online PayPass' }] : []),
-				...(payload.proUrl ? [{ kind: 'walletobjects#uri', uri: payload.proUrl, description: 'Activate Pro' }] : []),
-				{ kind: 'walletobjects#uri', uri: `https://exchange.payto.money`, description: 'Exchange Currency' },
-				...(payload.props.network === 'xcb' ? [{ kind: 'walletobjects#uri', uri: 'sms:+12019715152', description: 'Send Offline Transaction' }] : [])
-			]
-		},
-
-		imageModulesData: [
-			...(iconUrl ? [{
-				id: 'icon',
-				mainImage: {
-					sourceUri: { uri: iconUrl },
-					contentDescription: { defaultValue: { language: 'en-US', value: 'Icon' } }
-				}
-			}] : []),
-		]
-	};
-
-	// Build Save to Google Wallet JWT
-	const now = Math.floor(Date.now() / 1000);
-	const jwtPayload = {
-		iss: saEmail,
-		aud: 'google',
-		typ: 'savetowallet',
-		iat: now,
-		payload: {
-			genericClasses: [gwClass],
-			genericObjects: [gwObject]
-		}
-	};
-
-	console.log('Google Wallet Debug:', {
-		classId: classId,
-		objectId: gwObject.id,
-		gwClass,
-		gwObject: JSON.stringify(gwObject, null, 2)
-	});
-
-	const alg = 'RS256';
-	const privateKey = await jose.importPKCS8(saPrivateKeyPem, alg);
-	const jwt = await new jose.SignJWT(jwtPayload as any)
-		.setProtectedHeader({ alg, typ: 'JWT' })
-		.sign(privateKey);
-
-	return { saveUrl: `https://pay.google.com/gp/v/save/${jwt}`, classId, gwObject, gwClass };
 }
 
 /* ----------------------------------------------------------------
@@ -598,7 +134,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
 			if (bearerToken && kvData.api?.secret) {
 				const payload = { authority: authorityItem };
-				if (verifyToken(bearerToken, payload, kvData.api.secret)) {
+				if (verifyToken(bearerToken, payload, kvData.api.secret, apiTokenTimeout)) {
 					isAuthorized = true;
 				} else {
 					throw error(403, 'Invalid or expired API token');
@@ -654,10 +190,6 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 		/* ---------------- OS switch ---------------- */
 
 		if (os === 'android') {
-			if (!gwIssuerId || !gwSaEmail || !gwSaKeyPem) {
-				throw error(500, 'Google signing configuration missing (issuer/service account).');
-			}
-
 			// Amount & labels
 			const amountText =
 				(props.params.amount?.value && Number(props.params.amount.value) > 0)
@@ -680,7 +212,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			const donate = props.params.donate?.value === '1';
 			const purposeText = getPurposeText(design, donate, true);
 
-			const { saveUrl, classId: finalClassId, gwObject, gwClass } = await buildGoogleWalletSaveLink({
+			const { saveUrl, classId: finalClassId, gwObject, gwClass } = await buildGoogleWalletPayPassSaveLink({
 				issuerId: gwIssuerId,
 				saEmail: gwSaEmail,
 				saPrivateKeyPem: gwSaKeyPem,
@@ -730,149 +262,30 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 
 			return json({ saveUrl, id: objectId, classId: finalClassId, gwObject, gwClass });
 		} else if (os === 'ios') {
-
 			// iOS: Build .pkpass with proper PKCS#7 signature
-			if (!p12Base64 || !p12Password || !wwdrPem) {
-				throw error(500, 'Apple signing configuration missing (P12/WWDR).');
-			}
-
-			const basicData = {
-				serialNumber: serialId,
-				passTypeIdentifier,           // fixed value from env
-				organizationName: org,
-				logoText: getTitleText(hostname, props, currency),
-				description: 'PayPass by ' + org,
+			const pkpassBlob = await buildAppleWalletPayPass({
+				serialId,
+				passTypeIdentifier,
+				teamIdentifier,
+				org,
+				hostname,
+				props,
+				design,
+				kvData,
+				currency,
+				bareLink,
 				expirationDate,
-				backgroundColor: getValidBackgroundColor(design, kvData, '#2A3950'),
-				foregroundColor: getValidForegroundColor(design, kvData, '#9AB1D6'),
-				labelColor: getValidForegroundColor(design, kvData, '#9AB1D6'),
-				appLaunchURL: bareLink,
-				...(hostname === 'void' && (props.network === 'geo' || props.network === 'plus') ? {
-					locations: [
-						{
-							latitude: props.params.lat?.value,
-							longitude: props.params.lon?.value,
-							relevantText: props.params.message?.value ? props.params.message.value : 'Payment location'
-						}
-					]
-				} : {})
-			};
-
-			const passData = {
-				...basicData,
-				formatVersion: 1,
-				teamIdentifier: teamIdentifier,
-				storeCard: {},  // Apple Wallet requires top-level style
-				nfc: {
-					message: bareLink,
-					requiresAuthentication: true
-				},
-				barcodes: [getBarcodeConfig(design.barcode || 'qr', bareLink).apple],
-				headerFields: [
-					{
-						key: 'payment',
-						label: props.params.donate?.value !== 0 ? 'Donation' : 'Payment',
-						value: hostname && hostname === 'void' ? 'CASH' : hostname.toUpperCase() + (props.network ? ': ' + props.network.toUpperCase() : '')
-					}
-				],
-				primaryFields: [
-					{
-						key: 'amount',
-						label: 'Amount',
-						value:
-							props.params.amount?.value && Number(props.params.amount.value) > 0
-								? formatter(currency, (kvData?.currencyLocale || undefined), customCurrencyData).format(Number(props.params.amount.value))
-								: 'Custom Amount'
-					}
-				],
-				secondaryFields: [
-					...(design.item ? [{ key: 'item', label: 'Item', value: design.item }] : []),
-					{ key: 'type', label: 'Type', value: props.params.rc?.value ? `Recurring ${props.params.rc.value.toUpperCase()}` : 'One-time' },
-					...(hostname === 'ican' ? [{
-						key: 'received',
-						label: 'Received',
-						value: 'Click to view transactions',
-						attributedValue: explorerUrl || '',
-						dataDetectorTypes: ['PKDataDetectorTypeLink']
-					}] : [])
-				],
-				auxiliaryFields: [
-					...(props.params.amount?.value && Number(props.params.amount.value) > 0 && props.split?.value ? [{
-						key: 'split',
-						label: 'Split',
-						value: props.split.isPercent
-							? `${Number(props.split.value)}%`
-							: formatter(currency, (kvData?.currencyLocale || undefined), customCurrencyData).format(Number(props.split.value))
-					}] : []),
-					...(props.params.message?.value ? [{ key: 'message', label: 'Message', value: props.params.message.value }] : []),
-					...(props.params.amount?.value && Number(props.params.amount.value) > 0 && props.split?.value && props.split?.address ? [{
-						key: 'split-address',
-						label: 'Split Receiving Address',
-						value: props.split.address
-					}] : []),
-					{
-						key: 'pro',
-						label: 'Pro',
-						value: `Activate Pro`,
-						attributedValue: proUrl,
-						dataDetectorTypes: ['PKDataDetectorTypeLink']
-					}
-				],
-				backFields: [
-					...(hostname === 'ican' ? [{
-						key: 'balance',
-						label: 'Balances',
-						value: 'Click to view',
-						attributedValue: explorerUrl || '',
-						dataDetectorTypes: ['PKDataDetectorTypeLink']
-					}] : []),
-					{
-						key: 'issuer',
-						label: 'Issuer',
-						value: `This PayPass HH is issued by: ${originatorName}`,
-						attributedValue: `${kvData?.url || (kvData?.name ? '' : 'https://payto.money')}`,
-						dataDetectorTypes: ['PKDataDetectorTypeLink']
-					}
-				],
-				...(kvData?.beacons ? { beacons: kvData.beacons } : {})
-			};
-
-			// 1) Prepare files: pass.json + images
-			const files: Record<string, ArrayBuffer> = {};
-			files['pass.json'] = new TextEncoder().encode(JSON.stringify(passData, null, 2)).buffer;
-
-			// Load images using unified image URLs
-			const imageUrls = getImageUrls(kvData, memberAddress, isDev, devServerUrl);
-			const defaultImages: Record<string, ArrayBuffer> = {};
-
-			await Promise.all([
-				fetch(imageUrls.apple.icon).then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) defaultImages['icon.png'] = b; }).catch(() => {}),
-				fetch(imageUrls.apple.icon2x).then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) defaultImages['icon@2x.png'] = b; }).catch(() => {}),
-				fetch(imageUrls.apple.icon3x).then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) defaultImages['icon@3x.png'] = b; }).catch(() => {}),
-				fetch(imageUrls.apple.logo).then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) defaultImages['logo.png'] = b; }).catch(() => {}),
-				fetch(imageUrls.apple.logo2x).then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) defaultImages['logo@2x.png'] = b; }).catch(() => {}),
-				fetch(imageUrls.apple.logo3x).then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) defaultImages['logo@3x.png'] = b; }).catch(() => {})
-			]);
-			for (const [name, ab] of Object.entries(defaultImages)) files[name] = ab;
-
-			// 2) manifest.json (SHA-1)
-			const manifestText = await buildAppleManifest(files);
-
-			// 3) signature (PKCS#7 DER detached)
-			const signatureBytes = signAppleManifestPKCS7({
-				manifestText,
+				memberAddress,
 				p12Base64,
 				p12Password,
-				wwdrPem
+				wwdrPem,
+				isDev,
+				devServerUrl,
+				explorerUrl,
+				customCurrencyData,
+				proUrl,
+				fetch
 			});
-
-			// 4) package zip
-			const zip = new JSZip();
-			for (const [name, ab] of Object.entries(files)) zip.file(name, ab);
-			zip.file('manifest.json', manifestText);
-			zip.file('signature', signatureBytes);
-
-			const pkpassBlob = await zip.generateAsync({ type: 'blob' });
 
 			// Optional stats
 			if (enableStats && pkpassBlob && supabase) {
