@@ -26,12 +26,13 @@ if (typeof window !== 'undefined') {
 
 // Language fallback logic: ko-KR -> ko_KR -> ko -> en (fallback)
 function getBestLocale(requestedLocale: string): Locales {
-	// Convert hyphens to underscores for internal locale lookup
-	const normalizedLocale = requestedLocale.replace(/-/g, '_');
+	// Normalize to lowercase and convert hyphens to underscores for comparison
+	const normalizedLocale = requestedLocale.toLowerCase().replace(/-/g, '_');
 
-	// If exact match found, use it (e.g., ko_KR, zh_CN)
-	if (locales.includes(normalizedLocale as any)) {
-		return normalizedLocale as Locales;
+	// Find exact match (case-insensitive) - e.g., pt_br matches pt_BR, pt-BR matches pt_BR
+	const exactMatch = locales.find(locale => locale.toLowerCase() === normalizedLocale);
+	if (exactMatch) {
+		return exactMatch;
 	}
 
 	// Extract base language (e.g., 'ko' from 'ko-KR' or 'ko_KR')
