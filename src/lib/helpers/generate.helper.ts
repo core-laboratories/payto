@@ -1,6 +1,7 @@
 import { META_CONTENT } from '$lib/data/meta-content.data';
 import { checkValidity } from '$lib/helpers/check-validity.helper';
 import { calculateColorDistance } from '$lib/helpers/euclidean-distance.helper';
+import { standardizeOrg } from '$lib/helpers/standardize.helper';
 import { setLocaleFromPaytoData } from '$i18n';
 import { i18nObject } from '$i18n/i18n-util';
 import type { Locales } from '$i18n/i18n-types';
@@ -62,7 +63,9 @@ export const generateLink = (payload: IPayload[] = [], props: Record<string, any
 		// PayPass transformer
 		if (design) {
 			const { org, item, colorF, colorB, barcode, rtl, lang, mode } = design;
-			if (org) searchParams.set('org', org);
+			if (org) {
+				searchParams.set('org', standardizeOrg(org) || '');
+			}
 			if (item) searchParams.set('item', item);
 
 			// Handle colors: validate distance if BOTH colors are provided

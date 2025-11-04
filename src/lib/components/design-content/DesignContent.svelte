@@ -14,6 +14,7 @@
 	import { calculateColorDistance } from '$lib/helpers/euclidean-distance.helper';
 	import { generateWebLink, getWebLink } from '$lib/helpers/generate.helper';
 	import { getAddress } from '$lib/helpers/get-address.helper';
+	import { standardizeOrg } from '$lib/helpers/standardize.helper';
 	import { toast } from '$lib/components/toast';
 	import { setLocaleFromPaytoData } from '$i18n';
 	import { onMount } from 'svelte';
@@ -265,6 +266,16 @@
 					placeholder="e.g. PINGCHB2"
 					bind:value={$constructor.design.org}
 					maxlength="25"
+					on:input={(e) => {
+						const value = (e.target as HTMLInputElement).value;
+						const sanitized = standardizeOrg(value || null) || '';
+						if (sanitized !== value) {
+							constructor.update(c => ({
+								...c,
+								design: { ...c.design, org: sanitized }
+							}));
+						}
+					}}
 				/>
 				<FieldGroupAppendix>If organization has ORIC/Website and matches receiving address, it will be marked as verified.</FieldGroupAppendix>
 			</FieldGroup>
