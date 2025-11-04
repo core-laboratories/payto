@@ -356,7 +356,7 @@ const generateMetaTag = (type: ITransitionType, props: Record<string, any>, well
 	let property = `${type}`;
 	if (type === 'ican' && props.network) {
 		if (props.network !== 'other') {
-			if (props.network === 'eth' && props.chain > 0) {
+			if (props.chain > 0) {
 				property += `:${props.network}@${props.chain}`;
 			} else {
 				property += `:${props.network}`;
@@ -384,9 +384,6 @@ const generateMetaTag = (type: ITransitionType, props: Record<string, any>, well
 		property += `:${props.bic.toLowerCase()}`;
 	}
 
-	if (props.params.currency.value) {
-		property += `:${props.params.currency.value.toLowerCase()}`;
-	}
 	if (props.params.fiat && props.params.fiat.value) {
 		property += `:${props.params.fiat.value.toLowerCase()}`;
 	}

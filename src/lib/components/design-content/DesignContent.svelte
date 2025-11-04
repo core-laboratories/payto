@@ -259,14 +259,14 @@
 		<div class="space-y-4">
 			<FieldGroup>
 				<FieldGroupLabel>
-					Organization Name / ORIC
+					Organization Name / ORIC / Website
 				</FieldGroupLabel>
 				<FieldGroupText
 					placeholder="e.g. PINGCHB2"
 					bind:value={$constructor.design.org}
 					maxlength="25"
 				/>
-				<FieldGroupAppendix>If organization has ORIC and matches receiving address, it will be marked as verified.</FieldGroupAppendix>
+				<FieldGroupAppendix>If organization has ORIC/Website and matches receiving address, it will be marked as verified.</FieldGroupAppendix>
 			</FieldGroup>
 
 			<div class="flex flex-col gap-6">

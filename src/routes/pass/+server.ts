@@ -222,6 +222,8 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				heroUrl: imageUrls.google.hero,
 				titleText,
 				amountText,
+				nameLabel: props.params.nameLabel?.value || design.nameLabel || 'Name',
+				nameText: props.params.name?.value || design.name || 'popo',
 				subheaderText: standardizeOrg(org) || 'Address',
 				hexBackgroundColor: getValidBackgroundColor(design, kvData, '#2A3950'),
 				barcode: getBarcodeConfig(design.barcode || 'qr', bareLink, purposeText).google,

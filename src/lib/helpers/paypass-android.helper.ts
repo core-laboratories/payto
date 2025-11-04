@@ -10,6 +10,8 @@ export interface GoogleWalletPayPassConfig {
 	heroUrl?: string;
 	titleText?: string;
 	amountText?: string | null;
+	nameLabel?: string;
+	nameText?: string;
 	subheaderText?: string;
 	hexBackgroundColor?: string;
 	barcode: any;
@@ -41,6 +43,9 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		iconUrl,
 		heroUrl,
 		titleText,
+		amountText,
+		nameLabel,
+		nameText,
 		subheaderText,
 		hexBackgroundColor,
 		barcode,
@@ -53,32 +58,102 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		throw new Error('Google signing configuration missing (issuer/service account).');
 	}
 
-	// Reuse a stable class (create once; reuse forever). If it doesn't exist,
-	// Google will auto-create it via the Save-to-Wallet JWT.
-	const gwClass: any = {
-		id: classId,
-		issuerName: payload.companyName || 'PayPass',
-		...(hexBackgroundColor ? { hexBackgroundColor } : {})
-	};
+		// Build address text for display on card
+	const addressText = payload.props.destination ? (() => {
+		const addr = payload.props.destination;
+		if (payload.props.network === 'xcb' || payload.props.network === 'xab' || payload.props.network === 'xce') {
+			return addr.match(/.{1,4}/g)?.join(' ').toUpperCase() || addr.toUpperCase();
+		}
+		return addr.match(/.{1,4}/g)?.join(' ') || addr;
+	})() : null;
 
-	let textModules: Array<{ header: string; body: string }> = [
-		...(payload.props.destination ? [{ header: 'Address', body: (() => {
-			const addr = payload.props.destination;
-			if (payload.props.network === 'xcb' || payload.props.network === 'xab') {
-				return addr.match(/.{1,4}/g)?.join(' ').toUpperCase() || addr.toUpperCase();
-			}
-			return addr;
-		})() }] : []),
-		...(payload.props.network ? [{ header: 'Network', body: payload.props.network.toUpperCase() + (payload.chainId ? ` / Chain: ${payload.chainId}` : '') }] : [])
-	];
+	// Build all text modules - will be displayed both on card (via template) and in details
+	const allTextModules: Array<{ id?: string; header: string; body: string }> = [];
+
+	// Address module (index 0)
+	if (addressText) {
+		allTextModules.push({ id: 'address', header: 'Address', body: addressText });
+	}
+
+	// Name module (index 1 if address exists, else 0)
+	if (nameLabel && nameText) {
+		allTextModules.push({ id: 'name', header: nameLabel, body: nameText });
+	}
+
+	// Network module (details only)
+	if (payload.props.network) {
+		const networkText = payload.props.network.toUpperCase() + (payload.chainId ? ` / Chain: ${payload.chainId}` : '');
+		allTextModules.push({ header: 'Network', body: networkText });
+	}
 
 	// Normalize text modules
-	textModules = textModules
+	const normalizedTextModules = allTextModules
 		.map(m => ({
+			...(m.id ? { id: m.id } : {}),
 			header: (m.header && String(m.header).trim()),
 			body: (m.body && String(m.body).trim())
 		}))
 		.filter(m => m.header.length > 0 && m.body.length > 0);
+
+		// Build card row template info - try referencing by ID
+	const cardRowTemplateInfos: any[] = [];
+
+	if (addressText) {
+		cardRowTemplateInfos.push({
+			twoColumns: {
+				startColumn: {
+					firstValue: {
+						fields: [
+							{
+								fieldPath: 'textModulesData.address.header'
+							}
+						]
+					},
+					secondValue: {
+						fields: [
+							{
+								fieldPath: 'textModulesData.address.body'
+							}
+						]
+					}
+				}
+			}
+		});
+	}
+
+	if (nameLabel && nameText) {
+		cardRowTemplateInfos.push({
+			twoColumns: {
+				startColumn: {
+					firstValue: {
+						fields: [
+							{
+								fieldPath: 'textModulesData.name.header'
+							}
+						]
+					},
+					secondValue: {
+						fields: [
+							{
+								fieldPath: 'textModulesData.name.body'
+							}
+						]
+					}
+				}
+			}
+		});
+	}
+
+	const gwClass: any = {
+		id: classId,
+		issuerName: payload.companyName || 'PayPass',
+		...(hexBackgroundColor ? { hexBackgroundColor } : {}),
+		...(cardRowTemplateInfos.length > 0 ? {
+			classTemplateInfo: {
+				cardRowTemplateInfos: cardRowTemplateInfos
+			}
+		} : {})
+	};
 
 	const gwObject: any = {
 		id: payload.id,
@@ -142,15 +217,27 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 			}
 		] : [],
 
-		textModulesData: textModules.map(m => ({ header: m.header, body: m.body })),
+		textModulesData: normalizedTextModules.map((m: { id?: string; header: string; body: string }) => ({
+			...(m.id ? { id: m.id } : {}),
+			header: m.header,
+			body: m.body
+		})),
 
 		linksModuleData: {
 			uris: [
-				...(payload.explorerUrl ? [{ kind: 'walletobjects#uri', uri: payload.explorerUrl, description: 'View transactions' }] : []),
+				// Navigation to location
 				...(payload.props.params.lat?.value && payload.props.params.lon?.value ? [{ kind: 'walletobjects#uri', uri: `geo:${payload.props.params.lat?.value},${payload.props.params.lon?.value}`, description: 'Navigate to location' }] : []),
+				// View transactions
+				...(payload.explorerUrl ? [{ kind: 'walletobjects#uri', uri: payload.explorerUrl, description: 'View transactions' }] : []),
+				// Online PayPass
 				...(payload.externalLink ? [{ kind: 'walletobjects#uri', uri: payload.externalLink, description: 'Online PayPass' }] : []),
+				// Send to Card
+				...(payload.props.network === 'xcb' ? [{ kind: 'walletobjects#uri', uri: `https://card.payto.money`, description: 'Send to CryptoCard' }] : []),
+				// Swap Currency
+				{ kind: 'walletobjects#uri', uri: `https://swap.payto.money`, description: 'Swap Currency' },
+				// Activate Pro
 				...(payload.proUrl ? [{ kind: 'walletobjects#uri', uri: payload.proUrl, description: 'Activate Pro' }] : []),
-				{ kind: 'walletobjects#uri', uri: `https://exchange.payto.money`, description: 'Exchange Currency' },
+				// Send Offline Transaction
 				...(payload.props.network === 'xcb' ? [{ kind: 'walletobjects#uri', uri: 'sms:+12019715152', description: 'Send Offline Transaction' }] : [])
 			]
 		},
