@@ -9,15 +9,16 @@ export interface GoogleWalletPayPassConfig {
 	iconUrl: string;
 	heroUrl?: string;
 	titleText?: string;
+	amountLabel?: string;
 	amountText?: string | null;
-	nameLabel?: string;
-	nameText?: string;
+	purposeLabel?: string;
+	purposeText?: string;
 	subheaderText?: string;
 	hexBackgroundColor?: string;
 	barcode: any;
 	donate?: boolean;
-	payload: any;	// Full payload with all data
 	rtl?: boolean;	// Right-to-left support (manual swap)
+	payload: any;	// Full payload with all data
 }
 
 export interface GoogleWalletPayPassResult {
@@ -37,9 +38,10 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		iconUrl,
 		heroUrl,
 		titleText,
+		amountLabel,
 		amountText,
-		nameLabel,
-		nameText,
+		purposeLabel,
+		purposeText,
 		subheaderText,
 		hexBackgroundColor,
 		barcode,
@@ -62,17 +64,19 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		return addr.match(/.{1,4}/g)?.join(' ') || addr;
 	})() : null;
 
+	// Defaults
+	const issuerName = payload.companyName || 'PayPass';
+
 	// ---------------- Text Modules ----------------
 	const textMods: Array<{ id?: string; header: string; body: string }> = [];
 
 	if (addressText) textMods.push({ id: 'address', header: 'Address', body: addressText });
-	if (nameLabel && nameText) textMods.push({ id: 'item', header: nameLabel, body: nameText });
-	if (amountText) textMods.push({ id: 'amount', header: 'Amount', body: amountText });
-
 	if (payload.props.network) {
 		const networkText = payload.props.network.toUpperCase() + (payload.chainId ? ` / Chain: ${payload.chainId}` : '');
 		textMods.push({ header: 'Network', body: networkText });
 	}
+	if (purposeLabel && purposeText) textMods.push({ id: 'purpose', header: purposeLabel, body: purposeText });
+	if (amountText) textMods.push({ id: 'amount', header: amountLabel || 'Amount', body: amountText });
 
 	const normalizedTextModules = textMods
 		.map(m => ({
@@ -85,29 +89,16 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 	// ---------------- Card Row Template ----------------
 	const rows: any[] = [];
 
-	// Address row (single)
-	if (addressText) {
-		rows.push({
-			twoItems: {
-				startItem: {
-					firstValue: {
-						fields: [{ fieldPath: "object.textModulesData['address'].body" }]
-					}
-				}
-			}
-		});
-	}
-
 	// Item / Amount dynamic row
-	const hasItem = !!(nameLabel && nameText);
+	const hasItem = !!(purposeLabel && purposeText);
 	const hasAmount = !!amountText;
 
 	if (hasItem || hasAmount) {
 		const row: any = { twoItems: {} as any };
 
 		// Prepare left/right items depending on RTL flag
-		const left = rtl ? 'amount' : 'item';
-		const right = rtl ? 'item' : 'amount';
+		const left = rtl ? 'amount' : 'purpose';
+		const right = rtl ? 'purpose' : 'amount';
 
 		if (hasItem || hasAmount) {
 			if ((rtl && hasAmount) || (!rtl && hasItem)) {
@@ -131,7 +122,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 
 	const gwClass: any = {
 		id: classId,
-		issuerName: payload.companyName || 'PayPass',
+		issuerName: issuerName,
 		...(hexBackgroundColor ? { hexBackgroundColor } : {}),
 		...(rows.length > 0 ? {
 			classTemplateInfo: {
@@ -160,7 +151,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 			}
 		},
 
-		cardTitle: { defaultValue: { language: 'en-US', value: payload.companyName || 'PayPass' } },
+		cardTitle: { defaultValue: { language: 'en-US', value: issuerName } },
 		header: { defaultValue: { language: 'en-US', value: titleText } },
 		...(subheaderText ? {
 			subheader: { defaultValue: { language: 'en-US', value: subheaderText } }
@@ -173,7 +164,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		barcode: barcode || {
 			type: 'qrCode',
 			value: payload.basicLink,
-			alternateText: donate ? 'Scan to donate' : 'Scan to pay'
+			alternateText: donate ? 'Scan to donate' : 'Scan to pay' // This is backup defaults
 		},
 
 		smartTapRedemptionValue: payload.basicLink,
@@ -214,7 +205,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 				...(payload.props.network === 'xcb' ? [{
 					kind: 'walletobjects#uri',
 					uri: `https://card.payto.money`,
-					description: 'Send to CryptoCard'
+					description: 'Send to Crypto Card'
 				}] : []),
 				{ kind: 'walletobjects#uri', uri: `https://swap.payto.money`, description: 'Swap Currency' },
 				...(payload.proUrl ? [{

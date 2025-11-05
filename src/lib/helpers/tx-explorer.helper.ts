@@ -5,37 +5,57 @@
  * @param {object} data - An object containing data to insert into the URL (e.g., `address`, `txId`).
  * @returns {string | null} The formatted URL or `null` if the currency is not supported.
  */
-export function getExplorerUrl(currency: string, data: Record<string, string>): string | null {
+export function getExplorerUrl(currency: string, data: Record<string, string>, proxy: boolean = false): string | null {
     const normalizedCurrency = currency.toUpperCase();
+    let url = null;
 
     switch (normalizedCurrency) {
         case 'XCB':
-            return `https://blockindex.net/address/${data.address}`;
+            url = `https://blockindex.net/address/${data.address}`;
+            break;
         case 'XAB':
-            return `https://xab.blockindex.net/address/${data.address}`;
+            url = `https://xab.blockindex.net/address/${data.address}`;
+            break;
         case 'BTC':
-            return `https://blockstream.info/address/${data.address}`;
+            url = `https://blockstream.info/address/${data.address}`;
+            break;
         case 'ETH':
-            return `https://etherscan.io/address/${data.address}`;
+            url = `https://etherscan.io/address/${data.address}`;
+            break;
         case 'LTC':
-            return `https://blockchair.com/litecoin/address/${data.address}`;
+            url = `https://blockchair.com/litecoin/address/${data.address}`;
+            break;
         case 'SOL':
-            return `https://explorer.solana.com/address/${data.address}`;
+            url = `https://explorer.solana.com/address/${data.address}`;
+            break;
         case 'BCH':
-            return `https://blockchair.com/bitcoin-cash/address/${data.address}`;
+            url = `https://blockchair.com/bitcoin-cash/address/${data.address}`;
+            break;
         case 'BNB':
-            return `https://bscscan.com/address/${data.address}`;
+            url = `https://bscscan.com/address/${data.address}`;
+            break;
         case 'ADA':
-            return `https://cardanoscan.io/address/${data.address}`;
+            url = `https://cardanoscan.io/address/${data.address}`;
+            break;
         case 'DOGE':
-            return `https://dogechain.info/address/${data.address}`;
+            url = `https://dogechain.info/address/${data.address}`;
+            break;
         case 'XMR':
-            return `https://xmrchain.net/search?value=${data.address}`;
+            url = `https://xmrchain.net/search?value=${data.address}`;
+            break;
         case 'DOT':
-            return `https://polkascan.io/polkadot/account/${data.address}`;
+            url = `https://polkascan.io/polkadot/account/${data.address}`;
+            break;
         case 'TRON':
-            return `https://tronscan.org/#/address/${data.address}`;
+            url = `https://tronscan.org/#/address/${data.address}`;
+            break;
         default:
-            return null;
+            url = null;
     }
+
+    if (proxy) {
+        url = `https://payto.money/proxy/explorer?url=${url}`;
+    }
+
+    return url;
 }

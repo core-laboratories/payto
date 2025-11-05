@@ -16,7 +16,8 @@ import {
 	verifyToken,
 	getFormattedDateTime,
 	getFileId,
-	formatter
+	formatter,
+	getCodeText
 } from '$lib/helpers/paypass-operator.helper';
 import { buildGoogleWalletPayPassSaveLink } from '$lib/helpers/paypass-android.helper';
 import { buildAppleWalletPayPass } from '$lib/helpers/paypass-ios.helper';
@@ -27,27 +28,6 @@ import { PUBLIC_ENABLE_STATS } from '$env/static/public';
 
 /* ----------------------------------------------------------------
  * Env vars
- * ----------------------------------------------------------------
- * Apple (iOS)
- *   PRIVATE_PASS_TEAM_IDENTIFIER           -> Apple Team ID
- *   PRIVATE_PASS_P12_BASE64                -> base64-encoded Pass Type ID .p12
- *   PRIVATE_PASS_P12_PASSWORD              -> password for the .p12
- *   PRIVATE_WWDR_PEM                       -> Apple WWDR certificate (PEM text)
- *   PRIVATE_PASS_TYPE_IDENTIFIER           -> e.g., "pass.money.payto" (should match the certificate)
- *
- * Google Wallet (Android)
- *   PRIVATE_GW_ISSUER_ID                   -> your Google Wallet issuerId
- *   PRIVATE_GW_SA_EMAIL                    -> service account email
- *   PRIVATE_GW_SA_PRIVATE_KEY              -> service account private key (PEM)
- *   Note: Class is created dynamically, no PRIVATE_GW_CLASS_ID needed
- *
- * Optional
- *   PRIVATE_SUPABASE_URL
- *   PRIVATE_SUPABASE_KEY
- *   PRIVATE_API_TOKEN_TIMEOUT              -> default minutes (string int)
- *   PUBLIC_ENABLE_STATS                    -> enable stats (boolean)
- *   PUBLIC_PRO_URL                         -> public pro URL
- *   PUBLIC_DEV_SERVER_URL                  -> development server URL (default: http://localhost:5173)
  * ---------------------------------------------------------------- */
 
 const teamIdentifier = env.PRIVATE_PASS_TEAM_IDENTIFIER;
@@ -67,7 +47,7 @@ const devServerUrl = publicEnv.PUBLIC_DEV_SERVER_URL || 'http://localhost:5173';
 // Optional
 const proUrlLink = publicEnv.PUBLIC_PRO_URL || (isDev ? devServerUrl + '/activate/pro' : 'https://payto.money/activate/pro');
 const enableStats = PUBLIC_ENABLE_STATS === 'true' ? true : false;
-const apiTokenTimeout = parseInt(env.PRIVATE_API_TOKEN_TIMEOUT || '1', 10); // Default: 1 minute
+const apiTokenTimeout = parseInt(env.PRIVATE_API_TOKEN_TIMEOUT || '1', 10);
 
 /* ------------------ optional Supabase stats ------------------ */
 
@@ -174,12 +154,15 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 
 		const serialId = getFileId([originator, memberAddress, props.destination, hostname, props.network]);
 		const fileId = getFileId([originator, memberAddress, props.destination, hostname, props.network], '-', true, false);
-		const explorerUrl = getExplorerUrl(props.network, { address: props.destination });
+		const explorerUrl = getExplorerUrl(props.network, { address: props.destination }, true);
 		const customCurrencyData = kvData?.customCurrency || {};
-		const currency = getCurrency(props.network, hostname as ITransitionType);
+		const currency = getCurrency(props, hostname as ITransitionType);
 		const proUrl = `${proUrlLink}?originator=${originator}&subscriber=${memberAddress}&destination=${props.destination}&network=${props.network}`;
 		const expirationDate = props.params.dl?.value ? (props.params.dl?.value > 60 ? new Date(props.params.dl?.value).toISOString() : new Date(Date.now() + props.params.dl?.value * 60 * 1000).toISOString()) : null;
 		const chainId = props.params.chainId?.value;
+		const isRecurring = !!props.params.rc?.value;
+		const isRtl = String(props.params.rtl?.value || '') === '1';
+		const isDonate = String(props.params.donate?.value || '') === '1';
 
 		if (hostname === 'void' && props.network === 'plus') {
 			const plusCoordinates = getLocationCode(props.params.loc?.value || '');
@@ -187,50 +170,55 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			props.params.lon = { value: plusCoordinates[1] };
 		}
 
+		const amountValue =
+			(props.params.amount?.value && Number(props.params.amount.value) > 0)
+				? formatter(currency, (kvData?.currencyLocale || undefined), customCurrencyData).format(Number(props.params.amount.value))
+				: null;
+		const finalAmount = isRecurring && props.params.rc?.value && amountValue ? `🔁 ${amountValue} / ${props.params.rc.value}` : amountValue;
+
 		/* ---------------- OS switch ---------------- */
 
 		if (os === 'android') {
 
-			// ---------- MINIMAL CHANGES FOR "NEW COPY EACH TIME" ----------
-			// Use a STABLE class id and a UNIQUE object id (<= 64 chars)
-			const classId = `${gwIssuerId}.paypass`; // stable class (create once, then reuse)
-			const base = `${gwIssuerId}.paypass`;
-			const ts = Math.floor(Date.now() / 1000);
-			const nonce = crypto.randomUUID().split('-')[0]; // short 8-12 chars
-			const uniquePart = `${serialId}`.replace(/[^a-zA-Z0-9]/g, '').slice(0, 16);
-			const objectId = `${base}.${uniquePart}-${ts}-${nonce}`.replace(/[^a-zA-Z0-9._-]/g, '').slice(0, 64);
-			// --------------------------------------------------------------
+			/* -------------------------------------------------------------
+			 * Class & Object ID generation
+			 * -------------------------------------------------------------
+			 * Use stable prefix per originator (authority) for classId
+			 * and generate unique objectId for each pass instance.
+			 * ------------------------------------------------------------- */
 
-			// Amount & labels
-			const amountText =
-				(props.params.amount?.value && Number(props.params.amount.value) > 0)
-					? formatter(currency, (kvData?.currencyLocale || undefined), customCurrencyData).format(Number(props.params.amount.value))
-					: null;
-			// Get unified image URLs
+			const originatorSafe = originator.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+			const classId = `${gwIssuerId}.paypass.${originatorSafe}`.slice(0, 255);
+
+			const base = `${gwIssuerId}.paypass.${originatorSafe}`;
+			const uniquePart = `${serialId}`.replace(/[^a-zA-Z0-9]/g, '').slice(0, 16);
+			const ts = Math.floor(Date.now() / 1000);
+			const nonce = crypto.randomUUID().split('-')[0];
+			const objectId = `${base}.${uniquePart}-${ts}-${nonce}`.replace(/[^a-zA-Z0-9._-]/g, '').slice(0, 64);
+
 			const imageUrls = getImageUrls(kvData, memberAddress, isDev, devServerUrl);
 			const titleText = getTitleText(hostname, props, currency);
-			const donate = props.params.donate?.value === '1';
-			const purposeText = getPurposeText(design, donate, true);
+			const purposeText = getPurposeText(design);
+			const codeText = getCodeText(isDonate, 'scan');
 
 			const { saveUrl, classId: finalClassId, gwObject, gwClass } = await buildGoogleWalletPayPassSaveLink({
 				issuerId: gwIssuerId,
 				saEmail: gwSaEmail,
 				saPrivateKeyPem: gwSaKeyPem,
-				classId, // pass stable class id into builder
+				classId,
 				logoUrl: imageUrls.google.logo,
 				iconUrl: imageUrls.google.icon,
 				heroUrl: imageUrls.google.hero,
 				titleText,
-				//amountText,
-				//nameLabel: props.params.nameLabel?.value || design.nameLabel || 'Name',
-				//nameText: props.params.name?.value || design.name || 'popo',
-				nameLabel: 'Item',
-				nameText: 'Premium Subscription',
-				amountText: '$9.99',
-				subheaderText: standardizeOrg(org) || 'Address',
+				purposeLabel: 'Item',
+				purposeText: purposeText,
+				amountLabel: isRecurring ? (isDonate ? 'Recurring Donation' : 'Recurring Payment') : (isDonate ? 'Donation' : 'Payment'),
+				amountText: finalAmount,
+				//subheaderText: standardizeOrg(org) || 'Address',
 				hexBackgroundColor: getValidBackgroundColor(design, kvData, '#2A3950'),
-				barcode: getBarcodeConfig(design.barcode || 'qr', bareLink, purposeText).google,
-				donate,
+				barcode: getBarcodeConfig(design.barcode || 'qr', bareLink, codeText).google,
+				donate: isDonate,
+				rtl: isRtl,
 				payload: {
 					id: objectId,
 					companyName: kvData?.name,
@@ -245,13 +233,15 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				}
 			});
 
-			// Optionally log stats (non-blocking)
+			// Optional stats logging
 			if (enableStats && supabase) {
 				try {
 					// @ts-ignore
 					await (supabase as any).from('passes_stats')
 						.insert([{
-							hostname, network: props.network, currency,
+							hostname,
+							network: props.network,
+							currency,
 							...(props.params.amount?.value ? { amount: props.params.amount.value } : {}),
 							...(design.org ? { custom_org: true } : {}),
 							...(props.params.donate?.value ? { donate: true } : {}),
@@ -266,8 +256,9 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			}
 
 			return json({ saveUrl, id: objectId, classId: finalClassId, gwObject, gwClass });
+
 		} else if (os === 'ios') {
-			// iOS: Build .pkpass with proper PKCS#7 signature
+
 			const pkpassBlob = await buildAppleWalletPayPass({
 				serialId,
 				passTypeIdentifier,
@@ -292,13 +283,14 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				fetch
 			});
 
-			// Optional stats
 			if (enableStats && pkpassBlob && supabase) {
 				try {
 					// @ts-ignore
 					await (supabase as any).from('passes_stats')
 						.insert([{
-							hostname, network: props.network, currency,
+							hostname,
+							network: props.network,
+							currency,
 							...(props.params.amount?.value ? { amount: props.params.amount.value } : {}),
 							...(design.org ? { custom_org: true } : {}),
 							...(props.params.donate?.value ? { donate: true } : {}),

@@ -69,19 +69,31 @@ export function getTitleText(hostname: string, props: any, currency?: string): s
  * Get purpose text for PayPass (Pay/Donate)
  * @param design - Design object with item property
  * @param donate - Whether this is a donation
- * @param scan - Whether this is a scan action
- * @returns Purpose text
+ * @returns Purpose text or undefined if no item is provided
  */
-export function getPurposeText(design: any, donate: boolean, scan: boolean): string {
-	const purpose = donate ? 'Donate' : 'Pay';
+export function getPurposeText(design: any): string | undefined {
 	if (design?.item) {
-		return `${purpose} for ${design.item}`;
+		return `${design.item}`;
 	}
-	if (scan) {
+	return undefined;
+}
+
+/**
+ * Get code text for PayPass (Scan/Tap)
+ * @param donate - Whether this is a donation
+ * @param type - Type of code (scan/nfc)
+ * @returns Code text
+ */
+export function getCodeText(donate: boolean, type: string): string {
+	const purpose = donate ? 'Donate' : 'Pay';
+	if (type === 'scan') {
 		return `Scan to ${purpose.toLowerCase()}`;
+	} else if (type === 'nfc') {
+		return `Tap to ${purpose.toLowerCase()}`;
 	}
 	return purpose;
 }
+
 
 /**
  * Get barcode configuration for Apple and Google Wallet based on selected type
@@ -104,10 +116,7 @@ export function getBarcodeConfig(barcodeType: string, message: string, alternate
 		'qr': 'qrCode',
 		'pdf417': 'pdf417',
 		'aztec': 'aztec',
-		'code128': 'code128',
-		'upca': 'upcA',
-		'ean13': 'ean13',
-		'code39': 'code39'
+		'code128': 'code128'
 	};
 
 	const normalizedType = barcodeType?.toLowerCase() || 'qr';
