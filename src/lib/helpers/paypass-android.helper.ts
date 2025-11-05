@@ -16,7 +16,8 @@ export interface GoogleWalletPayPassConfig {
 	hexBackgroundColor?: string;
 	barcode: any;
 	donate?: boolean;
-	payload: any; // Full payload with all data
+	payload: any;	// Full payload with all data
+	rtl?: boolean;	// Right-to-left support (manual swap)
 }
 
 export interface GoogleWalletPayPassResult {
@@ -26,13 +27,6 @@ export interface GoogleWalletPayPassResult {
 	gwClass: any;
 }
 
-/**
- * Build Google Wallet PayPass save link by creating a GenericClass and GenericObject,
- * signing them with a JWT, and returning the "Save to Google Wallet" URL
- * @param config - Configuration object with all required parameters
- * @returns Promise with save URL, class ID, and the generated class/object
- * @throws Error if Google Wallet signing configuration is missing
- */
 export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPassConfig): Promise<GoogleWalletPayPassResult> {
 	const {
 		issuerId,
@@ -50,146 +44,127 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		hexBackgroundColor,
 		barcode,
 		donate,
-		payload
+		payload,
+		rtl = false
 	} = config;
 
-	// Validate Google Wallet signing configuration
+	// Validate configuration
 	if (!issuerId || !saEmail || !saPrivateKeyPem) {
 		throw new Error('Google signing configuration missing (issuer/service account).');
 	}
 
-		// Build address text for display on card
+	// ---------------- Address formatting ----------------
 	const addressText = payload.props.destination ? (() => {
 		const addr = payload.props.destination;
-		if (payload.props.network === 'xcb' || payload.props.network === 'xab' || payload.props.network === 'xce') {
+		if (['xcb', 'xab', 'xce'].includes(payload.props.network)) {
 			return addr.match(/.{1,4}/g)?.join(' ').toUpperCase() || addr.toUpperCase();
 		}
 		return addr.match(/.{1,4}/g)?.join(' ') || addr;
 	})() : null;
 
-	// Build all text modules - will be displayed both on card (via template) and in details
-	const allTextModules: Array<{ id?: string; header: string; body: string }> = [];
+	// ---------------- Text Modules ----------------
+	const textMods: Array<{ id?: string; header: string; body: string }> = [];
 
-	// Address module (index 0)
-	if (addressText) {
-		allTextModules.push({ id: 'address', header: 'Address', body: addressText });
-	}
+	if (addressText) textMods.push({ id: 'address', header: 'Address', body: addressText });
+	if (nameLabel && nameText) textMods.push({ id: 'item', header: nameLabel, body: nameText });
+	if (amountText) textMods.push({ id: 'amount', header: 'Amount', body: amountText });
 
-	// Name module (index 1 if address exists, else 0)
-	if (nameLabel && nameText) {
-		allTextModules.push({ id: 'item', header: nameLabel, body: nameText });
-	}
-
-	// Price module (index 2 if name exists, else 1)
-	if (amountText) {
-		allTextModules.push({ id: 'price', header: 'Price', body: amountText });
-	}
-
-	// Network module (details only)
 	if (payload.props.network) {
 		const networkText = payload.props.network.toUpperCase() + (payload.chainId ? ` / Chain: ${payload.chainId}` : '');
-		allTextModules.push({ header: 'Network', body: networkText });
+		textMods.push({ header: 'Network', body: networkText });
 	}
 
-	// Normalize text modules
-	const normalizedTextModules = allTextModules
+	const normalizedTextModules = textMods
 		.map(m => ({
 			...(m.id ? { id: m.id } : {}),
-			header: (m.header && String(m.header).trim()),
-			body: (m.body && String(m.body).trim())
+			header: String(m.header ?? '').trim(),
+			body: String(m.body ?? '').trim()
 		}))
 		.filter(m => m.header.length > 0 && m.body.length > 0);
 
-		// Build card row template info - try referencing by ID
-	const cardRowTemplateInfos: any[] = [];
+	// ---------------- Card Row Template ----------------
+	const rows: any[] = [];
 
+	// Address row (single)
 	if (addressText) {
-		cardRowTemplateInfos.push({
-			twoColumns: {
-				startColumn: {
+		rows.push({
+			twoItems: {
+				startItem: {
 					firstValue: {
-						fields: [
-							{
-								fieldPath: 'textModulesData.address.header'
-							}
-						]
-					},
-					secondValue: {
-						fields: [
-							{
-								fieldPath: 'textModulesData.address.body'
-							}
-						]
+						fields: [{ fieldPath: "object.textModulesData['address'].body" }]
 					}
 				}
 			}
 		});
 	}
 
-	if (nameLabel && nameText) {
-		cardRowTemplateInfos.push({
-			twoColumns: {
-				startColumn: {
+	// Item / Amount dynamic row
+	const hasItem = !!(nameLabel && nameText);
+	const hasAmount = !!amountText;
+
+	if (hasItem || hasAmount) {
+		const row: any = { twoItems: {} as any };
+
+		// Prepare left/right items depending on RTL flag
+		const left = rtl ? 'amount' : 'item';
+		const right = rtl ? 'item' : 'amount';
+
+		if (hasItem || hasAmount) {
+			if ((rtl && hasAmount) || (!rtl && hasItem)) {
+				row.twoItems.startItem = {
 					firstValue: {
-						fields: [
-							{
-								fieldPath: 'textModulesData.name.header'
-							}
-						]
-					},
-					secondValue: {
-						fields: [
-							{
-								fieldPath: 'textModulesData.name.body'
-							}
-						]
+						fields: [{ fieldPath: `object.textModulesData['${left}'].body` }]
 					}
-				}
+				};
 			}
-		});
+			if ((rtl && hasItem) || (!rtl && hasAmount)) {
+				row.twoItems.endItem = {
+					firstValue: {
+						fields: [{ fieldPath: `object.textModulesData['${right}'].body` }]
+					}
+				};
+			}
+		}
+
+		rows.push(row);
 	}
 
 	const gwClass: any = {
 		id: classId,
 		issuerName: payload.companyName || 'PayPass',
 		...(hexBackgroundColor ? { hexBackgroundColor } : {}),
-		...(cardRowTemplateInfos.length > 0 ? {
+		...(rows.length > 0 ? {
 			classTemplateInfo: {
-				cardRowTemplateInfos: cardRowTemplateInfos
+				cardTemplateOverride: {
+					cardRowTemplateInfos: rows
+				}
 			}
 		} : {})
 	};
 
+	// ---------------- Object ----------------
 	const gwObject: any = {
 		id: payload.id,
 		classId: classId,
 		state: 'active',
 		...(payload.expirationDate ? {
-			validTimeInterval: {
-				end: payload.expirationDate
-			}
+			validTimeInterval: { end: payload.expirationDate }
 		} : {}),
 
 		appLinkData: {
-			displayText: {
-				defaultValue: { language: 'en-US', value: 'Pay' }
-			},
-
+			displayText: { defaultValue: { language: 'en-US', value: 'Pay' } },
 			webAppLinkInfo: {
 				appTarget: {
-					targetUri: {
-						uri: payload.fullLink,
-						description: 'Pay'
-					}
+					targetUri: { uri: payload.fullLink, description: 'Pay' }
 				}
 			}
 		},
 
-		cardTitle: { defaultValue: { language: 'en-US', value: payload.companyName || 'PayPass'} },
-		header:    { defaultValue: { language: 'en-US', value: titleText } },
-		...(subheaderText
-			? { subheader: { defaultValue: { language: 'en-US', value: subheaderText } } }
-			: {}),
+		cardTitle: { defaultValue: { language: 'en-US', value: payload.companyName || 'PayPass' } },
+		header: { defaultValue: { language: 'en-US', value: titleText } },
+		...(subheaderText ? {
+			subheader: { defaultValue: { language: 'en-US', value: subheaderText } }
+		} : {}),
 
 		...(logoUrl ? { logo: { sourceUri: { uri: logoUrl } } } : {}),
 		...(heroUrl ? { heroImage: { sourceUri: { uri: heroUrl } } } : {}),
@@ -207,7 +182,9 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 			{
 				latitude: payload.props.params.lat?.value,
 				longitude: payload.props.params.lon?.value,
-				relevantText: payload.props.params.message?.value ? payload.props.params.message.value : 'Payment location'
+				relevantText: payload.props.params.message?.value
+					? payload.props.params.message.value
+					: 'Payment Location'
 			}
 		] : [],
 
@@ -219,20 +196,37 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 
 		linksModuleData: {
 			uris: [
-				// Navigation to location
-				...(payload.props.params.lat?.value && payload.props.params.lon?.value ? [{ kind: 'walletobjects#uri', uri: `geo:${payload.props.params.lat?.value},${payload.props.params.lon?.value}`, description: 'Navigate to location' }] : []),
-				// View transactions
-				...(payload.explorerUrl ? [{ kind: 'walletobjects#uri', uri: payload.explorerUrl, description: 'View transactions' }] : []),
-				// Online PayPass
-				...(payload.externalLink ? [{ kind: 'walletobjects#uri', uri: payload.externalLink, description: 'Online PayPass' }] : []),
-				// Send to Card
-				...(payload.props.network === 'xcb' ? [{ kind: 'walletobjects#uri', uri: `https://card.payto.money`, description: 'Send to CryptoCard' }] : []),
-				// Swap Currency
+				...(payload.props.params.lat?.value && payload.props.params.lon?.value ? [{
+					kind: 'walletobjects#uri',
+					uri: `geo:${payload.props.params.lat?.value},${payload.props.params.lon?.value}`,
+					description: 'Navigate to Location'
+				}] : []),
+				...(payload.explorerUrl ? [{
+					kind: 'walletobjects#uri',
+					uri: payload.explorerUrl,
+					description: 'View Transactions'
+				}] : []),
+				...(payload.externalLink ? [{
+					kind: 'walletobjects#uri',
+					uri: payload.externalLink,
+					description: 'Online PayPass'
+				}] : []),
+				...(payload.props.network === 'xcb' ? [{
+					kind: 'walletobjects#uri',
+					uri: `https://card.payto.money`,
+					description: 'Send to CryptoCard'
+				}] : []),
 				{ kind: 'walletobjects#uri', uri: `https://swap.payto.money`, description: 'Swap Currency' },
-				// Activate Pro
-				...(payload.proUrl ? [{ kind: 'walletobjects#uri', uri: payload.proUrl, description: 'Activate Pro' }] : []),
-				// Send Offline Transaction
-				...(payload.props.network === 'xcb' ? [{ kind: 'walletobjects#uri', uri: 'sms:+12019715152', description: 'Send Offline Transaction' }] : [])
+				...(payload.proUrl ? [{
+					kind: 'walletobjects#uri',
+					uri: payload.proUrl,
+					description: 'Activate Pro'
+				}] : []),
+				...(payload.props.network === 'xcb' ? [{
+					kind: 'walletobjects#uri',
+					uri: 'sms:+12019715152',
+					description: 'Send Offline Transaction'
+				}] : [])
 			]
 		},
 
@@ -243,11 +237,11 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 					sourceUri: { uri: iconUrl },
 					contentDescription: { defaultValue: { language: 'en-US', value: 'Icon' } }
 				}
-			}] : []),
+			}] : [])
 		]
 	};
 
-	// Build Save to Google Wallet JWT
+	// ---------------- Sign JWT ----------------
 	const now = Math.floor(Date.now() / 1000);
 	const jwtPayload = {
 		iss: saEmail,
@@ -266,5 +260,10 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		.setProtectedHeader({ alg, typ: 'JWT' })
 		.sign(privateKey);
 
-	return { saveUrl: `https://pay.google.com/gp/v/save/${jwt}`, classId, gwObject, gwClass };
+	return {
+		saveUrl: `https://pay.google.com/gp/v/save/${jwt}`,
+		classId,
+		gwObject,
+		gwClass
+	};
 }
