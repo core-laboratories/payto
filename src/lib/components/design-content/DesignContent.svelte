@@ -22,13 +22,10 @@
 	export let hostname: ITransitionType | undefined = undefined;
 
 	const barcodeTypes = [
-		{ label: 'QR Code', value: 'qr', ticker: '' },
-		{ label: 'PDF 417', value: 'pdf417', ticker: '' },
-		{ label: 'Aztec', value: 'aztec', ticker: '' },
-		{ label: 'Code 128', value: 'code128', ticker: '' },
-		{ label: 'UPC-A', value: 'upca', ticker: 'Android only' },
-		{ label: 'EAN-13', value: 'ean13', ticker: 'Android only' },
-		{ label: 'Code 39', value: 'code39', ticker: 'Android only' }
+		{ label: 'QR Code', value: 'qr' },
+		{ label: 'PDF 417', value: 'pdf417' },
+		{ label: 'Aztec', value: 'aztec' },
+		{ label: 'Code 128', value: 'code128' }
 	];
 
 	const passModes = [

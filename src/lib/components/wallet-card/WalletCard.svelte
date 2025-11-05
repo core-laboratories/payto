@@ -782,6 +782,7 @@
 	async function handleVerifyOrganization(org: string | Readable<string> | undefined) {
 		// Reset verification state
 		isVerifiedOrganization.set(false);
+		verifiedOrgIcon.set(null);
 		isVerifiedWebsite.set(false);
 
 		if (!org) {
@@ -998,7 +999,12 @@
 					{#if $verifiedOrgIcon}
 						<div class="flex items-center justify-center mb-2">
 							<div class="flex items-center justify-center">
-								<img src={$verifiedOrgIcon} alt="Organization" class="w-14 h-14 rounded-full" />
+								<img
+									src={$verifiedOrgIcon}
+									alt="Organization"
+									class="w-14 h-14 rounded-full"
+									on:error={() => verifiedOrgIcon.set(null)}
+								/>
 							</div>
 						</div>
 					{:else if $paytoData.address}
