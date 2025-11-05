@@ -77,7 +77,12 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 
 	// Name module (index 1 if address exists, else 0)
 	if (nameLabel && nameText) {
-		allTextModules.push({ id: 'name', header: nameLabel, body: nameText });
+		allTextModules.push({ id: 'item', header: nameLabel, body: nameText });
+	}
+
+	// Price module (index 2 if name exists, else 1)
+	if (amountText) {
+		allTextModules.push({ id: 'price', header: 'Price', body: amountText });
 	}
 
 	// Network module (details only)
@@ -178,17 +183,6 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 					}
 				}
 			}
-
-			// If instead you want to open your Android app, use this block
-			// (and remove webAppLinkInfo above):
-			// androidAppLinkInfo: {
-			// 	appTarget: {
-			// 		// Prefer packageName when it's your own app
-			// 		packageName: 'com.yourcompany.yourapp'
-			// 		// or deep link to a specific screen:
-			// 		// targetUri: { uri: 'yourapp://rate', description: 'Open app' }
-			// 	}
-			// }
 		},
 
 		cardTitle: { defaultValue: { language: 'en-US', value: payload.companyName || 'PayPass'} },

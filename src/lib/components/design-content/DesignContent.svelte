@@ -278,7 +278,7 @@
 			</FieldGroup>
 
 			<div class="flex flex-col gap-6">
-				<h2 class="text-lg font-bold">Theme setup</h2>
+				<h2 class="text-lg font-bold">Pass appearance</h2>
 			</div>
 
 			<FieldGroup flexType="row" itemPosition="items-center">
