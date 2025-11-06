@@ -22,12 +22,13 @@
 	import { getCategoryByValue } from '$lib/helpers/get-category-by-value.helper';
 	import { onDestroy, onMount } from 'svelte';
 	import { blo } from "@blockchainhub/blo";
-	import { X, QrCode, Nfc, Navigation2, BadgeCheck } from 'lucide-svelte';
+	import { X, QrCode, Nfc, Navigation2, BadgeCheck, TriangleAlert } from 'lucide-svelte';
 	import { LL, setLocaleFromPaytoData, init } from '$i18n';
 	import { formatLocalizedNumber, formatRecurringSymbol, getNumberingSystem, isRtlLanguage } from '$lib/helpers/i18n';
 	import { verifyOrganization } from '$lib/helpers/oric.helper';
 	import { verifyWebsite } from '$lib/helpers/fintag.helper';
 	import { standardizeOrg } from '$lib/helpers/standardize.helper';
+	import { validateAddressByType } from '$lib/helpers/validate-address-by-type.helper';
 
 	// @ts-expect-error: Module is untyped
 	import pkg from 'open-location-code/js/src/openlocationcode';
@@ -48,6 +49,7 @@
 	let isVerifiedOrganization = writable<boolean>(false);
 	let verifiedOrgIcon = writable<string | null>(null);
 	let isVerifiedWebsite = writable<boolean>(false);
+	let addressValidationError = writable<string | null>(null);
 	interface FlexiblePaytoData {
 		hostname: string;
 		paymentType: string;
@@ -821,6 +823,24 @@
 	// Watch for organization changes
 	$: handleVerifyOrganization($paytoData.organization);
 
+	// Validate address based on hostname/type
+	$: {
+		const address = typeof $paytoData.address === 'string' ? $paytoData.address : ($paytoData.address ? String(get($paytoData.address)) : undefined);
+		const hostname = typeof $paytoData.hostname === 'string' ? $paytoData.hostname : ($paytoData.hostname ? String(get($paytoData.hostname)) : undefined);
+		const network = typeof $paytoData.network === 'string' ? $paytoData.network : ($paytoData.network ? String(get($paytoData.network)) : undefined);
+
+		if (address && hostname && address.trim() && hostname.trim()) {
+			const validation = validateAddressByType(address, hostname, network);
+			if (!validation.isValid && validation.errorMessage) {
+				addressValidationError.set(validation.errorMessage);
+			} else {
+				addressValidationError.set(null);
+			}
+		} else {
+			addressValidationError.set(null);
+		}
+	}
+
 	onMount(() => {
 		// Initialize i18n only if no language is set yet
 		// Don't call init() if paytoData already has a language set
@@ -947,12 +967,12 @@
 <!-- Tap Design -->
 <div class="relative flex flex-col justify-between bg-gray-900 bg-gradient-to-b to-gray-800/90 w-full h-screen sm:h-auto min-h-[600px] sm:rounded-2xl shadow-md font-medium text-white print:border-2 print:border-black print:text-black print:shadow-none" style="background-color: {$paytoData.colorBackground};">
 	<!-- Snow effect (now at the top) -->
-	<div class={`absolute top-0 left-0 w-full h-16 pointer-events-none z-0 overflow-hidden print:hidden ${isExpiredPayment || noData ? 'hidden' : ''}`}>
+	<div class={`absolute top-0 left-0 w-full h-16 pointer-events-none z-0 overflow-hidden print:hidden ${$addressValidationError || isExpiredPayment || noData ? 'hidden' : ''}`}>
 		<div class="w-full h-full animate-pulse bg-gradient-to-b from-white/20 to-transparent sm:rounded-t-2xl"></div>
 	</div>
 
 	<!-- Top: NFC icon and message -->
-	<div class={`flex flex-col items-center pt-8 mb-4 select-none z-10 ${isExpiredPayment || noData ? 'hidden' : ''}`}>
+	<div class={`flex flex-col items-center pt-8 mb-4 select-none z-10 ${$addressValidationError || isExpiredPayment || noData ? 'hidden' : ''}`}>
 		<div class={`${isUpsideDown ? 'rotated' : ''}`}>
 			{#if $nfcSupported && mode === 'nfc'}
 				<Nfc class="w-16 h-16 mb-2 print:hidden" />
@@ -978,7 +998,14 @@
 	<div class="flex-1 flex items-center justify-center">
 		<div class={`relative transition-transform duration-500 ${isUpsideDown ? 'rotated' : ''}`}>
 			<div class="rounded-2xl bg-black/40 shadow-xl px-2 pb-4 flex flex-col items-center min-w-[320px] max-w-xs relative overflow-hidden print:shadow-none print:border-2 print:border-gray-400">
-				{#if $expirationTimeMs && !isExpiredPayment}
+				{#if $addressValidationError}
+					<div class="pt-4 px-4">
+						<div class="flex flex-col items-center gap-2">
+							<TriangleAlert class="w-8 h-8 text-red-400" />
+							<div>{$addressValidationError}</div>
+						</div>
+					</div>
+				{:else if $expirationTimeMs && !isExpiredPayment}
 					<div class="w-[calc(100%+1rem)] flex flex-col gap-1 mb-2">
 						<div class="w-full bg-black/20 rounded-t-2xl h-2 overflow-hidden" dir={$paytoData.rtl ? 'rtl' : 'ltr'}>
 							<div
@@ -994,29 +1021,29 @@
 							<span class="font-medium text-gray-100">{$formattedTimeRemaining}</span>
 						</div>
 					</div>
-				{/if}
-				<div class="pt-4">
-					{#if $verifiedOrgIcon}
-						<div class="flex items-center justify-center mb-2">
-							<div class="flex items-center justify-center">
-								<img
-									src={$verifiedOrgIcon}
-									alt="Organization"
-									class="w-14 h-14 rounded-full"
-									on:error={() => verifiedOrgIcon.set(null)}
-								/>
+				{:else}
+					<div class="pt-4">
+						{#if $verifiedOrgIcon}
+							<div class="flex items-center justify-center mb-2">
+								<div class="flex items-center justify-center">
+									<img
+										src={$verifiedOrgIcon}
+										alt="Organization"
+										class="w-14 h-14 rounded-full"
+										on:error={() => verifiedOrgIcon.set(null)}
+									/>
+								</div>
 							</div>
-						</div>
-					{:else if $paytoData.address}
-						<div class="flex items-center justify-center mb-2">
-							<div class="flex items-center justify-center">
-								<img src={getIdenticon($paytoData.address)} alt="ID" class="w-14 h-14 rounded-full" />
+						{:else if $paytoData.address}
+							<div class="flex items-center justify-center mb-2">
+								<div class="flex items-center justify-center">
+									<img src={getIdenticon($paytoData.address)} alt="ID" class="w-14 h-14 rounded-full" />
+								</div>
 							</div>
-						</div>
-					{/if}
-					<div class="text-center">
-					{#if $paytoData.organization}
-						<div class="text-lg font-medium mb-2 flex items-center justify-center gap-1" dir={$paytoData.rtl ? 'rtl' : 'ltr'}>
+						{/if}
+						<div class="text-center">
+							{#if $paytoData.organization}
+								<div class="text-lg font-medium mb-2 flex items-center justify-center gap-1" dir={$paytoData.rtl ? 'rtl' : 'ltr'}>
 							{#if $isVerifiedOrganization}
 								<span class="cursor-help" title={$LL.walletCard.verifiedBusiness()}>
 									<BadgeCheck class={`w-5 h-5 text-amber-400 ${$paytoData.rtl ? 'ml-0.5' : 'mr-0.5'}`} />
@@ -1026,13 +1053,13 @@
 									<BadgeCheck class={`w-5 h-5 text-blue-400 ${$paytoData.rtl ? 'ml-0.5' : 'mr-0.5'}`} />
 								</span>
 							{/if}
-							<span>{typeof $paytoData.organization === 'string' ? standardizeOrg($paytoData.organization) : null}</span>
-						</div>
-					{/if}
-						<div class="text-lg font-medium mb-1" dir={$paytoData.rtl ? 'rtl' : 'ltr'}>
-							{$paytoData.purpose}{#if $paytoData.item}{` `}{$LL.walletCard.for()}{` `}<span class="break-all">{$paytoData.item}</span>{/if}
-						</div>
-						<div class="text-4xl font-bold tracking-tigh mt-1 mb-2" dir={$paytoData.rtl ? 'rtl' : 'ltr'}>
+									<span>{typeof $paytoData.organization === 'string' ? standardizeOrg($paytoData.organization) : null}</span>
+								</div>
+							{/if}
+							<div class="text-lg font-medium mb-1" dir={$paytoData.rtl ? 'rtl' : 'ltr'}>
+								{$paytoData.purpose}{#if $paytoData.item}{` `}{$LL.walletCard.for()}{` `}<span class="break-all">{$paytoData.item}</span>{/if}
+							</div>
+							<div class="text-4xl font-bold tracking-tigh mt-1 mb-2" dir={$paytoData.rtl ? 'rtl' : 'ltr'}>
 							{#if noData}
 								<span class="text-3xl">{$LL.walletCard.noPayment()}</span>
 							{:else if isExpiredPayment}
@@ -1046,7 +1073,8 @@
 							{/if}
 						</div>
 					</div>
-				</div>
+					</div>
+				{/if}
 			</div>
 		</div>
 	</div>

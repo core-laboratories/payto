@@ -157,7 +157,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 		const explorerUrl = getExplorerUrl(props.network, { address: props.destination }, true);
 		const customCurrencyData = kvData?.customCurrency || {};
 		const currency = getCurrency(props, hostname as ITransitionType);
-		const proUrl = `${proUrlLink}?originator=${originator}&subscriber=${memberAddress}&destination=${props.destination}&network=${props.network}`;
+		const proUrl = `${proUrlLink}?origin=${originator}&subscriber=${memberAddress}&network=${props.network}`;
 		const expirationDate = props.params.dl?.value ? (props.params.dl?.value > 60 ? new Date(props.params.dl?.value).toISOString() : new Date(Date.now() + props.params.dl?.value * 60 * 1000).toISOString()) : null;
 		const chainId = props.params.chainId?.value;
 		const isRecurring = !!props.params.rc?.value;

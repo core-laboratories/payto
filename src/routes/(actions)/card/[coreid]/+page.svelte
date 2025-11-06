@@ -190,6 +190,11 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Crypto Card Refill</title>
+	<meta name="description" content="Crypto Card Refill - Direct Asset Transfers without intermediaries." />
+</svelte:head>
+
 <div class="min-h-screen p-4 sm:p-6 lg:p-8">
 	<div class="w-full max-w-md mx-auto">
 		{#if isValidating}
@@ -296,10 +301,16 @@
 				</button>
 
 				<!-- Note -->
-				<div class="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 text-sm text-yellow-200">
-					<p>
-						<strong>Note:</strong> If the card is not registered, funds will be returned minus fees.
+				<div class="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 text-xs text-yellow-200">
+					<p class="mb-1">
+						<strong>Note:</strong>
 					</p>
+					<ul class="list-disc list-inside space-y-1">
+						<li>If the card is not registered, funds will be returned without fees.</li>
+						<li>If the card is connected to an exchange service, supported assets will be automatically converted to the card's base fiat currency. If conversion succeeds, funds are applied to the card. If it fails, funds are returned to the sender without fees.</li>
+						<li>If the card is not connected to an exchange service, the original asset will be kept.</li>
+					</ul>
+					<p class="mt-2"><strong>Supported assets:</strong> XCB, CTN, USDX, CNYX, RUBX, THBX</p>
 				</div>
 
 				<!-- Requested from text -->
