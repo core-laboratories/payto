@@ -49,7 +49,7 @@
 	// Check if card is UnionPay (starts with 62 or 88, 16-19 digits)
 	function isUnionPay(digits: string): boolean {
 		return (digits.length >= 16 && digits.length <= 19) &&
-		       (digits.startsWith('62') || digits.startsWith('88'));
+			(digits.startsWith('62') || digits.startsWith('88'));
 	}
 
 	// Check if card is JCB (starts with 35, typically 16 digits, but can be 16-19)
@@ -79,11 +79,11 @@
 
 		// Determine max length based on card type
 		let maxLength = 16; // Default for standard cards
-		if (digits.startsWith('34') || digits.startsWith('37')) {
+		if (isAmex(digits)) {
 			maxLength = 15; // Amex
-		} else if (digits.startsWith('62') || digits.startsWith('88')) {
+		} else if (isUnionPay(digits)) {
 			maxLength = 19; // UnionPay
-		} else if (digits.startsWith('35')) {
+		} else if (isJCB(digits)) {
 			maxLength = 19; // JCB
 		}
 
@@ -298,7 +298,7 @@
 				<!-- Note -->
 				<div class="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 text-sm text-yellow-200">
 					<p>
-						<strong>Note:</strong> If the card is not registered, funds will be returned minus fees; if the card doesn't have equivalent FIAT currency, the original asset received will be settled.
+						<strong>Note:</strong> If the card is not registered, funds will be returned minus fees.
 					</p>
 				</div>
 
