@@ -21,7 +21,8 @@ const en = {
 		payment: 'payment',
 		purposePay: 'Pay',
 		purposeDonate: 'Donate',
-		verifiedBusiness: 'Verified Business'
+		verifiedBusiness: 'Verified Business',
+		verifiedWebsite: 'Verified Website'
 	},
 	paymentButton: {
 		Recurring: 'Recurring',

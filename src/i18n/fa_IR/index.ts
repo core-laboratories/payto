@@ -24,7 +24,8 @@ const fa_IRPartial: DeepPartial<Translation> = {
 		payment: 'پرداخت',
 		purposePay: 'پرداخت',
 		purposeDonate: 'اهدا',
-		verifiedBusiness: 'کسب و کار تأیید شده'
+		verifiedBusiness: 'کسب و کار تأیید شده',
+		verifiedWebsite: 'وبسایت تأیید شده'
 	},
 	paymentButton: {
 		Recurring: 'دوره‌ای',

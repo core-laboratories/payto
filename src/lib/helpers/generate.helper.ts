@@ -1,6 +1,7 @@
 import { META_CONTENT } from '$lib/data/meta-content.data';
 import { checkValidity } from '$lib/helpers/check-validity.helper';
 import { calculateColorDistance } from '$lib/helpers/euclidean-distance.helper';
+import { standardizeOrg } from '$lib/helpers/standardize.helper';
 import { setLocaleFromPaytoData } from '$i18n';
 import { i18nObject } from '$i18n/i18n-util';
 import type { Locales } from '$i18n/i18n-types';
@@ -62,31 +63,24 @@ export const generateLink = (payload: IPayload[] = [], props: Record<string, any
 		// PayPass transformer
 		if (design) {
 			const { org, item, colorF, colorB, barcode, rtl, lang, mode } = design;
-			if (org) searchParams.set('org', org);
+			if (org) {
+				searchParams.set('org', standardizeOrg(org) || '');
+			}
 			if (item) searchParams.set('item', item);
+
+			// Handle colors: validate distance if BOTH colors are provided
 			if (colorB && colorF && colorB !== '#2A3950' && colorF !== '#9AB1D6') {
-				const similar = calculateColorDistance(colorB, colorF);
-				if (similar >= 100) {
+				const distance = calculateColorDistance(colorB, colorF);
+				if (distance >= 100) {
 					searchParams.set('color-f', colorF.substring(1));
 					searchParams.set('color-b', colorB.substring(1));
-				} else {
-					searchParams.delete('color-f');
-					searchParams.delete('color-b');
 				}
 			} else if (colorF && colorF !== '#9AB1D6') {
-				const similar = calculateColorDistance('#2A3950', colorF);
-				if (similar >= 100) {
-					searchParams.set('color-f', colorF.substring(1));
-				} else {
-					searchParams.delete('color-f');
-				}
+				// Only foreground provided, use it without distance check
+				searchParams.set('color-f', colorF.substring(1));
 			} else if (colorB && colorB !== '#2A3950') {
-				const similar = calculateColorDistance('#9AB1D6', colorB);
-				if (similar >= 100) {
-					searchParams.set('color-b', colorB.substring(1));
-				} else {
-					searchParams.delete('color-b');
-				}
+				// Only background provided, use it without distance check
+				searchParams.set('color-b', colorB.substring(1));
 			}
 			if (rtl) {
 				searchParams.set('rtl', '1');
@@ -365,7 +359,7 @@ const generateMetaTag = (type: ITransitionType, props: Record<string, any>, well
 	let property = `${type}`;
 	if (type === 'ican' && props.network) {
 		if (props.network !== 'other') {
-			if (props.network === 'eth' && props.chain > 0) {
+			if (props.chain > 0) {
 				property += `:${props.network}@${props.chain}`;
 			} else {
 				property += `:${props.network}`;
@@ -393,9 +387,6 @@ const generateMetaTag = (type: ITransitionType, props: Record<string, any>, well
 		property += `:${props.bic.toLowerCase()}`;
 	}
 
-	if (props.params.currency.value) {
-		property += `:${props.params.currency.value.toLowerCase()}`;
-	}
 	if (props.params.fiat && props.params.fiat.value) {
 		property += `:${props.params.fiat.value.toLowerCase()}`;
 	}

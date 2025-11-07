@@ -114,6 +114,10 @@ type RootTranslation = {
 		 * V​e​r​i​f​i​e​d​ ​B​u​s​i​n​e​s​s
 		 */
 		verifiedBusiness: string
+		/**
+		 * V​e​r​i​f​i​e​d​ ​W​e​b​s​i​t​e
+		 */
+		verifiedWebsite: string
 	}
 	paymentButton: {
 		/**
@@ -239,6 +243,10 @@ export type TranslationFunctions = {
 		 * Verified Business
 		 */
 		verifiedBusiness: () => LocalizedString
+		/**
+		 * Verified Website
+		 */
+		verifiedWebsite: () => LocalizedString
 	}
 	paymentButton: {
 		/**

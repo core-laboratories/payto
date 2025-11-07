@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { env } from '$env/dynamic/public';
 	import { CircleCheck, Plus } from 'lucide-svelte';
+	import { formatter } from '$lib/helpers/paypass-operator.helper';
 </script>
 
 <svelte:head>
@@ -21,7 +22,7 @@
 					</h3>
 					<h4>
 						<span class="text-2xl">CTN</span>
-						<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500">Ƈ 500</span>
+						<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500">{formatter('CTN', 'currency').format(Number(env.PUBLIC_PRO_PRICE))}</span>
 						<span class="text-sm">/month</span>
 					</h4>
 					<a href="/?pass=1#pass" class="inline-flex items-center justify-center gap-2 px-8 py-3 font-semibold text-white transition duration-300 rounded-lg bg-emerald-700 hover:bg-emerald-600 focus:bg-emerald-700 focus-visible:outline-none !no-underline">
@@ -107,7 +108,7 @@
 				</h3>
 				<h4>
 					<span class="text-2xl">EUR</span>
-					<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500">€ 10,000</span>
+					<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500">{formatter('EUR', 'currency').format(Number(env.PUBLIC_PRO_ORG_PRICE))}</span>
 					<span class="text-sm">/year</span>
 				</h4>
 				<a href="mailto:sales@payto.money?subject=Pro%20Organization&body=ORIC%3A%20%0AMessage%3A%20%0A%0A%28Please%20attach%20the%20JSON%20file%20with%20the%20details%29%0A" class="inline-flex items-center justify-center gap-2 px-8 py-3 font-semibold text-white transition duration-300 rounded-lg bg-emerald-700 hover:bg-emerald-600 focus:bg-emerald-700 focus-visible:outline-none !no-underline">
@@ -134,7 +135,7 @@
 					</li>
 					<li class="flex items-start gap-2">
 						<Plus class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
-						<div>Dynamic PayPass class creation for Google Wallet</div>
+						<div>Assign custom Android App for Payment Button</div>
 					</li>
 					<li class="flex items-start gap-2">
 						<Plus class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />

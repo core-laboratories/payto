@@ -14,6 +14,7 @@
 	import { calculateColorDistance } from '$lib/helpers/euclidean-distance.helper';
 	import { generateWebLink, getWebLink } from '$lib/helpers/generate.helper';
 	import { getAddress } from '$lib/helpers/get-address.helper';
+	import { standardizeOrg } from '$lib/helpers/standardize.helper';
 	import { toast } from '$lib/components/toast';
 	import { setLocaleFromPaytoData } from '$i18n';
 	import { onMount } from 'svelte';
@@ -21,10 +22,10 @@
 	export let hostname: ITransitionType | undefined = undefined;
 
 	const barcodeTypes = [
-		{ label: 'QR Code', value: 'qr', ticker: 'QR' },
-		{ label: 'PDF 417', value: 'pdf417', ticker: 'PDF' },
-		{ label: 'Aztec', value: 'aztec', ticker: 'Aztec' },
-		{ label: 'Code 128', value: 'code128', ticker: 'Code 128' }
+		{ label: 'QR Code', value: 'qr' },
+		{ label: 'PDF 417', value: 'pdf417' },
+		{ label: 'Aztec', value: 'aztec' },
+		{ label: 'Code 128', value: 'code128' }
 	];
 
 	const passModes = [
@@ -63,11 +64,19 @@
 	// Default to empty string for "Application Language (or English)" option
 	const currentLanguageValue = derived(constructorStore, ($constructor) => $constructor.design.lang || '');
 
-	const distance = derived(constructorStore, $constructor =>
-		Math.floor(
-			calculateColorDistance($constructor.design.colorF || '#9AB1D6', $constructor.design.colorB || '#2A3950')
-		)
-	);
+	const enableDistanceCheck = writable(false);
+	const distance = derived([constructorStore, enableDistanceCheck], ([$constructor, $enableDistanceCheck]) => {
+
+		if (!$enableDistanceCheck) return;
+
+		// Only calculate distance if both colors are provided
+		const hasBothColors = $constructor.design.colorF && $constructor.design.colorB;
+		if (!hasBothColors) return;
+
+		return Math.floor(
+			calculateColorDistance($constructor.design.colorF!, $constructor.design.colorB!)
+		);
+	});
 
 	const barcodeValue = derived(constructorStore, $constructor => $constructor.design.barcode ?? 'qr');
 	const passMode = derived(constructorStore, $constructor => $constructor.design.mode ?? 'auto');
@@ -90,6 +99,14 @@
 			userOS.set('android');
 		}
 	});
+
+	// Reset colorF when enableDistanceCheck is unchecked
+	$: if (!$enableDistanceCheck && $constructor.design.colorF) {
+		constructor.update(c => ({
+			...c,
+			design: { ...c.design, colorF: undefined }
+		}));
+	}
 
 	function updateBarcode(value: string | number) {
 		constructor.update(c => ({
@@ -117,7 +134,7 @@
 			toast({ message: 'Generation timed out. Please try again.', type: 'error' });
 		}, GENERATION_TIMEOUT);
 
-	try {
+		try {
 			const formData = new FormData();
 			formData.append('hostname', hostname);
 			formData.append('props', JSON.stringify($constructorStore.networks[hostname]));
@@ -125,8 +142,7 @@
 			const selectedOs = osOverride ?? get(userOS);
 			formData.append('os', selectedOs);
 
-			const endpoint = '/pass';
-			const response = await fetch(endpoint, {
+			const response = await fetch('/pass', {
 				method: 'POST',
 				body: formData
 			});
@@ -156,14 +172,8 @@
 			const url = URL.createObjectURL(blob);
 			const a = document.createElement('a');
 			a.href = url;
-			const addr = $constructorStore.networks[hostname]?.destination || '';
-			const normalizedAddr = normalizeAddress(addr, hostname);
-			const timestamp = new Date().toISOString().replace(/[-:]/g, '').slice(2, 13);
-			a.download = `PayPass-${hostname.toUpperCase()}-${normalizedAddr}-${timestamp}.pkpass`;
-			document.body.appendChild(a);
 			a.click();
 			toast({ message: 'Pass downloaded successfully', type: 'success' });
-			document.body.removeChild(a);
 			URL.revokeObjectURL(url);
 		} catch (error) {
 			clearTimeout(timeoutId);
@@ -247,41 +257,65 @@
 		<div class="space-y-4">
 			<FieldGroup>
 				<FieldGroupLabel>
-					Organization Name / ORIC
+					Organization Name / ORIC / Website
 				</FieldGroupLabel>
 				<FieldGroupText
 					placeholder="e.g. PINGCHB2"
 					bind:value={$constructor.design.org}
 					maxlength="25"
+					on:input={(e) => {
+						const value = (e.target as HTMLInputElement).value;
+						const sanitized = standardizeOrg(value || null) || '';
+						if (sanitized !== value) {
+							constructor.update(c => ({
+								...c,
+								design: { ...c.design, org: sanitized }
+							}));
+						}
+					}}
 				/>
-				<FieldGroupAppendix>If organization has ORIC and matches receiving address, it will be marked as verified.</FieldGroupAppendix>
+				<FieldGroupAppendix>If organization has ORIC/Website and matches receiving address, it will be marked as verified.</FieldGroupAppendix>
 			</FieldGroup>
 
 			<div class="flex flex-col gap-6">
-				<h2 class="text-lg font-bold">Theme setup</h2>
+				<h2 class="text-lg font-bold">Pass appearance</h2>
 			</div>
 
 			<FieldGroup flexType="row" itemPosition="items-center">
 				<FieldGroupColorPicker
-					label="Foreground Color"
-					bind:value={$constructor.design.colorF}
-				/>
-			</FieldGroup>
-
-			<FieldGroup flexType="row" itemPosition="items-center">
-				<FieldGroupColorPicker
-					label="Background Color (Online Payment)"
+					label="Background Color"
 					bind:value={$constructor.design.colorB}
 				/>
 			</FieldGroup>
 
-			<div>
-				Current Color Euclidean distance:
-				<span class:text-red-500={$distance < 100}>{$distance}</span>
-				<p class="-mb-1 text-gray-400 text-sm">
-					Minimum Euclidean distance of 100 is required.
-				</p>
-			</div>
+			<FieldGroup>
+				<div class="flex items-center">
+					<input
+						type="checkbox"
+						bind:checked={$enableDistanceCheck}
+						id="distanceCheckbox"
+					/>
+					<label for="distanceCheckbox" class="ml-2 text-sm">Define foreground color</label>
+				</div>
+			</FieldGroup>
+
+			{#if $enableDistanceCheck}
+
+				<FieldGroup flexType="row" itemPosition="items-center">
+					<FieldGroupColorPicker
+						label="Foreground Color"
+						bind:value={$constructor.design.colorF}
+					/>
+				</FieldGroup>
+
+				<div>
+					Current Color Euclidean distance:
+					<span class:text-red-500={$distance !== undefined && $distance < 100}>{$distance !== undefined ? $distance : '—'}</span>
+					<p class="-mb-1 text-gray-400 text-sm">
+						Minimum Euclidean distance of 100 is required.
+					</p>
+				</div>
+			{/if}
 
 			<FieldGroup>
 				<FieldGroupLabel>Language</FieldGroupLabel>

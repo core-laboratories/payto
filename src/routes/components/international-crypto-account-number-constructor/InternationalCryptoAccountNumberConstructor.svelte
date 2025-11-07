@@ -36,7 +36,7 @@
 
 	let timeDateValue = $state('');
 	let classUpperValue = $state('uppercase');
-	let tokens = TRANSPORT.ican.find(item => item.value === $constructor.networks.ican.network)?.tokens;
+	let tokens = $derived(TRANSPORT.ican.find(item => item.value === $constructor.networks.ican.network)?.tokens);
 
 	let previousClearedState = false;
 
@@ -321,7 +321,7 @@
 
 <div class="flex flex-col gap-6" in:fly={{ y: 64 }}>
 	<div class="flex flex-col items-stretch gap-2">
-		<label id="transport-network-label" for="transport-network">Transport Network *</label>
+		<label id="transport-network-label" for="transport-network">Network *</label>
 		<div class="flex flex-col items-stretch gap-4">
 			{#if $constructor.networks.ican.network !== 'other'}
 				<div in:fade>
@@ -385,15 +385,17 @@
 		</div>
 	</FieldGroup>
 
-	{#if tokens}
+	{#if tokens === true}
 		<FieldGroup>
-			<FieldGroupLabel>Token code / Token address</FieldGroupLabel>
+			<FieldGroupLabel><span class="relative overflow-hidden cursor-help group hover:overflow-visible focus-visible:outline-none border-b border-dotted border-gray-400" aria-describedby="tooltip-tokencode">Token Code<span role="tooltip" id="tooltip-tokencode" class="invisible absolute bottom-full left-1/2 z-10 mb-2 w-48 -translate-x-1/2 rounded bg-slate-700 p-2 text-xs text-white opacity-0 transition-all before:invisible before:absolute before:left-1/2 before:top-full before:z-10 before:mb-2 before:-ml-1 before:border-x-4 before:border-t-4 before:border-x-transparent before:border-t-slate-700 before:opacity-0 before:transition-all before:content-[''] group-hover:visible group-hover:block group-hover:opacity-100 group-hover:before:visible group-hover:before:opacity-100">Token Code from <a href="https://github.com/bchainhub/well-known" target="_blank" rel="noopener">Well-Known registry</a></span></span> / Token Address</FieldGroupLabel>
 			<FieldGroupText
 				placeholder="e.g. CTN; 0x1ab…"
 				bind:value={$constructor.networks.ican.params.currency.value}
 				classValue={`tracking-widest placeholder:tracking-normal [&:not(:placeholder-shown)]:font-code ${classUpperValue}`}
 			/>
-			<FieldGroupAppendix>If left empty, the default is the network currency or local fiat.</FieldGroupAppendix>
+			<FieldGroupAppendix>
+				If left empty, the default is the network currency or local fiat.
+			</FieldGroupAppendix>
 		</FieldGroup>
 	{/if}
 

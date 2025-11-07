@@ -31,7 +31,14 @@ export const addressSchema = z.object({
 		case 'xcb':
 		case 'xce':
 		case 'xab':
-			const icanResult = validateWalletAddress(ctx.value.destination, { network: ['ican'], testnet: isTestnetAllowed });
+			const icanResult = validateWalletAddress(
+				ctx.value.destination,
+				{
+					network: ['ican', 'ns'],
+					nsDomains: ['card'],
+					testnet: isTestnetAllowed
+				}
+			);
 			if (!icanResult.isValid) {
 				ctx.issues.push({
 					code: 'custom',
@@ -74,7 +81,7 @@ export const addressSchema = z.object({
 					state.networks.ican.network = 'xce';
 					return state;
 				});
-			} else if (icanResult.network !== ctx.value.network) {
+			} else if (icanResult.network !== 'ns' && icanResult.network !== ctx.value.network) {
 				ctx.issues.push({
 					code: 'custom',
 					message: 'Different CORE network detected',

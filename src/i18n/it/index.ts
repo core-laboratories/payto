@@ -24,7 +24,8 @@ const it_ITPartial: DeepPartial<Translation> = {
 		payment: 'pagamento',
 		purposePay: 'pagamento',
 		purposeDonate: 'donazione',
-		verifiedBusiness: 'Attività Verificata'
+		verifiedBusiness: 'Attività Verificata',
+		verifiedWebsite: 'Sito Web Verificato'
 	},
 	paymentButton: {
 		Recurring: 'Ricorrente',

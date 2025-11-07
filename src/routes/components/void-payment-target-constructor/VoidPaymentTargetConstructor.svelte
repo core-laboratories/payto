@@ -185,7 +185,7 @@
 
 <div class="flex flex-col gap-6" in:fly={{ y: 64 }}>
 	<div class="flex flex-col items-stretch gap-2">
-		<label id="transport-network-label" for="transport-network">Transport Network *</label>
+		<label id="transport-network-label" for="transport-network">Network *</label>
 		<div class="flex flex-col items-stretch gap-4">
 			{#if $constructor.networks.void.transport !== 'other'}
 				<div in:fade>

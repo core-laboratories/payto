@@ -3,31 +3,31 @@ export const TYPES: ITypesObject = {
 		value: 'ican',
 		label: 'ICAN',
 		description: 'International Crypto Account Number',
-		link: 'https://cip.coreblockchain.net/cip/cbc/cip-100/'
+		link: 'https://payto.onl/solutions/ican'
 	},
 	iban: {
 		value: 'iban',
 		label: 'IBAN',
 		description: 'International Bank Account Number',
-		link: 'https://en.wikipedia.org/wiki/International_Bank_Account_Number'
+		link: 'https://grokipedia.com/page/International_Bank_Account_Number'
 	},
 	ach: {
 		value: 'ach',
 		label: 'ACH',
 		description: 'Automated Clearing House',
-		link: 'https://en.wikipedia.org/wiki/ACH_Network'
+		link: 'https://grokipedia.com/page/Automated_clearing_house'
 	},
 	upi: {
 		value: 'upi',
 		label: 'UPI',
 		description: 'Unified Payments Interface',
-		link: 'https://en.wikipedia.org/wiki/Unified_Payments_Interface'
+		link: 'https://grokipedia.com/page/Unified_Payments_Interface'
 	},
 	pix: {
 		value: 'pix',
 		label: 'PIX',
 		description: 'Brazilian instant payments',
-		link: 'https://www.bcb.gov.br/en/financialstability/pix_en'
+		link: 'https://grokipedia.com/page/Pix_(payment_system)'
 	},
 	bic: {
 		value: 'bic',
@@ -51,6 +51,6 @@ export const TYPES: ITypesObject = {
 		value: 'void',
 		label: 'Cash',
 		description: 'Cash-based transactions',
-		link: 'https://en.wikipedia.org/wiki/Money'
+		link: 'https://grokipedia.com/page/Cash'
 	}
 };
