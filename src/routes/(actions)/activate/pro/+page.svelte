@@ -8,7 +8,8 @@
 	import { formatter } from '$lib/helpers/paypass-operator.helper';
 
 	const origin = page.url.searchParams.get('origin');
-	const subscriber = page.url.searchParams.get('subscriber') || origin;
+	const subscriber = page.url.searchParams.get('subscriber');
+	const destination = page.url.searchParams.get('destination') || subscriber;
 	const network = page.url.searchParams.get('network');
 
 	const url = env.PUBLIC_WEB_ACTIVATION_URL || 'https://activate.payto.money';
@@ -61,8 +62,9 @@
 
 		try {
 			const formData = new FormData();
-			formData.append('origin', origin || '');
+			formData.append('origin', origin || 'payto');
 			formData.append('subscriber', subscriber || '');
+			formData.append('destination', destination || '');
 			formData.append('network', network || '');
 
 			if (emailChecked && emailValue) {
@@ -123,7 +125,7 @@
 			</button>
 			<h1 class="text-2xl font-bold">Activate Pro</h1>
 
-			{#if !origin || !subscriber || !network}
+			{#if !subscriber || !destination || !network}
 				<div class="flex flex-col items-center gap-4 text-center w-full">
 					<div class="flex flex-col items-center gap-2">
 						<TriangleAlert class="w-6 h-6 text-rose-500" />

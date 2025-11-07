@@ -44,8 +44,8 @@ const gwSaKeyPem = env.PRIVATE_GW_SA_PRIVATE_KEY;
 const isDev = process.env.NODE_ENV === 'development';
 const devServerUrl = publicEnv.PUBLIC_DEV_SERVER_URL || 'http://localhost:5173';
 
-// Optional
-const proUrlLink = publicEnv.PUBLIC_PRO_URL || (isDev ? devServerUrl + '/activate/pro' : 'https://payto.money/activate/pro');
+const linkBaseUrl = isDev ? devServerUrl : 'https://payto.money';
+const proUrlLink = `${linkBaseUrl}/activate/pro`;
 const enableStats = PUBLIC_ENABLE_STATS === 'true' ? true : false;
 const apiTokenTimeout = parseInt(env.PRIVATE_API_TOKEN_TIMEOUT || '1', 10);
 
@@ -157,7 +157,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 		const explorerUrl = getExplorerUrl(props.network, { address: props.destination }, true);
 		const customCurrencyData = kvData?.customCurrency || {};
 		const currency = getCurrency(props, hostname as ITransitionType);
-		const proUrl = `${proUrlLink}?origin=${originator}&subscriber=${memberAddress}&network=${props.network}`;
+		const proUrl = `${proUrlLink}?origin=${originator}&subscriber=${memberAddress}&destination=${props.destination}&network=${props.network}`;
 		const expirationDate = props.params.dl?.value ? (props.params.dl?.value > 60 ? new Date(props.params.dl?.value).toISOString() : new Date(Date.now() + props.params.dl?.value * 60 * 1000).toISOString()) : null;
 		const chainId = props.params.chainId?.value;
 		const isRecurring = !!props.params.rc?.value;
