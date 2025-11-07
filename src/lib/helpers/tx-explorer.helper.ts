@@ -5,7 +5,7 @@
  * @param {object} data - An object containing data to insert into the URL (e.g., `address`, `txId`).
  * @returns {string | null} The formatted URL or `null` if the currency is not supported.
  */
-export function getExplorerUrl(currency: string, data: Record<string, string>, proxy: boolean = false): string | null {
+export function getExplorerUrl(currency: string, data: Record<string, string>, proxy: boolean = false, urlBase: string = 'https://payto.money'): string | null {
     const normalizedCurrency = currency.toUpperCase();
     let url = null;
 
@@ -54,7 +54,7 @@ export function getExplorerUrl(currency: string, data: Record<string, string>, p
     }
 
     if (proxy) {
-        url = `https://payto.money/proxy/explorer?url=${url}`;
+        url = `${urlBase}/proxy/explorer?url=${url}`;
     }
 
     return url;
