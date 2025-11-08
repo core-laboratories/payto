@@ -747,9 +747,23 @@
 	let isUpsideDown = false;
 
 	function updateRotationState() {
-		// Check angle of screen orientation
-		const angle = screen.orientation?.angle ?? 0;
-		// 180 degrees means the phone is upside down in portrait mode
+		let angle: number | null = null;
+
+		if (typeof window !== 'undefined') {
+			const orientationValue = (window as any).orientation;
+
+			if (typeof orientationValue === 'number') {
+				angle = orientationValue;
+			} else if (typeof screen.orientation?.angle === 'number') {
+				angle = screen.orientation.angle;
+			}
+		}
+
+		if (angle === null) {
+			isUpsideDown = false;
+			return;
+		}
+
 		isUpsideDown = angle === 180 || angle === -180;
 	}
 
@@ -853,11 +867,13 @@
 		// Listen for orientation change
 		window.addEventListener('orientationchange', updateRotationState);
 		screen.orientation?.addEventListener?.('change', updateRotationState);
+		window.addEventListener('deviceorientation', updateRotationState);
 	});
 
 	onDestroy(() => {
 		window.removeEventListener('orientationchange', updateRotationState);
 		screen.orientation?.removeEventListener?.('change', updateRotationState);
+		window.removeEventListener('deviceorientation', updateRotationState);
 	});
 
 	// Reactive statement to set locale when paytoData.lang changes
