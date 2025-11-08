@@ -204,10 +204,10 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 				}] : []),
 				...(payload.props.network === 'xcb' ? [{
 					kind: 'walletobjects#uri',
-					uri: `https://payto.money/card/${payload.props.destination}`,
+					uri: `${payload.linkBaseUrl}/card/${payload.props.destination}`,
 					description: 'Send to Crypto Card'
 				}] : []),
-				{ kind: 'walletobjects#uri', uri: `https://swap.payto.money`, description: 'Swap Currency' },
+				{ kind: 'walletobjects#uri', uri: payload.swapUrl, description: 'Swap Currency' },
 				...(payload.proUrl ? [{
 					kind: 'walletobjects#uri',
 					uri: payload.proUrl,

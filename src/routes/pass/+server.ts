@@ -30,9 +30,9 @@ import { PUBLIC_ENABLE_STATS } from '$env/static/public';
  * Env vars
  * ---------------------------------------------------------------- */
 
+// Apple Wallet
 const teamIdentifier = env.PRIVATE_PASS_TEAM_IDENTIFIER;
 const passTypeIdentifier = env.PRIVATE_PASS_TYPE_IDENTIFIER;
-
 const p12Base64 = env.PRIVATE_PASS_P12_BASE64;
 const p12Password = env.PRIVATE_PASS_P12_PASSWORD;
 const wwdrPem = env.PRIVATE_WWDR_PEM;
@@ -41,11 +41,15 @@ const wwdrPem = env.PRIVATE_WWDR_PEM;
 const gwIssuerId = env.PRIVATE_GW_ISSUER_ID;
 const gwSaEmail = env.PRIVATE_GW_SA_EMAIL;
 const gwSaKeyPem = env.PRIVATE_GW_SA_PRIVATE_KEY;
-const isDev = process.env.NODE_ENV === 'development';
-const devServerUrl = publicEnv.PUBLIC_DEV_SERVER_URL || 'http://localhost:5173';
+const isDev = import.meta.env.DEV;
+const devServerUrl = publicEnv.PUBLIC_DEV_SERVER_URL || `http://localhost:${import.meta.env.VITE_DEV_SERVER_PORT || 5173}`;
 
+// Base URL for links
 const linkBaseUrl = isDev ? devServerUrl : 'https://payto.money';
 const proUrlLink = `${linkBaseUrl}/activate/pro`;
+const swapUrlLink = env.PUBLIC_SWAP_URL || `${linkBaseUrl}/swap`;
+
+// Enable stats
 const enableStats = PUBLIC_ENABLE_STATS === 'true' ? true : false;
 const apiTokenTimeout = parseInt(env.PRIVATE_API_TOKEN_TIMEOUT || '1', 10);
 
@@ -154,7 +158,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 
 		const serialId = getFileId([originator, memberAddress, props.destination, hostname, props.network]);
 		const fileId = getFileId([originator, memberAddress, props.destination, hostname, props.network], '-', true, false);
-		const explorerUrl = getExplorerUrl(props.network, { address: props.destination }, true);
+		const explorerUrl = getExplorerUrl(props.network, { address: props.destination }, true, linkBaseUrl);
 		const customCurrencyData = kvData?.customCurrency || {};
 		const currency = getCurrency(props, hostname as ITransitionType);
 		const proUrl = `${proUrlLink}?origin=${originator}&subscriber=${memberAddress}&destination=${props.destination}&network=${props.network}`;
@@ -227,6 +231,8 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 					externalLink: getExternalLink(hostname, props),
 					explorerUrl: explorerUrl || undefined,
 					proUrl,
+					swapUrl: swapUrlLink,
+					linkBaseUrl,
 					props,
 					expirationDate,
 					chainId

@@ -5,6 +5,7 @@ import { standardizeOrg } from '$lib/helpers/standardize.helper';
 import { setLocaleFromPaytoData } from '$i18n';
 import { i18nObject } from '$i18n/i18n-util';
 import type { Locales } from '$i18n/i18n-types';
+import { env as publicEnv } from '$env/dynamic/public';
 
 /**
  * It takes a list of payloads and a set of props, and returns a link
@@ -387,10 +388,6 @@ const generateMetaTag = (type: ITransitionType, props: Record<string, any>, well
 		property += `:${props.bic.toLowerCase()}`;
 	}
 
-	if (props.params.fiat && props.params.fiat.value) {
-		property += `:${props.params.fiat.value.toLowerCase()}`;
-	}
-
 	const content = META_CONTENT[type](props);
 
 	return wellKnown ? `{"${property}": "${content}"}` : `<meta property="${property}" content="${content}" />`;
@@ -451,7 +448,7 @@ export const getWebLink = ({
 	if (!network || !networkData) return '#';
 
 	const domain = import.meta.env.DEV
-		? `http://localhost:${import.meta.env.VITE_DEV_SERVER_PORT || 5173}`
+		? (publicEnv.PUBLIC_DEV_SERVER_URL || (`http://localhost:${import.meta.env.VITE_DEV_SERVER_PORT || 5173}`))
 		: 'https://payto.money';
 
 	const finalPayload = payload ?? [
@@ -481,7 +478,7 @@ export const generateWebLink = (link: string) => {
 	if (!link) return '#';
 
 	const domain = import.meta.env.DEV
-		? `http://localhost:${import.meta.env.VITE_DEV_SERVER_PORT || 5173}`
+		? (publicEnv.PUBLIC_DEV_SERVER_URL || (`http://localhost:${import.meta.env.VITE_DEV_SERVER_PORT || 5173}`))
 		: 'https://payto.money';
 
 	return `${domain}/${link.slice(5)}`;
