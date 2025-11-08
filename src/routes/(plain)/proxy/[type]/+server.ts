@@ -1,5 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import type { RequestEvent } from '@sveltejs/kit';
+import { getExplorerUrl } from '$lib/helpers/tx-explorer.helper';
 
 /**
  * Proxy route handler
@@ -16,14 +17,14 @@ export async function GET(event: RequestEvent) {
 
 	switch (type) {
 		case 'explorer': {
-			const targetUrl = url.searchParams.get('url');
-			if (!targetUrl) {
-				throw new Error('Missing url query parameter for explorer proxy');
+			const chain = url.searchParams.get('chain');
+			const address = url.searchParams.get('address');
+			if (!chain || !address) {
+				throw new Error('Missing required parameters: chain and address');
 			}
-
-			// Validate that the URL is safe (starts with http:// or https://)
-			if (!/^https?:\/\//i.test(targetUrl)) {
-				throw new Error('Invalid URL format. Must start with http:// or https://');
+			const targetUrl = getExplorerUrl(chain, { address });
+			if (!targetUrl) {
+				throw new Error('Invalid chain or address');
 			}
 
 			// Perform 301 permanent redirect

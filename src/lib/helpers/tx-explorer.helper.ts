@@ -54,7 +54,7 @@ export function getExplorerUrl(currency: string, data: Record<string, string>, p
     }
 
     if (proxy) {
-        url = `${urlBase}/proxy/explorer?url=${url}`;
+        url = `${urlBase}/proxy/explorer?chain=${normalizedCurrency}&address=${data.address}`;
     }
 
     return url;
