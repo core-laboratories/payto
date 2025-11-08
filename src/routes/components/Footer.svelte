@@ -17,7 +17,7 @@
 				href="https://payto.onl"
 				target="_blank"
 				rel="noreferrer"
-			>PayTo:Alliance</a>
+			>PayTo Alliance</a>
 			Initiative
 			</div>
 		</div>

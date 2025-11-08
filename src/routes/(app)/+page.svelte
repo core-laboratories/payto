@@ -12,7 +12,7 @@
 	import { toast } from '$lib/components/toast';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
-	import { ChevronUp, ChevronDown, Copy } from 'lucide-svelte';
+	import { ChevronUp, ChevronDown, Copy, Sticker } from 'lucide-svelte';
 
 	interface ILink {
 		href: string;
@@ -152,9 +152,9 @@
 				<div class="flex flex-col gap-6">
 					{#each $outputs as output, index}
 						{#if output.length && output.length > 2000}
-							<div class="w-full px-4 py-3 my-3 text-sm border rounded border-amber-700 bg-amber-900/50 text-amber-200" role="alert">
-								<h3 class="mb-1 font-semibold">Warning: URL Length</h3>
-								<p>PayTo URL exceed 2000 characters. Some browsers and servers may not support these lengthy URLs. Consider shortening your parameters.</p>
+							<div class="self-start max-w-screen-sm px-4 py-3 my-3 text-sm border rounded border-amber-700 bg-amber-900/50 text-amber-200" role="alert">
+								<h3 class="mb-1 font-semibold">Warning: Link too long</h3>
+								<p>PayTo link exceeds 2000 characters. Some browsers and servers may not support these lengthy links. Consider shortening your parameters.</p>
 							</div>
 						{/if}
 						<div class="flex flex-col gap-2">
@@ -201,6 +201,9 @@
 							{/if}
 						</div>
 					{/each}
+					<div class="flex flex-col gap-2">
+						<a href="/stickers/payto-stickers.pdf" download class="font-semibold text-sm text-gray-400 hover:text-gray-300 flex items-center gap-2"><Sticker class="w-4 h-4" />Download PayTo Stickers</a>
+					</div>
 				</div>
 			</BoxContent>
 		</Box>
@@ -229,7 +232,6 @@
 							</div>
 							<WalletCard
 								bind:hostname={$type}
-								authority={$authority}
 							/>
 							<div class="flex flex-col mt-4 gap-4">
 								<div class="w-full px-4 py-3 text-sm border rounded border-gray-700 bg-gray-800 text-gray-300 flex flex-col gap-2" role="alert">
@@ -262,7 +264,6 @@
 						<div class="w-full flex-1 min-w-0">
 							<DesignContent
 								bind:hostname={$type}
-								authority={$authority.toLowerCase()}
 							/>
 						</div>
 					</div>

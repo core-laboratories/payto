@@ -297,7 +297,7 @@
 					disabled={cardValidationState !== 'valid'}
 					class="w-full bg-green-500 hover:bg-green-600 disabled:bg-gray-500 disabled:cursor-not-allowed disabled:hover:bg-gray-500 text-white font-semibold py-3 px-6 rounded-lg transition-colors shadow-lg"
 				>
-					Payment
+					Top up
 				</button>
 
 				<!-- Note -->

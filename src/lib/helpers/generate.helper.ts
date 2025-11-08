@@ -388,10 +388,6 @@ const generateMetaTag = (type: ITransitionType, props: Record<string, any>, well
 		property += `:${props.bic.toLowerCase()}`;
 	}
 
-	if (props.params.fiat && props.params.fiat.value) {
-		property += `:${props.params.fiat.value.toLowerCase()}`;
-	}
-
 	const content = META_CONTENT[type](props);
 
 	return wellKnown ? `{"${property}": "${content}"}` : `<meta property="${property}" content="${content}" />`;
