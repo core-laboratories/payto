@@ -1,7 +1,7 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestEvent } from '@sveltejs/kit';
 import { getValidBackgroundColor } from '$lib/helpers/color-validation.helper';
-import { getBasicLink, getFullLink, getExternalLink } from '$lib/helpers/get-link.helper';
+import { getLink } from '$lib/helpers/get-link.helper';
 import { getCurrency } from '$lib/helpers/get-currency.helper';
 import { getExplorerUrl } from '$lib/helpers/tx-explorer.helper';
 import { KV } from '$lib/helpers/kv.helper';
@@ -150,7 +150,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 		}
 
 		// Build shared business data
-		const bareLink = getBasicLink(hostname, props);
+		const bareLink = getLink(hostname, props);
 		const org = kvData?.name ? kvData.name : (design.org ? design.org : null);
 		const originator = kvData?.id || 'payto';
 		const originatorName = kvData?.name;
@@ -226,9 +226,9 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				payload: {
 					id: objectId,
 					companyName: kvData?.name,
-					basicLink: getBasicLink(hostname, props),
-					fullLink: getFullLink(hostname, props),
-					externalLink: getExternalLink(hostname, props),
+					basicLink: getLink(hostname, props),
+					fullLink: getLink(hostname, props, true, false),
+					externalLink: getLink(hostname, props, true, true),
 					explorerUrl: explorerUrl || undefined,
 					proUrl,
 					swapUrl: swapUrlLink,
