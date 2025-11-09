@@ -169,6 +169,21 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 		const isRecurring = !!props.params.rc?.value;
 		const isRtl = String(props.params.rtl?.value || '') === '1';
 		const isDonate = String(props.params.donate?.value || '') === '1';
+		const splitPayment = (
+			!!props.params.split?.value &&
+			props.params.split?.value > 0 &&
+			props.params.split?.value < props.params.amount?.value &&
+			props.params.split?.address &&
+			props.destination &&
+			props.params.split.address.toLowerCase() !== props.destination.toLowerCase()
+		)
+			? {
+				value: props.params.split.value,
+				formattedValue: formatter(currency, (kvData?.currencyLocale || undefined), customCurrencyData).format(Number(props.params.split.value)),
+				isPercent: props.params.split.isPercent,
+				address: props.params.split.address
+			}
+			: null;
 
 		const companyName = standardizeOrg(originatorName);
 		const orgName = await getVerifiedOrganizationName({
@@ -251,7 +266,8 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 					expirationDate,
 					chainId,
 					redemptionIssuers: kvData?.data?.google?.redemptionIssuers || [],
-					enableSmartTap: kvData?.data?.google?.enableSmartTap,
+					enableSmartTap: kvData?.data?.google?.enableSmartTap || true,
+					splitPayment
 				},
 			});
 
