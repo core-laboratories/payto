@@ -167,6 +167,7 @@
 	});
 
 	let timerInterval: ReturnType<typeof setInterval> | null = null;
+	let timerTimeout: ReturnType<typeof setTimeout> | null = null;
 
 	// Add a new store to track expiration state
 	const isExpired = writable<boolean>(false);
@@ -180,6 +181,11 @@
 		// Clear any existing interval first to prevent duplicates
 		if (timerInterval) {
 			clearInterval(timerInterval);
+			timerInterval = null;
+		}
+		if (timerTimeout) {
+			clearTimeout(timerTimeout);
+			timerTimeout = null;
 		}
 
 		// Update immediately before starting the interval
@@ -206,7 +212,8 @@
 		const msToNextSecond = 1000 - (Date.now() % 1000);
 
 		// First set a timeout to align with the next second boundary
-		setTimeout(() => {
+		timerTimeout = setTimeout(() => {
+			timerTimeout = null;
 			// Update once at the second boundary
 			updateTimer();
 
@@ -708,6 +715,10 @@
 						clearInterval(timerInterval);
 						timerInterval = null;
 					}
+					if (timerTimeout) {
+						clearTimeout(timerTimeout);
+						timerTimeout = null;
+					}
 					startExpirationTimer();
 				}
 			}
@@ -716,6 +727,10 @@
 			if (timerInterval) {
 				clearInterval(timerInterval);
 				timerInterval = null;
+			}
+			if (timerTimeout) {
+				clearTimeout(timerTimeout);
+				timerTimeout = null;
 			}
 			timeRemaining.set(0);
 			isExpired.set(true);
@@ -729,6 +744,10 @@
 			clearInterval(timerInterval);
 			timerInterval = null;
 		}
+		if (timerTimeout) {
+			clearTimeout(timerTimeout);
+			timerTimeout = null;
+		}
 		expirationTimeMs.set(null);
 		initialTimeMs.set(null);
 		timeRemaining.set(0);
@@ -741,6 +760,10 @@
 		if (timerInterval) {
 			clearInterval(timerInterval);
 			timerInterval = null;
+		}
+		if (timerTimeout) {
+			clearTimeout(timerTimeout);
+			timerTimeout = null;
 		}
 	});
 
