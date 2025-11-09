@@ -6,6 +6,8 @@ import { standardizeOrg } from '$lib/helpers/standardize.helper';
 import { verifyOrganization } from '$lib/helpers/oric.helper';
 import { verifyWebsite } from '$lib/helpers/fintag.helper';
 
+const shortenTitle = (str: string | undefined) => (str && str.length > 10) ? `${str.slice(0,4)}…${str.slice(-4)}` : str;
+
 /**
  * Get image URLs for Apple and Google Wallet passes
  * @param kvData - KV data with icon overrides
@@ -130,15 +132,16 @@ export function getLocationCode(plusCode: string): [number, number] {
  */
 export function getTitleText(hostname: string, props: any, destination: string, currency?: string): string {
 	const currencyValue = props.currency?.value || currency || '';
-	const currencyText =
-		currencyValue && currencyValue.length < 6
-			? currencyValue.toUpperCase()
-			: (props.network?.toUpperCase() || hostname.toUpperCase());
-	const destinationText =
-		destination?.length > 8
-			? destination.slice(0, 4).toUpperCase() + '…' + destination.slice(-4).toUpperCase()
-			: (destination?.toUpperCase() || '');
-	return `${currencyText} ${destinationText}`;
+	let network = props.network;
+	if (hostname === 'void') {
+		network = props.transport !== 'other'
+			? props.transport.toUpperCase()
+			: props.other.toUpperCase();
+	} else {
+		network = currencyValue.toUpperCase();
+	}
+	const destinationText = shortenTitle(destination);
+	return `${network} ${destinationText}`;
 }
 
 /**
