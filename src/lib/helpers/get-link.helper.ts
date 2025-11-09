@@ -8,11 +8,14 @@ import { getWebLink } from './generate.helper';
  * @param transform - Whether to transform the link
  * @returns External PayTo link with design and transformation
  */
-export function getLink(hostname: string, props: any, design: boolean = false, transform: boolean = false): string {
+export function getLink(hostname: string, props: any, designData: any = null, transform: boolean = false): string {
 	return getWebLink({
 		network: hostname as ITransitionType,
-		networkData: props,
-		design: design,
+		networkData: {
+			...props,
+			design: designData
+		},
+		design: !!designData,
 		transform: transform
 	});
 }

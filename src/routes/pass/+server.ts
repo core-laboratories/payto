@@ -184,6 +184,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				address: props.params.split.address
 			}
 			: null;
+		const swap = props.params.swap?.value ? props.params.swap.value : null;
 
 		const companyName = standardizeOrg(originatorName);
 		const orgName = await getVerifiedOrganizationName({
@@ -256,8 +257,8 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				payload: {
 					id: objectId,
 					basicLink: getLink(hostname, props),
-					fullLink: getLink(hostname, props, true, false),
-					externalLink: getLink(hostname, props, true, true),
+					fullLink: getLink(hostname, props, design, false),
+					externalLink: getLink(hostname, props, design, true),
 					explorerUrl: explorerUrl || undefined,
 					proUrl,
 					swapUrl: swapUrlLink,
@@ -267,7 +268,8 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 					chainId,
 					redemptionIssuers: kvData?.data?.google?.redemptionIssuers || [],
 					enableSmartTap: kvData?.data?.google?.enableSmartTap || true,
-					splitPayment
+					splitPayment,
+					swap
 				},
 			});
 

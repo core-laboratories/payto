@@ -89,6 +89,8 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 	}
 	if (purposeLabel && purposeText) textMods.push({ id: 'purpose', header: purposeLabel, body: purposeText, onPass: true });
 	if (amountText) textMods.push({ id: 'amount', header: amountLabel || 'Amount', body: amountText, onPass: true });
+	// Swap
+	if (payload.swap) textMods.push({ id: 'swap', header: 'Swap for', body: payload.swap, onPass: false });
 	// Split payment
 	if (payload.splitPayment) textMods.push({ id: 'split', header: 'Split', body: `${payload.splitPayment.isPercent ? payload.splitPayment.value.toString() + '%' : payload.splitPayment.formattedValue} to ${payload.splitPayment.address}`, onPass: false });
 
