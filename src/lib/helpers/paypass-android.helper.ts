@@ -12,6 +12,8 @@ export interface GoogleWalletPayPassConfig {
 	saEmail: string | undefined;
 	saPrivateKeyPem: string | undefined;
 	classId: string;
+	companyName: string | null;
+	orgName: string;
 	logoUrl: string;
 	iconUrl: string;
 	heroUrl?: string;
@@ -41,6 +43,8 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		saEmail,
 		saPrivateKeyPem,
 		classId,
+		companyName,
+		orgName,
 		logoUrl,
 		iconUrl,
 		heroUrl,
@@ -72,7 +76,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 	})() : null;
 
 	// Defaults
-	const issuerName = payload.companyName || 'PayPass';
+	const issuerName = companyName || 'PayPass';
 
 	// ---------------- Text Modules ----------------
 	const textMods: TextModConfig[] = [];

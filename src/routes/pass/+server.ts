@@ -168,6 +168,9 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 		const isRtl = String(props.params.rtl?.value || '') === '1';
 		const isDonate = String(props.params.donate?.value || '') === '1';
 
+		const companyName = standardizeOrg(originatorName);
+		const orgName = standardizeOrg(org) || '';
+
 		if (hostname === 'void' && props.network === 'plus') {
 			const plusCoordinates = getLocationCode(props.params.loc?.value || '');
 			props.params.lat = { value: plusCoordinates[0] };
@@ -216,6 +219,8 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				logoUrl: imageUrls.google.logo,
 				iconUrl: imageUrls.google.icon,
 				heroUrl: imageUrls.google.hero,
+				companyName,
+				orgName,
 				titleText,
 				purposeLabel: 'Item',
 				purposeText: purposeText,
@@ -228,7 +233,6 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				rtl: isRtl,
 				payload: {
 					id: objectId,
-					companyName: kvData?.name,
 					basicLink: getLink(hostname, props),
 					fullLink: getLink(hostname, props, true, false),
 					externalLink: getLink(hostname, props, true, true),
