@@ -37,6 +37,32 @@ export function getImageUrls(kvData: any, address: string, isDev: boolean, devSe
 	};
 }
 
+export function getExpirationDate(deadlineValue: number | string | null | undefined): string | null {
+	if (deadlineValue === null || deadlineValue === undefined || deadlineValue === '') return null;
+
+	// Non-numeric string: parse as date string
+	if (typeof deadlineValue === 'string' && isNaN(Number(deadlineValue))) {
+		const parsed = new Date(deadlineValue);
+		return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+	}
+
+	const deadline = Number(deadlineValue);
+	if (Number.isNaN(deadline) || deadline <= 0) return null;
+
+	// Small value (<= 60): minutes from now
+	if (deadline <= 60) {
+		return new Date(Date.now() + deadline * 60 * 1000).toISOString();
+	}
+
+	// < 1e12: treat as Unix seconds
+	if (deadline < 1e12) {
+		return new Date(deadline * 1000).toISOString();
+	}
+
+	// >= 1e12: treat as ms timestamp
+	return new Date(deadline).toISOString();
+}
+
 export async function getVerifiedOrganizationName({
 	org,
 	kvName,

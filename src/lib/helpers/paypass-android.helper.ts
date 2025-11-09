@@ -179,13 +179,31 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 			: {})
 	};
 
-	// ---------------- Object ----------------
+	const validTimeInterval = (() => {
+		const raw = payload.expirationDate;
+		if (!raw) return undefined;
+
+		const date = new Date(raw);
+		if (Number.isNaN(date.getTime())) return undefined;
+
+		const iso = date.toISOString();
+		const hasTimeComponent = /T\d{2}:\d{2}/.test(String(raw));
+
+		return {
+			end: {
+				// Google Wallet expects only `date`
+				// ISO 8601 string — may include time or not
+				date: hasTimeComponent ? iso : iso.split('T')[0]
+			}
+		};
+	})();
+
 	const gwObject: any = {
 		id: payload.id,
 		classId: classId,
 		state: 'active',
-		...(payload.expirationDate ? {
-			validTimeInterval: { end: { dateTime: payload.expirationDate } }
+		...(validTimeInterval ? {
+			validTimeInterval
 		} : {}),
 
 		appLinkData: {
