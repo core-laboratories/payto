@@ -2,6 +2,9 @@ import ExchNumberFormat from 'exchange-rounding';
 import forge from 'node-forge';
 // @ts-ignore
 import OpenLocationCode from 'open-location-code/js/src/openlocationcode';
+import { standardizeOrg } from '$lib/helpers/standardize.helper';
+import { verifyOrganization } from '$lib/helpers/oric.helper';
+import { verifyWebsite } from '$lib/helpers/fintag.helper';
 
 /**
  * Get image URLs for Apple and Google Wallet passes
@@ -32,6 +35,53 @@ export function getImageUrls(kvData: any, address: string, isDev: boolean, devSe
 			fullWidth: kvData?.icons?.google?.fullWidth || `${baseUrl}/images/paypass/google-wallet/full-width.png` // full-width image - displayed at the top of the card
 		}
 	};
+}
+
+export async function getVerifiedOrganizationName({
+	org,
+	kvName,
+	address,
+	network
+}: {
+	org?: string | null;
+	kvName?: string | null;
+	address?: string | null;
+	network?: string | null;
+}): Promise<string> {
+	const fallback = 'PayPass';
+
+	if (kvName) {
+		return `${kvName} ✅`;
+	}
+
+	const sanitized = standardizeOrg(org ?? null);
+	if (!sanitized) {
+		return fallback;
+	}
+
+	if (!address) {
+		return sanitized;
+	}
+
+	try {
+		const oricResult = await verifyOrganization(sanitized.toUpperCase(), address);
+		if (oricResult.isVerified) {
+			return `${sanitized} ☑️`;
+		}
+	} catch (error) {
+		// Ignore ORIC verification failure and fall back to other checks
+	}
+
+	try {
+		const websiteResult = await verifyWebsite(sanitized, address, network || undefined);
+		if (websiteResult.isVerified) {
+			return `${sanitized} ✔️`;
+		}
+	} catch (error) {
+		// Ignore website verification failure
+	}
+
+	return sanitized;
 }
 
 /**

@@ -1037,7 +1037,8 @@
 							<span class="font-medium text-gray-100">{$formattedTimeRemaining}</span>
 						</div>
 					</div>
-				{:else}
+				{/if}
+				{#if !$addressValidationError}
 					<div class="pt-4">
 						{#if $verifiedOrgIcon}
 							<div class="flex items-center justify-center mb-2">

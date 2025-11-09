@@ -17,7 +17,8 @@ import {
 	getFormattedDateTime,
 	getFileId,
 	formatter,
-	getCodeText
+	getCodeText,
+	getVerifiedOrganizationName
 } from '$lib/helpers/paypass-operator.helper';
 import { buildGoogleWalletPayPassSaveLink } from '$lib/helpers/paypass-android.helper';
 import { buildAppleWalletPayPass } from '$lib/helpers/paypass-ios.helper';
@@ -151,7 +152,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 
 		// Build shared business data
 		const bareLink = getLink(hostname, props);
-		const org = kvData?.name ? kvData.name : (design.org ? design.org : null);
+		const designOrg = design.org ? design.org : null;
 		const originator = kvData?.id || 'payto';
 		const originatorName = kvData?.name;
 		const memberAddress = membership || props.destination;
@@ -169,7 +170,12 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 		const isDonate = String(props.params.donate?.value || '') === '1';
 
 		const companyName = standardizeOrg(originatorName);
-		const orgName = standardizeOrg(org) || '';
+		const orgName = await getVerifiedOrganizationName({
+			org: designOrg,
+			kvName: originatorName,
+			address: props.destination,
+			network: props.network
+		});
 
 		if (hostname === 'void' && props.network === 'plus') {
 			const plusCoordinates = getLocationCode(props.params.loc?.value || '');
@@ -276,7 +282,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				serialId,
 				passTypeIdentifier,
 				teamIdentifier,
-				org,
+				org: orgName,
 				hostname,
 				props,
 				design,

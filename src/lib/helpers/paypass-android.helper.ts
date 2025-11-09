@@ -179,7 +179,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 			}
 		},
 
-		cardTitle: { defaultValue: { language: 'en-US', value: issuerName } },
+		cardTitle: { defaultValue: { language: 'en-US', value: orgName } },
 		header: { defaultValue: { language: 'en-US', value: titleText } },
 		...(subheaderText ? {
 			subheader: { defaultValue: { language: 'en-US', value: subheaderText } }
