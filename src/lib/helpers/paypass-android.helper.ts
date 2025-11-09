@@ -1,5 +1,12 @@
 import * as jose from 'jose';
 
+type TextModConfig = {
+	id?: string;
+	header: string;
+	body: string;
+	onPass?: boolean;
+};
+
 export interface GoogleWalletPayPassConfig {
 	issuerId: string | undefined;
 	saEmail: string | undefined;
@@ -68,15 +75,15 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 	const issuerName = payload.companyName || 'PayPass';
 
 	// ---------------- Text Modules ----------------
-	const textMods: Array<{ id?: string; header: string; body: string }> = [];
+	const textMods: TextModConfig[] = [];
 
-	if (addressText) textMods.push({ id: 'address', header: 'Address', body: addressText });
+	if (addressText) textMods.push({ id: 'address', header: 'Address', body: addressText, onPass: false });
 	if (payload.props.network) {
 		const networkText = payload.props.network.toUpperCase() + (payload.chainId ? ` / Chain: ${payload.chainId}` : '');
-		textMods.push({ header: 'Network', body: networkText });
+		textMods.push({ header: 'Network', body: networkText, onPass: false });
 	}
-	if (purposeLabel && purposeText) textMods.push({ id: 'purpose', header: purposeLabel, body: purposeText });
-	if (amountText) textMods.push({ id: 'amount', header: amountLabel || 'Amount', body: amountText });
+	if (purposeLabel && purposeText) textMods.push({ id: 'purpose', header: purposeLabel, body: purposeText, onPass: true });
+	if (amountText) textMods.push({ id: 'amount', header: amountLabel || 'Amount', body: amountText, onPass: true });
 
 	const normalizedTextModules = textMods
 		.map(m => ({
@@ -89,29 +96,46 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 	// ---------------- Card Row Template ----------------
 	const rows: any[] = [];
 
-	// Item / Amount dynamic row
-	const hasItem = !!(purposeLabel && purposeText);
-	const hasAmount = !!amountText;
+	// Look up per-field visibility
+	const purposeMod = textMods.find(m => m.id === 'purpose');
+	const amountMod = textMods.find(m => m.id === 'amount');
 
+	const hasItem = !!(purposeMod?.onPass && purposeText && purposeText.trim().length);
+	const hasAmount = !!(amountMod?.onPass && amountText && amountText.trim().length);
+
+	// Item / Amount row only if their own onPass is true
 	if (hasItem || hasAmount) {
 		const row: any = { twoItems: {} as any };
 
-		// Prepare left/right items depending on RTL flag
-		const left = rtl ? 'amount' : 'purpose';
-		const right = rtl ? 'purpose' : 'amount';
-
-		if (hasItem || hasAmount) {
-			if ((rtl && hasAmount) || (!rtl && hasItem)) {
+		if (!rtl) {
+			// LTR: Item on the left, Amount on the right
+			if (hasItem) {
 				row.twoItems.startItem = {
 					firstValue: {
-						fields: [{ fieldPath: `object.textModulesData['${left}'].body` }]
+						fields: [{ fieldPath: "object.textModulesData['purpose']" }]
 					}
 				};
 			}
-			if ((rtl && hasItem) || (!rtl && hasAmount)) {
+			if (hasAmount) {
 				row.twoItems.endItem = {
 					firstValue: {
-						fields: [{ fieldPath: `object.textModulesData['${right}'].body` }]
+						fields: [{ fieldPath: "object.textModulesData['amount']" }]
+					}
+				};
+			}
+		} else {
+			// RTL: swap sides
+			if (hasAmount) {
+				row.twoItems.startItem = {
+					firstValue: {
+						fields: [{ fieldPath: "object.textModulesData['amount']" }]
+					}
+				};
+			}
+			if (hasItem) {
+				row.twoItems.endItem = {
+					firstValue: {
+						fields: [{ fieldPath: "object.textModulesData['purpose']" }]
 					}
 				};
 			}

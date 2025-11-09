@@ -192,7 +192,10 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			 * ------------------------------------------------------------- */
 
 			const originatorSafe = originator.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-			const classId = `${gwIssuerId}.paypass.${originatorSafe}`.slice(0, 255);
+
+			// Make classId unique per pass so each template is honored
+			const classSuffix = `${originatorSafe}.${serialId}`.replace(/[^a-zA-Z0-9._-]/g, '').slice(0, 40);
+			const classId = `${gwIssuerId}.paypass.${classSuffix}`.slice(0, 255);
 
 			const base = `${gwIssuerId}.paypass.${originatorSafe}`;
 			const uniquePart = `${serialId}`.replace(/[^a-zA-Z0-9]/g, '').slice(0, 16);
