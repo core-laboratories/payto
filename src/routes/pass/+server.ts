@@ -27,6 +27,8 @@ import { createClient } from '@supabase/supabase-js';
 import { env } from '$env/dynamic/private';
 import { env as publicEnv } from '$env/dynamic/public';
 import { PUBLIC_ENABLE_STATS } from '$env/static/public';
+import { getNetwork } from '$lib/helpers/get-network.helper';
+import { getAddress } from '$lib/helpers/get-address.helper';
 
 /* ----------------------------------------------------------------
  * Env vars
@@ -147,23 +149,29 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 		if (!props) throw error(400, 'Missing required field: props');
 		if (!os || (os !== 'ios' && os !== 'android')) throw error(400, 'Missing or invalid required field: os (must be "ios" or "android")');
 
-		for (const field of ['network', 'params', 'destination']) {
+		for (const field of ['network', 'params']) {
 			if (!props[field]) throw error(400, `Missing required field in props: ${field}`);
 		}
+
+		// Basic data
+		const network = getNetwork(props, hostname as ITransitionType);
+		if (!network) throw error(400, 'Invalid network');
+		const destination = getAddress(props, hostname as ITransitionType);
+		if (!destination) throw error(400, 'Invalid destination');
 
 		// Build shared business data
 		const bareLink = getLink(hostname, props);
 		const designOrg = design.org ? design.org : null;
 		const originator = kvData?.id || 'payto';
 		const originatorName = kvData?.name;
-		const memberAddress = membership || props.destination;
+		const memberAddress = membership || destination;
 
-		const serialId = getFileId([originator, memberAddress, props.destination, hostname, props.network]);
-		const fileId = getFileId([originator, memberAddress, props.destination, hostname, props.network], '-', true, false);
-		const explorerUrl = getExplorerUrl(props.network, { address: props.destination }, true, linkBaseUrl);
+		const serialId = getFileId([originator, memberAddress, destination, hostname, network]);
+		const fileId = getFileId([originator, memberAddress, destination, hostname, network], '-', true, false);
+		const explorerUrl = getExplorerUrl(network, { address: destination }, true, linkBaseUrl);
 		const customCurrencyData = kvData?.customCurrency || {};
-		const currency = getCurrency(props, hostname as ITransitionType);
-		const proUrl = `${proUrlLink}?origin=${originator}&subscriber=${memberAddress}&destination=${props.destination}&network=${props.network}`;
+		const currency = getCurrency(props, network as ITransitionType);
+		const proUrl = `${proUrlLink}?origin=${encodeURIComponent(originator)}&subscriber=${encodeURIComponent(memberAddress)}&destination=${encodeURIComponent(destination)}&network=${encodeURIComponent(network as string)}`;
 		const expirationDate = getExpirationDate(props.params?.dl?.value);
 		const chainId = props.params.chainId?.value;
 		const isRecurring = !!props.params.rc?.value;
@@ -174,8 +182,8 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			props.params.split?.value > 0 &&
 			props.params.split?.value < props.params.amount?.value &&
 			props.params.split?.address &&
-			props.destination &&
-			props.params.split.address.toLowerCase() !== props.destination.toLowerCase()
+			destination &&
+			props.params.split.address.toLowerCase() !== destination.toLowerCase()
 		)
 			? {
 				value: props.params.split.value,
@@ -190,11 +198,11 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 		const orgName = await getVerifiedOrganizationName({
 			org: designOrg,
 			kvName: originatorName,
-			address: props.destination,
-			network: props.network
+			address: destination,
+			network: network
 		});
 
-		if (hostname === 'void' && props.network === 'plus') {
+		if (hostname === 'void' && network === 'plus') {
 			const plusCoordinates = getLocationCode(props.params.loc?.value || '');
 			props.params.lat = { value: plusCoordinates[0] };
 			props.params.lon = { value: plusCoordinates[1] };
@@ -278,7 +286,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 					await (supabase as any).from('passes_stats')
 						.insert([{
 							hostname,
-							network: props.network,
+							network,
 							currency,
 							...(props.params.amount?.value ? { amount: props.params.amount.value } : {}),
 							...(design.org ? { custom_org: true } : {}),
@@ -327,7 +335,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 					await (supabase as any).from('passes_stats')
 						.insert([{
 							hostname,
-							network: props.network,
+							network,
 							currency,
 							...(props.params.amount?.value ? { amount: props.params.amount.value } : {}),
 							...(design.org ? { custom_org: true } : {}),
