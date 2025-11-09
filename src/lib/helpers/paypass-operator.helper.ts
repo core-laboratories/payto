@@ -128,16 +128,16 @@ export function getLocationCode(plusCode: string): [number, number] {
  * @param currency - Optional currency override
  * @returns Formatted title text
  */
-export function getTitleText(hostname: string, props: any, currency?: string): string {
+export function getTitleText(hostname: string, props: any, destination: string, currency?: string): string {
 	const currencyValue = props.currency?.value || currency || '';
 	const currencyText =
 		currencyValue && currencyValue.length < 6
 			? currencyValue.toUpperCase()
 			: (props.network?.toUpperCase() || hostname.toUpperCase());
 	const destinationText =
-		props.destination?.length > 8
-			? props.destination.slice(0, 4).toUpperCase() + '…' + props.destination.slice(-4).toUpperCase()
-			: (props.destination?.toUpperCase() || '');
+		destination?.length > 8
+			? destination.slice(0, 4).toUpperCase() + '…' + destination.slice(-4).toUpperCase()
+			: (destination?.toUpperCase() || '');
 	return `${currencyText} ${destinationText}`;
 }
 

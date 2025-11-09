@@ -236,7 +236,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			const objectId = `${base}.${uniquePart}-${ts}-${nonce}`.replace(/[^a-zA-Z0-9._-]/g, '').slice(0, 64);
 
 			const imageUrls = getImageUrls(kvData, memberAddress, isDev, devServerUrl);
-			const titleText = getTitleText(hostname, props, currency);
+			const titleText = getTitleText(hostname, props, destination as string, currency);
 			const purposeText = getPurposeText(design);
 			const codeText = getCodeText(isDonate, 'scan');
 
