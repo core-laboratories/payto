@@ -248,8 +248,10 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 					linkBaseUrl,
 					props,
 					expirationDate,
-					chainId
-				}
+					chainId,
+					redemptionIssuers: kvData?.data?.google?.redemptionIssuers || [],
+					enableSmartTap: kvData?.data?.google?.enableSmartTap,
+				},
 			});
 
 			// Optional stats logging

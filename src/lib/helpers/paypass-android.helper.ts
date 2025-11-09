@@ -1,4 +1,5 @@
 import * as jose from 'jose';
+import { env as publicEnv } from '$env/dynamic/public';
 
 type TextModConfig = {
 	id?: string;
@@ -148,9 +149,14 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		rows.push(row);
 	}
 
+	const callbackUrl = publicEnv.PUBLIC_GW_CALLBACK_URL ? publicEnv.PUBLIC_GW_CALLBACK_URL : `${payload.linkBaseUrl}/pass/gw/callback`;
+	const updateRequestUrl = publicEnv.PUBLIC_GW_UPDATE_REQUEST_URL ? publicEnv.PUBLIC_GW_UPDATE_REQUEST_URL : `${payload.linkBaseUrl}/pass/gw/update`;
+	const enableSmartTap = payload.enableSmartTap ? payload.enableSmartTap : true;
+
 	const gwClass: any = {
 		id: classId,
 		issuerName: issuerName,
+		multipleDevicesAndHoldersAllowedStatus: publicEnv.PUBLIC_GW_MULTIPLE_STATUS ? publicEnv.PUBLIC_GW_MULTIPLE_STATUS : 'ONE_USER_ALL_DEVICES',
 		...(hexBackgroundColor ? { hexBackgroundColor } : {}),
 		...(rows.length > 0 ? {
 			classTemplateInfo: {
@@ -158,7 +164,19 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 					cardRowTemplateInfos: rows
 				}
 			}
-		} : {})
+		} : {}),
+		...(enableSmartTap ? { enableSmartTap: true } : {}),
+		...(payload.redemptionIssuers?.length
+			? { redemptionIssuers: payload.redemptionIssuers }
+			: {}),
+		...(callbackUrl || updateRequestUrl
+			? {
+				callbackOptions: {
+					...(callbackUrl ? { url: callbackUrl } : {}),
+					...(updateRequestUrl ? { updateRequestUrl: updateRequestUrl } : {})
+				}
+				}
+			: {})
 	};
 
 	// ---------------- Object ----------------
@@ -167,7 +185,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		classId: classId,
 		state: 'active',
 		...(payload.expirationDate ? {
-			validTimeInterval: { end: payload.expirationDate }
+			validTimeInterval: { end: { dateTime: payload.expirationDate } }
 		} : {}),
 
 		appLinkData: {
