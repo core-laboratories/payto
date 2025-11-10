@@ -1,10 +1,20 @@
 import * as jose from 'jose';
+import { env as publicEnv } from '$env/dynamic/public';
+
+type TextModConfig = {
+	id?: string;
+	header: string;
+	body: string;
+	onPass?: boolean;
+};
 
 export interface GoogleWalletPayPassConfig {
 	issuerId: string | undefined;
 	saEmail: string | undefined;
 	saPrivateKeyPem: string | undefined;
 	classId: string;
+	companyName: string | null;
+	orgName: string;
 	logoUrl: string;
 	iconUrl: string;
 	heroUrl?: string;
@@ -34,6 +44,8 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		saEmail,
 		saPrivateKeyPem,
 		classId,
+		companyName,
+		orgName,
 		logoUrl,
 		iconUrl,
 		heroUrl,
@@ -65,18 +77,61 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 	})() : null;
 
 	// Defaults
-	const issuerName = payload.companyName || 'PayPass';
+	const issuerName = companyName || 'PayPass';
 
 	// ---------------- Text Modules ----------------
-	const textMods: Array<{ id?: string; header: string; body: string }> = [];
+	const textMods: TextModConfig[] = [];
 
-	if (addressText) textMods.push({ id: 'address', header: 'Address', body: addressText });
+	if (addressText) textMods.push({ id: 'address', header: 'Address', body: addressText, onPass: false });
 	if (payload.props.network) {
 		const networkText = payload.props.network.toUpperCase() + (payload.chainId ? ` / Chain: ${payload.chainId}` : '');
-		textMods.push({ header: 'Network', body: networkText });
+		textMods.push({ header: 'Network', body: networkText, onPass: false });
 	}
-	if (purposeLabel && purposeText) textMods.push({ id: 'purpose', header: purposeLabel, body: purposeText });
-	if (amountText) textMods.push({ id: 'amount', header: amountLabel || 'Amount', body: amountText });
+	if (purposeLabel && purposeText) textMods.push({ id: 'purpose', header: purposeLabel, body: purposeText, onPass: true });
+	if (amountText) textMods.push({ id: 'amount', header: amountLabel || 'Amount', body: amountText, onPass: true });
+	// Swap
+	if (payload.swap) textMods.push({ id: 'swap', header: 'Swap for', body: payload.swap, onPass: false });
+	// Split payment
+	if (payload.splitPayment) textMods.push({ id: 'split', header: 'Split', body: `${payload.splitPayment.isPercent ? payload.splitPayment.value.toString() + '%' : payload.splitPayment.formattedValue} to ${payload.splitPayment.address}`, onPass: false });
+
+	if (payload.props.network === 'iban') {
+		const iban = payload.props.iban?.match(/.{1,4}/g)?.join(' ').toUpperCase() || payload.props.iban?.toUpperCase();
+		if (iban) textMods.push({ id: 'iban', header: 'IBAN', body: iban, onPass: false });
+		const bic = payload.props.bic?.toUpperCase();
+		if (bic) textMods.push({ id: 'bic', header: 'BIC', body: bic, onPass: false });
+		const receiverName = payload.props.params?.receiverName?.value;
+		if (receiverName) textMods.push({ id: 'beneficiary', header: 'Beneficiary', body: receiverName, onPass: false });
+		const messageText = payload.props.params?.message?.value;
+		if (messageText) textMods.push({ id: 'message', header: 'Message', body: messageText, onPass: false });
+	} else if (payload.props.network === 'ach') {
+		const accountNumber = payload.props.accountNumber;
+		if (accountNumber) textMods.push({ id: 'accountNumber', header: 'Account Number', body: accountNumber, onPass: false });
+		const routingNumber = payload.props.routingNumber?.toUpperCase();
+		if (routingNumber) textMods.push({ id: 'routingNumber', header: 'Routing Number', body: routingNumber, onPass: false });
+		const receiverName = payload.props.params?.receiverName?.value;
+		if (receiverName) textMods.push({ id: 'beneficiary', header: 'Beneficiary', body: receiverName, onPass: false });
+		const messageText = payload.props.params?.message?.value;
+		if (messageText) textMods.push({ id: 'message', header: 'Message', body: messageText, onPass: false });
+	} else if (payload.props.network === 'upi') {
+		const accountAlias = payload.props.accountAlias;
+		if (accountAlias) textMods.push({ id: 'accountAlias', header: 'Account Alias', body: accountAlias, onPass: false });
+		const receiverName = payload.props.params?.receiverName?.value;
+		if (receiverName) textMods.push({ id: 'beneficiary', header: 'Beneficiary', body: receiverName, onPass: false });
+		const messageText = payload.props.params?.message?.value;
+		if (messageText) textMods.push({ id: 'message', header: 'Message', body: messageText, onPass: false });
+	} else if (payload.props.network === 'pix') {
+		const accountAlias = payload.props.accountAlias;
+		if (accountAlias) textMods.push({ id: 'accountAlias', header: 'Account Alias', body: accountAlias, onPass: false });
+		const receiverName = payload.props.params?.receiverName?.value;
+		if (receiverName) textMods.push({ id: 'beneficiary', header: 'Beneficiary', body: receiverName, onPass: false });
+		const idText = payload.props.params?.id?.value;
+		if (idText) textMods.push({ id: 'id', header: 'ID', body: idText, onPass: false });
+		const messageText = payload.props.params?.message?.value;
+		if (messageText) textMods.push({ id: 'message', header: 'Message', body: messageText, onPass: false });
+	} else if (payload.props.network === 'bic') {
+		const bic = payload.props.bic?.toUpperCase();
+		if (bic) textMods.push({ id: 'bic', header: 'BIC', body: bic, onPass: false });
+	}
 
 	const normalizedTextModules = textMods
 		.map(m => ({
@@ -89,29 +144,46 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 	// ---------------- Card Row Template ----------------
 	const rows: any[] = [];
 
-	// Item / Amount dynamic row
-	const hasItem = !!(purposeLabel && purposeText);
-	const hasAmount = !!amountText;
+	// Look up per-field visibility
+	const purposeMod = textMods.find(m => m.id === 'purpose');
+	const amountMod = textMods.find(m => m.id === 'amount');
 
+	const hasItem = !!(purposeMod?.onPass && purposeText && purposeText.trim().length);
+	const hasAmount = !!(amountMod?.onPass && amountText && amountText.trim().length);
+
+	// Item / Amount row only if their own onPass is true
 	if (hasItem || hasAmount) {
 		const row: any = { twoItems: {} as any };
 
-		// Prepare left/right items depending on RTL flag
-		const left = rtl ? 'amount' : 'purpose';
-		const right = rtl ? 'purpose' : 'amount';
-
-		if (hasItem || hasAmount) {
-			if ((rtl && hasAmount) || (!rtl && hasItem)) {
+		if (!rtl) {
+			// LTR: Item on the left, Amount on the right
+			if (hasItem) {
 				row.twoItems.startItem = {
 					firstValue: {
-						fields: [{ fieldPath: `object.textModulesData['${left}'].body` }]
+						fields: [{ fieldPath: "object.textModulesData['purpose']" }]
 					}
 				};
 			}
-			if ((rtl && hasItem) || (!rtl && hasAmount)) {
+			if (hasAmount) {
 				row.twoItems.endItem = {
 					firstValue: {
-						fields: [{ fieldPath: `object.textModulesData['${right}'].body` }]
+						fields: [{ fieldPath: "object.textModulesData['amount']" }]
+					}
+				};
+			}
+		} else {
+			// RTL: swap sides
+			if (hasAmount) {
+				row.twoItems.startItem = {
+					firstValue: {
+						fields: [{ fieldPath: "object.textModulesData['amount']" }]
+					}
+				};
+			}
+			if (hasItem) {
+				row.twoItems.endItem = {
+					firstValue: {
+						fields: [{ fieldPath: "object.textModulesData['purpose']" }]
 					}
 				};
 			}
@@ -120,9 +192,14 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		rows.push(row);
 	}
 
+	const callbackUrl = publicEnv.PUBLIC_GW_CALLBACK_URL ? publicEnv.PUBLIC_GW_CALLBACK_URL : `${payload.linkBaseUrl}/pass/gw/callback`;
+	const updateRequestUrl = publicEnv.PUBLIC_GW_UPDATE_REQUEST_URL ? publicEnv.PUBLIC_GW_UPDATE_REQUEST_URL : `${payload.linkBaseUrl}/pass/gw/update`;
+	const enableSmartTap = payload.enableSmartTap ? payload.enableSmartTap : true;
+
 	const gwClass: any = {
 		id: classId,
 		issuerName: issuerName,
+		multipleDevicesAndHoldersAllowedStatus: publicEnv.PUBLIC_GW_MULTIPLE_STATUS ? publicEnv.PUBLIC_GW_MULTIPLE_STATUS : 'ONE_USER_ALL_DEVICES',
 		...(hexBackgroundColor ? { hexBackgroundColor } : {}),
 		...(rows.length > 0 ? {
 			classTemplateInfo: {
@@ -130,16 +207,46 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 					cardRowTemplateInfos: rows
 				}
 			}
-		} : {})
+		} : {}),
+		...(enableSmartTap ? { enableSmartTap: true } : {}),
+		...(payload.redemptionIssuers?.length
+			? { redemptionIssuers: payload.redemptionIssuers }
+			: {}),
+		...(callbackUrl || updateRequestUrl
+			? {
+				callbackOptions: {
+					...(callbackUrl ? { url: callbackUrl } : {}),
+					...(updateRequestUrl ? { updateRequestUrl: updateRequestUrl } : {})
+				}
+				}
+			: {})
 	};
 
-	// ---------------- Object ----------------
+	const validTimeInterval = (() => {
+		const raw = payload.expirationDate;
+		if (!raw) return undefined;
+
+		const date = new Date(raw);
+		if (Number.isNaN(date.getTime())) return undefined;
+
+		const iso = date.toISOString();
+		const hasTimeComponent = /T\d{2}:\d{2}/.test(String(raw));
+
+		return {
+			end: {
+				// Google Wallet expects only `date`
+				// ISO 8601 string — may include time or not
+				date: hasTimeComponent ? iso : iso.split('T')[0]
+			}
+		};
+	})();
+
 	const gwObject: any = {
 		id: payload.id,
 		classId: classId,
 		state: 'active',
-		...(payload.expirationDate ? {
-			validTimeInterval: { end: payload.expirationDate }
+		...(validTimeInterval ? {
+			validTimeInterval
 		} : {}),
 
 		appLinkData: {
@@ -151,7 +258,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 			}
 		},
 
-		cardTitle: { defaultValue: { language: 'en-US', value: issuerName } },
+		cardTitle: { defaultValue: { language: 'en-US', value: orgName } },
 		header: { defaultValue: { language: 'en-US', value: titleText } },
 		...(subheaderText ? {
 			subheader: { defaultValue: { language: 'en-US', value: subheaderText } }
@@ -205,10 +312,10 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 				...(payload.props.network === 'xcb' ? [{
 					kind: 'walletobjects#uri',
 					uri: `${payload.linkBaseUrl}/card/${payload.props.destination}`,
-					description: 'Send to Crypto Card'
+					description: 'Top up Crypto Card'
 				}] : []),
 				{ kind: 'walletobjects#uri', uri: payload.swapUrl, description: 'Swap Currency' },
-				...(payload.proUrl ? [{
+				...(payload.proUrl && payload.props.network == 'xcb' ? [{
 					kind: 'walletobjects#uri',
 					uri: payload.proUrl,
 					description: 'Activate Pro'

@@ -179,7 +179,7 @@
 	});
 
 	function handleClose() {
-		window.history.back();
+		window.close();
 	}
 
 	function handleProceed() {
@@ -206,15 +206,8 @@
 				class="bg-red-500/20 border border-red-500/30 rounded-xl p-6 shadow-lg"
 				transition:fly={{ y: 20, duration: 300 }}
 			>
-				<div class="flex items-start justify-between mb-4">
+				<div class="mb-4">
 					<h2 class="text-xl font-semibold text-red-200">Error</h2>
-					<button
-						onclick={handleClose}
-						class="text-red-300 hover:text-red-200 transition-colors p-1"
-						aria-label="Close"
-					>
-						<X class="w-5 h-5" />
-					</button>
 				</div>
 				<p class="text-red-200 mb-6">{errorMessage || 'Invalid core ID. Please check your link.'}</p>
 				<button

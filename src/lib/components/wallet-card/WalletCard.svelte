@@ -167,6 +167,7 @@
 	});
 
 	let timerInterval: ReturnType<typeof setInterval> | null = null;
+	let timerTimeout: ReturnType<typeof setTimeout> | null = null;
 
 	// Add a new store to track expiration state
 	const isExpired = writable<boolean>(false);
@@ -180,6 +181,11 @@
 		// Clear any existing interval first to prevent duplicates
 		if (timerInterval) {
 			clearInterval(timerInterval);
+			timerInterval = null;
+		}
+		if (timerTimeout) {
+			clearTimeout(timerTimeout);
+			timerTimeout = null;
 		}
 
 		// Update immediately before starting the interval
@@ -206,7 +212,8 @@
 		const msToNextSecond = 1000 - (Date.now() % 1000);
 
 		// First set a timeout to align with the next second boundary
-		setTimeout(() => {
+		timerTimeout = setTimeout(() => {
+			timerTimeout = null;
 			// Update once at the second boundary
 			updateTimer();
 
@@ -708,6 +715,10 @@
 						clearInterval(timerInterval);
 						timerInterval = null;
 					}
+					if (timerTimeout) {
+						clearTimeout(timerTimeout);
+						timerTimeout = null;
+					}
 					startExpirationTimer();
 				}
 			}
@@ -716,6 +727,10 @@
 			if (timerInterval) {
 				clearInterval(timerInterval);
 				timerInterval = null;
+			}
+			if (timerTimeout) {
+				clearTimeout(timerTimeout);
+				timerTimeout = null;
 			}
 			timeRemaining.set(0);
 			isExpired.set(true);
@@ -728,6 +743,10 @@
 		if (timerInterval) {
 			clearInterval(timerInterval);
 			timerInterval = null;
+		}
+		if (timerTimeout) {
+			clearTimeout(timerTimeout);
+			timerTimeout = null;
 		}
 		expirationTimeMs.set(null);
 		initialTimeMs.set(null);
@@ -742,14 +761,32 @@
 			clearInterval(timerInterval);
 			timerInterval = null;
 		}
+		if (timerTimeout) {
+			clearTimeout(timerTimeout);
+			timerTimeout = null;
+		}
 	});
 
 	let isUpsideDown = false;
 
 	function updateRotationState() {
-		// Check angle of screen orientation
-		const angle = screen.orientation?.angle ?? 0;
-		// 180 degrees means the phone is upside down in portrait mode
+		let angle: number | null = null;
+
+		if (typeof window !== 'undefined') {
+			const orientationValue = (window as any).orientation;
+
+			if (typeof orientationValue === 'number') {
+				angle = orientationValue;
+			} else if (typeof screen.orientation?.angle === 'number') {
+				angle = screen.orientation.angle;
+			}
+		}
+
+		if (angle === null) {
+			isUpsideDown = false;
+			return;
+		}
+
 		isUpsideDown = angle === 180 || angle === -180;
 	}
 
@@ -853,11 +890,13 @@
 		// Listen for orientation change
 		window.addEventListener('orientationchange', updateRotationState);
 		screen.orientation?.addEventListener?.('change', updateRotationState);
+		window.addEventListener('deviceorientation', updateRotationState);
 	});
 
 	onDestroy(() => {
 		window.removeEventListener('orientationchange', updateRotationState);
 		screen.orientation?.removeEventListener?.('change', updateRotationState);
+		window.removeEventListener('deviceorientation', updateRotationState);
 	});
 
 	// Reactive statement to set locale when paytoData.lang changes
@@ -1021,7 +1060,8 @@
 							<span class="font-medium text-gray-100">{$formattedTimeRemaining}</span>
 						</div>
 					</div>
-				{:else}
+				{/if}
+				{#if !$addressValidationError}
 					<div class="pt-4">
 						{#if $verifiedOrgIcon}
 							<div class="flex items-center justify-center mb-2">

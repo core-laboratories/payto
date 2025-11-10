@@ -2,6 +2,11 @@ import ExchNumberFormat from 'exchange-rounding';
 import forge from 'node-forge';
 // @ts-ignore
 import OpenLocationCode from 'open-location-code/js/src/openlocationcode';
+import { standardizeOrg } from '$lib/helpers/standardize.helper';
+import { verifyOrganization } from '$lib/helpers/oric.helper';
+import { verifyWebsite } from '$lib/helpers/fintag.helper';
+
+const shortenTitle = (str: string | undefined) => (str && str.length > 10) ? `${str.slice(0,4)}…${str.slice(-4)}` : str;
 
 /**
  * Get image URLs for Apple and Google Wallet passes
@@ -34,6 +39,79 @@ export function getImageUrls(kvData: any, address: string, isDev: boolean, devSe
 	};
 }
 
+export function getExpirationDate(deadlineValue: number | string | null | undefined): string | null {
+	if (deadlineValue === null || deadlineValue === undefined || deadlineValue === '') return null;
+
+	// Non-numeric string: parse as date string
+	if (typeof deadlineValue === 'string' && isNaN(Number(deadlineValue))) {
+		const parsed = new Date(deadlineValue);
+		return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+	}
+
+	const deadline = Number(deadlineValue);
+	if (Number.isNaN(deadline) || deadline <= 0) return null;
+
+	// Small value (<= 60): minutes from now
+	if (deadline <= 60) {
+		return new Date(Date.now() + deadline * 60 * 1000).toISOString();
+	}
+
+	// < 1e12: treat as Unix seconds
+	if (deadline < 1e12) {
+		return new Date(deadline * 1000).toISOString();
+	}
+
+	// >= 1e12: treat as ms timestamp
+	return new Date(deadline).toISOString();
+}
+
+export async function getVerifiedOrganizationName({
+	org,
+	kvName,
+	address,
+	network
+}: {
+	org?: string | null;
+	kvName?: string | null;
+	address?: string | null;
+	network?: string | null;
+}): Promise<string> {
+	const fallback = 'PayPass';
+
+	if (kvName) {
+		return `${kvName} ✅`;
+	}
+
+	const sanitized = standardizeOrg(org ?? null);
+	if (!sanitized) {
+		return fallback;
+	}
+
+	if (!address) {
+		return sanitized;
+	}
+
+	try {
+		const oricResult = await verifyOrganization(sanitized.toUpperCase(), address);
+		if (oricResult.isVerified) {
+			return `${sanitized} ☑️`;
+		}
+	} catch (error) {
+		// Ignore ORIC verification failure and fall back to other checks
+	}
+
+	try {
+		const websiteResult = await verifyWebsite(sanitized, address, network || undefined);
+		if (websiteResult.isVerified) {
+			return `${sanitized} ✔️`;
+		}
+	} catch (error) {
+		// Ignore website verification failure
+	}
+
+	return sanitized;
+}
+
 /**
  * Decode Plus Code (Open Location Code) to latitude and longitude
  * @param plusCode - Plus Code string
@@ -54,15 +132,18 @@ export function getLocationCode(plusCode: string): [number, number] {
  */
 export function getTitleText(hostname: string, props: any, currency?: string): string {
 	const currencyValue = props.currency?.value || currency || '';
-	const currencyText =
-		currencyValue && currencyValue.length < 6
-			? currencyValue.toUpperCase()
-			: (props.network?.toUpperCase() || hostname.toUpperCase());
-	const destinationText =
-		props.destination?.length > 8
-			? props.destination.slice(0, 4).toUpperCase() + '…' + props.destination.slice(-4).toUpperCase()
-			: (props.destination?.toUpperCase() || '');
-	return `${currencyText} ${destinationText}`;
+	const networkText = currencyValue && currencyValue.length < 6
+		? currencyValue.toUpperCase()
+		: (props.network?.toUpperCase() || hostname.toUpperCase());
+
+	const destinationValue = props.destination || '';
+	const destinationText = destinationValue
+		? (destinationValue.length > 8
+			? `${destinationValue.slice(0, 4).toUpperCase()}…${destinationValue.slice(-4).toUpperCase()}`
+			: destinationValue.toUpperCase())
+		: '';
+
+	return destinationText ? `${networkText} ${destinationText}` : networkText;
 }
 
 /**

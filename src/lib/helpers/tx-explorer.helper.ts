@@ -6,56 +6,76 @@
  * @returns {string | null} The formatted URL or `null` if the currency is not supported.
  */
 export function getExplorerUrl(currency: string, data: Record<string, string>, proxy: boolean = false, urlBase: string = 'https://payto.money'): string | null {
-    const normalizedCurrency = currency.toUpperCase();
-    let url = null;
+	const normalizedCurrency = currency.toUpperCase();
+	let url = null;
 
-    switch (normalizedCurrency) {
-        case 'XCB':
-            url = `https://blockindex.net/address/${data.address}`;
-            break;
-        case 'XAB':
-            url = `https://xab.blockindex.net/address/${data.address}`;
-            break;
-        case 'BTC':
-            url = `https://blockstream.info/address/${data.address}`;
-            break;
-        case 'ETH':
-            url = `https://etherscan.io/address/${data.address}`;
-            break;
-        case 'LTC':
-            url = `https://blockchair.com/litecoin/address/${data.address}`;
-            break;
-        case 'SOL':
-            url = `https://explorer.solana.com/address/${data.address}`;
-            break;
-        case 'BCH':
-            url = `https://blockchair.com/bitcoin-cash/address/${data.address}`;
-            break;
-        case 'BNB':
-            url = `https://bscscan.com/address/${data.address}`;
-            break;
-        case 'ADA':
-            url = `https://cardanoscan.io/address/${data.address}`;
-            break;
-        case 'DOGE':
-            url = `https://dogechain.info/address/${data.address}`;
-            break;
-        case 'XMR':
-            url = `https://xmrchain.net/search?value=${data.address}`;
-            break;
-        case 'DOT':
-            url = `https://polkascan.io/polkadot/account/${data.address}`;
-            break;
-        case 'TRON':
-            url = `https://tronscan.org/#/address/${data.address}`;
-            break;
-        default:
-            url = null;
-    }
+	const explorers = [
+		{
+			value: 'xcb',
+			url: 'https://blockindex.net/address/${address}'
+		},
+		{
+			value: 'xab',
+			url: 'https://xab.blockindex.net/address/${address}'
+		},
+		{
+			value: 'btc',
+			url: 'https://blockstream.info/address/${address}'
+		},
+		{
+			value: 'eth',
+			url: 'https://etherscan.io/address/${address}'
+		},
+		{
+			value: 'ltc',
+			url: 'https://blockchair.com/litecoin/address/${address}'
+		},
+		{
+			value: 'sol',
+			url: 'https://explorer.solana.com/address/${address}'
+		},
+		{
+			value: 'bch',
+			url: 'https://blockchair.com/bitcoin-cash/address/${address}'
+		},
+		{
+			value: 'bnb',
+			url: 'https://bscscan.com/address/${address}'
+		},
+		{
+			value: 'ada',
+			url: 'https://cardanoscan.io/address/${address}'
+		},
+		{
+			value: 'doge',
+			url: 'https://dogechain.info/address/${address}'
+		},
+		{
+			value: 'xmr',
+			url: 'https://xmrchain.net/search?value=${address}'
+		},
+		{
+			value: 'dot',
+			url: 'https://polkascan.io/polkadot/account/${address}'
+		},
+		{
+			value: 'trx',
+			url: 'https://tronscan.org/#/address/${address}'
+		}
+	]
 
-    if (proxy) {
-        url = `${urlBase}/proxy/explorer?url=${url}`;
-    }
+	const explorer = explorers.find(explorer => explorer.value === normalizedCurrency);
+	if (!explorer) {
+		return null;
+	}
 
-    return url;
+	if (!data?.address) {
+		return null;
+	}
+
+	if (proxy) {
+		return `${urlBase}/proxy/explorer?chain=${explorer.value}&address=${data.address}`;
+	}
+
+	return explorer.url.replace('${address}', data.address);
 }
