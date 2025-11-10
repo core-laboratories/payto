@@ -94,6 +94,33 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 	// Split payment
 	if (payload.splitPayment) textMods.push({ id: 'split', header: 'Split', body: `${payload.splitPayment.isPercent ? payload.splitPayment.value.toString() + '%' : payload.splitPayment.formattedValue} to ${payload.splitPayment.address}`, onPass: false });
 
+	if (payload.props.network === 'iban') {
+		const iban = payload.props.iban?.match(/.{1,4}/g)?.join(' ').toUpperCase() || payload.props.iban?.toUpperCase();
+		if (iban) textMods.push({ id: 'iban', header: 'IBAN', body: iban, onPass: false });
+		const bic = payload.props.bic?.toUpperCase();
+		if (bic) textMods.push({ id: 'bic', header: 'BIC', body: bic, onPass: false });
+		const receiverName = payload.props.params?.receiverName?.value;
+		if (receiverName) textMods.push({ id: 'beneficiary', header: 'Beneficiary', body: receiverName, onPass: false });
+		const messageText = payload.props.params?.message?.value;
+		if (messageText) textMods.push({ id: 'message', header: 'Message', body: messageText, onPass: false });
+	} else if (payload.props.network === 'ach') {
+		const accountNumber = payload.props.accountNumber;
+		if (accountNumber) textMods.push({ id: 'accountNumber', header: 'Account Number', body: accountNumber, onPass: false });
+		const routingNumber = payload.props.routingNumber?.toUpperCase();
+		if (routingNumber) textMods.push({ id: 'routingNumber', header: 'Routing Number', body: routingNumber, onPass: false });
+		const receiverName = payload.props.params?.receiverName?.value;
+		if (receiverName) textMods.push({ id: 'beneficiary', header: 'Beneficiary', body: receiverName, onPass: false });
+		const messageText = payload.props.params?.message?.value;
+		if (messageText) textMods.push({ id: 'message', header: 'Message', body: messageText, onPass: false });
+	} else if (payload.props.network === 'upi') {
+		const accountAlias = payload.props.accountAlias;
+		if (accountAlias) textMods.push({ id: 'accountAlias', header: 'Account Alias', body: accountAlias, onPass: false });
+		const receiverName = payload.props.params?.receiverName?.value;
+		if (receiverName) textMods.push({ id: 'beneficiary', header: 'Beneficiary', body: receiverName, onPass: false });
+		const messageText = payload.props.params?.message?.value;
+		if (messageText) textMods.push({ id: 'message', header: 'Message', body: messageText, onPass: false });
+	}
+
 	const normalizedTextModules = textMods
 		.map(m => ({
 			...(m.id ? { id: m.id } : {}),
@@ -276,7 +303,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 					description: 'Top up Crypto Card'
 				}] : []),
 				{ kind: 'walletobjects#uri', uri: payload.swapUrl, description: 'Swap Currency' },
-				...(payload.proUrl ? [{
+				...(payload.proUrl && payload.props.network == 'xcb' ? [{
 					kind: 'walletobjects#uri',
 					uri: payload.proUrl,
 					description: 'Activate Pro'
