@@ -119,6 +119,18 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		if (receiverName) textMods.push({ id: 'beneficiary', header: 'Beneficiary', body: receiverName, onPass: false });
 		const messageText = payload.props.params?.message?.value;
 		if (messageText) textMods.push({ id: 'message', header: 'Message', body: messageText, onPass: false });
+	} else if (payload.props.network === 'pix') {
+		const accountAlias = payload.props.accountAlias;
+		if (accountAlias) textMods.push({ id: 'accountAlias', header: 'Account Alias', body: accountAlias, onPass: false });
+		const receiverName = payload.props.params?.receiverName?.value;
+		if (receiverName) textMods.push({ id: 'beneficiary', header: 'Beneficiary', body: receiverName, onPass: false });
+		const idText = payload.props.params?.id?.value;
+		if (idText) textMods.push({ id: 'id', header: 'ID', body: idText, onPass: false });
+		const messageText = payload.props.params?.message?.value;
+		if (messageText) textMods.push({ id: 'message', header: 'Message', body: messageText, onPass: false });
+	} else if (payload.props.network === 'bic') {
+		const bic = payload.props.bic?.toUpperCase();
+		if (bic) textMods.push({ id: 'bic', header: 'BIC', body: bic, onPass: false });
 	}
 
 	const normalizedTextModules = textMods
