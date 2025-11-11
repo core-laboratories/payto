@@ -5,8 +5,7 @@ import OpenLocationCode from 'open-location-code/js/src/openlocationcode';
 import { standardizeOrg } from '$lib/helpers/standardize.helper';
 import { verifyOrganization } from '$lib/helpers/oric.helper';
 import { verifyWebsite } from '$lib/helpers/fintag.helper';
-
-const shortenTitle = (str: string | undefined) => (str && str.length > 10) ? `${str.slice(0,4)}…${str.slice(-4)}` : str;
+export { getTitleText, getTitleTextBarcode } from './get-title-name.helper';
 
 /**
  * Get image URLs for Apple and Google Wallet passes
