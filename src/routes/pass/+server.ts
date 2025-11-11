@@ -250,7 +250,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				heroUrl: imageUrls.google.hero,
 				companyName,
 				orgName,
-				titleText,
+				titleText: titleText || undefined,
 				purposeLabel: 'Item',
 				purposeText: purposeText,
 				amountLabel: isRecurring ? (isDonate ? 'Recurring Donation' : 'Recurring Payment') : (isDonate ? 'Donation' : 'Payment'),

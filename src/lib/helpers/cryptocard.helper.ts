@@ -321,4 +321,3 @@ export function maskFormattedNumber(formattedNumber: string, publicLength: numbe
 	}
 	return masked;
 }
-

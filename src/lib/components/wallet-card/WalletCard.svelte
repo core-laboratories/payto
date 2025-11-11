@@ -29,6 +29,7 @@
 	import { verifyWebsite } from '$lib/helpers/fintag.helper';
 	import { standardizeOrg } from '$lib/helpers/standardize.helper';
 	import { validateAddressByType } from '$lib/helpers/validate-address-by-type.helper';
+	import { getTitleTextBarcode } from '$lib/helpers/get-title-name.helper';
 
 	// @ts-expect-error: Module is untyped
 	import pkg from 'open-location-code/js/src/openlocationcode';
@@ -624,7 +625,10 @@
 			infoDisplay = paytoData.paymentType.toUpperCase();
 		}
 		if (paytoData.address) {
-			infoDisplay += `/${shortenAddress(paytoData.address)}`;
+			const titleText = getTitleTextBarcode(paytoData.hostname, paytoData);
+			if (titleText) {
+				infoDisplay += `/${titleText}`;
+			}
 		}
 		return infoDisplay;
 	}
