@@ -1,12 +1,13 @@
 import { z } from 'zod';
 import { validateWalletAddress } from 'blockchain-wallet-validator';
 import { constructor } from '$lib/store/constructor.store';
+import { env as publicEnv } from '$env/dynamic/public';
 
 const PUBLIC_ENABLE_TESTNET = import.meta.env.PUBLIC_ENABLE_TESTNET || 'true'; // Default to true if not set
 const isTestnetAllowed = PUBLIC_ENABLE_TESTNET === 'true';
 const PUBLIC_ENABLE_ENTERPRISE = import.meta.env.PUBLIC_ENABLE_ENTERPRISE || 'true'; // Default to true if not set
 const isEnterpriseAllowed = PUBLIC_ENABLE_ENTERPRISE === 'true';
-const isDebug = import.meta.env.MODE === 'development';
+const isDebug = (import.meta.env.DEV || publicEnv.PUBLIC_ENV === 'preview')
 
 const moneroRegex = /^4[0-9AB][1-9A-HJ-NP-Za-km-z]{93}$/;
 const moneroTestnetRegex = /^[9A][12s-z][1-9A-HJ-NP-Za-km-z]{93}$/;
