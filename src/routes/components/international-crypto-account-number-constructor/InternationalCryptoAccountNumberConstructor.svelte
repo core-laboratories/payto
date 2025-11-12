@@ -10,8 +10,9 @@
 		ListBox
 	} from '$lib/components';
 	import { ChevronDown, ChevronUp, ArrowLeft } from 'lucide-svelte';
+	import { env as publicEnv } from '$env/dynamic/public';
 
-	const isDebug = import.meta.env.MODE === 'development';
+	const isDebug = (import.meta.env.DEV || publicEnv.PUBLIC_ENV === 'preview')
 
 	import { TRANSPORT } from '$lib/data/transports.data';
 	import { constructor } from '$lib/store/constructor.store';

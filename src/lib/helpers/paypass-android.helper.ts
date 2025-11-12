@@ -82,7 +82,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 	// ---------------- Text Modules ----------------
 	const textMods: TextModConfig[] = [];
 
-	if (addressText) textMods.push({ id: 'address', header: 'Address', body: addressText, onPass: false });
+	if (addressText) textMods.push({ id: 'address', header: 'Address', body: addressText, onPass: false }); // TODO: Change for al cases
 	if (payload.props.network) {
 		const networkText = payload.props.network.toUpperCase() + (payload.chainId ? ` / Chain: ${payload.chainId}` : '');
 		textMods.push({ header: 'Network', body: networkText, onPass: false });
@@ -96,7 +96,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 
 	if (payload.props.network === 'iban') {
 		const iban = payload.props.iban?.match(/.{1,4}/g)?.join(' ').toUpperCase() || payload.props.iban?.toUpperCase();
-		if (iban) textMods.push({ id: 'iban', header: 'IBAN', body: iban, onPass: false });
+		if (iban) textMods.push({ id: 'iban', header: 'IBAN', body: iban, onPass: false }); // TODO: maybe not needed
 		const bic = payload.props.bic?.toUpperCase();
 		if (bic) textMods.push({ id: 'bic', header: 'BIC', body: bic, onPass: false });
 		const receiverName = payload.props.params?.receiverName?.value;
@@ -105,7 +105,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		if (messageText) textMods.push({ id: 'message', header: 'Message', body: messageText, onPass: false });
 	} else if (payload.props.network === 'ach') {
 		const accountNumber = payload.props.accountNumber;
-		if (accountNumber) textMods.push({ id: 'accountNumber', header: 'Account Number', body: accountNumber, onPass: false });
+		if (accountNumber) textMods.push({ id: 'accountNumber', header: 'Account Number', body: accountNumber, onPass: false }); // TODO: maybe not needed
 		const routingNumber = payload.props.routingNumber?.toUpperCase();
 		if (routingNumber) textMods.push({ id: 'routingNumber', header: 'Routing Number', body: routingNumber, onPass: false });
 		const receiverName = payload.props.params?.receiverName?.value;
@@ -114,14 +114,14 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		if (messageText) textMods.push({ id: 'message', header: 'Message', body: messageText, onPass: false });
 	} else if (payload.props.network === 'upi') {
 		const accountAlias = payload.props.accountAlias;
-		if (accountAlias) textMods.push({ id: 'accountAlias', header: 'Account Alias', body: accountAlias, onPass: false });
+		if (accountAlias) textMods.push({ id: 'accountAlias', header: 'Account Alias', body: accountAlias, onPass: false }); // TODO: maybe not needed
 		const receiverName = payload.props.params?.receiverName?.value;
 		if (receiverName) textMods.push({ id: 'beneficiary', header: 'Beneficiary', body: receiverName, onPass: false });
 		const messageText = payload.props.params?.message?.value;
 		if (messageText) textMods.push({ id: 'message', header: 'Message', body: messageText, onPass: false });
 	} else if (payload.props.network === 'pix') {
 		const accountAlias = payload.props.accountAlias;
-		if (accountAlias) textMods.push({ id: 'accountAlias', header: 'Account Alias', body: accountAlias, onPass: false });
+		if (accountAlias) textMods.push({ id: 'accountAlias', header: 'Account Alias', body: accountAlias, onPass: false }); // TODO: maybe not needed
 		const receiverName = payload.props.params?.receiverName?.value;
 		if (receiverName) textMods.push({ id: 'beneficiary', header: 'Beneficiary', body: receiverName, onPass: false });
 		const idText = payload.props.params?.id?.value;
@@ -130,7 +130,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		if (messageText) textMods.push({ id: 'message', header: 'Message', body: messageText, onPass: false });
 	} else if (payload.props.network === 'bic') {
 		const bic = payload.props.bic?.toUpperCase();
-		if (bic) textMods.push({ id: 'bic', header: 'BIC', body: bic, onPass: false });
+		if (bic) textMods.push({ id: 'bic', header: 'BIC', body: bic, onPass: false }); // TODO: maybe not needed
 	}
 
 	const normalizedTextModules = textMods
@@ -236,7 +236,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 			end: {
 				// Google Wallet expects only `date`
 				// ISO 8601 string — may include time or not
-				date: hasTimeComponent ? iso : iso.split('T')[0]
+				date: hasTimeComponent ? iso : iso.split('T')[0] // TODO: Change to use time also
 			}
 		};
 	})();
@@ -258,10 +258,10 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 			}
 		},
 
-		cardTitle: { defaultValue: { language: 'en-US', value: orgName } },
-		header: { defaultValue: { language: 'en-US', value: titleText } },
-		...(subheaderText ? {
-			subheader: { defaultValue: { language: 'en-US', value: subheaderText } }
+		cardTitle: { defaultValue: { language: 'en-US', value: (orgName && orgName.trim()) || 'PayPass' } }, // TODO: Change default value
+		header: { defaultValue: { language: 'en-US', value: (titleText && titleText.trim()) || 'Payment' } }, // TODO: Change default value
+		...(subheaderText && subheaderText.trim() ? {
+			subheader: { defaultValue: { language: 'en-US', value: subheaderText.trim() } } // TODO: Change default value
 		} : {}),
 
 		...(logoUrl ? { logo: { sourceUri: { uri: logoUrl } } } : {}),
@@ -311,7 +311,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 				}] : []),
 				...(payload.props.network === 'xcb' ? [{
 					kind: 'walletobjects#uri',
-					uri: `${payload.linkBaseUrl}/card/${payload.props.destination}`,
+					uri: `${payload.linkBaseUrl}/card`,
 					description: 'Top up Crypto Card'
 				}] : []),
 				{ kind: 'walletobjects#uri', uri: payload.swapUrl, description: 'Swap Currency' },

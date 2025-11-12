@@ -9,7 +9,6 @@ import { standardizeOrg } from '$lib/helpers/standardize.helper';
 import {
 	getImageUrls,
 	getLocationCode,
-	getTitleText,
 	getPurposeText,
 	getBarcodeConfig,
 	generateToken,
@@ -21,6 +20,7 @@ import {
 	getVerifiedOrganizationName,
 	getExpirationDate
 } from '$lib/helpers/paypass-operator.helper';
+import { getTitleText } from '$lib/helpers/get-title-name.helper';
 import { buildGoogleWalletPayPassSaveLink } from '$lib/helpers/paypass-android.helper';
 import { buildAppleWalletPayPass } from '$lib/helpers/paypass-ios.helper';
 import { createClient } from '@supabase/supabase-js';
@@ -236,7 +236,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			const objectId = `${base}.${uniquePart}-${ts}-${nonce}`.replace(/[^a-zA-Z0-9._-]/g, '').slice(0, 64);
 
 			const imageUrls = getImageUrls(kvData, memberAddress, isDev, devServerUrl);
-			const titleText = getTitleText(hostname, props, currency);
+			const titleText = getTitleText(hostname, destination, props, currency);
 			const purposeText = getPurposeText(design);
 			const codeText = getCodeText(isDonate, 'scan');
 
@@ -250,7 +250,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				heroUrl: imageUrls.google.hero,
 				companyName,
 				orgName,
-				titleText,
+				titleText: titleText || undefined,
 				purposeLabel: 'Item',
 				purposeText: purposeText,
 				amountLabel: isRecurring ? (isDonate ? 'Recurring Donation' : 'Recurring Payment') : (isDonate ? 'Donation' : 'Payment'),

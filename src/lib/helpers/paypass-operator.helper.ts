@@ -5,8 +5,7 @@ import OpenLocationCode from 'open-location-code/js/src/openlocationcode';
 import { standardizeOrg } from '$lib/helpers/standardize.helper';
 import { verifyOrganization } from '$lib/helpers/oric.helper';
 import { verifyWebsite } from '$lib/helpers/fintag.helper';
-
-const shortenTitle = (str: string | undefined) => (str && str.length > 10) ? `${str.slice(0,4)}…${str.slice(-4)}` : str;
+export { getTitleText, getTitleTextBarcode } from './get-title-name.helper';
 
 /**
  * Get image URLs for Apple and Google Wallet passes
@@ -121,29 +120,6 @@ export function getLocationCode(plusCode: string): [number, number] {
 	// @ts-ignore
 	const codeArea = OpenLocationCode.decode(plusCode);
 	return [codeArea.latitudeCenter, codeArea.longitudeCenter];
-}
-
-/**
- * Get title text for PayPass
- * @param hostname - Network hostname
- * @param props - Network data properties
- * @param currency - Optional currency override
- * @returns Formatted title text
- */
-export function getTitleText(hostname: string, props: any, currency?: string): string {
-	const currencyValue = props.currency?.value || currency || '';
-	const networkText = currencyValue && currencyValue.length < 6
-		? currencyValue.toUpperCase()
-		: (props.network?.toUpperCase() || hostname.toUpperCase());
-
-	const destinationValue = props.destination || '';
-	const destinationText = destinationValue
-		? (destinationValue.length > 8
-			? `${destinationValue.slice(0, 4).toUpperCase()}…${destinationValue.slice(-4).toUpperCase()}`
-			: destinationValue.toUpperCase())
-		: '';
-
-	return destinationText ? `${networkText} ${destinationText}` : networkText;
 }
 
 /**

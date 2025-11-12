@@ -447,7 +447,7 @@ export const getWebLink = ({
 }: IWebLinkOptions): string => {
 	if (!network || !networkData) return '#';
 
-	const domain = import.meta.env.DEV
+	const domain = (import.meta.env.DEV || publicEnv.PUBLIC_ENV === 'preview')
 		? (publicEnv.PUBLIC_DEV_SERVER_URL || (`http://localhost:${import.meta.env.VITE_DEV_SERVER_PORT || 5173}`))
 		: 'https://payto.money';
 
@@ -477,7 +477,7 @@ export const getWebLink = ({
 export const generateWebLink = (link: string) => {
 	if (!link) return '#';
 
-	const domain = import.meta.env.DEV
+	const domain = (import.meta.env.DEV || publicEnv.PUBLIC_ENV === 'preview')
 		? (publicEnv.PUBLIC_DEV_SERVER_URL || (`http://localhost:${import.meta.env.VITE_DEV_SERVER_PORT || 5173}`))
 		: 'https://payto.money';
 
