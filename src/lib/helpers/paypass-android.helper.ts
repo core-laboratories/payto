@@ -236,7 +236,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 			end: {
 				// Google Wallet expects only `date`
 				// ISO 8601 string — may include time or not
-				date: hasTimeComponent ? iso : iso.split('T')[0]
+				date: hasTimeComponent ? iso : iso.split('T')[0] // TODO: Change to use time also
 			}
 		};
 	})();
@@ -258,10 +258,10 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 			}
 		},
 
-		cardTitle: { defaultValue: { language: 'en-US', value: orgName } },
-		header: { defaultValue: { language: 'en-US', value: titleText } },
-		...(subheaderText ? {
-			subheader: { defaultValue: { language: 'en-US', value: subheaderText } }
+		cardTitle: { defaultValue: { language: 'en-US', value: (orgName && orgName.trim()) || 'PayPass' } }, // TODO: Change default value
+		header: { defaultValue: { language: 'en-US', value: (titleText && titleText.trim()) || 'Payment' } }, // TODO: Change default value
+		...(subheaderText && subheaderText.trim() ? {
+			subheader: { defaultValue: { language: 'en-US', value: subheaderText.trim() } } // TODO: Change default value
 		} : {}),
 
 		...(logoUrl ? { logo: { sourceUri: { uri: logoUrl } } } : {}),

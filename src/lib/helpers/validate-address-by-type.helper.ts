@@ -24,10 +24,11 @@ const BIC_REGEX = /^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/i;
 export function validateAddressByType(
 	address: string | undefined,
 	hostname: string | undefined,
-	network?: string
-): { isValid: boolean; errorMessage: string | null } {
+	network?: string,
+	additionalData?: any
+): { isValid: boolean; errorMessage: string | null, additionalData?: any } {
 	if (!address || !address.trim()) {
-		return { isValid: false, errorMessage: null };
+		return { isValid: false, errorMessage: null, additionalData: null };
 	}
 
 	if (!hostname) {
@@ -38,6 +39,7 @@ export function validateAddressByType(
 	const normalizedHostname = hostname.toLowerCase();
 	const uppercaseHostname = hostname.toUpperCase();
 	const normalizedNetwork = network?.toLowerCase();
+	const normalizedAdditionalData = typeof additionalData === 'string' ? additionalData?.toLowerCase() : null;
 
 	// Handle IBAN
 	if (normalizedHostname === 'iban') {
@@ -48,12 +50,21 @@ export function validateAddressByType(
 		return { isValid: true, errorMessage: null };
 	}
 
-	// Handle BIC (for intra-bank transfers)
-	if (normalizedHostname === 'bic' || normalizedHostname === 'intra') {
+	// Handle BIC / ORIC
+	if (normalizedHostname === 'bic') {
+		const result = bicSchema.safeParse({ bic: trimmedAddress });
+		if (!result.success) {
+			return { isValid: false, errorMessage: `Address is not valid for type ${uppercaseHostname}` };
+		}
+		return { isValid: true, errorMessage: null };
+	}
+
+	// Handle Intra-bank transfer addresses
+	if (normalizedHostname === 'intra') {
 		// For intra, we might have a CORE address in the ID field, but we validate BIC separately
 		// If this is being called for BIC validation, validate it
-		if (BIC_REGEX.test(trimmedAddress)) {
-			const result = bicSchema.safeParse({ bic: trimmedAddress });
+		if (normalizedAdditionalData && BIC_REGEX.test(normalizedAdditionalData)) {
+			const result = bicSchema.safeParse({ bic: normalizedAdditionalData });
 			if (!result.success) {
 				return { isValid: false, errorMessage: `Address is not valid for type ${uppercaseHostname}` };
 			}
@@ -69,10 +80,6 @@ export function validateAddressByType(
 				return { isValid: false, errorMessage: `Address is not valid for type ${uppercaseHostname}` };
 			}
 			return { isValid: true, errorMessage: null };
-		}
-		// If it's not a BIC or CORE address format, it's invalid for intra
-		if (normalizedHostname === 'intra') {
-			return { isValid: false, errorMessage: `Address is not valid for type ${uppercaseHostname}` };
 		}
 	}
 

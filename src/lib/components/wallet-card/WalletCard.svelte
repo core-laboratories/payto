@@ -64,6 +64,7 @@
 		currency: string | null | undefined;
 		network: string | Readable<string> | undefined;
 		item: string | Readable<string> | undefined;
+		bic: string | Readable<string> | undefined;
 		location: string | Readable<string> | undefined;
 		recurring: string | Readable<string> | undefined;
 		deadline: number | Readable<number> | undefined;
@@ -86,6 +87,7 @@
 		currency: undefined,
 		network: undefined,
 		item: undefined,
+		bic: undefined,
 		location: undefined,
 		recurring: undefined,
 		deadline: undefined,
@@ -323,6 +325,7 @@
 						getCurrency($constructorStore.networks[getCategoryByValue(payto.hostname!) as ITransitionType], getCategoryByValue(payto.hostname!) as ITransitionType),
 					network: payto.hostname === 'void' ? payto.void! : payto.network,
 					item: payto.item || undefined,
+					bic: payto.bic || undefined,
 					location: payto.location || undefined,
 					recurring: payto.recurring || undefined,
 					rtl: payto.rtl || false,
@@ -398,6 +401,7 @@
 						? ($store.networks[hostname].transport === 'other' ? $store.networks[hostname].other : $store.networks[hostname].transport)
 						: ($store.networks[hostname].network === 'other' ? $store.networks[hostname].other : $store.networks[hostname].network),
 					item: $store.design.item,
+					bic: $store.networks[hostname]?.bic,
 					location: $store.networks[hostname]?.params?.loc?.value,
 					recurring: $store.networks[hostname]?.params?.rc?.value ?? '',
 					rtl: $store.design.rtl || false,
@@ -577,45 +581,6 @@
 			return undefined;
 		}
 	});
-
-	function truncateToTwoDecimals(num: number) {
-		return parseFloat(num.toFixed(3).slice(0, -1));
-	}
-
-	function shortenEmail(email: string) {
-		const [localPart, domain] = email.split("@");
-		if (!domain) return email;
-
-		const domainParts = domain.split(".");
-		const mainDomain = domainParts.slice(-2).join(".");
-
-		if (localPart.length <= 4) {
-			return `${localPart}@${mainDomain}`;
-		}
-
-		return `${localPart.slice(0, 2)}…${localPart.slice(-1)}@${mainDomain}`;
-	}
-
-	function shortenAddress(address: string | Readable<string> | undefined): string {
-		if (!address) return '';
-		let finalAddress = '';
-
-		if ($paytoData.network === 'geo') {
-			const [lat, lon] = address.toString().split(',');
-			finalAddress = `${truncateToTwoDecimals(Number(lat))},${truncateToTwoDecimals(Number(lon))}`;
-		} else if ($paytoData.network === 'plus') {
-			finalAddress = address.toString().slice(0, 8);
-		} else {
-			if ($paytoData.paymentType === 'upi' || $paytoData.paymentType === 'pix') {
-				finalAddress = shortenEmail(address.toString());
-			} else {
-				const extractedAddress = typeof address === 'string' ? address : get(address);
-				finalAddress = extractedAddress.length <= 9 ? extractedAddress.toUpperCase() : `${extractedAddress.slice(0, 4).toUpperCase()}…${extractedAddress.slice(-4).toUpperCase()}`
-			}
-		}
-
-		return finalAddress;
-	}
 
 	function getInfoDisplay(paytoData: any): string {
 		let infoDisplay = '';
@@ -869,9 +834,10 @@
 		const address = typeof $paytoData.address === 'string' ? $paytoData.address : ($paytoData.address ? String(get($paytoData.address)) : undefined);
 		const hostname = typeof $paytoData.hostname === 'string' ? $paytoData.hostname : ($paytoData.hostname ? String(get($paytoData.hostname)) : undefined);
 		const network = typeof $paytoData.network === 'string' ? $paytoData.network : ($paytoData.network ? String(get($paytoData.network)) : undefined);
+		const bic = typeof $paytoData.bic === 'string' ? $paytoData.bic : ($paytoData.bic ? String(get($paytoData.bic)) : undefined);
 
-		if (address && hostname && address.trim() && hostname.trim()) {
-			const validation = validateAddressByType(address, hostname, network);
+		if (address && hostname) {
+			const validation = validateAddressByType(address, hostname, network, bic);
 			if (!validation.isValid && validation.errorMessage) {
 				addressValidationError.set(validation.errorMessage);
 			} else {
