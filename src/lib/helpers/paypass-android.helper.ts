@@ -310,10 +310,10 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 			}
 		},
 
-		cardTitle: { defaultValue: { language: 'en-US', value: (orgName && orgName.trim()) || 'PayPass' } }, // TODO: Change default value
-		header: { defaultValue: { language: 'en-US', value: (titleText && titleText.trim()) || 'Payment' } }, // TODO: Change default value
+		cardTitle: { defaultValue: { language: 'en-US', value: (orgName && orgName.trim()) || 'PayPass' } },
+		header: { defaultValue: { language: 'en-US', value: (titleText && titleText.trim()) || 'Payment' } },
 		...(subheaderText && subheaderText.trim() ? {
-			subheader: { defaultValue: { language: 'en-US', value: subheaderText.trim() } } // TODO: Change default value
+			subheader: { defaultValue: { language: 'en-US', value: subheaderText.trim() } }
 		} : {}),
 
 		...(logoUrl ? { logo: { sourceUri: { uri: logoUrl } } } : {}),
