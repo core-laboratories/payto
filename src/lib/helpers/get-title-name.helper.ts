@@ -3,11 +3,16 @@
  * @param hostname - Network hostname
  * @param props - Network data properties
  * @param currency - Optional currency override
+ * @param prefixed - Whether to prefix the title with the hostname
  * @returns Formatted title text
  */
 export function getTitleText(hostname: string, destination: string, props: any, currency?: string, prefixed: boolean = false): string | null {
 	if (hostname === 'ican') {
-		return prefixed ? hostname.toUpperCase() + ' ' + shortenTitle(destination) : shortenTitle(destination);
+		const currencyValue = currency || props.currency;
+		const currencyText = currencyValue && currencyValue.length < 6
+			? currencyValue.toUpperCase()
+			: (currencyValue ? shortenTitle(currencyValue) : shortenTitle(hostname));
+		return prefixed ? currencyText + ' ' + shortenTitle(destination) : shortenTitle(destination);
 	} else if (hostname === 'iban' || hostname === 'ach' || hostname === 'bic') {
 		return prefixed ? hostname.toUpperCase() + ' ' + shortenTitle(destination) : shortenTitle(destination);
 	} else if (hostname === 'upi' || hostname === 'pix') {
@@ -17,9 +22,9 @@ export function getTitleText(hostname: string, destination: string, props: any, 
 	} else if (hostname === 'void') {
 		if (props.network === 'geo') {
 			const [lat, lon] = destination.toString().split(',');
-			return prefixed ? 'Geo ' + `${truncateTitle(Number(lat), 4)},${truncateTitle(Number(lon), 4)}` : `${truncateTitle(Number(lat), 4)},${truncateTitle(Number(lon), 4)}`;
+			return prefixed ? `${props.network.toUpperCase()} ${truncateTitle(Number(lat), 4)},${truncateTitle(Number(lon), 4)}` : `${truncateTitle(Number(lat), 4)},${truncateTitle(Number(lon), 4)}`;
 		} else if (props.network === 'plus') {
-			return prefixed ? 'Plus ' + cutFromBeginning(destination.toString(), 4) : cutFromBeginning(destination.toString(), 4);
+			return prefixed ? props.network.toUpperCase() + ' ' + cutFromBeginning(destination.toString(), 4) : cutFromBeginning(destination.toString(), 4);
 		} else {
 			return prefixed ? hostname.toUpperCase() + ' ' + shortenTitle(destination) : shortenTitle(destination);
 		}

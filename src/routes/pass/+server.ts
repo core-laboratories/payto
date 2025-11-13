@@ -170,7 +170,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 		const fileId = getFileId([originator, memberAddress, destination, hostname, network], '-', true, false);
 		const explorerUrl = getExplorerUrl(network, { address: destination }, true, linkBaseUrl);
 		const customCurrencyData = kvData?.customCurrency || {};
-		const currency = getCurrency(props, network as ITransitionType);
+		const currency = getCurrency(props, network as ITransitionType, true);
 		const proUrl = `${proUrlLink}?origin=${encodeURIComponent(originator)}&subscriber=${encodeURIComponent(memberAddress)}&destination=${encodeURIComponent(destination)}&network=${encodeURIComponent(network as string)}`;
 		const expirationDate = getExpirationDate(props.params?.dl?.value);
 		const chainId = props.params.chainId?.value;
@@ -236,7 +236,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			const objectId = `${base}.${uniquePart}-${ts}-${nonce}`.replace(/[^a-zA-Z0-9._-]/g, '').slice(0, 64);
 
 			const imageUrls = getImageUrls(kvData, memberAddress, isDev, devServerUrl);
-			const titleText = getTitleText(hostname, destination, props, currency);
+			const titleText = getTitleText(hostname, destination, props, currency, true);
 			const purposeText = getPurposeText(design);
 			const codeText = getCodeText(isDonate, 'scan');
 
