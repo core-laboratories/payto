@@ -1,5 +1,6 @@
 import * as jose from 'jose';
 import { env as publicEnv } from '$env/dynamic/public';
+import { calculateNotifications } from './paypass-notifications.helper';
 
 type TextModConfig = {
 	id?: string;
@@ -289,6 +290,9 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		};
 	})();
 
+	// Calculate notifications based on expiration date
+	const notifications = calculateNotifications(payload.expirationDate);
+
 	const gwObject: any = {
 		id: payload.id,
 		classId: classId,
@@ -384,7 +388,9 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 					contentDescription: { defaultValue: { language: 'en-US', value: 'Icon' } }
 				}
 			}] : [])
-		]
+		],
+
+		...(notifications ? { notifications } : {})
 	};
 
 	// ---------------- Sign JWT ----------------
