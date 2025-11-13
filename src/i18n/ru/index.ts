@@ -44,7 +44,11 @@ const ruPartial: DeepPartial<Translation> = {
 		}
 	},
 	paypass: {
-		address: 'Адрес счёта'
+		address: 'Адрес счёта',
+		network: 'Сеть',
+		cash: 'Наличные',
+		chain: 'Цепь',
+		amount: 'Сумма'
 	}
 }
 

@@ -44,7 +44,11 @@ const skPartial: DeepPartial<Translation> = {
 		}
 	},
 	paypass: {
-		address: 'Adresa účtu'
+		address: 'Adresa účtu',
+		network: 'Sieť',
+		cash: 'Hotovosť',
+		chain: 'Chain',
+		amount: 'Suma'
 	}
 }
 

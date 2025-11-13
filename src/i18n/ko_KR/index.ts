@@ -44,7 +44,11 @@ const ko_KRPartial: DeepPartial<Translation> = {
 		}
 	},
 	paypass: {
-		address: '계정 주소'
+		address: '계정 주소',
+		network: '네트워크',
+		cash: '현금',
+		chain: '체인',
+		amount: '금액'
 	}
 }
 

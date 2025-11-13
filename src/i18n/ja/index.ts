@@ -44,7 +44,11 @@ const jaPartial: DeepPartial<Translation> = {
 		}
 	},
 	paypass: {
-		address: 'アカウントアドレス'
+		address: 'アカウントアドレス',
+		network: 'ネットワーク',
+		cash: '現金',
+		chain: '鎖',
+		amount: '金額'
 	}
 }
 

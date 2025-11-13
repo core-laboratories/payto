@@ -44,7 +44,11 @@ const it_ITPartial: DeepPartial<Translation> = {
 		}
 	},
 	paypass: {
-		address: 'Indirizzo conto'
+		address: 'Indirizzo conto',
+		network: 'Rete',
+		cash: 'Contanti',
+		chain: 'Chain',
+		amount: 'Importo'
 	}
 }
 

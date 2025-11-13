@@ -44,7 +44,11 @@ const zh_CNPartial: DeepPartial<Translation> = {
 		}
 	},
 	paypass: {
-		address: '账户地址'
+		address: '账户地址',
+		network: '网络',
+		cash: '现金',
+		chain: '链',
+		amount: '金额'
 	}
 }
 

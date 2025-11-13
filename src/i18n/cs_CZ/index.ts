@@ -44,7 +44,11 @@ const cs_CZPartial: DeepPartial<Translation> = {
 		}
 	},
 	paypass: {
-		address: 'Adresa účtu'
+		address: 'Adresa účtu',
+		network: 'Síť',
+		cash: 'Hotovost',
+		chain: 'Chain',
+		amount: 'Částka'
 	}
 }
 

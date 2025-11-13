@@ -44,7 +44,11 @@ const pl_PLPartial: DeepPartial<Translation> = {
 		}
 	},
 	paypass: {
-		address: 'Adres konta'
+		address: 'Adres konta',
+		network: 'Sieć',
+		cash: 'Gotówka',
+		chain: 'Chain',
+		amount: 'Kwota'
 	}
 }
 

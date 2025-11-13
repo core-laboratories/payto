@@ -44,7 +44,11 @@ const vi_VNPartial: DeepPartial<Translation> = {
 		}
 	},
 	paypass: {
-		address: 'Địa chỉ tài khoản'
+		address: 'Địa chỉ tài khoản',
+		network: 'Mạng',
+		cash: 'Tiền mặt',
+		chain: 'Chain',
+		amount: 'Số tiền'
 	}
 }
 

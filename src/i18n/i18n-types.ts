@@ -164,6 +164,22 @@ type RootTranslation = {
 		 * A​c​c​o​u​n​t​ ​A​d​d​r​e​s​s
 		 */
 		address: string
+		/**
+		 * N​e​t​w​o​r​k
+		 */
+		network: string
+		/**
+		 * C​a​s​h
+		 */
+		cash: string
+		/**
+		 * C​h​a​i​n
+		 */
+		chain: string
+		/**
+		 * A​m​o​u​n​t
+		 */
+		amount: string
 	}
 }
 
@@ -299,6 +315,22 @@ export type TranslationFunctions = {
 		 * Account Address
 		 */
 		address: () => LocalizedString
+		/**
+		 * Network
+		 */
+		network: () => LocalizedString
+		/**
+		 * Cash
+		 */
+		cash: () => LocalizedString
+		/**
+		 * Chain
+		 */
+		chain: () => LocalizedString
+		/**
+		 * Amount
+		 */
+		amount: () => LocalizedString
 	}
 }
 

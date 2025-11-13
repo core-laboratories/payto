@@ -44,7 +44,11 @@ const fa_IRPartial: DeepPartial<Translation> = {
 		}
 	},
 	paypass: {
-		address: 'آدرس حساب'
+		address: 'آدرس حساب',
+		network: 'شبکه',
+		cash: 'نقد',
+		chain: 'زنجیره',
+		amount: 'مبلغ'
 	}
 }
 

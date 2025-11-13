@@ -44,7 +44,11 @@ const arPartial: DeepPartial<Translation> = {
 		}
 	},
 	paypass: {
-		address: 'عنوان الحساب'
+		address: 'عنوان الحساب',
+		network: 'الشبكة',
+		cash: 'نقد',
+		chain: 'سلسلة',
+		amount: 'المبلغ'
 	}
 }
 

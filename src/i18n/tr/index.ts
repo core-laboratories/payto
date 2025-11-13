@@ -44,7 +44,11 @@ const tr_TRPartial: DeepPartial<Translation> = {
 		}
 	},
 	paypass: {
-		address: 'Hesap adresi'
+		address: 'Hesap adresi',
+		network: 'Ağ',
+		cash: 'Nakit',
+		chain: 'Chain',
+		amount: 'Tutar'
 	}
 }
 

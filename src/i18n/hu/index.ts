@@ -44,7 +44,11 @@ const hu_HUPartial: DeepPartial<Translation> = {
 		}
 	},
 	paypass: {
-		address: 'Számlacím'
+		address: 'Számlacím',
+		network: 'Hálózat',
+		cash: 'Készpénz',
+		chain: 'Chain',
+		amount: 'Összeg'
 	}
 }
 

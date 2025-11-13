@@ -3,11 +3,17 @@ import { env as publicEnv } from '$env/dynamic/public';
 import { calculateNotifications } from './paypass-notifications.helper';
 import { getPaypassLocalizedString } from './paypass-i18n.helper';
 
+type LocalizedText = {
+	defaultValue: string;
+	translatedValues?: Record<string, string>;
+};
+
 type TextModConfig = {
 	id?: string;
 	header: string;
-	localizedHeader?: { defaultValue: string; translatedValues?: Record<string, string> };
+	headerI18nKey?: string;	// i18n key for header (e.g. 'paypass.address')
 	body: string;
+	bodyI18nKey?: string;		// optional i18n key for body (full string per locale)
 	onPass?: boolean;
 };
 
@@ -39,6 +45,38 @@ export interface GoogleWalletPayPassResult {
 	classId: string;
 	gwObject: any;
 	gwClass: any;
+}
+
+/**
+ * Convert our internal LocalizedText shape (defaultValue + translatedValues map)
+ * into Google Wallet LocalizedString shape.
+ */
+function toGoogleLocalizedString(
+	src: LocalizedText | undefined,
+	defaultLanguage = 'en'
+): { defaultValue: { language: string; value: string }; translatedValues?: { language: string; value: string }[] } | undefined {
+	if (!src || !src.defaultValue) return undefined;
+
+	const result: {
+		defaultValue: { language: string; value: string };
+		translatedValues?: { language: string; value: string }[];
+	} = {
+		defaultValue: {
+			language: defaultLanguage,
+			value: src.defaultValue
+		}
+	};
+
+	if (src.translatedValues && Object.keys(src.translatedValues).length > 0) {
+		result.translatedValues = Object.entries(src.translatedValues).map(
+			([language, value]) => ({
+				language,
+				value
+			})
+		);
+	}
+
+	return result;
 }
 
 export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPassConfig): Promise<GoogleWalletPayPassResult> {
@@ -85,32 +123,93 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 	// ---------------- Text Modules ----------------
 	const textMods: TextModConfig[] = [];
 
-	// Get localized "Address" header
-	const addressHeaderLocalized = getPaypassLocalizedString('paypass.address');
+	// i18n lookups for labels
+	const addressHeaderLoc = getPaypassLocalizedString('paypass.address');
+	const networkHeaderLoc = getPaypassLocalizedString('paypass.network');
+	const cashLoc = getPaypassLocalizedString('paypass.cash');
+	const chainLoc = getPaypassLocalizedString('paypass.chain');
+	const amountHeaderLoc = getPaypassLocalizedString('paypass.amount');
 
 	if (addressText) {
 		textMods.push({
 			id: 'address',
-			header: addressHeaderLocalized?.defaultValue || 'Address',
-			localizedHeader: addressHeaderLocalized,
+			header: addressHeaderLoc?.defaultValue || 'Address',
+			headerI18nKey: 'paypass.address',
 			body: addressText,
 			onPass: false
 		});
 	}
+
 	if (payload.props.network) {
 		if (payload.props.network === 'void') {
-			textMods.push({ id: 'network', header: 'Network', body: `Cash / ${payload.props.transport.toUpperCase()}`, onPass: false });
+			// Cash / TRANSPORT
+			const cashText = cashLoc?.defaultValue || 'Cash';
+			const transportText = payload.props.transport?.toUpperCase() || '';
+			textMods.push({
+				id: 'network',
+				header: networkHeaderLoc?.defaultValue || 'Network',
+				headerI18nKey: 'paypass.network',
+				body: `${cashText} / ${transportText}`,
+				onPass: false
+			});
 		} else {
-			const networkText = payload.props.network.toUpperCase() + (payload.chainId ? ` / Chain: ${payload.chainId}` : '');
-			textMods.push({id: 'network', header: 'Network', body: networkText, onPass: false });
+			// NETWORK / Chain: ID
+			const chainWord = chainLoc?.defaultValue || 'Chain';
+			const chainPart = payload.chainId ? ` / ${chainWord}: ${payload.chainId}` : '';
+			const networkText = payload.props.network.toUpperCase() + chainPart;
+			textMods.push({
+				id: 'network',
+				header: networkHeaderLoc?.defaultValue || 'Network',
+				headerI18nKey: 'paypass.network',
+				body: networkText,
+				onPass: false
+			});
 		}
 	}
-	if (purposeLabel && purposeText) textMods.push({ id: 'purpose', header: purposeLabel, body: purposeText, onPass: true });
-	if (amountText) textMods.push({ id: 'amount', header: amountLabel || 'Amount', body: amountText, onPass: true });
+
+	if (purposeLabel && purposeText) {
+		textMods.push({
+			id: 'purpose',
+			header: purposeLabel,
+			body: purposeText,
+			onPass: true
+		});
+	}
+
+	if (amountText) {
+		// If a custom amountLabel is provided, we treat it as literal (no i18n key).
+		// Otherwise, use paypass.amount translations.
+		const useAmountI18n = !amountLabel;
+		const headerText = amountLabel || amountHeaderLoc?.defaultValue || 'Amount';
+
+		textMods.push({
+			id: 'amount',
+			header: headerText,
+			headerI18nKey: useAmountI18n ? 'paypass.amount' : undefined,
+			body: amountText,
+			onPass: true
+		});
+	}
+
 	// Swap
-	if (payload.swap) textMods.push({ id: 'swap', header: 'Swap for', body: payload.swap, onPass: false });
+	if (payload.swap) {
+		textMods.push({
+			id: 'swap',
+			header: 'Swap for',
+			body: payload.swap,
+			onPass: false
+		});
+	}
+
 	// Split payment
-	if (payload.splitPayment) textMods.push({ id: 'split', header: 'Split', body: `${payload.splitPayment.isPercent ? payload.splitPayment.value.toString() + '%' : payload.splitPayment.formattedValue} to ${payload.splitPayment.address}`, onPass: false });
+	if (payload.splitPayment) {
+		textMods.push({
+			id: 'split',
+			header: 'Split',
+			body: `${payload.splitPayment.isPercent ? payload.splitPayment.value.toString() + '%' : payload.splitPayment.formattedValue} to ${payload.splitPayment.address}`,
+			onPass: false
+		});
+	}
 
 	if (payload.props.network === 'iban') {
 		const iban = payload.props.iban?.match(/.{1,4}/g)?.join(' ').toUpperCase() || payload.props.iban?.toUpperCase();
@@ -168,31 +267,18 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 			const header = m.header.trim();
 			const body = String(m.body ?? '').trim();
 
-			const localizedHeader = m.localizedHeader
-				? {
-					defaultValue: {
-						language: 'en',
-						value: m.localizedHeader.defaultValue
-					},
-					...(m.localizedHeader.translatedValues &&
-					Object.keys(m.localizedHeader.translatedValues).length > 0
-						? {
-							translatedValues: Object.entries(m.localizedHeader.translatedValues).map(
-								([language, value]) => ({
-									language,
-									value
-								})
-							)
-						}
-						: {})
-				}
-				: undefined;
+			const headerLoc = m.headerI18nKey ? getPaypassLocalizedString(m.headerI18nKey) : undefined;
+			const localizedHeader = headerLoc ? toGoogleLocalizedString(headerLoc, 'en') : undefined;
+
+			const bodyLoc = m.bodyI18nKey ? getPaypassLocalizedString(m.bodyI18nKey) : undefined;
+			const localizedBody = bodyLoc ? toGoogleLocalizedString(bodyLoc, 'en') : undefined;
 
 			return {
 				...(m.id ? { id: m.id } : {}),
 				header,
 				body,
-				...(localizedHeader ? { localizedHeader } : {})
+				...(localizedHeader ? { localizedHeader } : {}),
+				...(localizedBody ? { localizedBody } : {})
 			};
 		})
 		.filter(m => m.header.length > 0 && m.body.length > 0);
@@ -317,13 +403,10 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		if (Number.isNaN(date.getTime())) return undefined;
 
 		// Always use full ISO 8601 format with time and timezone offset
-		// This provides an absolute instant in time that adjusts to user's timezone
 		const iso = date.toISOString();
 
 		return {
 			end: {
-				// ISO 8601 extended format date/time with timezone offset
-				// Provides absolute instant in time, adjusted to user's timezone
 				date: iso
 			}
 		};
@@ -362,7 +445,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		barcode: barcode || {
 			type: 'qrCode',
 			value: payload.basicLink,
-			alternateText: donate ? 'Scan to donate' : 'Scan to pay' // This is backup defaults
+			alternateText: donate ? 'Scan to donate' : 'Scan to pay'
 		},
 
 		smartTapRedemptionValue: payload.basicLink,

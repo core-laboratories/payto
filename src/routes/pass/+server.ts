@@ -253,9 +253,10 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				titleText: titleText || undefined,
 				purposeLabel: 'Item',
 				purposeText: purposeText,
-				amountLabel: isRecurring ? (isDonate ? 'Recurring Donation' : 'Recurring Payment') : (isDonate ? 'Donation' : 'Payment'),
+				amountLabel: isRecurring
+					? (isDonate ? 'Recurring Donation' : 'Recurring Payment')
+					: (isDonate ? 'Donation' : 'Payment'),
 				amountText: finalAmount,
-				//subheaderText: standardizeOrg(org) || 'Address',
 				hexBackgroundColor: getValidBackgroundColor(design, kvData, '#2A3950'),
 				barcode: getBarcodeConfig(design.barcode || 'qr', bareLink, codeText).google,
 				donate: isDonate,
@@ -277,7 +278,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 					merchantLocations: kvData?.data?.google?.merchantLocation || [],
 					splitPayment,
 					swap
-				},
+				}
 			});
 
 			// Optional stats logging

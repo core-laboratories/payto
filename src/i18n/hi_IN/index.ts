@@ -44,7 +44,11 @@ const hi_INPartial: DeepPartial<Translation> = {
 		}
 	},
 	paypass: {
-		address: 'खाता पता'
+		address: 'खाता पता',
+		network: 'नेटवर्क',
+		cash: 'नकद',
+		chain: 'जंजीर',
+		amount: 'राशि'
 	}
 }
 

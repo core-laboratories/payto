@@ -44,7 +44,11 @@ const esPartial: DeepPartial<Translation> = {
 		}
 	},
 	paypass: {
-		address: 'Dirección de cuenta'
+		address: 'Dirección de cuenta',
+		network: 'Red',
+		cash: 'Efectivo',
+		chain: 'Cadena',
+		amount: 'Monto'
 	}
 }
 

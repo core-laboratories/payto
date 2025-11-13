@@ -41,7 +41,11 @@ const en = {
 		}
 	},
 	paypass: {
-		address: 'Account Address'
+		address: 'Account Address',
+		network: 'Network',
+		cash: 'Cash',
+		chain: 'Chain',
+		amount: 'Amount'
 	}
 } satisfies BaseTranslation
 

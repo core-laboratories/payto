@@ -44,7 +44,11 @@ const ptBRPartial: DeepPartial<Translation> = {
 		}
 	},
 	paypass: {
-		address: 'Endereço da conta'
+		address: 'Endereço da conta',
+		network: 'Rede',
+		cash: 'Dinheiro',
+		chain: 'Chain',
+		amount: 'Valor'
 	}
 }
 

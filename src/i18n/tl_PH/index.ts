@@ -44,7 +44,11 @@ const tl_PHPartial: DeepPartial<Translation> = {
 		}
 	},
 	paypass: {
-		address: 'Address ng Account'
+		address: 'Address ng Account',
+		network: 'Network',
+		cash: 'Cash',
+		chain: 'Chain',
+		amount: 'Halaga'
 	}
 }
 
