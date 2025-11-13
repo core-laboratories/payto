@@ -42,6 +42,9 @@ const th_THPartial: DeepPartial<Translation> = {
 			month: 'ด',
 			year: 'ป'
 		}
+	},
+	paypass: {
+		address: 'ที่อยู่บัญชี'
 	}
 }
 

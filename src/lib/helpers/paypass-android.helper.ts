@@ -1,10 +1,12 @@
 import * as jose from 'jose';
 import { env as publicEnv } from '$env/dynamic/public';
 import { calculateNotifications } from './paypass-notifications.helper';
+import { getPaypassLocalizedString } from './paypass-i18n.helper';
 
 type TextModConfig = {
 	id?: string;
 	header: string;
+	localizedHeader?: { defaultValue: string; translatedValues?: Record<string, string> };
 	body: string;
 	onPass?: boolean;
 };
@@ -83,7 +85,18 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 	// ---------------- Text Modules ----------------
 	const textMods: TextModConfig[] = [];
 
-	if (addressText) textMods.push({ id: 'address', header: 'Address', body: addressText, onPass: false });
+	// Get localized "Address" header
+	const addressHeaderLocalized = getPaypassLocalizedString('paypass.address');
+
+	if (addressText) {
+		textMods.push({
+			id: 'address',
+			header: addressHeaderLocalized?.defaultValue || 'Address',
+			localizedHeader: addressHeaderLocalized,
+			body: addressText,
+			onPass: false
+		});
+	}
 	if (payload.props.network) {
 		if (payload.props.network === 'void') {
 			textMods.push({ id: 'network', header: 'Network', body: `Cash / ${payload.props.transport.toUpperCase()}`, onPass: false });
@@ -151,11 +164,37 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 	}
 
 	const normalizedTextModules = textMods
-		.map(m => ({
-			...(m.id ? { id: m.id } : {}),
-			header: String(m.header ?? '').trim(),
-			body: String(m.body ?? '').trim()
-		}))
+		.map(m => {
+			const header = m.header.trim();
+			const body = String(m.body ?? '').trim();
+
+			const localizedHeader = m.localizedHeader
+				? {
+					defaultValue: {
+						language: 'en',
+						value: m.localizedHeader.defaultValue
+					},
+					...(m.localizedHeader.translatedValues &&
+					Object.keys(m.localizedHeader.translatedValues).length > 0
+						? {
+							translatedValues: Object.entries(m.localizedHeader.translatedValues).map(
+								([language, value]) => ({
+									language,
+									value
+								})
+							)
+						}
+						: {})
+				}
+				: undefined;
+
+			return {
+				...(m.id ? { id: m.id } : {}),
+				header,
+				body,
+				...(localizedHeader ? { localizedHeader } : {})
+			};
+		})
 		.filter(m => m.header.length > 0 && m.body.length > 0);
 
 	// ---------------- Card Row Template ----------------
@@ -338,11 +377,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 			}
 		] : [],
 
-		textModulesData: normalizedTextModules.map((m: { id?: string; header: string; body: string }) => ({
-			...(m.id ? { id: m.id } : {}),
-			header: m.header,
-			body: m.body
-		})),
+		textModulesData: normalizedTextModules,
 
 		linksModuleData: {
 			uris: [

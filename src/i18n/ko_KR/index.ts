@@ -42,6 +42,9 @@ const ko_KRPartial: DeepPartial<Translation> = {
 			month: '월',
 			year: '년'
 		}
+	},
+	paypass: {
+		address: '계정 주소'
 	}
 }
 

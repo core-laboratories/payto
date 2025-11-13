@@ -159,6 +159,12 @@ type RootTranslation = {
 			year: string
 		}
 	}
+	paypass: {
+		/**
+		 * A​c​c​o​u​n​t​ ​A​d​d​r​e​s​s
+		 */
+		address: string
+	}
 }
 
 export type TranslationFunctions = {
@@ -287,6 +293,12 @@ export type TranslationFunctions = {
 			 */
 			year: () => LocalizedString
 		}
+	}
+	paypass: {
+		/**
+		 * Account Address
+		 */
+		address: () => LocalizedString
 	}
 }
 

@@ -42,6 +42,9 @@ const jaPartial: DeepPartial<Translation> = {
 			month: '月',
 			year: '年'
 		}
+	},
+	paypass: {
+		address: 'アカウントアドレス'
 	}
 }
 

@@ -42,6 +42,9 @@ const hi_INPartial: DeepPartial<Translation> = {
 			month: 'म',
 			year: 'व'
 		}
+	},
+	paypass: {
+		address: 'खाता पता'
 	}
 }
 

@@ -42,6 +42,9 @@ const fa_IRPartial: DeepPartial<Translation> = {
 			month: 'م',
 			year: 'س'
 		}
+	},
+	paypass: {
+		address: 'آدرس حساب'
 	}
 }
 

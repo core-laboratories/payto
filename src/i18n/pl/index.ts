@@ -42,6 +42,9 @@ const pl_PLPartial: DeepPartial<Translation> = {
 			month: 'm',
 			year: 'r'
 		}
+	},
+	paypass: {
+		address: 'Adres konta'
 	}
 }
 

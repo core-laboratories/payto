@@ -42,6 +42,9 @@ const tr_TRPartial: DeepPartial<Translation> = {
 			month: 'a',
 			year: 'y'
 		}
+	},
+	paypass: {
+		address: 'Hesap adresi'
 	}
 }
 

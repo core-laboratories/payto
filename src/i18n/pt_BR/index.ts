@@ -42,6 +42,9 @@ const ptBRPartial: DeepPartial<Translation> = {
 			month: 'm',
 			year: 'a'
 		}
+	},
+	paypass: {
+		address: 'Endereço da conta'
 	}
 }
 

@@ -39,6 +39,9 @@ const en = {
 			month: 'm',
 			year: 'y'
 		}
+	},
+	paypass: {
+		address: 'Account Address'
 	}
 } satisfies BaseTranslation
 

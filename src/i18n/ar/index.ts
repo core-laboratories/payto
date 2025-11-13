@@ -42,6 +42,9 @@ const arPartial: DeepPartial<Translation> = {
 			month: 'ش',
 			year: 'س'
 		}
+	},
+	paypass: {
+		address: 'عنوان الحساب'
 	}
 }
 

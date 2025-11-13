@@ -42,6 +42,9 @@ const skPartial: DeepPartial<Translation> = {
 			month: 'm',
 			year: 'r'
 		}
+	},
+	paypass: {
+		address: 'Adresa účtu'
 	}
 }
 

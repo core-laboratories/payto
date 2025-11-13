@@ -42,6 +42,9 @@ const zh_CNPartial: DeepPartial<Translation> = {
 			month: '月',
 			year: '年'
 		}
+	},
+	paypass: {
+		address: '账户地址'
 	}
 }
 

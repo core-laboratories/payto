@@ -42,6 +42,9 @@ const hu_HUPartial: DeepPartial<Translation> = {
 			month: 'hó', // hónap
 			year: 'év'  // év
 		}
+	},
+	paypass: {
+		address: 'Számlacím'
 	}
 }
 

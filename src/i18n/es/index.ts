@@ -42,6 +42,9 @@ const esPartial: DeepPartial<Translation> = {
 			month: 'm',
 			year: 'y'
 		}
+	},
+	paypass: {
+		address: 'Dirección de cuenta'
 	}
 }
 

@@ -42,6 +42,9 @@ const vi_VNPartial: DeepPartial<Translation> = {
 			month: 'th', // tháng
 			year: 'n'    // năm
 		}
+	},
+	paypass: {
+		address: 'Địa chỉ tài khoản'
 	}
 }
 

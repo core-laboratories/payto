@@ -42,6 +42,9 @@ const ruPartial: DeepPartial<Translation> = {
 			month: 'м',
 			year: 'г'
 		}
+	},
+	paypass: {
+		address: 'Адрес счёта'
 	}
 }
 

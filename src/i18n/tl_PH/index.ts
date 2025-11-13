@@ -42,6 +42,9 @@ const tl_PHPartial: DeepPartial<Translation> = {
 			month: 'b',
 			year: 't'
 		}
+	},
+	paypass: {
+		address: 'Address ng Account'
 	}
 }
 

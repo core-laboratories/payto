@@ -42,6 +42,9 @@ const frPartial: DeepPartial<Translation> = {
 			month: 'm',
 			year: 'a'
 		}
+	},
+	paypass: {
+		address: 'Adresse de compte'
 	}
 }
 
