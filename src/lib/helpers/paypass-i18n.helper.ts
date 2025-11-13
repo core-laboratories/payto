@@ -5,6 +5,7 @@ import en from '$i18n/en/index';
 
 type LocalizedText = {
 	defaultValue: string;
+	defaultLanguage: string;
 	translatedValues?: Record<string, string>;
 };
 
@@ -20,7 +21,7 @@ function mapLocaleToGoogleWallet(locale: Locales): string {
 /**
  * Get nested value from an object using a dot-separated path
  * @param obj - Object to traverse
- * @param path - Dot-separated path (e.g., 'paypass.welcome.header')
+ * @param path - Dot-separated path (e.g., 'paypass.address')
  * @returns The value at the path, or undefined if not found
  */
 function getNestedValue(obj: any, path: string): string | undefined {
@@ -42,23 +43,27 @@ function getNestedValue(obj: any, path: string): string | undefined {
  * Get Google Wallet LocalizedString-friendly shape from i18n translations
  *
  * This function loads all locale translations and collects values for the given key path.
- * It returns an object with defaultValue (string) and translatedValues (map)
- * for all languages that have the translation.
+ * It returns an object with:
+ *  - defaultValue: the text in the default language (prefer English if available)
+ *  - defaultLanguage: the language code (Google Wallet format) for defaultValue
+ *  - translatedValues: a map of language -> value for all other locales that differ
  *
  * @param keyPath - Dot-separated path to the translation key (e.g., 'paypass.address')
- * @returns { defaultValue, translatedValues? } or undefined if key not found
+ * @returns { defaultValue, defaultLanguage, translatedValues? } or undefined if key not found
  */
 export function getPaypassLocalizedString(keyPath: string): LocalizedText | undefined {
 	// Ensure all locales are loaded
 	loadAllLocales();
 
 	let defaultValue: string | undefined;
+	let defaultLanguage: string | undefined;
 	const translatedValues: Record<string, string> = {};
 
 	// Prefer English as default if available
 	const englishValue = getNestedValue(en, keyPath);
 	if (englishValue) {
 		defaultValue = englishValue;
+		defaultLanguage = mapLocaleToGoogleWallet('en' as Locales);
 	}
 
 	for (const locale of locales) {
@@ -73,6 +78,7 @@ export function getPaypassLocalizedString(keyPath: string): LocalizedText | unde
 		// If we don't have a defaultValue yet, use the first found translation
 		if (!defaultValue) {
 			defaultValue = value;
+			defaultLanguage = googleLocale;
 			continue;
 		}
 
@@ -85,12 +91,13 @@ export function getPaypassLocalizedString(keyPath: string): LocalizedText | unde
 		}
 	}
 
-	if (!defaultValue) {
+	if (!defaultValue || !defaultLanguage) {
 		return undefined;
 	}
 
 	return {
 		defaultValue,
+		defaultLanguage,
 		...(Object.keys(translatedValues).length > 0 ? { translatedValues } : {})
 	};
 }

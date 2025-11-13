@@ -5,6 +5,7 @@ import { getPaypassLocalizedString } from './paypass-i18n.helper';
 
 type LocalizedText = {
 	defaultValue: string;
+	defaultLanguage?: string;
 	translatedValues?: Record<string, string>;
 };
 
@@ -13,7 +14,7 @@ type TextModConfig = {
 	header: string;
 	headerI18nKey?: string;	// i18n key for header (e.g. 'paypass.address')
 	body: string;
-	bodyI18nKey?: string;		// optional i18n key for body (full string per locale)
+	bodyI18nKey?: string;	// optional i18n key for body (full string per locale)
 	onPass?: boolean;
 };
 
@@ -53,9 +54,14 @@ export interface GoogleWalletPayPassResult {
  */
 function toGoogleLocalizedString(
 	src: LocalizedText | undefined,
-	defaultLanguage = 'en'
-): { defaultValue: { language: string; value: string }; translatedValues?: { language: string; value: string }[] } | undefined {
+	fallbackLanguage = 'en'
+): {
+	defaultValue: { language: string; value: string };
+	translatedValues?: { language: string; value: string }[];
+} | undefined {
 	if (!src || !src.defaultValue) return undefined;
+
+	const defaultLanguage = src.defaultLanguage || fallbackLanguage;
 
 	const result: {
 		defaultValue: { language: string; value: string };
