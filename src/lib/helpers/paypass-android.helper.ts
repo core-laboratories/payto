@@ -276,14 +276,15 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		const date = new Date(raw);
 		if (Number.isNaN(date.getTime())) return undefined;
 
+		// Always use full ISO 8601 format with time and timezone offset
+		// This provides an absolute instant in time that adjusts to user's timezone
 		const iso = date.toISOString();
-		const hasTimeComponent = /T\d{2}:\d{2}/.test(String(raw));
 
 		return {
 			end: {
-				// Google Wallet expects only `date`
-				// ISO 8601 string — may include time or not
-				date: hasTimeComponent ? iso : iso.split('T')[0] // TODO: Change to use time also
+				// ISO 8601 extended format date/time with timezone offset
+				// Provides absolute instant in time, adjusted to user's timezone
+				date: iso
 			}
 		};
 	})();
