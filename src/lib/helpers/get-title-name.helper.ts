@@ -20,11 +20,21 @@ export function getTitleText(hostname: string, destination: string, props: any, 
 	} else if (hostname === 'intra') {
 		return prefixed ? hostname.toUpperCase() + ' ' + shortenTitle(destination) : shortenTitle(destination);
 	} else if (hostname === 'void') {
-		if (props.network === 'geo') {
-			const [lat, lon] = destination.toString().split(',');
-			return prefixed ? `${props.network.toUpperCase()} ${truncateTitle(Number(lat), 4)},${truncateTitle(Number(lon), 4)}` : `${truncateTitle(Number(lat), 4)},${truncateTitle(Number(lon), 4)}`;
-		} else if (props.network === 'plus') {
-			return prefixed ? props.network.toUpperCase() + ' ' + cutFromBeginning(destination.toString(), 4) : cutFromBeginning(destination.toString(), 4);
+		if (props.transport === 'geo') {
+			const lat = props.params?.loc?.lat;
+			const lon = props.params?.loc?.lon;
+			if (lat && lon) {
+				return prefixed ? `${props.transport.toUpperCase()} ${truncateTitle(Number(lat), 4)},${truncateTitle(Number(lon), 4)}` : `${truncateTitle(Number(lat), 4)},${truncateTitle(Number(lon), 4)}`;
+			} else {
+				return prefixed ? hostname.toUpperCase() + ' ' + shortenTitle(destination) : shortenTitle(destination);
+			}
+		} else if (props.transport === 'plus') {
+			const plus = props.params?.loc?.plus;
+			if (plus) {
+				return prefixed ? props.transport.toUpperCase() + ' ' + cutFromBeginning(plus.toString(), 4) : cutFromBeginning(plus.toString(), 4);
+			} else {
+				return prefixed ? hostname.toUpperCase() + ' ' + shortenTitle(destination) : shortenTitle(destination);
+			}
 		} else {
 			return prefixed ? hostname.toUpperCase() + ' ' + shortenTitle(destination) : shortenTitle(destination);
 		}
@@ -47,10 +57,10 @@ export function getTitleTextBarcode(hostname: string, props: any): string | null
 	} else if (hostname === 'bic') {
 		return props.address.toUpperCase();
 	} else if (hostname === 'void') {
-		if (props.network === 'geo') {
+		if (props.transport === 'geo') {
 			const [lat, lon] = props.address.toString().split(',');
 			return `${truncateTitle(Number(lat), 4)},${truncateTitle(Number(lon), 4)}`;
-		} else if (props.network === 'plus') {
+		} else if (props.transport === 'plus') {
 			return cutFromBeginning(props.address.toString(), 4);
 		} else {
 			return shortenTitle(props.address);

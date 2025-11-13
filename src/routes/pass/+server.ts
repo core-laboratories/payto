@@ -254,7 +254,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				purposeLabel: 'Item',
 				purposeText: purposeText,
 				amountLabel: isRecurring ? (isDonate ? 'Recurring Donation' : 'Recurring Payment') : (isDonate ? 'Donation' : 'Payment'),
-				amountText: finalAmount,
+				amountText: finalAmount + ' ' + JSON.stringify(props),
 				//subheaderText: standardizeOrg(org) || 'Address',
 				hexBackgroundColor: getValidBackgroundColor(design, kvData, '#2A3950'),
 				barcode: getBarcodeConfig(design.barcode || 'qr', bareLink, codeText).google,

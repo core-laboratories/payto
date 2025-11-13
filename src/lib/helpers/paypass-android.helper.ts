@@ -84,8 +84,12 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 
 	if (addressText) textMods.push({ id: 'address', header: 'Address', body: addressText, onPass: false });
 	if (payload.props.network) {
-		const networkText = payload.props.network.toUpperCase() + (payload.chainId ? ` / Chain: ${payload.chainId}` : '');
-		textMods.push({ header: 'Network', body: networkText, onPass: false });
+		if (payload.props.network === 'void') {
+			textMods.push({ id: 'network', header: 'Network', body: `Cash / ${payload.props.transport.toUpperCase()}`, onPass: false });
+		} else {
+			const networkText = payload.props.network.toUpperCase() + (payload.chainId ? ` / Chain: ${payload.chainId}` : '');
+			textMods.push({id: 'network', header: 'Network', body: networkText, onPass: false });
+		}
 	}
 	if (purposeLabel && purposeText) textMods.push({ id: 'purpose', header: purposeLabel, body: purposeText, onPass: true });
 	if (amountText) textMods.push({ id: 'amount', header: amountLabel || 'Amount', body: amountText, onPass: true });
@@ -134,6 +138,11 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		if (bic) textMods.push({ id: 'bic', header: 'BIC / ORIC', body: bic, onPass: false });
 		const intraId = payload.props.id;
 		if (intraId) textMods.push({ id: 'id', header: 'Account ID', body: intraId, onPass: false });
+		const receiverName = payload.props.params?.receiverName?.value;
+		if (receiverName) textMods.push({ id: 'beneficiary', header: 'Beneficiary', body: receiverName, onPass: false });
+		const messageText = payload.props.params?.message?.value;
+		if (messageText) textMods.push({ id: 'message', header: 'Message', body: messageText, onPass: false });
+	} else if (payload.props.network === 'void') {
 		const receiverName = payload.props.params?.receiverName?.value;
 		if (receiverName) textMods.push({ id: 'beneficiary', header: 'Beneficiary', body: receiverName, onPass: false });
 		const messageText = payload.props.params?.message?.value;
@@ -283,10 +292,10 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 
 		smartTapRedemptionValue: payload.basicLink,
 
-		locations: payload.props.params.lat?.value && payload.props.params.lon?.value ? [
+		locations: payload.props.params.loc?.lat && payload.props.params.loc.lon ? [
 			{
-				latitude: payload.props.params.lat?.value,
-				longitude: payload.props.params.lon?.value,
+				latitude: payload.props.params.loc.lat,
+				longitude: payload.props.params.loc.lon,
 				relevantText: payload.props.params.message?.value
 					? payload.props.params.message.value
 					: 'Payment Location'
@@ -301,9 +310,9 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 
 		linksModuleData: {
 			uris: [
-				...(payload.props.params.lat?.value && payload.props.params.lon?.value ? [{
+				...(payload.props.params.loc?.lat && payload.props.params.loc.lon ? [{
 					kind: 'walletobjects#uri',
-					uri: `geo:${payload.props.params.lat?.value},${payload.props.params.lon?.value}`,
+					uri: `https://www.google.com/maps/place/${payload.props.params.loc.lat},${payload.props.params.loc.lon}`,
 					description: 'Navigate to Location'
 				}] : []),
 				...(payload.explorerUrl ? [{
