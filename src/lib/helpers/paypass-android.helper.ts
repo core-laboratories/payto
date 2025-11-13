@@ -1,13 +1,7 @@
 import * as jose from 'jose';
 import { env as publicEnv } from '$env/dynamic/public';
 import { calculateNotifications } from './paypass-notifications.helper';
-import { getPaypassLocalizedString } from './paypass-i18n.helper';
-
-type LocalizedText = {
-	defaultValue: string;
-	defaultLanguage?: string;
-	translatedValues?: Record<string, string>;
-};
+import { getPaypassLocalizedString, type LocalizedText } from './paypass-i18n.helper';
 
 type TextModConfig = {
 	id?: string;
@@ -50,7 +44,7 @@ export interface GoogleWalletPayPassResult {
 
 /**
  * Convert our internal LocalizedText shape (defaultValue + translatedValues map)
- * into Google Wallet LocalizedString shape.
+ * into the Google Wallet LocalizedString shape.
  */
 function toGoogleLocalizedString(
 	src: LocalizedText | undefined,
@@ -61,22 +55,24 @@ function toGoogleLocalizedString(
 } | undefined {
 	if (!src || !src.defaultValue) return undefined;
 
-	const defaultLanguage = src.defaultLanguage || fallbackLanguage;
+	// If we know the real language of defaultValue, use it.
+	// Otherwise fall back to 'en' to avoid invalid payloads.
+	const language = src.defaultLanguage || fallbackLanguage;
 
 	const result: {
 		defaultValue: { language: string; value: string };
 		translatedValues?: { language: string; value: string }[];
 	} = {
 		defaultValue: {
-			language: defaultLanguage,
+			language,
 			value: src.defaultValue
 		}
 	};
 
 	if (src.translatedValues && Object.keys(src.translatedValues).length > 0) {
 		result.translatedValues = Object.entries(src.translatedValues).map(
-			([language, value]) => ({
-				language,
+			([lang, value]) => ({
+				language: lang,
 				value
 			})
 		);

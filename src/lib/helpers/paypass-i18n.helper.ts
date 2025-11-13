@@ -3,35 +3,54 @@ import { loadAllLocales } from '$i18n/i18n-util.sync';
 import { loadedLocales, locales } from '$i18n/i18n-util';
 import en from '$i18n/en/index';
 
-type LocalizedText = {
+export type LocalizedText = {
+	/**
+	 * Text to use when no locale-specific override matches.
+	 * Usually the English string, but can be any language if
+	 * English is missing for the key.
+	 */
 	defaultValue: string;
+
+	/**
+	 * BCP-47 (Google Wallet style) language tag for defaultValue.
+	 * Example: "en", "en-US", "sk", "cs-CZ"
+	 */
 	defaultLanguage: string;
+
+	/**
+	 * Language → string overrides for all other locales that differ
+	 * from defaultValue.
+	 */
 	translatedValues?: Record<string, string>;
 };
 
 /**
- * Map locale codes from typesafe-i18n format to Google Wallet format
- * Google Wallet uses ISO 639-1 language codes with ISO 3166-1 country codes (e.g., 'en-US', 'de', 'cs-CZ')
+ * Map locale codes from typesafe-i18n to Google Wallet style.
+ *
+ * - typesafe-i18n: "en", "en_US", "sk", "cs_CZ"
+ * - Google Wallet: "en", "en-US", "sk", "cs-CZ"
  */
 function mapLocaleToGoogleWallet(locale: Locales): string {
-	// Convert underscore to hyphen for Google Wallet format
 	return locale.replace(/_/g, '-');
 }
 
 /**
- * Get nested value from an object using a dot-separated path
- * @param obj - Object to traverse
- * @param path - Dot-separated path (e.g., 'paypass.address')
- * @returns The value at the path, or undefined if not found
+ * Safely read a nested property using a dot-separated path.
+ *
+ * Example:
+ *   getNestedValue(obj, "paypass.network")
  */
-function getNestedValue(obj: any, path: string): string | undefined {
+function getNestedValue(obj: unknown, path: string): string | undefined {
+	if (!obj) return undefined;
+
 	const keys = path.split('.');
-	let current = obj;
+	let current: unknown = obj;
 
 	for (const key of keys) {
-		if (current && typeof current === 'object' && key in current) {
-			current = current[key];
+		if (current && typeof current === 'object' && key in (current as Record<string, unknown>)) {
+			current = (current as Record<string, unknown>)[key];
 		} else {
+            // Key not found on this branch
 			return undefined;
 		}
 	}
@@ -40,16 +59,12 @@ function getNestedValue(obj: any, path: string): string | undefined {
 }
 
 /**
- * Get Google Wallet LocalizedString-friendly shape from i18n translations
+ * Build a LocalizedText structure for a given i18n key path.
  *
- * This function loads all locale translations and collects values for the given key path.
- * It returns an object with:
- *  - defaultValue: the text in the default language (prefer English if available)
- *  - defaultLanguage: the language code (Google Wallet format) for defaultValue
- *  - translatedValues: a map of language -> value for all other locales that differ
- *
- * @param keyPath - Dot-separated path to the translation key (e.g., 'paypass.address')
- * @returns { defaultValue, defaultLanguage, translatedValues? } or undefined if key not found
+ * - Prefer English as the default language if it exists.
+ * - Otherwise, use the first locale that has a translation.
+ * - translatedValues contains only entries that actually differ
+ *   from defaultValue (so we don’t duplicate English).
  */
 export function getPaypassLocalizedString(keyPath: string): LocalizedText | undefined {
 	// Ensure all locales are loaded
@@ -59,39 +74,41 @@ export function getPaypassLocalizedString(keyPath: string): LocalizedText | unde
 	let defaultLanguage: string | undefined;
 	const translatedValues: Record<string, string> = {};
 
-	// Prefer English as default if available
+	// 1) Prefer English as the default, if it exists
 	const englishValue = getNestedValue(en, keyPath);
 	if (englishValue) {
 		defaultValue = englishValue;
 		defaultLanguage = mapLocaleToGoogleWallet('en' as Locales);
 	}
 
+	// 2) Collect values for all locales
 	for (const locale of locales) {
-		const translation = loadedLocales[locale];
-		if (!translation) continue;
+		const translationRoot = loadedLocales[locale];
+		if (!translationRoot) continue;
 
-		const value = getNestedValue(translation, keyPath);
+		const value = getNestedValue(translationRoot, keyPath);
 		if (!value) continue;
 
-		const googleLocale = mapLocaleToGoogleWallet(locale);
+		const gwLocale = mapLocaleToGoogleWallet(locale);
 
-		// If we don't have a defaultValue yet, use the first found translation
+		// If we don’t yet have a default, take the first non-empty one
 		if (!defaultValue) {
 			defaultValue = value;
-			defaultLanguage = googleLocale;
+			defaultLanguage = gwLocale;
 			continue;
 		}
 
-		// If this is 'en' and we already set defaultValue from 'en', skip
+		// Skip English, since it’s our default
 		if (locale === 'en') continue;
 
-		// Only include if different from defaultValue (avoid duplicates)
+		// Only store if it actually differs from the default text
 		if (value !== defaultValue) {
-			translatedValues[googleLocale] = value;
+			translatedValues[gwLocale] = value;
 		}
 	}
 
 	if (!defaultValue || !defaultLanguage) {
+		// Key doesn’t exist in any loaded locale
 		return undefined;
 	}
 
