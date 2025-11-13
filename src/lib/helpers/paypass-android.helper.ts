@@ -212,6 +212,36 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 	const updateRequestUrl = publicEnv.PUBLIC_GW_UPDATE_REQUEST_URL ? publicEnv.PUBLIC_GW_UPDATE_REQUEST_URL : `${payload.linkBaseUrl}/pass/gw/update`;
 	const enableSmartTap = payload.enableSmartTap ? payload.enableSmartTap : true;
 
+	// Process merchantLocations: validate and limit to 10 items max
+	const merchantLocations = (() => {
+		const locations = payload.merchantLocations || [];
+		if (!Array.isArray(locations) || locations.length === 0) return undefined;
+
+		const validLocations = locations
+			.filter((loc: any) => {
+				// Validate that location has latitude and longitude
+				if (typeof loc?.latitude !== 'number' || typeof loc?.longitude !== 'number') {
+					return false;
+				}
+				// Validate latitude range: -90.0 to +90.0
+				if (loc.latitude < -90.0 || loc.latitude > 90.0) {
+					return false;
+				}
+				// Validate longitude range: -180.0 to +180.0
+				if (loc.longitude < -180.0 || loc.longitude > 180.0) {
+					return false;
+				}
+				return true;
+			})
+			.slice(0, 10) // Limit to 10 items max
+			.map((loc: any) => ({
+				latitude: loc.latitude,
+				longitude: loc.longitude
+			}));
+
+		return validLocations.length > 0 ? validLocations : undefined;
+	})();
+
 	const gwClass: any = {
 		id: classId,
 		issuerName: issuerName,
@@ -228,6 +258,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		...(payload.redemptionIssuers?.length
 			? { redemptionIssuers: payload.redemptionIssuers }
 			: {}),
+		...(merchantLocations ? { merchantLocations } : {}),
 		...(callbackUrl || updateRequestUrl
 			? {
 				callbackOptions: {
@@ -312,7 +343,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 			uris: [
 				...(payload.props.params.loc?.lat && payload.props.params.loc.lon ? [{
 					kind: 'walletobjects#uri',
-					uri: `https://www.google.com/maps/place/${payload.props.params.loc.lat},${payload.props.params.loc.lon}`,
+					uri: `https://www.google.com/maps/dir/?api=1&origin=Current+Location&destination=${payload.props.params.loc.lat},${payload.props.params.loc.lon}`,
 					description: 'Navigate to Location'
 				}] : []),
 				...(payload.explorerUrl ? [{

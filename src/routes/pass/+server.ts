@@ -254,7 +254,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				purposeLabel: 'Item',
 				purposeText: purposeText,
 				amountLabel: isRecurring ? (isDonate ? 'Recurring Donation' : 'Recurring Payment') : (isDonate ? 'Donation' : 'Payment'),
-				amountText: finalAmount + ' ' + JSON.stringify(props),
+				amountText: finalAmount,
 				//subheaderText: standardizeOrg(org) || 'Address',
 				hexBackgroundColor: getValidBackgroundColor(design, kvData, '#2A3950'),
 				barcode: getBarcodeConfig(design.barcode || 'qr', bareLink, codeText).google,
@@ -274,6 +274,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 					chainId,
 					redemptionIssuers: kvData?.data?.google?.redemptionIssuers || [],
 					enableSmartTap: kvData?.data?.google?.enableSmartTap || true,
+					merchantLocations: kvData?.data?.google?.merchantLocation || [],
 					splitPayment,
 					swap
 				},
