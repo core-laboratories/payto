@@ -12,30 +12,32 @@ export const getCurrency = (state: any, type: ITransitionType | undefined, pass:
 			case 'upi':
 			case 'pix':
 			case 'bic':
+			case 'intra':
 			case 'void':
-				return state.params.currency.value !== undefined ? state.params.currency.value : undefined;
+				return state.params.currency?.value;
 			default: // All the rest - including ICAN
-				return state.params.fiat.value !== undefined ? state.params.fiat.value : // Fiat value
-					state.params.currency.value !== undefined ? state.params.currency.value : // Token value
-					state.other !== undefined ? state.other : // Other value - custom currency
-					(state.network !== undefined) ? state.network : // Network value
+				return state.params.fiat?.value ?? // Fiat value
+					state.params.currency?.value ?? // Token value
+					state.other ?? // Other value - custom currency
+					state.network ?? // Network value
 					undefined;
 		}
 	} else if (state && state.params) {
 		switch (type) {
 			case 'ican':
-				return state.params.fiat.value !== undefined ? String(state.params.fiat.value) : // Fiat value
-					state.params.currency.value !== undefined ? String(state.params.currency.value) : // Token value
-					state.other !== undefined ? String(state.other) : // Other value - custom currency
-					(state.network !== undefined && state.network !== 'other') ? String(state.network) : // Network value
+				return state.params.fiat?.value !== undefined ? String(state.params.fiat.value) :
+					state.params.currency?.value !== undefined ? String(state.params.currency.value) :
+					state.other !== undefined ? String(state.other) :
+					(state.network !== undefined && state.network !== 'other') ? String(state.network) :
 					undefined;
 			case 'iban':
 			case 'ach':
 			case 'upi':
 			case 'pix':
 			case 'bic':
+			case 'intra':
 			case 'void':
-				return state.params.currency.value !== undefined ? String(state.params.currency.value) : undefined;
+				return state.params.currency?.value !== undefined ? String(state.params.currency.value) : undefined;
 			default:
 				return undefined;
 		}

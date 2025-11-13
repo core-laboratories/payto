@@ -18,7 +18,7 @@ export function getTitleText(hostname: string, destination: string, props: any, 
 	} else if (hostname === 'upi' || hostname === 'pix') {
 		return prefixed ? hostname.toUpperCase() + ' ' + splitAddress(destination, '@', 1).toLowerCase() : splitAddress(destination, '@', 1).toLowerCase();
 	} else if (hostname === 'intra') {
-		return prefixed ? 'Intra-bank ' + shortenTitle(destination) : shortenTitle(destination);
+		return prefixed ? hostname.toUpperCase() + ' ' + shortenTitle(destination) : shortenTitle(destination);
 	} else if (hostname === 'void') {
 		if (props.network === 'geo') {
 			const [lat, lon] = destination.toString().split(',');

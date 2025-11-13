@@ -26,32 +26,37 @@ export const getAddress = (address: ITransactionState | string | null | undefine
 		}
 	}
 
+	// Helper to normalize address values
+	const normalizeAddress = (value: any): string | undefined => {
+		return (value && typeof value === 'string' && value.trim()) ? value.trim() : undefined;
+	};
+
 	// Handle ITransactionState case (from constructor)
 	switch (type) {
 		case 'ican':
-			return address.destination || undefined;
+			return normalizeAddress(address.destination);
 		case 'iban':
-			return address.iban || undefined;
+			return normalizeAddress(address.iban);
 		case 'ach':
-			return address.accountNumber || undefined;
+			return normalizeAddress(address.accountNumber);
 		case 'upi':
 		case 'pix':
-			return address.accountAlias || undefined;
+			return normalizeAddress(address.accountAlias);
 		case 'bic':
-			return address.bic || undefined;
+			return normalizeAddress(address.bic);
 		case 'intra':
-			return address.id || undefined;
+			return normalizeAddress(address.id);
 		case 'void':
 			if (address.transport === 'geo') {
-				if(address.params.loc.lat && address.params.loc.lon) {
-					return address.params.loc.value || undefined;
+				if (address.params?.loc?.lat && address.params?.loc?.lon) {
+					return normalizeAddress(address.params.loc.value);
 				} else {
 					return undefined;
 				}
 			} else if (address.transport === 'plus') {
-				return address.params.loc.plus || undefined;
+				return normalizeAddress(address.params?.loc?.plus);
 			} else if (address.other) {
-				return address.other || undefined;
+				return normalizeAddress(address.other);
 			}
 			return undefined;
 		default:
