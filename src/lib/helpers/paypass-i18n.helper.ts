@@ -54,6 +54,11 @@ function mapLocaleToGoogleWallet(locale: Locales): string {
 	return locale.replace(/_/g, '-');
 }
 
+function mapGoogleWalletToLocale(locale: string): Locales | undefined {
+	const normalized = locale.replace(/-/g, '_') as Locales;
+	return translationsByLocale[normalized] ? normalized : undefined;
+}
+
 /**
  * Safely read a nested property using a dot-separated path.
  *
@@ -155,4 +160,27 @@ export function getPaypassLocalizedString(keyPath: string): LocalizedText | unde
 		defaultLanguage,
 		...(Object.keys(translatedValues).length > 0 ? { translatedValues } : {})
 	};
+}
+
+export function getPaypassLocalizedValueForLocale(keyPath: string, locale: string): string | null {
+	const localesToTry: Locales[] = [];
+
+	const mapped = mapGoogleWalletToLocale(locale);
+	if (mapped) {
+		localesToTry.push(mapped);
+	}
+
+	if (!localesToTry.includes('en')) {
+		localesToTry.push('en');
+	}
+
+	for (const loc of localesToTry) {
+		const translationRoot = translationsByLocale[loc];
+		const value = getNestedValue(translationRoot, keyPath);
+		if (value) {
+			return value;
+		}
+	}
+
+	return null;
 }

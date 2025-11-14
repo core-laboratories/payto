@@ -256,6 +256,46 @@ type RootTranslation = {
 		 * P​a​y​P​a​s​s
 		 */
 		paypass: string
+		/**
+		 * S​c​a​n​ ​t​o​ ​d​o​n​a​t​e
+		 */
+		scanToDonate: string
+		/**
+		 * S​c​a​n​ ​t​o​ ​p​a​y
+		 */
+		scanToPay: string
+		/**
+		 * P​a​y​m​e​n​t​ ​L​o​c​a​t​i​o​n
+		 */
+		paymentLocation: string
+		/**
+		 * N​a​v​i​g​a​t​e​ ​t​o​ ​L​o​c​a​t​i​o​n
+		 */
+		navigateToLocation: string
+		/**
+		 * V​i​e​w​ ​T​r​a​n​s​a​c​t​i​o​n​s
+		 */
+		viewTransactions: string
+		/**
+		 * O​n​l​i​n​e​ ​P​a​y​P​a​s​s
+		 */
+		onlinePaypass: string
+		/**
+		 * T​o​p​ ​u​p​ ​C​r​y​p​t​o​ ​C​a​r​d
+		 */
+		topUpCryptoCard: string
+		/**
+		 * S​w​a​p​ ​C​u​r​r​e​n​c​y
+		 */
+		swapCurrency: string
+		/**
+		 * A​c​t​i​v​a​t​e​ ​P​r​o
+		 */
+		activatePro: string
+		/**
+		 * S​e​n​d​ ​O​f​f​l​i​n​e​ ​T​r​a​n​s​a​c​t​i​o​n
+		 */
+		sendOfflineTransaction: string
 	}
 }
 
@@ -483,6 +523,46 @@ export type TranslationFunctions = {
 		 * PayPass
 		 */
 		paypass: () => LocalizedString
+		/**
+		 * Scan to donate
+		 */
+		scanToDonate: () => LocalizedString
+		/**
+		 * Scan to pay
+		 */
+		scanToPay: () => LocalizedString
+		/**
+		 * Payment Location
+		 */
+		paymentLocation: () => LocalizedString
+		/**
+		 * Navigate to Location
+		 */
+		navigateToLocation: () => LocalizedString
+		/**
+		 * View Transactions
+		 */
+		viewTransactions: () => LocalizedString
+		/**
+		 * Online PayPass
+		 */
+		onlinePaypass: () => LocalizedString
+		/**
+		 * Top up Crypto Card
+		 */
+		topUpCryptoCard: () => LocalizedString
+		/**
+		 * Swap Currency
+		 */
+		swapCurrency: () => LocalizedString
+		/**
+		 * Activate Pro
+		 */
+		activatePro: () => LocalizedString
+		/**
+		 * Send Offline Transaction
+		 */
+		sendOfflineTransaction: () => LocalizedString
 	}
 }
 

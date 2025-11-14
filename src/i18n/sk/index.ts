@@ -67,7 +67,17 @@ const skPartial: DeepPartial<Translation> = {
 		id: 'ID',
 		accountId: 'ID účtu',
 		pay: 'Zaplatiť',
-		paypass: 'PayPass'
+		paypass: 'PayPass',
+		scanToDonate: 'Skenovať na darovanie',
+		scanToPay: 'Skenovať na zaplatenie',
+		paymentLocation: 'Miesto platby',
+		navigateToLocation: 'Navigovať na miesto',
+		viewTransactions: 'Zobraziť transakcie',
+		onlinePaypass: 'Online PayPass',
+		topUpCryptoCard: 'Dobiť krypto kartu',
+		swapCurrency: 'Zameniť menu',
+		activatePro: 'Aktivovať Pro',
+		sendOfflineTransaction: 'Odoslať offline transakciu'
 	}
 }
 

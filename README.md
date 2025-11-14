@@ -86,6 +86,7 @@ Issuing authorities[^authority] deliver an object like this example to the email
   "forceTheme": false, // If true, forces your theme even if users or system set their own custom colors
   "data": { // Organization data
     "google": { // Google Wallet data
+      "locale": "en", // The locale used for Google Wallet data (e.g., `"en-GB"`, `"de"`, `"sk"`)
       "redemptionIssuers": [ // Redemption issuers for Google Wallet
         "1234567890" // Redemption issuer ID
       ],
@@ -162,6 +163,8 @@ Issuing authorities[^authority] deliver an object like this example to the email
 
 - **`data`** (optional): Organization data.
   - `google`: Google Wallet data
+    - `locale`: The locale used for Google Wallet data (e.g., `"en-GB"`, `"de"`, `"sk"`)
+      - Default: parsed or provided in the request
     - `redemptionIssuers`: Redemption issuers for Google Wallet (array of strings)
       - Example: `["1234567890"]`
       - Default: none

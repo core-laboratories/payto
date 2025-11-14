@@ -1,7 +1,7 @@
 import * as jose from 'jose';
 import { env as publicEnv } from '$env/dynamic/public';
 import { calculateNotifications } from './paypass-notifications.helper';
-import { getPaypassLocalizedString, type LocalizedText } from './paypass-i18n.helper';
+import { getPaypassLocalizedString, type LocalizedText, getPaypassLocalizedValueForLocale as getPaypassLocalizedValue } from './paypass-i18n.helper';
 
 const isDebug = true;
 
@@ -33,6 +33,7 @@ export interface GoogleWalletPayPassConfig {
 	barcode: any;
 	donate?: boolean;
 	rtl?: boolean;	// Right-to-left support (manual swap)
+	locale?: string;
 	payload: any;	// Full payload with all data
 }
 
@@ -102,7 +103,8 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		barcode,
 		donate,
 		payload,
-		rtl = false
+		rtl = false,
+		locale = 'en'
 	} = config;
 
 	// Validate configuration
@@ -657,8 +659,6 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 	// Calculate notifications based on expiration date
 	const notifications = calculateNotifications(payload.expirationDate);
 
-	const payLangI18nKey = 'paypass.pay';
-	const payHeaderLoc = getPaypassLocalizedString(payLangI18nKey);
 	const paypassLangI18nKey = 'paypass.paypass';
 	const paypassHeaderLoc = getPaypassLocalizedString(paypassLangI18nKey);
 	const paymentLangI18nKey = 'paypass.payment';
@@ -673,10 +673,10 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		} : {}),
 
 		appLinkData: {
-			displayText: { defaultValue: { language: 'en-US', value: payHeaderLoc?.defaultValue || 'Pay' } }, // TODO: Add translation
+			displayText: { defaultValue: { language: locale, value: getPaypassLocalizedValue('paypass.pay', locale) || 'Pay' } },
 			webAppLinkInfo: {
 				appTarget: {
-					targetUri: { uri: payload.fullLink, description: 'Pay' } // TODO: Add translation
+					targetUri: { uri: payload.fullLink, description: getPaypassLocalizedValue('paypass.pay', locale) || 'Pay' }
 				}
 			}
 		},
@@ -706,7 +706,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 				longitude: payload.props.params.loc.lon,
 				relevantText: payload.props.params.message?.value
 					? payload.props.params.message.value
-					: 'Payment Location' // TODO: Add translation
+					: getPaypassLocalizedValue('paypass.paymentLocation', locale) || 'Payment Location'
 			}
 		] : [],
 
@@ -718,37 +718,37 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 				...(payload.props.params.loc?.lat && payload.props.params.loc.lon ? [{
 					kind: 'walletobjects#uri',
 					uri: `https://www.google.com/maps/dir/?api=1&origin=Current+Location&destination=${payload.props.params.loc.lat},${payload.props.params.loc.lon}`,
-					description: 'Navigate to Location' // TODO: Add translation
+					description: getPaypassLocalizedValue('paypass.navigateToLocation', locale) || 'Navigate to Location'
 				}] : []),
 				...(payload.explorerUrl ? [{
 					kind: 'walletobjects#uri',
 					uri: payload.explorerUrl,
-					description: 'View Transactions' // TODO: Add translation
+					description: getPaypassLocalizedValue('paypass.viewTransactions', locale) || 'View Transactions'
 				}] : []),
 				...(payload.externalLink ? [{
 					kind: 'walletobjects#uri',
 					uri: payload.externalLink,
-					description: 'Online PayPass' // TODO: Add translation
+					description: getPaypassLocalizedValue('paypass.onlinePaypass', locale) || 'Online PayPass'
 				}] : []),
 				...(payload.props.network === 'xcb' ? [{
 					kind: 'walletobjects#uri',
 					uri: `${payload.linkBaseUrl}/card`,
-					description: 'Top up Crypto Card' // TODO: Add translation
+					description: getPaypassLocalizedValue('paypass.topUpCryptoCard', locale) || 'Top up Crypto Card'
 				}] : []),
 				...(payload.swapUrl ? [{
 					kind: 'walletobjects#uri',
 					uri: payload.swapUrl,
-					description: 'Swap Currency' // TODO: Add translation
+					description: getPaypassLocalizedValue('paypass.swapCurrency', locale) || 'Swap Currency'
 				}] : []),
 				...(payload.proUrl && payload.props.network == 'xcb' ? [{
 					kind: 'walletobjects#uri',
 					uri: payload.proUrl,
-					description: 'Activate Pro' // TODO: Add translation
+					description: getPaypassLocalizedValue('paypass.activatePro', locale) || 'Activate Pro'
 				}] : []),
 				...(payload.props.network === 'xcb' ? [{
 					kind: 'walletobjects#uri',
 					uri: 'sms:+12019715152',
-					description: 'Send Offline Transaction' // TODO: Add translation
+					description: getPaypassLocalizedValue('paypass.sendOfflineTransaction', locale) || 'Send Offline Transaction'
 				}] : [])
 			]
 		},

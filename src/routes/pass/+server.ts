@@ -99,6 +99,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 		data.authority = formData.get('authority') as string;
 		data.membership = formData.get('membership') as string;
 		data.os = (formData.get('os') as string) || url.searchParams.get('os') || '';
+		data.locale = (formData.get('locale') as string) || url.searchParams.get('locale') || null;
 
 		const formDestination = formData.get('destination') as string;
 		if (formDestination && data.props) data.props.destination = formDestination;
@@ -239,6 +240,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			const titleText = getTitleText(hostname, destination, props, currency, true);
 			const purposeText = getPurposeText(design);
 			const codeText = getCodeText(isDonate, 'scan');
+			const locale = kvData?.data?.google?.locale || data.locale || design.lang || 'en';
 
 			const { saveUrl, classId: finalClassId, gwObject, gwClass } = await buildGoogleWalletPayPassSaveLink({
 				issuerId: gwIssuerId,
@@ -258,6 +260,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				barcode: getBarcodeConfig(design.barcode || 'qr', bareLink, codeText).google,
 				donate: isDonate,
 				rtl: isRtl,
+				locale: locale,
 				payload: {
 					id: objectId,
 					basicLink: getLink(hostname, props),
