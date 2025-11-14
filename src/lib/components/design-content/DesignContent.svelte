@@ -168,10 +168,13 @@
 				return;
 			}
 
+			const contentDisposition = response.headers.get('Content-Disposition');
+			const filename = getFilenameFromContentDisposition(contentDisposition) || 'paypass.pkpass';
 			const blob = await response.blob();
 			const url = URL.createObjectURL(blob);
 			const a = document.createElement('a');
 			a.href = url;
+			a.download = filename;
 			a.click();
 			toast({ message: 'Pass downloaded successfully', type: 'success' });
 			URL.revokeObjectURL(url);
@@ -181,6 +184,23 @@
 			const errorMessage = error instanceof Error ? error.message : String(error);
 			toast({ message: errorMessage, type: 'error' });
 		}
+	}
+
+	function getFilenameFromContentDisposition(header: string | null): string | null {
+		if (!header) return null;
+		const utf8Match = header.match(/filename\*=UTF-8''([^;]+)/i);
+		if (utf8Match?.[1]) {
+			try {
+				return decodeURIComponent(utf8Match[1]);
+			} catch {
+				return utf8Match[1];
+			}
+		}
+		const quotedMatch = header.match(/filename="([^"]+)"/i);
+		if (quotedMatch?.[1]) {
+			return quotedMatch[1];
+		}
+		return null;
 	}
 
 	const link = derived(

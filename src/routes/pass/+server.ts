@@ -168,7 +168,12 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 		const memberAddress = membership || destination;
 
 		const serialId = getFileId([originator, memberAddress, destination, hostname, network]);
-		const fileId = getFileId([originator, memberAddress, destination, hostname, network], '-', true, false);
+		const rawFileId = getFileId([originator, memberAddress, destination, hostname, network], '-', true, false);
+		const sanitizedFileId = rawFileId
+			.replace(/[^a-zA-Z0-9-_]/g, '_')
+			.replace(/_+/g, '_')
+			.replace(/^_+|_+$/g, '') || 'paypass';
+		const pkpassFilename = `${sanitizedFileId}.pkpass`;
 		const explorerUrl = getExplorerUrl(network, { address: destination }, true, linkBaseUrl);
 		const customCurrencyData = kvData?.customCurrency || {};
 		const currency = getCurrency(props, network as ITransitionType, true);
@@ -364,7 +369,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			return new Response(pkpassBlob, {
 				headers: {
 					'Content-Type': 'application/vnd.apple.pkpass',
-					'Content-Disposition': `attachment; filename="${fileId}.pkpass"`
+					'Content-Disposition': `attachment; filename="${pkpassFilename}"; filename*=UTF-8''${encodeURIComponent(pkpassFilename)}`
 				}
 			});
 

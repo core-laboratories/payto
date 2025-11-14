@@ -2,6 +2,117 @@ import JSZip from 'jszip';
 import forge from 'node-forge';
 import { getImageUrls, getBarcodeConfig, getTitleText, formatter } from './paypass-operator.helper';
 import { getValidBackgroundColor, getValidForegroundColor } from './color-validation.helper';
+import {
+	getPaypassLocalizedValueForLocale as getPaypassLocalizedValue
+} from './paypass-i18n.helper';
+import { locales as availableLocales } from '$i18n/i18n-util';
+
+export interface AppleWalletPayPassConfig {
+	serialId: string;
+	passTypeIdentifier: string;
+	teamIdentifier: string | undefined;
+	org: string | null;
+	hostname: string;
+	props: any;
+	design: any;
+	kvData: any;
+	currency: string | undefined;
+	bareLink: string;
+	expirationDate: string | null;
+	memberAddress: string;
+	p12Base64: string | undefined;
+	p12Password: string | undefined;
+	wwdrPem: string | undefined;
+	isDev: boolean;
+	devServerUrl: string;
+	explorerUrl: string | null;
+	customCurrencyData: any;
+	proUrl: string;
+	fetch: typeof fetch;
+}
+
+/* ----------------------------------------------------------------
+ * Apple localization config (Google-style key reuse)
+ * ---------------------------------------------------------------- */
+
+// All locales we support for Apple Wallet
+const APPLE_LOCALES = Array.from(
+	new Set(
+		availableLocales
+			.map(locale => locale.replace(/_/g, '-'))
+			.filter(Boolean)
+	)
+);
+
+// All keys we want available in Apple pass.strings (mirrors Google usage)
+const APPLE_I18N_KEYS = [
+	'paypass.paypass',
+	'paypass.pay',
+	'paypass.address',
+	'paypass.network',
+	'paypass.cash',
+	'paypass.chain',
+	'paypass.amount',
+	'paypass.purpose',
+	'paypass.recurringDonation',
+	'paypass.recurringPayment',
+	'paypass.donation',
+	'paypass.payment',
+	'paypass.swapFor',
+	'paypass.split',
+	'paypass.iban',
+	'paypass.bic',
+	'paypass.beneficiary',
+	'paypass.bicOroric',
+	'paypass.accountNumber',
+	'paypass.routingNumber',
+	'paypass.accountAlias',
+	'paypass.message',
+	'paypass.id',
+	'paypass.accountId',
+	'paypass.paymentLocation',
+	'paypass.navigateToLocation',
+	'paypass.viewTransactions',
+	'paypass.onlinePaypass',
+	'paypass.topUpCryptoCard',
+	'paypass.swapCurrency',
+	'paypass.activatePro',
+	'paypass.sendOfflineTransaction',
+	'paypass.scanToDonate',
+	'paypass.scanToPay'
+];
+
+/**
+ * Escape a string for use in a .strings file.
+ */
+function escapeStringsValue(value: string): string {
+	return value
+		.replace(/\\/g, '\\\\')
+		.replace(/"/g, '\\"')
+		.replace(/\r?\n/g, '\\n');
+}
+
+/**
+ * Build contents of pass.strings for a given locale using existing paypass i18n keys.
+ * Keys are kept as-is (e.g. "paypass.payment") so we can reuse them across platforms.
+ */
+function buildApplePassStringsForLocale(locale: string): string {
+	const lines: string[] = [];
+
+	for (const key of APPLE_I18N_KEYS) {
+		const value =
+			getPaypassLocalizedValue(key, locale) ||
+			getPaypassLocalizedValue(key, 'en') ||
+			key;
+		lines.push(`"${key}" = "${escapeStringsValue(value)}";`);
+	}
+
+	return lines.join('\n') + '\n';
+}
+
+/* ----------------------------------------------------------------
+ * Manifest + signature helpers
+ * ---------------------------------------------------------------- */
 
 /**
  * Build Apple Wallet manifest (SHA-1 hashes of all files)
@@ -10,13 +121,21 @@ import { getValidBackgroundColor, getValidForegroundColor } from './color-valida
  */
 export async function buildAppleManifest(files: Record<string, ArrayBuffer>): Promise<string> {
 	const manifest: Record<string, string> = {};
+
 	for (const [name, content] of Object.entries(files)) {
 		const u8 = new Uint8Array(content);
-		const b = forge.util.createBuffer(u8 as unknown as string);
+
+		// Properly convert bytes for forge
+		const buffer = forge.util.createBuffer();
+		for (let i = 0; i < u8.length; i++) {
+			buffer.putByte(u8[i]);
+		}
+
 		const md = forge.md.sha1.create();
-		md.update(b.getBytes());
+		md.update(buffer.getBytes());
 		manifest[name] = md.digest().toHex();
 	}
+
 	return JSON.stringify(manifest, null, 2);
 }
 
@@ -78,35 +197,13 @@ export function signAppleManifestPKCS7({
 	return out;
 }
 
-export interface AppleWalletPayPassConfig {
-	serialId: string;
-	passTypeIdentifier: string;
-	teamIdentifier: string | undefined;
-	org: string | null;
-	hostname: string;
-	props: any;
-	design: any;
-	kvData: any;
-	currency: string | undefined;
-	bareLink: string;
-	expirationDate: string | null;
-	memberAddress: string;
-	p12Base64: string | undefined;
-	p12Password: string | undefined;
-	wwdrPem: string | undefined;
-	isDev: boolean;
-	devServerUrl: string;
-	explorerUrl: string | null;
-	customCurrencyData: any;
-	proUrl: string;
-	fetch: typeof fetch;
-}
+/* ----------------------------------------------------------------
+ * Main builder
+ * ---------------------------------------------------------------- */
 
 /**
  * Build Apple Wallet PayPass (.pkpass file) with proper PKCS#7 signature
- * @param config - Configuration object with all required parameters
- * @returns Promise resolving to Blob of the .pkpass file
- * @throws Error if Apple signing configuration is missing
+ * and Apple-style localization (.lproj/pass.strings) using Google-style keys.
  */
 export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig): Promise<Blob> {
 	const {
@@ -141,124 +238,280 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 		throw new Error('Apple signing configuration missing (P12/WWDR).');
 	}
 
-	const basicData = {
+	const safeOrg = org || 'PayPass';
+	const locale = design?.lang || 'en';
+
+	const isDonate = !!props.params?.donate?.value;
+	const isRecurring = !!props.params?.rc?.value;
+
+	// Decide header key like Google: payment / donation / recurring*
+	let paymentHeaderKey = 'paypass.payment';
+	if (isRecurring && isDonate) paymentHeaderKey = 'paypass.recurringDonation';
+	else if (isRecurring) paymentHeaderKey = 'paypass.recurringPayment';
+	else if (isDonate) paymentHeaderKey = 'paypass.donation';
+
+	// For Apple, labels (and some values) are KEYS, resolved via pass.strings
+	const paymentLabelKey = paymentHeaderKey;
+	const amountLabelKey = 'paypass.amount';
+	const typeLabelKey = 'paypass.type';
+	const itemLabelKey = 'paypass.purpose';
+	const messageLabelKey = 'paypass.message';
+	const splitLabelKey = 'paypass.split';
+	const viewTransactionsKey = 'paypass.viewTransactions';
+	const proLabelKey = 'paypass.activatePro';
+	const issuerLabelKey = 'paypass.beneficiary';
+	const accountAddressKey = 'paypass.accountAddress';
+	const paymentLocationKey = 'paypass.paymentLocation';
+
+	const titleForLogo = getTitleText(hostname, props, currency);
+	const logoText = String(titleForLogo || safeOrg);
+
+	const basicData: any = {
 		serialNumber: serialId,
 		passTypeIdentifier,
-		organizationName: org,
-		logoText: getTitleText(hostname, props, currency),
-		description: 'PayPass by ' + org,
-		expirationDate,
+		organizationName: safeOrg,
+		logoText,
+		description: 'PayPass by ' + safeOrg,
 		backgroundColor: getValidBackgroundColor(design, kvData, '#2A3950'),
 		foregroundColor: getValidForegroundColor(design, kvData, '#9AB1D6'),
 		labelColor: getValidForegroundColor(design, kvData, '#9AB1D6'),
 		appLaunchURL: bareLink,
-		...(hostname === 'void' && (props.network === 'geo' || props.network === 'plus') ? {
-			locations: [
-				{
-					latitude: props.params.lat?.value,
-					longitude: props.params.lon?.value,
-					relevantText: props.params.message?.value ? props.params.message.value : 'Payment location'
-				}
-			]
-		} : {})
+		...(hostname === 'void' && (props.network === 'geo' || props.network === 'plus')
+			? {
+				locations: [
+					{
+						latitude: props.params.lat?.value,
+						longitude: props.params.lon?.value,
+						// store key, value is resolved by pass.strings
+						relevantText: paymentLocationKey
+					}
+				]
+			}
+			: {})
 	};
 
-	const passData = {
-		...basicData,
-		formatVersion: 1,
-		teamIdentifier: teamIdentifier,
-		storeCard: {},  // Apple Wallet requires top-level style
-		nfc: {
-			message: bareLink,
-			requiresAuthentication: true
-		},
-		barcodes: [getBarcodeConfig(design.barcode || 'qr', bareLink).apple],
+	if (expirationDate) {
+		basicData.expirationDate = expirationDate;
+	}
+
+	// Normalize split config (support both props.params.split and props.split)
+	const splitConfig = (props.params && props.params.split) || props.split;
+
+	const amountValue =
+		props.params.amount?.value && Number(props.params.amount.value) > 0
+			? formatter(
+					currency,
+					kvData?.currencyLocale || undefined,
+					customCurrencyData
+			  ).format(Number(props.params.amount.value))
+			: 'Custom Amount';
+
+	const typeValue = isRecurring
+		? `Recurring ${String(props.params.rc.value).toUpperCase()}`
+		: 'One-time';
+
+	const networkPart =
+		hostname && hostname === 'void'
+			? 'CASH'
+			: hostname.toUpperCase() +
+			  (props.network ? ': ' + String(props.network).toUpperCase() : '');
+
+	// Prepare barcode with localized alternate text via key
+	const baseBarcode = getBarcodeConfig(design.barcode || 'qr', bareLink).apple;
+	const barcodeAltKey = isDonate ? 'paypass.scanToDonate' : 'paypass.scanToPay';
+	const barcode = {
+		...baseBarcode,
+		altText: barcodeAltKey
+	};
+
+	const storeCard = {
 		headerFields: [
 			{
 				key: 'payment',
-				label: props.params.donate?.value !== 0 ? 'Donation' : 'Payment',
-				value: hostname && hostname === 'void' ? 'CASH' : hostname.toUpperCase() + (props.network ? ': ' + props.network.toUpperCase() : '')
+				label: paymentLabelKey, // key → localized in pass.strings
+				value: networkPart
 			}
 		],
 		primaryFields: [
 			{
 				key: 'amount',
-				label: 'Amount',
-				value:
-					props.params.amount?.value && Number(props.params.amount.value) > 0
-						? formatter(currency, (kvData?.currencyLocale || undefined), customCurrencyData).format(Number(props.params.amount.value))
-						: 'Custom Amount'
+				label: amountLabelKey, // key
+				value: amountValue
 			}
 		],
 		secondaryFields: [
-			...(design.item ? [{ key: 'item', label: 'Item', value: design.item }] : []),
-			{ key: 'type', label: 'Type', value: props.params.rc?.value ? `Recurring ${props.params.rc.value.toUpperCase()}` : 'One-time' },
-			...(hostname === 'ican' ? [{
-				key: 'received',
-				label: 'Received',
-				value: 'Click to view transactions',
-				attributedValue: explorerUrl || '',
-				dataDetectorTypes: ['PKDataDetectorTypeLink']
-			}] : [])
+			...(design.item
+				? [
+						{
+							key: 'item',
+							label: itemLabelKey, // key
+							value: design.item
+						}
+				  ]
+				: []),
+			{
+				key: 'type',
+				label: typeLabelKey, // key
+				value: typeValue
+			},
+			...(hostname === 'ican'
+				? [
+						{
+							key: 'received',
+							label: viewTransactionsKey, // key
+							value: viewTransactionsKey, // also key (shows "Click to view…" via localization)
+							attributedValue: explorerUrl || '',
+							dataDetectorTypes: ['PKDataDetectorTypeLink']
+						}
+				  ]
+				: [])
 		],
 		auxiliaryFields: [
-			...(props.params.amount?.value && Number(props.params.amount.value) > 0 && props.split?.value ? [{
-				key: 'split',
-				label: 'Split',
-				value: props.split.isPercent
-					? `${Number(props.split.value)}%`
-					: formatter(currency, (kvData?.currencyLocale || undefined), customCurrencyData).format(Number(props.split.value))
-			}] : []),
-			...(props.params.message?.value ? [{ key: 'message', label: 'Message', value: props.params.message.value }] : []),
-			...(props.params.amount?.value && Number(props.params.amount.value) > 0 && props.split?.value && props.split?.address ? [{
-				key: 'split-address',
-				label: 'Split Receiving Address',
-				value: props.split.address
-			}] : []),
+			// Split
+			...(props.params.amount?.value &&
+			Number(props.params.amount.value) > 0 &&
+			splitConfig?.value
+				? [
+						{
+							key: 'split',
+							label: splitLabelKey, // key
+							value: splitConfig.isPercent
+								? `${Number(splitConfig.value)}%`
+								: formatter(
+										currency,
+										kvData?.currencyLocale || undefined,
+										customCurrencyData
+								  ).format(Number(splitConfig.value))
+						}
+				  ]
+				: []),
+
+			// Message
+			...(props.params.message?.value
+				? [
+						{
+							key: 'message',
+							label: messageLabelKey, // key
+							value: props.params.message.value
+						}
+				  ]
+				: []),
+
+			// Split receiving address
+			...(props.params.amount?.value &&
+			Number(props.params.amount.value) > 0 &&
+			splitConfig?.value &&
+			splitConfig?.address
+				? [
+						{
+							key: 'split-address',
+							label: accountAddressKey, // key
+							value: splitConfig.address
+						}
+				  ]
+				: []),
+
+			// Pro link
 			{
 				key: 'pro',
-				label: 'Pro',
-				value: `Activate Pro`,
+				label: proLabelKey, // key
+				value: proLabelKey, // key
 				attributedValue: proUrl,
 				dataDetectorTypes: ['PKDataDetectorTypeLink']
 			}
 		],
 		backFields: [
-			...(hostname === 'ican' ? [{
-				key: 'balance',
-				label: 'Balances',
-				value: 'Click to view',
-				attributedValue: explorerUrl || '',
-				dataDetectorTypes: ['PKDataDetectorTypeLink']
-			}] : []),
+			...(hostname === 'ican'
+				? [
+						{
+							key: 'balance',
+							label: viewTransactionsKey,
+							value: viewTransactionsKey,
+							attributedValue: explorerUrl || '',
+							dataDetectorTypes: ['PKDataDetectorTypeLink']
+						}
+				  ]
+				: []),
 			{
 				key: 'issuer',
-				label: 'Issuer',
-				value: `This PayPass is issued by: ${kvData?.name || org}`,
+				label: issuerLabelKey, // key
+				value: `This PayPass is issued by: ${kvData?.name || safeOrg}`,
 				attributedValue: `${kvData?.url || (kvData?.name ? '' : 'https://payto.money')}`,
 				dataDetectorTypes: ['PKDataDetectorTypeLink']
 			}
-		],
+		]
+	};
+
+	const passData: any = {
+		...basicData,
+		formatVersion: 1,
+		teamIdentifier,
+		storeCard,
+		nfc: {
+			message: bareLink,
+			requiresAuthentication: true
+		},
+		barcodes: [barcode],
 		...(kvData?.beacons ? { beacons: kvData.beacons } : {})
 	};
 
-	// 1) Prepare files: pass.json + images
+	// 1) Prepare files: pass.json + images + localization
 	const files: Record<string, ArrayBuffer> = {};
 	files['pass.json'] = new TextEncoder().encode(JSON.stringify(passData, null, 2)).buffer;
+
+	// Apple-style localization: one pass.strings per supported locale
+	for (const loc of APPLE_LOCALES) {
+		const stringsContent = buildApplePassStringsForLocale(loc);
+		const path = `${loc}.lproj/pass.strings`;
+		files[path] = new TextEncoder().encode(stringsContent).buffer;
+	}
 
 	// Load images using unified image URLs
 	const imageUrls = getImageUrls(kvData, memberAddress, isDev, devServerUrl);
 	const defaultImages: Record<string, ArrayBuffer> = {};
 
 	await Promise.all([
-		fetchFn(imageUrls.apple.icon).then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) defaultImages['icon.png'] = b; }).catch(() => {}),
-		fetchFn(imageUrls.apple.icon2x).then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) defaultImages['icon@2x.png'] = b; }).catch(() => {}),
-		fetchFn(imageUrls.apple.icon3x).then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) defaultImages['icon@3x.png'] = b; }).catch(() => {}),
-		fetchFn(imageUrls.apple.logo).then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) defaultImages['logo.png'] = b; }).catch(() => {}),
-		fetchFn(imageUrls.apple.logo2x).then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) defaultImages['logo@2x.png'] = b; }).catch(() => {}),
-		fetchFn(imageUrls.apple.logo3x).then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) defaultImages['logo@3x.png'] = b; }).catch(() => {})
+		fetchFn(imageUrls.apple.icon)
+			.then(r => (r.ok ? r.arrayBuffer() : null))
+			.then(b => {
+				if (b) defaultImages['icon.png'] = b;
+			})
+			.catch(() => {}),
+		fetchFn(imageUrls.apple.icon2x)
+			.then(r => (r.ok ? r.arrayBuffer() : null))
+			.then(b => {
+				if (b) defaultImages['icon@2x.png'] = b;
+			})
+			.catch(() => {}),
+		fetchFn(imageUrls.apple.icon3x)
+			.then(r => (r.ok ? r.arrayBuffer() : null))
+			.then(b => {
+				if (b) defaultImages['icon@3x.png'] = b;
+			})
+			.catch(() => {}),
+		fetchFn(imageUrls.apple.logo)
+			.then(r => (r.ok ? r.arrayBuffer() : null))
+			.then(b => {
+				if (b) defaultImages['logo.png'] = b;
+			})
+			.catch(() => {}),
+		fetchFn(imageUrls.apple.logo2x)
+			.then(r => (r.ok ? r.arrayBuffer() : null))
+			.then(b => {
+				if (b) defaultImages['logo@2x.png'] = b;
+			})
+			.catch(() => {}),
+		fetchFn(imageUrls.apple.logo3x)
+			.then(r => (r.ok ? r.arrayBuffer() : null))
+			.then(b => {
+				if (b) defaultImages['logo@3x.png'] = b;
+			})
+			.catch(() => {})
 	]);
-	for (const [name, ab] of Object.entries(defaultImages)) files[name] = ab;
+
+	for (const [name, ab] of Object.entries(defaultImages)) {
+		files[name] = ab;
+	}
 
 	// 2) manifest.json (SHA-1)
 	const manifestText = await buildAppleManifest(files);
