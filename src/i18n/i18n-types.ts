@@ -180,6 +180,122 @@ type RootTranslation = {
 		 * A​m​o​u​n​t
 		 */
 		amount: string
+		/**
+		 * I​t​e​m
+		 */
+		purpose: string
+		/**
+		 * R​e​c​u​r​r​i​n​g​ ​D​o​n​a​t​i​o​n
+		 */
+		recurringDonation: string
+		/**
+		 * R​e​c​u​r​r​i​n​g​ ​P​a​y​m​e​n​t
+		 */
+		recurringPayment: string
+		/**
+		 * D​o​n​a​t​i​o​n
+		 */
+		donation: string
+		/**
+		 * P​a​y​m​e​n​t
+		 */
+		payment: string
+		/**
+		 * S​w​a​p​ ​f​o​r
+		 */
+		swapFor: string
+		/**
+		 * S​p​l​i​t
+		 */
+		split: string
+		/**
+		 * I​B​A​N
+		 */
+		iban: string
+		/**
+		 * B​I​C
+		 */
+		bic: string
+		/**
+		 * B​e​n​e​f​i​c​i​a​r​y
+		 */
+		beneficiary: string
+		/**
+		 * B​I​C​ ​/​ ​O​R​I​C
+		 */
+		bicOroric: string
+		/**
+		 * A​c​c​o​u​n​t​ ​N​u​m​b​e​r
+		 */
+		accountNumber: string
+		/**
+		 * R​o​u​t​i​n​g​ ​N​u​m​b​e​r
+		 */
+		routingNumber: string
+		/**
+		 * A​c​c​o​u​n​t​ ​A​l​i​a​s
+		 */
+		accountAlias: string
+		/**
+		 * M​e​s​s​a​g​e
+		 */
+		message: string
+		/**
+		 * I​D
+		 */
+		id: string
+		/**
+		 * A​c​c​o​u​n​t​ ​I​D
+		 */
+		accountId: string
+		/**
+		 * P​a​y
+		 */
+		pay: string
+		/**
+		 * P​a​y​P​a​s​s
+		 */
+		paypass: string
+		/**
+		 * S​c​a​n​ ​t​o​ ​d​o​n​a​t​e
+		 */
+		scanToDonate: string
+		/**
+		 * S​c​a​n​ ​t​o​ ​p​a​y
+		 */
+		scanToPay: string
+		/**
+		 * P​a​y​m​e​n​t​ ​L​o​c​a​t​i​o​n
+		 */
+		paymentLocation: string
+		/**
+		 * N​a​v​i​g​a​t​e​ ​t​o​ ​L​o​c​a​t​i​o​n
+		 */
+		navigateToLocation: string
+		/**
+		 * V​i​e​w​ ​T​r​a​n​s​a​c​t​i​o​n​s
+		 */
+		viewTransactions: string
+		/**
+		 * O​n​l​i​n​e​ ​P​a​y​P​a​s​s
+		 */
+		onlinePaypass: string
+		/**
+		 * T​o​p​ ​u​p​ ​C​r​y​p​t​o​ ​C​a​r​d
+		 */
+		topUpCryptoCard: string
+		/**
+		 * S​w​a​p​ ​C​u​r​r​e​n​c​y
+		 */
+		swapCurrency: string
+		/**
+		 * A​c​t​i​v​a​t​e​ ​P​r​o
+		 */
+		activatePro: string
+		/**
+		 * S​e​n​d​ ​O​f​f​l​i​n​e​ ​T​r​a​n​s​a​c​t​i​o​n
+		 */
+		sendOfflineTransaction: string
 	}
 }
 
@@ -331,6 +447,122 @@ export type TranslationFunctions = {
 		 * Amount
 		 */
 		amount: () => LocalizedString
+		/**
+		 * Item
+		 */
+		purpose: () => LocalizedString
+		/**
+		 * Recurring Donation
+		 */
+		recurringDonation: () => LocalizedString
+		/**
+		 * Recurring Payment
+		 */
+		recurringPayment: () => LocalizedString
+		/**
+		 * Donation
+		 */
+		donation: () => LocalizedString
+		/**
+		 * Payment
+		 */
+		payment: () => LocalizedString
+		/**
+		 * Swap for
+		 */
+		swapFor: () => LocalizedString
+		/**
+		 * Split
+		 */
+		split: () => LocalizedString
+		/**
+		 * IBAN
+		 */
+		iban: () => LocalizedString
+		/**
+		 * BIC
+		 */
+		bic: () => LocalizedString
+		/**
+		 * Beneficiary
+		 */
+		beneficiary: () => LocalizedString
+		/**
+		 * BIC / ORIC
+		 */
+		bicOroric: () => LocalizedString
+		/**
+		 * Account Number
+		 */
+		accountNumber: () => LocalizedString
+		/**
+		 * Routing Number
+		 */
+		routingNumber: () => LocalizedString
+		/**
+		 * Account Alias
+		 */
+		accountAlias: () => LocalizedString
+		/**
+		 * Message
+		 */
+		message: () => LocalizedString
+		/**
+		 * ID
+		 */
+		id: () => LocalizedString
+		/**
+		 * Account ID
+		 */
+		accountId: () => LocalizedString
+		/**
+		 * Pay
+		 */
+		pay: () => LocalizedString
+		/**
+		 * PayPass
+		 */
+		paypass: () => LocalizedString
+		/**
+		 * Scan to donate
+		 */
+		scanToDonate: () => LocalizedString
+		/**
+		 * Scan to pay
+		 */
+		scanToPay: () => LocalizedString
+		/**
+		 * Payment Location
+		 */
+		paymentLocation: () => LocalizedString
+		/**
+		 * Navigate to Location
+		 */
+		navigateToLocation: () => LocalizedString
+		/**
+		 * View Transactions
+		 */
+		viewTransactions: () => LocalizedString
+		/**
+		 * Online PayPass
+		 */
+		onlinePaypass: () => LocalizedString
+		/**
+		 * Top up Crypto Card
+		 */
+		topUpCryptoCard: () => LocalizedString
+		/**
+		 * Swap Currency
+		 */
+		swapCurrency: () => LocalizedString
+		/**
+		 * Activate Pro
+		 */
+		activatePro: () => LocalizedString
+		/**
+		 * Send Offline Transaction
+		 */
+		sendOfflineTransaction: () => LocalizedString
 	}
 }
 

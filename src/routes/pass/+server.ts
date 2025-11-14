@@ -251,11 +251,8 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				companyName,
 				orgName,
 				titleText: titleText || undefined,
-				purposeLabel: 'Item',
 				purposeText: purposeText,
-				amountLabel: isRecurring
-					? (isDonate ? 'Recurring Donation' : 'Recurring Payment')
-					: (isDonate ? 'Donation' : 'Payment'),
+				amountType: { recurring: isRecurring, donate: isDonate },
 				amountText: finalAmount,
 				hexBackgroundColor: getValidBackgroundColor(design, kvData, '#2A3950'),
 				barcode: getBarcodeConfig(design.barcode || 'qr', bareLink, codeText).google,
@@ -280,6 +277,10 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 					swap
 				}
 			});
+
+			if (true) {
+				console.log('Google Wallet PayPass Save Link:', JSON.stringify({ saveUrl, id: objectId, classId: finalClassId, gwObject, gwClass }, null, 2));
+			}
 
 			// Optional stats logging
 			if (enableStats && supabase) {

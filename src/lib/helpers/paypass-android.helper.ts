@@ -3,6 +3,8 @@ import { env as publicEnv } from '$env/dynamic/public';
 import { calculateNotifications } from './paypass-notifications.helper';
 import { getPaypassLocalizedString, type LocalizedText } from './paypass-i18n.helper';
 
+const isDebug = true;
+
 type TextModConfig = {
 	id?: string;
 	header: string;
@@ -23,9 +25,8 @@ export interface GoogleWalletPayPassConfig {
 	iconUrl: string;
 	heroUrl?: string;
 	titleText?: string;
-	amountLabel?: string;
+	amountType?: { recurring: boolean; donate: boolean };
 	amountText?: string | null;
-	purposeLabel?: string;
 	purposeText?: string;
 	subheaderText?: string;
 	hexBackgroundColor?: string;
@@ -93,9 +94,8 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		iconUrl,
 		heroUrl,
 		titleText,
-		amountLabel,
+		amountType,
 		amountText,
-		purposeLabel,
 		purposeText,
 		subheaderText,
 		hexBackgroundColor,
@@ -172,12 +172,12 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		}
 	}
 
-	if (purposeLabel && purposeText) {
+	if (purposeText) {
 		const purposeLangI18nKey = 'paypass.purpose';
 		const purposeHeaderLoc = getPaypassLocalizedString(purposeLangI18nKey);
 		textMods.push({
 			id: 'purpose',
-			header: purposeHeaderLoc?.defaultValue || 'Purpose',
+			header: purposeHeaderLoc?.defaultValue || 'Item',
 			headerI18nKey: purposeLangI18nKey,
 			body: purposeText,
 			onPass: true
@@ -185,17 +185,26 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 	}
 
 	if (amountText) {
-		// If a custom amountLabel is provided, we treat it as literal (no i18n key).
-		// Otherwise, use paypass.amount translations.
-		const amountLangI18nKey = 'paypass.amount';
-		const amountHeaderLoc = getPaypassLocalizedString(amountLangI18nKey);
-		const useAmountI18n = !amountLabel;
-		const headerText = amountLabel || amountHeaderLoc?.defaultValue || 'Amount';
+		let headerText: string | undefined = undefined;
+		let headerI18nKey: string | undefined = undefined;
+		if (amountType?.recurring && amountType?.donate) {
+			headerI18nKey = 'paypass.recurringDonation';
+			headerText = getPaypassLocalizedString(headerI18nKey)?.defaultValue || 'Recurring Donation';
+		} else if (amountType?.recurring) {
+			headerI18nKey = 'paypass.recurringPayment';
+			headerText = getPaypassLocalizedString(headerI18nKey)?.defaultValue || 'Recurring Payment';
+		} else if (amountType?.donate) {
+			headerI18nKey = 'paypass.donation';
+			headerText = getPaypassLocalizedString(headerI18nKey)?.defaultValue || 'Donation';
+		} else {
+			headerI18nKey = 'paypass.payment';
+			headerText = getPaypassLocalizedString(headerI18nKey)?.defaultValue || 'Payment';
+		}
 
 		textMods.push({
 			id: 'amount',
 			header: headerText,
-			headerI18nKey: useAmountI18n ? amountLangI18nKey : undefined,
+			headerI18nKey: headerI18nKey,
 			body: amountText,
 			onPass: true
 		});
@@ -203,73 +212,131 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 
 	// Swap
 	if (payload.swap) {
+		const swapLangI18nKey = 'paypass.swapFor';
+		const swapHeaderLoc = getPaypassLocalizedString(swapLangI18nKey);
 		textMods.push({
 			id: 'swap',
-			header: 'Swap for',
+			header: swapHeaderLoc?.defaultValue || 'Swap for',
+			headerI18nKey: swapLangI18nKey,
 			body: payload.swap,
 			onPass: false
 		});
 	}
 
 	// Split payment
-	if (payload.splitPayment) {
+	if (payload.splitPayment && payload.splitPayment.value > 0) {
+		const splitLangI18nKey = 'paypass.split';
+		const splitHeaderLoc = getPaypassLocalizedString(splitLangI18nKey);
+
 		textMods.push({
 			id: 'split',
-			header: 'Split',
-			body: `${payload.splitPayment.isPercent ? payload.splitPayment.value.toString() + '%' : payload.splitPayment.formattedValue} to ${payload.splitPayment.address}`,
+			header: splitHeaderLoc?.defaultValue || 'Split',
+			headerI18nKey: splitLangI18nKey,
+			body: `${payload.splitPayment.isPercent ? payload.splitPayment.value.toString() + '%' : payload.splitPayment.formattedValue} ➜ ${payload.splitPayment.address}`,
 			onPass: false
 		});
 	}
 
 	if (payload.props.network === 'iban') {
+		const ibanLangI18nKey = 'paypass.iban';
+		const ibanHeaderLoc = getPaypassLocalizedString(ibanLangI18nKey);
 		const iban = payload.props.iban?.match(/.{1,4}/g)?.join(' ').toUpperCase() || payload.props.iban?.toUpperCase();
-		if (iban) textMods.push({ id: 'iban', header: 'IBAN', body: iban, onPass: false });
+		if (iban) textMods.push({ id: 'iban', header: ibanHeaderLoc?.defaultValue || 'IBAN', body: iban, onPass: false });
+		const bicLangI18nKey = 'paypass.bic';
+		const bicHeaderLoc = getPaypassLocalizedString(bicLangI18nKey);
 		const bic = payload.props.bic?.toUpperCase();
-		if (bic) textMods.push({ id: 'bic', header: 'BIC', body: bic, onPass: false });
+		if (bic) textMods.push({ id: 'bic', header: bicHeaderLoc?.defaultValue || 'BIC', body: bic, onPass: false });
+		const receiverNameLangI18nKey = 'paypass.beneficiary';
+		const receiverNameHeaderLoc = getPaypassLocalizedString(receiverNameLangI18nKey);
 		const receiverName = payload.props.params?.receiverName?.value;
-		if (receiverName) textMods.push({ id: 'beneficiary', header: 'Beneficiary', body: receiverName, onPass: false });
+		if (receiverName) textMods.push({ id: 'beneficiary', header: receiverNameHeaderLoc?.defaultValue || 'Beneficiary', body: receiverName, onPass: false });
+		const messageLangI18nKey = 'paypass.message';
+		const messageHeaderLoc = getPaypassLocalizedString(messageLangI18nKey);
 		const messageText = payload.props.params?.message?.value;
-		if (messageText) textMods.push({ id: 'message', header: 'Message', body: messageText, onPass: false });
+		if (messageText) textMods.push({ id: 'message', header: messageHeaderLoc?.defaultValue || 'Message', body: messageText, onPass: false });
 	} else if (payload.props.network === 'ach') {
+		const accountNumberLangI18nKey = 'paypass.accountNumber';
+		const accountNumberHeaderLoc = getPaypassLocalizedString(accountNumberLangI18nKey);
 		const accountNumber = payload.props.accountNumber;
-		if (accountNumber) textMods.push({ id: 'accountNumber', header: 'Account Number', body: accountNumber, onPass: false });
+		if (accountNumber) textMods.push({ id: 'accountNumber', header: accountNumberHeaderLoc?.defaultValue || 'Account Number', body: accountNumber, onPass: false });
+		const routingNumberLangI18nKey = 'paypass.routingNumber';
+		const routingNumberHeaderLoc = getPaypassLocalizedString(routingNumberLangI18nKey);
 		const routingNumber = payload.props.routingNumber?.toUpperCase();
-		if (routingNumber) textMods.push({ id: 'routingNumber', header: 'Routing Number', body: routingNumber, onPass: false });
+		if (routingNumber) textMods.push({ id: 'routingNumber', header: routingNumberHeaderLoc?.defaultValue || 'Routing Number', body: routingNumber, onPass: false });
+		const receiverNameLangI18nKey = 'paypass.beneficiary';
+		const receiverNameHeaderLoc = getPaypassLocalizedString(receiverNameLangI18nKey);
 		const receiverName = payload.props.params?.receiverName?.value;
-		if (receiverName) textMods.push({ id: 'beneficiary', header: 'Beneficiary', body: receiverName, onPass: false });
+		if (receiverName) textMods.push({ id: 'beneficiary', header: receiverNameHeaderLoc?.defaultValue || 'Beneficiary', body: receiverName, onPass: false });
 	} else if (payload.props.network === 'upi') {
+		const accountAliasLangI18nKey = 'paypass.accountAlias';
+		const accountAliasHeaderLoc = getPaypassLocalizedString(accountAliasLangI18nKey);
 		const accountAlias = payload.props.accountAlias;
-		if (accountAlias) textMods.push({ id: 'accountAlias', header: 'Account Alias', body: accountAlias, onPass: false });
+		if (accountAlias) textMods.push({ id: 'accountAlias', header: accountAliasHeaderLoc?.defaultValue || 'Account Alias', body: accountAlias, onPass: false });
+		const receiverNameLangI18nKey = 'paypass.beneficiary';
+		const receiverNameHeaderLoc = getPaypassLocalizedString(receiverNameLangI18nKey);
 		const receiverName = payload.props.params?.receiverName?.value;
-		if (receiverName) textMods.push({ id: 'beneficiary', header: 'Beneficiary', body: receiverName, onPass: false });
+		if (receiverName) textMods.push({ id: 'beneficiary', header: receiverNameHeaderLoc?.defaultValue || 'Beneficiary', body: receiverName, onPass: false });
+		const messageLangI18nKey = 'paypass.message';
+		const messageHeaderLoc = getPaypassLocalizedString(messageLangI18nKey);
 		const messageText = payload.props.params?.message?.value;
-		if (messageText) textMods.push({ id: 'message', header: 'Message', body: messageText, onPass: false });
+		if (messageText) textMods.push({ id: 'message', header: messageHeaderLoc?.defaultValue || 'Message', body: messageText, onPass: false });
 	} else if (payload.props.network === 'pix') {
+		const accountAliasLangI18nKey = 'paypass.accountAlias';
+		const accountAliasHeaderLoc = getPaypassLocalizedString(accountAliasLangI18nKey);
 		const accountAlias = payload.props.accountAlias;
-		if (accountAlias) textMods.push({ id: 'accountAlias', header: 'Account Alias', body: accountAlias, onPass: false });
+		if (accountAlias) textMods.push({ id: 'accountAlias', header: accountAliasHeaderLoc?.defaultValue || 'Account Alias', body: accountAlias, onPass: false });
+		const receiverNameLangI18nKey = 'paypass.beneficiary';
+		const receiverNameHeaderLoc = getPaypassLocalizedString(receiverNameLangI18nKey);
 		const receiverName = payload.props.params?.receiverName?.value;
-		if (receiverName) textMods.push({ id: 'beneficiary', header: 'Beneficiary', body: receiverName, onPass: false });
+		if (receiverName) textMods.push({ id: 'beneficiary', header: receiverNameHeaderLoc?.defaultValue || 'Beneficiary', body: receiverName, onPass: false });
+		const idLangI18nKey = 'paypass.id';
+		const idHeaderLoc = getPaypassLocalizedString(idLangI18nKey);
 		const idText = payload.props.params?.id?.value;
-		if (idText) textMods.push({ id: 'id', header: 'ID', body: idText, onPass: false });
+		if (idText) textMods.push({ id: 'id', header: idHeaderLoc?.defaultValue || 'ID', body: idText, onPass: false });
+		const messageLangI18nKey = 'paypass.message';
+		const messageHeaderLoc = getPaypassLocalizedString(messageLangI18nKey);
 		const messageText = payload.props.params?.message?.value;
-		if (messageText) textMods.push({ id: 'message', header: 'Message', body: messageText, onPass: false });
+		if (messageText) textMods.push({ id: 'message', header: messageHeaderLoc?.defaultValue || 'Message', body: messageText, onPass: false });
 	} else if (payload.props.network === 'bic') {
+		const bicLangI18nKey = 'paypass.bicOroric';
+		const bicHeaderLoc = getPaypassLocalizedString(bicLangI18nKey);
 		const bic = payload.props.bic?.toUpperCase();
-		if (bic) textMods.push({ id: 'bic', header: 'BIC / ORIC', body: bic, onPass: false });
+		if (bic) textMods.push({ id: 'bic', header: bicHeaderLoc?.defaultValue || 'BIC / ORIC', body: bic, onPass: false });
 	} else if (payload.props.network === 'intra') {
+		const bicLangI18nKey = 'paypass.bicOroric';
+		const bicHeaderLoc = getPaypassLocalizedString(bicLangI18nKey);
 		const bic = payload.props.bic?.toUpperCase();
-		if (bic) textMods.push({ id: 'bic', header: 'BIC / ORIC', body: bic, onPass: false });
+		if (bic) textMods.push({ id: 'bic', header: bicHeaderLoc?.defaultValue || 'BIC / ORIC', body: bic, onPass: false });
+		const intraIdLangI18nKey = 'paypass.accountId';
+		const intraIdHeaderLoc = getPaypassLocalizedString(intraIdLangI18nKey);
 		const intraId = payload.props.id;
-		if (intraId) textMods.push({ id: 'id', header: 'Account ID', body: intraId, onPass: false });
+		if (intraId) textMods.push({ id: 'id', header: intraIdHeaderLoc?.defaultValue || 'Account ID', body: intraId, onPass: false });
+		const receiverNameLangI18nKey = 'paypass.beneficiary';
+		const receiverNameHeaderLoc = getPaypassLocalizedString(receiverNameLangI18nKey);
 		const receiverName = payload.props.params?.receiverName?.value;
-		if (receiverName) textMods.push({ id: 'beneficiary', header: 'Beneficiary', body: receiverName, onPass: false });
+		if (receiverName) textMods.push({ id: 'beneficiary', header: receiverNameHeaderLoc?.defaultValue || 'Beneficiary', body: receiverName, onPass: false });
+		const messageLangI18nKey = 'paypass.message';
+		const messageHeaderLoc = getPaypassLocalizedString(messageLangI18nKey);
 		const messageText = payload.props.params?.message?.value;
-		if (messageText) textMods.push({ id: 'message', header: 'Message', body: messageText, onPass: false });
+		if (messageText) textMods.push({ id: 'message', header: messageHeaderLoc?.defaultValue || 'Message', body: messageText, onPass: false });
 	} else if (payload.props.network === 'void') {
+		const receiverNameLangI18nKey = 'paypass.beneficiary';
+		const receiverNameHeaderLoc = getPaypassLocalizedString(receiverNameLangI18nKey);
 		const receiverName = payload.props.params?.receiverName?.value;
-		if (receiverName) textMods.push({ id: 'beneficiary', header: 'Beneficiary', body: receiverName, onPass: false });
+		if (receiverName) textMods.push({ id: 'beneficiary', header: receiverNameHeaderLoc?.defaultValue || 'Beneficiary', body: receiverName, onPass: false });
+		const messageLangI18nKey = 'paypass.message';
+		const messageHeaderLoc = getPaypassLocalizedString(messageLangI18nKey);
 		const messageText = payload.props.params?.message?.value;
-		if (messageText) textMods.push({ id: 'message', header: 'Message', body: messageText, onPass: false });
+		if (messageText) textMods.push({ id: 'message', header: messageHeaderLoc?.defaultValue || 'Message', body: messageText, onPass: false });
+	}
+
+	if (isDebug) {
+		textMods.push({
+			id: 'debug',
+			header: 'Debug',
+			body: JSON.stringify(payload) + '\n\n' + JSON.stringify(textMods),
+			onPass: false
+		});
 	}
 
 	const normalizedTextModules = textMods
@@ -425,6 +492,17 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 	// Calculate notifications based on expiration date
 	const notifications = calculateNotifications(payload.expirationDate);
 
+	const payLangI18nKey = 'paypass.pay';
+	const payHeaderLoc = getPaypassLocalizedString(payLangI18nKey);
+	const paypassLangI18nKey = 'paypass.paypass';
+	const paypassHeaderLoc = getPaypassLocalizedString(paypassLangI18nKey);
+	const paymentLangI18nKey = 'paypass.payment';
+	const paymentHeaderLoc = getPaypassLocalizedString(paymentLangI18nKey);
+	const scanToDonateLangI18nKey = 'paypass.scanToDonate';
+	const scanToDonateHeaderLoc = getPaypassLocalizedString(scanToDonateLangI18nKey);
+	const scanToPayLangI18nKey = 'paypass.scanToPay';
+	const scanToPayHeaderLoc = getPaypassLocalizedString(scanToPayLangI18nKey);
+
 	const gwObject: any = {
 		id: payload.id,
 		classId: classId,
@@ -434,16 +512,16 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		} : {}),
 
 		appLinkData: {
-			displayText: { defaultValue: { language: 'en-US', value: 'Pay' } },
+			displayText: { defaultValue: { language: 'en-US', value: payHeaderLoc?.defaultValue || 'Pay' } },
 			webAppLinkInfo: {
 				appTarget: {
-					targetUri: { uri: payload.fullLink, description: 'Pay' }
+					targetUri: { uri: payload.fullLink, description: payHeaderLoc?.defaultValue || 'Pay' }
 				}
 			}
 		},
 
-		cardTitle: { defaultValue: { language: 'en-US', value: (orgName && orgName.trim()) || 'PayPass' } },
-		header: { defaultValue: { language: 'en-US', value: (titleText && titleText.trim()) || 'Payment' } },
+		cardTitle: { defaultValue: { language: 'en-US', value: (orgName && orgName.trim()) || paypassHeaderLoc?.defaultValue || 'PayPass' } },
+		header: { defaultValue: { language: 'en-US', value: (titleText && titleText.trim()) || paymentHeaderLoc?.defaultValue || 'Payment' } },
 		...(subheaderText && subheaderText.trim() ? {
 			subheader: { defaultValue: { language: 'en-US', value: subheaderText.trim() } }
 		} : {}),
@@ -455,7 +533,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		barcode: barcode || {
 			type: 'qrCode',
 			value: payload.basicLink,
-			alternateText: donate ? 'Scan to donate' : 'Scan to pay'
+			alternateText: donate ? scanToDonateHeaderLoc?.defaultValue || 'Scan to donate' : scanToPayHeaderLoc?.defaultValue || 'Scan to pay'
 		},
 
 		smartTapRedemptionValue: payload.basicLink,
@@ -466,7 +544,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 				longitude: payload.props.params.loc.lon,
 				relevantText: payload.props.params.message?.value
 					? payload.props.params.message.value
-					: 'Payment Location'
+					: getPaypassLocalizedString('paypass.paymentLocation')?.defaultValue || 'Payment Location'
 			}
 		] : [],
 
@@ -477,33 +555,37 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 				...(payload.props.params.loc?.lat && payload.props.params.loc.lon ? [{
 					kind: 'walletobjects#uri',
 					uri: `https://www.google.com/maps/dir/?api=1&origin=Current+Location&destination=${payload.props.params.loc.lat},${payload.props.params.loc.lon}`,
-					description: 'Navigate to Location'
+					description: getPaypassLocalizedString('paypass.navigateToLocation')?.defaultValue || 'Navigate to Location'
 				}] : []),
 				...(payload.explorerUrl ? [{
 					kind: 'walletobjects#uri',
 					uri: payload.explorerUrl,
-					description: 'View Transactions'
+					description: getPaypassLocalizedString('paypass.viewTransactions')?.defaultValue || 'View Transactions'
 				}] : []),
 				...(payload.externalLink ? [{
 					kind: 'walletobjects#uri',
 					uri: payload.externalLink,
-					description: 'Online PayPass'
+					description: getPaypassLocalizedString('paypass.onlinePaypass')?.defaultValue || 'Online PayPass'
 				}] : []),
 				...(payload.props.network === 'xcb' ? [{
 					kind: 'walletobjects#uri',
 					uri: `${payload.linkBaseUrl}/card`,
-					description: 'Top up Crypto Card'
+					description: getPaypassLocalizedString('paypass.topUpCryptoCard')?.defaultValue || 'Top up Crypto Card'
 				}] : []),
-				{ kind: 'walletobjects#uri', uri: payload.swapUrl, description: 'Swap Currency' },
+				...(payload.swapUrl ? [{
+					kind: 'walletobjects#uri',
+					uri: payload.swapUrl,
+					description: getPaypassLocalizedString('paypass.swapCurrency')?.defaultValue || 'Swap Currency'
+				}] : []),
 				...(payload.proUrl && payload.props.network == 'xcb' ? [{
 					kind: 'walletobjects#uri',
 					uri: payload.proUrl,
-					description: 'Activate Pro'
+					description: getPaypassLocalizedString('paypass.activatePro')?.defaultValue || 'Activate Pro'
 				}] : []),
 				...(payload.props.network === 'xcb' ? [{
 					kind: 'walletobjects#uri',
 					uri: 'sms:+12019715152',
-					description: 'Send Offline Transaction'
+					description: getPaypassLocalizedString('paypass.sendOfflineTransaction')?.defaultValue || 'Send Offline Transaction'
 				}] : [])
 			]
 		},
