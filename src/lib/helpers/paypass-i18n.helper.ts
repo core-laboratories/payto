@@ -1,7 +1,27 @@
 import type { Locales } from '$i18n/i18n-types';
-import { loadAllLocales } from '$i18n/i18n-util.sync';
-import { loadedLocales, locales } from '$i18n/i18n-util';
+import type { BaseTranslation } from '$i18n/i18n-types';
+
 import en from '$i18n/en/index';
+import ar from '$i18n/ar/index';
+import cs_CZ from '$i18n/cs_CZ/index';
+import de from '$i18n/de/index';
+import es from '$i18n/es/index';
+import fa_IR from '$i18n/fa_IR/index';
+import fr from '$i18n/fr/index';
+import hi_IN from '$i18n/hi_IN/index';
+import hu from '$i18n/hu/index';
+import it from '$i18n/it/index';
+import ja from '$i18n/ja/index';
+import ko_KR from '$i18n/ko_KR/index';
+import pl from '$i18n/pl/index';
+import pt_BR from '$i18n/pt_BR/index';
+import ru from '$i18n/ru/index';
+import sk from '$i18n/sk/index';
+import th from '$i18n/th/index';
+import tl_PH from '$i18n/tl_PH/index';
+import tr from '$i18n/tr/index';
+import vi_VN from '$i18n/vi_VN/index';
+import zh_CN from '$i18n/zh_CN/index';
 
 export type LocalizedText = {
 	/**
@@ -66,10 +86,31 @@ function getNestedValue(obj: unknown, path: string): string | undefined {
  * - translatedValues contains only entries that actually differ
  *   from defaultValue (so we don’t duplicate English).
  */
-export function getPaypassLocalizedString(keyPath: string): LocalizedText | undefined {
-	// Ensure all locales are loaded
-	loadAllLocales();
+const translationsByLocale: Record<Locales, BaseTranslation> = {
+	en,
+	ar,
+	cs_CZ,
+	de,
+	es,
+	fa_IR,
+	fr,
+	hi_IN,
+	hu,
+	it,
+	ja,
+	ko_KR,
+	pl,
+	pt_BR,
+	ru,
+	sk,
+	th,
+	tl_PH,
+	tr,
+	vi_VN,
+	zh_CN
+};
 
+export function getPaypassLocalizedString(keyPath: string): LocalizedText | undefined {
 	let defaultValue: string | undefined;
 	let defaultLanguage: string | undefined;
 	const translatedValues: Record<string, string> = {};
@@ -81,11 +122,8 @@ export function getPaypassLocalizedString(keyPath: string): LocalizedText | unde
 		defaultLanguage = mapLocaleToGoogleWallet('en' as Locales);
 	}
 
-	// 2) Collect values for all locales
-	for (const locale of locales) {
-		const translationRoot = loadedLocales[locale];
-		if (!translationRoot) continue;
-
+	// 2) Collect values for all locales (including English to ensure coverage)
+	for (const [locale, translationRoot] of Object.entries(translationsByLocale) as [Locales, BaseTranslation][]) {
 		const value = getNestedValue(translationRoot, keyPath);
 		if (!value) continue;
 

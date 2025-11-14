@@ -113,7 +113,9 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 	// ---------------- Address formatting ----------------
 	const addressText = payload.props.destination ? (() => {
 		const addr = payload.props.destination;
-		if (['xcb', 'xab', 'xce'].includes(payload.props.network)) {
+		if (['xcb', 'xce'].includes(payload.props.network)) {
+			return addr.match(/.{1,4}/g)?.join(' ').toUpperCase() || addr.toUpperCase();
+		} else if (payload.props.network === "other" && ['xab'].includes(payload.props.other)) {
 			return addr.match(/.{1,4}/g)?.join(' ').toUpperCase() || addr.toUpperCase();
 		}
 		return addr.match(/.{1,4}/g)?.join(' ') || addr;
@@ -125,44 +127,45 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 	// ---------------- Text Modules ----------------
 	const textMods: TextModConfig[] = [];
 
-	// i18n lookups for labels
-	const addressHeaderLoc = getPaypassLocalizedString('paypass.address');
-	const networkHeaderLoc = getPaypassLocalizedString('paypass.network');
-	const cashLoc = getPaypassLocalizedString('paypass.cash');
-	const chainLoc = getPaypassLocalizedString('paypass.chain');
-	const amountHeaderLoc = getPaypassLocalizedString('paypass.amount');
-
 	if (addressText) {
+		const addressLangI18nKey = 'paypass.address';
+		const addressHeaderLoc = getPaypassLocalizedString(addressLangI18nKey);
 		textMods.push({
 			id: 'address',
 			header: addressHeaderLoc?.defaultValue || 'Address',
-			headerI18nKey: 'paypass.address',
+			headerI18nKey: addressLangI18nKey,
 			body: addressText,
 			onPass: false
 		});
 	}
 
 	if (payload.props.network) {
+		const networkLangI18nKey = 'paypass.network';
+		const networkHeaderLoc = getPaypassLocalizedString(networkLangI18nKey);
 		if (payload.props.network === 'void') {
 			// Cash / TRANSPORT
+			const cashLangI18nKey = 'paypass.cash';
+			const cashLoc = getPaypassLocalizedString(cashLangI18nKey);
 			const cashText = cashLoc?.defaultValue || 'Cash';
 			const transportText = payload.props.transport?.toUpperCase() || '';
 			textMods.push({
 				id: 'network',
 				header: networkHeaderLoc?.defaultValue || 'Network',
-				headerI18nKey: 'paypass.network',
+				headerI18nKey: cashLangI18nKey,
 				body: `${cashText} / ${transportText}`,
 				onPass: false
 			});
 		} else {
 			// NETWORK / Chain: ID
+			const chainLangI18nKey = 'paypass.chain';
+			const chainLoc = getPaypassLocalizedString(chainLangI18nKey);
 			const chainWord = chainLoc?.defaultValue || 'Chain';
 			const chainPart = payload.chainId ? ` / ${chainWord}: ${payload.chainId}` : '';
-			const networkText = payload.props.network.toUpperCase() + chainPart;
+			const networkText = (payload.props.network === "other" ? payload.props.other : payload.props.network).toUpperCase() + chainPart;
 			textMods.push({
 				id: 'network',
 				header: networkHeaderLoc?.defaultValue || 'Network',
-				headerI18nKey: 'paypass.network',
+				headerI18nKey: networkLangI18nKey,
 				body: networkText,
 				onPass: false
 			});
@@ -170,9 +173,12 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 	}
 
 	if (purposeLabel && purposeText) {
+		const purposeLangI18nKey = 'paypass.purpose';
+		const purposeHeaderLoc = getPaypassLocalizedString(purposeLangI18nKey);
 		textMods.push({
 			id: 'purpose',
-			header: purposeLabel,
+			header: purposeHeaderLoc?.defaultValue || 'Purpose',
+			headerI18nKey: purposeLangI18nKey,
 			body: purposeText,
 			onPass: true
 		});
@@ -181,13 +187,15 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 	if (amountText) {
 		// If a custom amountLabel is provided, we treat it as literal (no i18n key).
 		// Otherwise, use paypass.amount translations.
+		const amountLangI18nKey = 'paypass.amount';
+		const amountHeaderLoc = getPaypassLocalizedString(amountLangI18nKey);
 		const useAmountI18n = !amountLabel;
 		const headerText = amountLabel || amountHeaderLoc?.defaultValue || 'Amount';
 
 		textMods.push({
 			id: 'amount',
 			header: headerText,
-			headerI18nKey: useAmountI18n ? 'paypass.amount' : undefined,
+			headerI18nKey: useAmountI18n ? amountLangI18nKey : undefined,
 			body: amountText,
 			onPass: true
 		});
