@@ -664,6 +664,22 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 	const paymentLangI18nKey = 'paypass.payment';
 	const paymentHeaderLoc = getPaypassLocalizedString(paymentLangI18nKey);
 
+	const barcodeAlternateText =
+		donate
+			? getPaypassLocalizedValue('paypass.scanToDonate', locale) || 'Scan to donate'
+			: getPaypassLocalizedValue('paypass.scanToPay', locale) || 'Scan to pay';
+
+	const normalizedBarcode = barcode && typeof barcode === 'object'
+		? {
+			...barcode,
+			alternateText: barcodeAlternateText
+		}
+		: {
+			type: 'qrCode',
+			value: payload.basicLink,
+			alternateText: barcodeAlternateText
+		};
+
 	const gwObject: any = {
 		id: payload.id,
 		classId: classId,
@@ -685,18 +701,14 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 
 		header: { defaultValue: { language: 'en-US', value: (titleText && titleText.trim()) || paymentHeaderLoc?.defaultValue || 'Payment' } }, // TODO: Add translation
 		...(subheaderText && subheaderText.trim() ? {
-			subheader: { defaultValue: { language: 'en-US', value: subheaderText.trim() } } // TODO: Add translation
+			subheader: { defaultValue: { language: locale, value: subheaderText.trim() } }
 		} : {}),
 
 		...(logoUrl ? { logo: { sourceUri: { uri: logoUrl } } } : {}),
 		...(heroUrl ? { heroImage: { sourceUri: { uri: heroUrl } } } : {}),
 		...(hexBackgroundColor ? { hexBackgroundColor } : {}),
 
-		barcode: barcode || {
-			type: 'qrCode',
-			value: payload.basicLink,
-			alternateText: donate ? 'Scan to donate 🎁' : 'Scan to pay 💸' // TODO: Add translation
-		},
+		barcode: normalizedBarcode,
 
 		smartTapRedemptionValue: payload.basicLink,
 
@@ -713,7 +725,6 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		textModulesData: normalizedTextModules,
 
 		linksModuleData: {
-			// No translations here :(
 			uris: [
 				...(payload.props.params.loc?.lat && payload.props.params.loc.lon ? [{
 					kind: 'walletobjects#uri',
