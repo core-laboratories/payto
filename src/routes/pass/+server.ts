@@ -213,7 +213,16 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			(props.params.amount?.value && Number(props.params.amount.value) > 0)
 				? formatter(currency, (kvData?.currencyLocale || undefined), customCurrencyData).format(Number(props.params.amount.value))
 				: null;
-		const finalAmount = isRecurring && props.params.rc?.value && amountValue ? `🔁 ${amountValue} / ${props.params.rc.value}` : amountValue;
+		const finalAmount = (() => {
+			if (!amountValue) return undefined;
+			if (isRecurring && props.params.rc?.value) {
+				return {
+					value: amountValue,
+					recurrence: { value: props.params.rc.value }
+				};
+			}
+			return { value: amountValue };
+		})();
 
 		/* ---------------- OS switch ---------------- */
 
@@ -255,7 +264,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				titleText: titleText || undefined,
 				purposeText: purposeText,
 				amountType: { recurring: isRecurring, donate: isDonate },
-				amountText: finalAmount,
+				amountObject: finalAmount,
 				hexBackgroundColor: getValidBackgroundColor(design, kvData, '#2A3950'),
 				barcode: getBarcodeConfig(design.barcode || 'qr', bareLink, codeText).google,
 				donate: isDonate,

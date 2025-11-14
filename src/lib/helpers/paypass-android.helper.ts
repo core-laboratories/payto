@@ -2,6 +2,7 @@ import * as jose from 'jose';
 import { env as publicEnv } from '$env/dynamic/public';
 import { calculateNotifications } from './paypass-notifications.helper';
 import { getPaypassLocalizedString, type LocalizedText, getPaypassLocalizedValueForLocale as getPaypassLocalizedValue } from './paypass-i18n.helper';
+import { formatAmount } from './paypass-operator.helper';
 
 const isDebug = true;
 
@@ -26,7 +27,7 @@ export interface GoogleWalletPayPassConfig {
 	heroUrl?: string;
 	titleText?: string;
 	amountType?: { recurring: boolean; donate: boolean };
-	amountText?: string | null;
+	amountObject?: { value: string; recurrence?: { value?: string } };
 	purposeText?: string;
 	subheaderText?: string;
 	hexBackgroundColor?: string;
@@ -96,7 +97,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		heroUrl,
 		titleText,
 		amountType,
-		amountText,
+		amountObject,
 		purposeText,
 		subheaderText,
 		hexBackgroundColor,
@@ -186,7 +187,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		});
 	}
 
-	if (amountText) {
+	if (amountObject) {
 		let headerText: string | undefined = undefined;
 		let headerI18nKey: string | undefined = undefined;
 		if (amountType?.recurring && amountType?.donate) {
@@ -203,11 +204,18 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 			headerText = getPaypassLocalizedString(headerI18nKey)?.defaultValue || 'Payment';
 		}
 
+		const translations = {
+			day: getPaypassLocalizedValue('common.recurring.day', locale) || 'd',
+			week: getPaypassLocalizedValue('common.recurring.week', locale) || 'w',
+			month: getPaypassLocalizedValue('common.recurring.month', locale) || 'm',
+			year: getPaypassLocalizedValue('common.recurring.year', locale) || 'y'
+		};
+
 		textMods.push({
 			id: 'amount',
 			header: headerText,
 			headerI18nKey: headerI18nKey,
-			body: amountText,
+			body: formatAmount(amountObject, translations, rtl),
 			onPass: true
 		});
 	}
@@ -535,7 +543,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 	const amountMod = textMods.find(m => m.id === 'amount');
 
 	const hasItem = !!(purposeMod?.onPass && purposeText && purposeText.trim().length);
-	const hasAmount = !!(amountMod?.onPass && amountText && amountText.trim().length);
+	const hasAmount = !!(amountMod?.onPass && amountObject && amountObject.value && amountObject.value.trim().length);
 
 	// Item / Amount row only if their own onPass is true
 	if (hasItem || hasAmount) {
@@ -699,7 +707,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 
 		cardTitle: { defaultValue: { language: 'en-US', value: (orgName && orgName.trim()) || paypassHeaderLoc?.defaultValue || 'PayPass' } }, // TODO: Add translation
 
-		header: { defaultValue: { language: 'en-US', value: (titleText && titleText.trim()) || paymentHeaderLoc?.defaultValue || 'Payment' } }, // TODO: Add translation
+		header: { defaultValue: { language: locale, value: (titleText && titleText.trim()) } },
 		...(subheaderText && subheaderText.trim() ? {
 			subheader: { defaultValue: { language: locale, value: subheaderText.trim() } }
 		} : {}),
