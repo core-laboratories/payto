@@ -278,10 +278,6 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				}
 			});
 
-			if (true) {
-				console.log('Google Wallet PayPass Save Link:', JSON.stringify({ saveUrl, id: objectId, classId: finalClassId, gwObject, gwClass }, null, 2));
-			}
-
 			// Optional stats logging
 			if (enableStats && supabase) {
 				try {

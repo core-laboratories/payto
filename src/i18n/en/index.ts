@@ -64,17 +64,7 @@ const en = {
 		id: 'ID',
 		accountId: 'Account ID',
 		pay: 'Pay',
-		paypass: 'PayPass',
-		scanToDonate: 'Scan to donate',
-		scanToPay: 'Scan to pay',
-		paymentLocation: 'Payment Location',
-		navigateToLocation: 'Navigate to Location',
-		viewTransactions: 'View Transactions',
-		onlinePaypass: 'Online PayPass',
-		topUpCryptoCard: 'Top up Crypto Card',
-		swapCurrency: 'Swap Currency',
-		activatePro: 'Activate Pro',
-		sendOfflineTransaction: 'Send Offline Transaction'
+		paypass: 'PayPass'
 	}
 } satisfies BaseTranslation
 
