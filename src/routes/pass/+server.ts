@@ -99,6 +99,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 		data.authority = formData.get('authority') as string;
 		data.membership = formData.get('membership') as string;
 		data.os = (formData.get('os') as string) || url.searchParams.get('os') || '';
+		data.locale = (formData.get('locale') as string) || url.searchParams.get('locale') || null;
 
 		const formDestination = formData.get('destination') as string;
 		if (formDestination && data.props) data.props.destination = formDestination;
@@ -170,7 +171,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 		const fileId = getFileId([originator, memberAddress, destination, hostname, network], '-', true, false);
 		const explorerUrl = getExplorerUrl(network, { address: destination }, true, linkBaseUrl);
 		const customCurrencyData = kvData?.customCurrency || {};
-		const currency = getCurrency(props, network as ITransitionType);
+		const currency = getCurrency(props, network as ITransitionType, true);
 		const proUrl = `${proUrlLink}?origin=${encodeURIComponent(originator)}&subscriber=${encodeURIComponent(memberAddress)}&destination=${encodeURIComponent(destination)}&network=${encodeURIComponent(network as string)}`;
 		const expirationDate = getExpirationDate(props.params?.dl?.value);
 		const chainId = props.params.chainId?.value;
@@ -212,7 +213,16 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			(props.params.amount?.value && Number(props.params.amount.value) > 0)
 				? formatter(currency, (kvData?.currencyLocale || undefined), customCurrencyData).format(Number(props.params.amount.value))
 				: null;
-		const finalAmount = isRecurring && props.params.rc?.value && amountValue ? `🔁 ${amountValue} / ${props.params.rc.value}` : amountValue;
+		const finalAmount = (() => {
+			if (!amountValue) return undefined;
+			if (isRecurring && props.params.rc?.value) {
+				return {
+					value: amountValue,
+					recurrence: { value: props.params.rc.value }
+				};
+			}
+			return { value: amountValue };
+		})();
 
 		/* ---------------- OS switch ---------------- */
 
@@ -236,9 +246,10 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			const objectId = `${base}.${uniquePart}-${ts}-${nonce}`.replace(/[^a-zA-Z0-9._-]/g, '').slice(0, 64);
 
 			const imageUrls = getImageUrls(kvData, memberAddress, isDev, devServerUrl);
-			const titleText = getTitleText(hostname, destination, props, currency);
+			const titleText = getTitleText(hostname, destination, props, currency, true);
 			const purposeText = getPurposeText(design);
 			const codeText = getCodeText(isDonate, 'scan');
+			const locale = kvData?.data?.google?.locale || data.locale || design.lang || 'en';
 
 			const { saveUrl, classId: finalClassId, gwObject, gwClass } = await buildGoogleWalletPayPassSaveLink({
 				issuerId: gwIssuerId,
@@ -251,15 +262,14 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				companyName,
 				orgName,
 				titleText: titleText || undefined,
-				purposeLabel: 'Item',
 				purposeText: purposeText,
-				amountLabel: isRecurring ? (isDonate ? 'Recurring Donation' : 'Recurring Payment') : (isDonate ? 'Donation' : 'Payment'),
-				amountText: finalAmount,
-				//subheaderText: standardizeOrg(org) || 'Address',
+				amountType: { recurring: isRecurring, donate: isDonate },
+				amountObject: finalAmount,
 				hexBackgroundColor: getValidBackgroundColor(design, kvData, '#2A3950'),
 				barcode: getBarcodeConfig(design.barcode || 'qr', bareLink, codeText).google,
 				donate: isDonate,
 				rtl: isRtl,
+				locale: locale,
 				payload: {
 					id: objectId,
 					basicLink: getLink(hostname, props),
@@ -274,9 +284,10 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 					chainId,
 					redemptionIssuers: kvData?.data?.google?.redemptionIssuers || [],
 					enableSmartTap: kvData?.data?.google?.enableSmartTap || true,
+					merchantLocations: kvData?.data?.google?.merchantLocation || [],
 					splitPayment,
 					swap
-				},
+				}
 			});
 
 			// Optional stats logging

@@ -12,6 +12,8 @@
 	} from '$lib/helpers/cryptocard.helper';
 	import type { CardBrandDefinition } from '$lib/helpers/cryptocard.helper';
 
+	const wip = true;
+
 	const digitsRegex = /\D/g;
 
 	function formatCardNumber(value: string): string {
@@ -147,6 +149,9 @@
 <div class="min-h-screen p-4 sm:p-6 lg:p-8">
 	<div class="w-full max-w-md mx-auto">
 		<div class="space-y-6">
+			{#if wip}
+				<div class="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 text-sm text-yellow-200">🐻 Bear with us - this feature is still under development. But you can check it out now!</div>
+			{/if}
 			<!-- Credit Card -->
 			<div
 				class="relative w-full h-56 sm:h-60 mx-auto rounded-2xl shadow-2xl bg-gradient-to-br from-blue-500 to-purple-600 overflow-hidden"
@@ -249,7 +254,7 @@
 			<!-- Proceed Button -->
 			<button
 				onclick={handleProceed}
-				disabled={cardValidationState !== 'valid' || cardholderValidationState !== 'valid'}
+				disabled={wip || cardValidationState !== 'valid' || cardholderValidationState !== 'valid'}
 				class="w-full bg-green-500 hover:bg-green-600 disabled:bg-gray-500 disabled:cursor-not-allowed disabled:hover:bg-gray-500 text-white font-semibold py-3 px-6 rounded-lg transition-colors shadow-lg"
 			>
 				Top Up

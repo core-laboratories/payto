@@ -86,10 +86,17 @@ Issuing authorities[^authority] deliver an object like this example to the email
   "forceTheme": false, // If true, forces your theme even if users or system set their own custom colors
   "data": { // Organization data
     "google": { // Google Wallet data
+      "locale": "en", // The locale used for Google Wallet data (e.g., `"en-GB"`, `"de"`, `"sk"`)
       "redemptionIssuers": [ // Redemption issuers for Google Wallet
         "1234567890" // Redemption issuer ID
       ],
-      "enableSmartTap": true // Enable Smart Tap (NFC) for Google Wallet
+      "enableSmartTap": true, // Enable Smart Tap (NFC) for Google Wallet
+      "merchantLocation": [
+        {
+          "latitude": 40.7128,
+          "longitude": -74.0060
+        }
+      ]
     }
   },
   "customCurrency": { // Custom currency definitions for non-standard currencies or tokens
@@ -156,12 +163,19 @@ Issuing authorities[^authority] deliver an object like this example to the email
 
 - **`data`** (optional): Organization data.
   - `google`: Google Wallet data
+    - `locale`: The locale used for Google Wallet data (e.g., `"en-GB"`, `"de"`, `"sk"`)
+      - Default: parsed or provided in the request
     - `redemptionIssuers`: Redemption issuers for Google Wallet (array of strings)
       - Example: `["1234567890"]`
       - Default: none
     - `enableSmartTap`: Enable Smart Tap (NFC) for Google Wallet
       - Example: `true` or `false`
       - Default: `true`
+    - `merchantLocation`: Merchant location for Google Wallet (array of objects, max 10)
+      - `latitude`: Latitude (number)
+      - `longitude`: Longitude (number)
+      - Default: none
+      - Example: `[ { "latitude": 40.7128, "longitude": -74.0060 } ]`
   - Default: none
 
 - **`customCurrency`** (optional): Custom currency definitions for non-standard currencies or tokens.

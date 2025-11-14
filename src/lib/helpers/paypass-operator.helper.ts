@@ -280,3 +280,44 @@ export function formatter(currency: string | undefined, format: string | undefin
 		customCurrency: customCurrencyData
 	});
 }
+
+/**
+ * Format amount with recurrence
+ * @param object - Object with value and recurrence
+ * @param translations - Translations for recurring
+ * @param rtl - Whether to use right-to-left formatting
+ * @returns Formatted amount string
+ */
+export function formatAmount(
+	object: { value: string; recurrence?: { value?: string } },
+	translations: { day: string; week: string; month: string; year: string },
+	rtl: boolean = false
+): string {
+	if (!object.recurrence) return object.value;
+
+	const recurrenceValue = object.recurrence.value?.toLowerCase();
+	const buildText = (label: string) => (rtl ? `${label} / ${object.value} 🔁` : `🔁 ${object.value} / ${label}`);
+
+	if (recurrenceValue === 'd') {
+		return buildText(translations.day);
+	}
+
+	const dayMatch = recurrenceValue?.match(/^(\d{1,3})d$/);
+	if (dayMatch) {
+		const numericValue = Number(dayMatch[1]);
+		if (numericValue >= 1 && numericValue <= 365) {
+			return buildText(`${numericValue} ${translations.day}`);
+		}
+	}
+
+	switch (recurrenceValue) {
+		case 'w':
+			return buildText(translations.week);
+		case 'm':
+			return buildText(translations.month);
+		case 'y':
+			return buildText(translations.year);
+		default:
+			return rtl ? `${object.recurrence.value} / ${object.value} 🔁` : `🔁 ${object.value} / ${object.recurrence.value}`;
+	}
+}

@@ -42,6 +42,42 @@ const tr_TRPartial: DeepPartial<Translation> = {
 			month: 'a',
 			year: 'y'
 		}
+	},
+	paypass: {
+		address: 'Hesap adresi',
+		network: 'Ağ',
+		cash: 'Nakit',
+		chain: 'Ağ türü',
+		amount: 'Tutar',
+		purpose: 'Öğe',
+		recurringDonation: 'Düzenli bağış',
+		recurringPayment: 'Düzenli ödeme',
+		donation: 'Bağış',
+		payment: 'Ödeme',
+		swapFor: 'Şununla değiştir',
+		split: 'Böl',
+		iban: 'IBAN',
+		bic: 'BIC',
+		beneficiary: 'Lehdar',
+		bicOroric: 'BIC / ORIC',
+		accountNumber: 'Hesap numarası',
+		routingNumber: 'Yönlendirme numarası',
+		accountAlias: 'Hesap takma adı',
+		message: 'Mesaj',
+		id: 'ID',
+		accountId: 'Hesap ID',
+		pay: 'Öde',
+		paypass: 'PayPass',
+		scanToDonate: 'Bağış için tara',
+		scanToPay: 'Ödeme için tara',
+		paymentLocation: 'Ödeme konumu',
+		navigateToLocation: 'Konuma git',
+		viewTransactions: 'İşlemleri görüntüle',
+		onlinePaypass: 'Çevrimiçi PayPass',
+		topUpCryptoCard: 'Kripto kartı yükle',
+		swapCurrency: 'Para birimi değiştir',
+		activatePro: 'Pro’yu etkinleştir',
+		sendOfflineTransaction: 'Çevrimdışı işlem gönder'
 	}
 }
 

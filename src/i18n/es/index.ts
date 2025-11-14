@@ -42,6 +42,42 @@ const esPartial: DeepPartial<Translation> = {
 			month: 'm',
 			year: 'y'
 		}
+	},
+	paypass: {
+		address: 'Dirección de cuenta',
+		network: 'Red',
+		cash: 'Efectivo',
+		chain: 'Tipo de cadena',
+		amount: 'Cantidad',
+		purpose: 'Artículo',
+		recurringDonation: 'Donación recurrente',
+		recurringPayment: 'Pago recurrente',
+		donation: 'Donación',
+		payment: 'Pago',
+		swapFor: 'Cambiar por',
+		split: 'Dividir',
+		iban: 'IBAN',
+		bic: 'BIC',
+		beneficiary: 'Beneficiario',
+		bicOroric: 'BIC / ORIC',
+		accountNumber: 'Número de cuenta',
+		routingNumber: 'Número de enrutamiento',
+		accountAlias: 'Alias de cuenta',
+		message: 'Mensaje',
+		id: 'ID',
+		accountId: 'ID de cuenta',
+		pay: 'Pagar',
+		paypass: 'PayPass',
+		scanToDonate: 'Escanear para donar',
+		scanToPay: 'Escanear para pagar',
+		paymentLocation: 'Lugar de pago',
+		navigateToLocation: 'Navegar al lugar',
+		viewTransactions: 'Ver transacciones',
+		onlinePaypass: 'PayPass en línea',
+		topUpCryptoCard: 'Recargar tarjeta cripto',
+		swapCurrency: 'Cambiar moneda',
+		activatePro: 'Activar Pro',
+		sendOfflineTransaction: 'Enviar transacción sin conexión'
 	}
 }
 

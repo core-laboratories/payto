@@ -3,23 +3,38 @@
  * @param hostname - Network hostname
  * @param props - Network data properties
  * @param currency - Optional currency override
+ * @param prefixed - Whether to prefix the title with the hostname
  * @returns Formatted title text
  */
 export function getTitleText(hostname: string, destination: string, props: any, currency?: string, prefixed: boolean = false): string | null {
 	if (hostname === 'ican') {
-		return prefixed ? hostname.toUpperCase() + ' ' + shortenTitle(destination) : shortenTitle(destination);
+		const currencyValue = currency || props.currency;
+		const currencyText = currencyValue && currencyValue.length < 6
+			? currencyValue.toUpperCase()
+			: (currencyValue ? shortenTitle(currencyValue) : shortenTitle(hostname));
+		return prefixed ? currencyText + ' ' + shortenTitle(destination) : shortenTitle(destination);
 	} else if (hostname === 'iban' || hostname === 'ach' || hostname === 'bic') {
 		return prefixed ? hostname.toUpperCase() + ' ' + shortenTitle(destination) : shortenTitle(destination);
 	} else if (hostname === 'upi' || hostname === 'pix') {
 		return prefixed ? hostname.toUpperCase() + ' ' + splitAddress(destination, '@', 1).toLowerCase() : splitAddress(destination, '@', 1).toLowerCase();
 	} else if (hostname === 'intra') {
-		return prefixed ? 'Intra-bank ' + shortenTitle(destination) : shortenTitle(destination);
+		return prefixed ? hostname.toUpperCase() + ' ' + shortenTitle(destination) : shortenTitle(destination);
 	} else if (hostname === 'void') {
-		if (props.network === 'geo') {
-			const [lat, lon] = destination.toString().split(',');
-			return prefixed ? 'Geo ' + `${truncateTitle(Number(lat), 4)},${truncateTitle(Number(lon), 4)}` : `${truncateTitle(Number(lat), 4)},${truncateTitle(Number(lon), 4)}`;
-		} else if (props.network === 'plus') {
-			return prefixed ? 'Plus ' + cutFromBeginning(destination.toString(), 4) : cutFromBeginning(destination.toString(), 4);
+		if (props.transport === 'geo') {
+			const lat = props.params?.loc?.lat;
+			const lon = props.params?.loc?.lon;
+			if (lat && lon) {
+				return prefixed ? `${props.transport.toUpperCase()} ${truncateTitle(Number(lat), 4)},${truncateTitle(Number(lon), 4)}` : `${truncateTitle(Number(lat), 4)},${truncateTitle(Number(lon), 4)}`;
+			} else {
+				return prefixed ? hostname.toUpperCase() + ' ' + shortenTitle(destination) : shortenTitle(destination);
+			}
+		} else if (props.transport === 'plus') {
+			const plus = props.params?.loc?.plus;
+			if (plus) {
+				return prefixed ? props.transport.toUpperCase() + ' ' + cutFromBeginning(plus.toString(), 4) : cutFromBeginning(plus.toString(), 4);
+			} else {
+				return prefixed ? hostname.toUpperCase() + ' ' + shortenTitle(destination) : shortenTitle(destination);
+			}
 		} else {
 			return prefixed ? hostname.toUpperCase() + ' ' + shortenTitle(destination) : shortenTitle(destination);
 		}
@@ -42,10 +57,10 @@ export function getTitleTextBarcode(hostname: string, props: any): string | null
 	} else if (hostname === 'bic') {
 		return props.address.toUpperCase();
 	} else if (hostname === 'void') {
-		if (props.network === 'geo') {
+		if (props.transport === 'geo') {
 			const [lat, lon] = props.address.toString().split(',');
 			return `${truncateTitle(Number(lat), 4)},${truncateTitle(Number(lon), 4)}`;
-		} else if (props.network === 'plus') {
+		} else if (props.transport === 'plus') {
 			return cutFromBeginning(props.address.toString(), 4);
 		} else {
 			return shortenTitle(props.address);

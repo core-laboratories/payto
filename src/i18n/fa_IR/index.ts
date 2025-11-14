@@ -42,6 +42,42 @@ const fa_IRPartial: DeepPartial<Translation> = {
 			month: 'م',
 			year: 'س'
 		}
+	},
+	paypass: {
+		address: 'آدرس حساب',
+		network: 'شبکه',
+		cash: 'نقدی',
+		chain: 'نوع زنجیره',
+		amount: 'مبلغ',
+		purpose: 'آیتم',
+		recurringDonation: 'اهدای مکرر',
+		recurringPayment: 'پرداخت مکرر',
+		donation: 'اهداء',
+		payment: 'پرداخت',
+		swapFor: 'تعویض با',
+		split: 'تقسیم',
+		iban: 'IBAN',
+		bic: 'BIC',
+		beneficiary: 'ذینفع',
+		bicOroric: 'BIC / ORIC',
+		accountNumber: 'شماره حساب',
+		routingNumber: 'شماره مسیریابی',
+		accountAlias: 'لقب حساب',
+		message: 'پیام',
+		id: 'شناسه',
+		accountId: 'شناسه حساب',
+		pay: 'پرداخت',
+		paypass: 'PayPass',
+		scanToDonate: 'اسکن برای اهدا',
+		scanToPay: 'اسکن برای پرداخت',
+		paymentLocation: 'محل پرداخت',
+		navigateToLocation: 'رفتن به محل',
+		viewTransactions: 'مشاهده تراکنش‌ها',
+		onlinePaypass: 'PayPass آنلاین',
+		topUpCryptoCard: 'شارژ کارت کریپتو',
+		swapCurrency: 'تعویض ارز',
+		activatePro: 'فعال‌سازی Pro',
+		sendOfflineTransaction: 'ارسال تراکنش آفلاین'
 	}
 }
 

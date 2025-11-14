@@ -42,6 +42,42 @@ const ruPartial: DeepPartial<Translation> = {
 			month: 'м',
 			year: 'г'
 		}
+	},
+	paypass: {
+		address: 'Адрес счёта',
+		network: 'Сеть',
+		cash: 'Наличные',
+		chain: 'Тип сети',
+		amount: 'Сумма',
+		purpose: 'Позиция',
+		recurringDonation: 'Регулярное пожертвование',
+		recurringPayment: 'Регулярный платёж',
+		donation: 'Пожертвование',
+		payment: 'Платёж',
+		swapFor: 'Обменять на',
+		split: 'Разделить',
+		iban: 'IBAN',
+		bic: 'BIC',
+		beneficiary: 'Получатель',
+		bicOroric: 'BIC / ORIC',
+		accountNumber: 'Номер счёта',
+		routingNumber: 'Маршрутный номер',
+		accountAlias: 'Псевдоним счёта',
+		message: 'Сообщение',
+		id: 'ID',
+		accountId: 'ID счёта',
+		pay: 'Оплатить',
+		paypass: 'PayPass',
+		scanToDonate: 'Сканируйте для помощи',
+		scanToPay: 'Сканируйте для оплаты',
+		paymentLocation: 'Место оплаты',
+		navigateToLocation: 'Навигировать к месту',
+		viewTransactions: 'Просмотр транзакций',
+		onlinePaypass: 'Онлайн PayPass',
+		topUpCryptoCard: 'Пополнить криптокарту',
+		swapCurrency: 'Обмен валюты',
+		activatePro: 'Активировать Pro',
+		sendOfflineTransaction: 'Отправить офлайн-транзакцию'
 	}
 }
 

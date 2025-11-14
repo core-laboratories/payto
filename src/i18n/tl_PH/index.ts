@@ -42,6 +42,42 @@ const tl_PHPartial: DeepPartial<Translation> = {
 			month: 'b',
 			year: 't'
 		}
+	},
+	paypass: {
+		address: 'Address ng account',
+		network: 'Network',
+		cash: 'Cash',
+		chain: 'Uri ng network',
+		amount: 'Halaga',
+		purpose: 'Item',
+		recurringDonation: 'Paulit-ulit na donasyon',
+		recurringPayment: 'Paulit-ulit na bayad',
+		donation: 'Donasyon',
+		payment: 'Bayad',
+		swapFor: 'Palitan para sa',
+		split: 'Hatiin',
+		iban: 'IBAN',
+		bic: 'BIC',
+		beneficiary: 'Benepisyaryo',
+		bicOroric: 'BIC / ORIC',
+		accountNumber: 'Numero ng account',
+		routingNumber: 'Routing number',
+		accountAlias: 'Alias ng account',
+		message: 'Mensahe',
+		id: 'ID',
+		accountId: 'Account ID',
+		pay: 'Magbayad',
+		paypass: 'PayPass',
+		scanToDonate: 'I-scan para magbigay',
+		scanToPay: 'I-scan para magbayad',
+		paymentLocation: 'Lokasyon ng bayaran',
+		navigateToLocation: 'Mag-navigate sa lokasyon',
+		viewTransactions: 'Tingnan ang mga transaksyon',
+		onlinePaypass: 'Online PayPass',
+		topUpCryptoCard: 'Mag-top up ng crypto card',
+		swapCurrency: 'Palitan ang currency',
+		activatePro: 'I-activate ang Pro',
+		sendOfflineTransaction: 'Magpadala ng offline na transaksyon'
 	}
 }
 

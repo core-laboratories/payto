@@ -42,6 +42,42 @@ const skPartial: DeepPartial<Translation> = {
 			month: 'm',
 			year: 'r'
 		}
+	},
+	paypass: {
+		address: 'Adresa účtu',
+		network: 'Sieť',
+		cash: 'Hotovosť',
+		chain: 'Typ siete',
+		amount: 'Suma',
+		purpose: 'Položka',
+		recurringDonation: 'Pravidelný dar',
+		recurringPayment: 'Pravidelná platba',
+		donation: 'Dar',
+		payment: 'Platba',
+		swapFor: 'Zameniť za',
+		split: 'Rozdeliť',
+		iban: 'IBAN',
+		bic: 'BIC',
+		beneficiary: 'Príjemca',
+		bicOroric: 'BIC / ORIC',
+		accountNumber: 'Číslo účtu',
+		routingNumber: 'Smerovacie číslo',
+		accountAlias: 'Alias účtu',
+		message: 'Správa',
+		id: 'ID',
+		accountId: 'ID účtu',
+		pay: 'Zaplatiť',
+		paypass: 'PayPass',
+		scanToDonate: 'Skenovať pre dar',
+		scanToPay: 'Skenovať pre platbu',
+		paymentLocation: 'Miesto platby',
+		navigateToLocation: 'Navigovať na miesto',
+		viewTransactions: 'Zobraziť transakcie',
+		onlinePaypass: 'Online PayPass',
+		topUpCryptoCard: 'Dobiť krypto kartu',
+		swapCurrency: 'Zameniť menu',
+		activatePro: 'Aktivovať Pro',
+		sendOfflineTransaction: 'Odoslať offline transakciu'
 	}
 }
 

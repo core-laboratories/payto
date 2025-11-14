@@ -143,11 +143,11 @@
 			id="descCheckbox"
 			onchange={handleDescChange}
 		/>
-		<label for="descCheckbox" class="ml-2">Description</label>
+		<label for="descCheckbox" class="ml-2">Message</label>
 	</div>
 	{#if $constructor.networks.pix.isDesc}
 		<FieldGroup>
-			<FieldGroupLabel>Description</FieldGroupLabel>
+			<FieldGroupLabel>Message</FieldGroupLabel>
 			<FieldGroupText
 				placeholder="e.g. Payment for services"
 				bind:value={$constructor.networks.pix.params.message.value}
