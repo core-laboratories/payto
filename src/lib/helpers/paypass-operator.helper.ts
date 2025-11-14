@@ -281,6 +281,13 @@ export function formatter(currency: string | undefined, format: string | undefin
 	});
 }
 
+/**
+ * Format amount with recurrence
+ * @param object - Object with value and recurrence
+ * @param translations - Translations for recurring
+ * @param rtl - Whether to use right-to-left formatting
+ * @returns Formatted amount string
+ */
 export function formatAmount(
 	object: { value: string; recurrence?: { value?: string } },
 	translations: { day: string; week: string; month: string; year: string },

@@ -4,7 +4,7 @@ import { calculateNotifications } from './paypass-notifications.helper';
 import { getPaypassLocalizedString, type LocalizedText, getPaypassLocalizedValueForLocale as getPaypassLocalizedValue } from './paypass-i18n.helper';
 import { formatAmount } from './paypass-operator.helper';
 
-const isDebug = true;
+const isDebug = false;
 
 type TextModConfig = {
 	id?: string;
@@ -705,7 +705,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 			}
 		},
 
-		cardTitle: { defaultValue: { language: 'en-US', value: (orgName && orgName.trim()) || paypassHeaderLoc?.defaultValue || 'PayPass' } }, // TODO: Add translation
+		cardTitle: { defaultValue: { language: locale, value: (orgName && orgName.trim()) || paypassHeaderLoc?.defaultValue || 'PayPass' } },
 
 		header: { defaultValue: { language: locale, value: (titleText && titleText.trim()) } },
 		...(subheaderText && subheaderText.trim() ? {
