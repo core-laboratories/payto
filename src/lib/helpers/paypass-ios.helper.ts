@@ -11,7 +11,9 @@ export interface AppleWalletPayPassConfig {
 	serialId: string;
 	passTypeIdentifier: string;
 	teamIdentifier: string | undefined;
-	org: string | null;
+	locale: string;
+	companyName: string | null;
+	orgName: string;
 	hostname: string;
 	props: any;
 	design: any;
@@ -210,7 +212,9 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 		serialId,
 		passTypeIdentifier,
 		teamIdentifier,
-		org,
+		locale,
+		companyName,
+		orgName,
 		hostname,
 		props,
 		design,
@@ -238,9 +242,6 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 		throw new Error('Apple signing configuration missing (P12/WWDR).');
 	}
 
-	const safeOrg = org || 'PayPass';
-	const locale = design?.lang || 'en';
-
 	const isDonate = !!props.params?.donate?.value;
 	const isRecurring = !!props.params?.rc?.value;
 
@@ -264,14 +265,14 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 	const paymentLocationKey = 'paypass.paymentLocation';
 
 	const titleForLogo = getTitleText(hostname, props, currency);
-	const logoText = String(titleForLogo || safeOrg);
+	const logoText = String(titleForLogo || companyName);
 
 	const basicData: any = {
 		serialNumber: serialId,
 		passTypeIdentifier,
-		organizationName: safeOrg,
+		organizationName: orgName,
 		logoText,
-		description: 'PayPass by ' + safeOrg,
+		description: 'PayPass by ' + companyName,
 		backgroundColor: getValidBackgroundColor(design, kvData, '#2A3950'),
 		foregroundColor: getValidForegroundColor(design, kvData, '#9AB1D6'),
 		labelColor: getValidForegroundColor(design, kvData, '#9AB1D6'),
@@ -435,7 +436,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 			{
 				key: 'issuer',
 				label: issuerLabelKey, // key
-				value: `This PayPass is issued by: ${kvData?.name || safeOrg}`,
+				value: `This PayPass is issued by: ${kvData?.name || companyName}`,
 				attributedValue: `${kvData?.url || (kvData?.name ? '' : 'https://payto.money')}`,
 				dataDetectorTypes: ['PKDataDetectorTypeLink']
 			}

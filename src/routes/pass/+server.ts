@@ -229,6 +229,12 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			return { value: amountValue };
 		})();
 
+		const imageUrls = getImageUrls(kvData, memberAddress, isDev, devServerUrl);
+		const titleText = getTitleText(hostname, destination, props, currency, true);
+		const purposeText = getPurposeText(design);
+		const codeText = getCodeText(isDonate, 'scan');
+		const locale = kvData?.data?.google?.locale || data.locale || design.lang || 'en';
+
 		/* ---------------- OS switch ---------------- */
 
 		if (os === 'android') {
@@ -249,12 +255,6 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			const ts = Math.floor(Date.now() / 1000);
 			const nonce = crypto.randomUUID().split('-')[0];
 			const objectId = `${base}.${uniquePart}-${ts}-${nonce}`.replace(/[^a-zA-Z0-9._-]/g, '').slice(0, 64);
-
-			const imageUrls = getImageUrls(kvData, memberAddress, isDev, devServerUrl);
-			const titleText = getTitleText(hostname, destination, props, currency, true);
-			const purposeText = getPurposeText(design);
-			const codeText = getCodeText(isDonate, 'scan');
-			const locale = kvData?.data?.google?.locale || data.locale || design.lang || 'en';
 
 			const { saveUrl, classId: finalClassId, gwObject, gwClass } = await buildGoogleWalletPayPassSaveLink({
 				issuerId: gwIssuerId,
@@ -325,7 +325,12 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				serialId,
 				passTypeIdentifier,
 				teamIdentifier,
-				org: orgName,
+				p12Base64,
+				p12Password,
+				wwdrPem,
+				locale,
+				companyName,
+				orgName,
 				hostname,
 				props,
 				design,
@@ -334,9 +339,6 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				bareLink,
 				expirationDate,
 				memberAddress,
-				p12Base64,
-				p12Password,
-				wwdrPem,
 				isDev,
 				devServerUrl,
 				explorerUrl,
