@@ -586,8 +586,8 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		rows.push(row);
 	}
 
-	const callbackUrl = publicEnv.PUBLIC_GW_CALLBACK_URL ? publicEnv.PUBLIC_GW_CALLBACK_URL : `${payload.linkBaseUrl}/pass/gw/callback`;
-	const updateRequestUrl = publicEnv.PUBLIC_GW_UPDATE_REQUEST_URL ? publicEnv.PUBLIC_GW_UPDATE_REQUEST_URL : `${payload.linkBaseUrl}/pass/gw/update`;
+	const callbackUrl = publicEnv.PUBLIC_GW_CALLBACK_URL ? publicEnv.PUBLIC_GW_CALLBACK_URL : `${payload.linkBaseUrl}/pass/gw/callback`; // For later if needed
+	const updateRequestUrl = publicEnv.PUBLIC_GW_UPDATE_REQUEST_URL ? publicEnv.PUBLIC_GW_UPDATE_REQUEST_URL : `${payload.linkBaseUrl}/pass/gw/update`; // For later if needed
 	const enableSmartTap = payload.enableSmartTap ? payload.enableSmartTap : true;
 
 	// Process merchantLocations: validate and limit to 10 items max

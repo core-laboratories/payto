@@ -1,6 +1,6 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestEvent } from '@sveltejs/kit';
-import { getValidBackgroundColor } from '$lib/helpers/color-validation.helper';
+import { getValidBackgroundColor, getValidForegroundColor, getAutoTextColor } from '$lib/helpers/color-validation.helper';
 import { getLink } from '$lib/helpers/get-link.helper';
 import { getCurrency } from '$lib/helpers/get-currency.helper';
 import { getExplorerUrl } from '$lib/helpers/tx-explorer.helper';
@@ -168,7 +168,6 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 		const memberAddress = membership || destination;
 
 		const serialId = getFileId([originator, memberAddress, destination, hostname, network]);
-		const fileId = getFileId([originator, memberAddress, destination, hostname, network], '-', true, false);
 		const explorerUrl = getExplorerUrl(network, { address: destination }, true, linkBaseUrl);
 		const customCurrencyData = kvData?.customCurrency || {};
 		const currency = getCurrency(props, network as ITransitionType, true);
@@ -187,11 +186,11 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			props.params.split.address.toLowerCase() !== destination.toLowerCase()
 		)
 			? {
-				value: props.params.split.value,
-				formattedValue: formatter(currency, (kvData?.currencyLocale || undefined), customCurrencyData).format(Number(props.params.split.value)),
-				isPercent: props.params.split.isPercent,
-				address: props.params.split.address
-			}
+					value: props.params.split.value,
+					formattedValue: formatter(currency, (kvData?.currencyLocale || undefined), customCurrencyData).format(Number(props.params.split.value)),
+					isPercent: props.params.split.isPercent,
+					address: props.params.split.address
+			  }
 			: null;
 		const swap = props.params.swap?.value ? props.params.swap.value : null;
 
@@ -203,6 +202,31 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			network: network
 		});
 
+		// pkpass filename: CompanyName or PayPass - destination address - YYMMDDHHmm.pkpass
+		const filenameCompanyBase =
+			companyName && companyName.trim().length > 0 ? companyName.trim() : 'PayPass';
+
+		const safeCompany = filenameCompanyBase
+			.replace(/[^a-zA-Z0-9]+/g, '-')
+			.replace(/-+/g, '-')
+			.replace(/^-|-$/g, '');
+
+		const safeDestination = (destination || '')
+			.replace(/[^a-zA-Z0-9]+/g, '-')
+			.replace(/-+/g, '-')
+			.replace(/^-|-$/g, '');
+
+		const now = new Date();
+		// YYMMDDHHmm
+		const dtPart =
+			String(now.getFullYear()).slice(2) +
+			String(now.getMonth() + 1).padStart(2, '0') +
+			String(now.getDate()).padStart(2, '0') +
+			String(now.getHours()).padStart(2, '0') +
+			String(now.getMinutes()).padStart(2, '0');
+
+		const pkpassFilename = `${safeCompany || 'PayPass'}-${safeDestination || 'address'}-${dtPart}.pkpass`;
+
 		if (hostname === 'void' && network === 'plus') {
 			const plusCoordinates = getLocationCode(props.params.loc?.value || '');
 			props.params.lat = { value: plusCoordinates[0] };
@@ -210,8 +234,10 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 		}
 
 		const amountValue =
-			(props.params.amount?.value && Number(props.params.amount.value) > 0)
-				? formatter(currency, (kvData?.currencyLocale || undefined), customCurrencyData).format(Number(props.params.amount.value))
+			props.params.amount?.value && Number(props.params.amount.value) > 0
+				? formatter(currency, (kvData?.currencyLocale || undefined), customCurrencyData).format(
+						Number(props.params.amount.value)
+				  )
 				: null;
 		const finalAmount = (() => {
 			if (!amountValue) return undefined;
@@ -223,6 +249,16 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			}
 			return { value: amountValue };
 		})();
+
+		const imageUrls = getImageUrls(kvData, destination, network, isDev, devServerUrl);
+		const titleText = getTitleText(hostname, destination, props, currency, true);
+		const purposeText = getPurposeText(design);
+		const codeText = getCodeText(isDonate, 'scan');
+		const fallbackLocale = data.locale || design.lang || 'en';
+		const googleLocale = kvData?.data?.google?.locale || fallbackLocale;
+		const appleLocale = kvData?.data?.apple?.locale || fallbackLocale;
+		const appleBeacons = Array.isArray(kvData?.data?.apple?.beacons) ? kvData.data.apple.beacons : undefined;
+		const backgroundColor = getValidBackgroundColor(design, kvData, '#2A3950');
 
 		/* ---------------- OS switch ---------------- */
 
@@ -245,12 +281,6 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			const nonce = crypto.randomUUID().split('-')[0];
 			const objectId = `${base}.${uniquePart}-${ts}-${nonce}`.replace(/[^a-zA-Z0-9._-]/g, '').slice(0, 64);
 
-			const imageUrls = getImageUrls(kvData, memberAddress, isDev, devServerUrl);
-			const titleText = getTitleText(hostname, destination, props, currency, true);
-			const purposeText = getPurposeText(design);
-			const codeText = getCodeText(isDonate, 'scan');
-			const locale = kvData?.data?.google?.locale || data.locale || design.lang || 'en';
-
 			const { saveUrl, classId: finalClassId, gwObject, gwClass } = await buildGoogleWalletPayPassSaveLink({
 				issuerId: gwIssuerId,
 				saEmail: gwSaEmail,
@@ -265,11 +295,11 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				purposeText: purposeText,
 				amountType: { recurring: isRecurring, donate: isDonate },
 				amountObject: finalAmount,
-				hexBackgroundColor: getValidBackgroundColor(design, kvData, '#2A3950'),
+				hexBackgroundColor: backgroundColor,
 				barcode: getBarcodeConfig(design.barcode || 'qr', bareLink, codeText).google,
 				donate: isDonate,
 				rtl: isRtl,
-				locale: locale,
+				locale: googleLocale,
 				payload: {
 					id: objectId,
 					basicLink: getLink(hostname, props),
@@ -316,27 +346,48 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 
 		} else if (os === 'ios') {
 
+			const foregroundColor = getValidForegroundColor(design, kvData, '#9AB1D6');
+
 			const pkpassBlob = await buildAppleWalletPayPass({
 				serialId,
 				passTypeIdentifier,
 				teamIdentifier,
-				org: orgName,
-				hostname,
-				props,
-				design,
-				kvData,
-				currency,
-				bareLink,
-				expirationDate,
-				memberAddress,
 				p12Base64,
 				p12Password,
 				wwdrPem,
-				isDev,
-				devServerUrl,
-				explorerUrl,
-				customCurrencyData,
-				proUrl,
+				companyName,
+				orgName,
+				logoUrl: imageUrls.apple.logo,
+				iconUrl: imageUrls.apple.icon,
+				titleText: titleText || undefined,
+				purposeText: purposeText,
+				amountType: { recurring: isRecurring, donate: isDonate },
+				amountObject: finalAmount,
+				hexBackgroundColor: backgroundColor,
+				hexForegroundColor: foregroundColor,
+				hexLabelColor: getAutoTextColor(backgroundColor, foregroundColor),
+				barcode: getBarcodeConfig(design.barcode || 'qr', bareLink, codeText).apple,
+				donate: isDonate,
+				rtl: isRtl,
+				locale: appleLocale,
+				beacons: appleBeacons,
+				payload: {
+					basicLink: getLink(hostname, props),
+					fullLink: getLink(hostname, props, design, false),
+					externalLink: getLink(hostname, props, design, true),
+					explorerUrl: explorerUrl || undefined,
+					proUrl,
+					swapUrl: swapUrlLink,
+					linkBaseUrl,
+					props,
+					expirationDate,
+					chainId,
+					redemptionIssuers: kvData?.data?.google?.redemptionIssuers || [],
+					enableSmartTap: kvData?.data?.google?.enableSmartTap || true,
+					merchantLocations: kvData?.data?.google?.merchantLocation || [],
+					splitPayment,
+					swap
+				},
 				fetch
 			});
 
@@ -364,7 +415,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			return new Response(pkpassBlob, {
 				headers: {
 					'Content-Type': 'application/vnd.apple.pkpass',
-					'Content-Disposition': `attachment; filename="${fileId}.pkpass"`
+					'Content-Disposition': `attachment; filename="${pkpassFilename}"; filename*=UTF-8''${encodeURIComponent(pkpassFilename)}`
 				}
 			});
 
