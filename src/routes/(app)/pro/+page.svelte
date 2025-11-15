@@ -51,7 +51,7 @@
 						{#if env.PUBLIC_COMMUNITY_URL}
 						<li class="flex items-start gap-2">
 							<CircleCheck class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
-							<div><a href={env.PUBLIC_COMMUNITY_URL} target="_blank" rel="noopener">Discord community support</a></div>
+							<div><a href={env.PUBLIC_COMMUNITY_URL} target="_blank" rel="noopener">Community support</a></div>
 						</li>
 						{/if}
 					</ul>
@@ -97,8 +97,8 @@
 		</div>
 	</div>
 
-	<!-- Second row: Organization (full width at bottom) -->
-	<div class="w-full max-w-6xl rounded shadow-lg text-gray-100 bg-gray-800/75 h-fit">
+	<!-- Second row: Organization (matches width of first row on desktop) -->
+	<div class="w-full max-w-screen-lg rounded shadow-lg text-gray-100 bg-gray-800/75 h-fit">
 		<a id="org" aria-hidden="true" aria-label="Pro Organization"></a>
 		<div class="flex flex-col h-full">
 			<header class="flex flex-col gap-4 p-4 text-slate-400">
@@ -111,7 +111,7 @@
 					<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500">{formatter('EUR', 'currency').format(Number(env.PUBLIC_PRO_ORG_PRICE))}</span>
 					<span class="text-sm">/year</span>
 				</h4>
-				<a href="mailto:sales@payto.money?subject=Pro%20Organization&body=ORIC%3A%20%0AMessage%3A%20%0A%0A%28Please%20attach%20the%20JSON%20file%20with%20the%20details%29%0A" class="inline-flex items-center justify-center gap-2 px-8 py-3 font-semibold text-white transition duration-300 rounded-lg bg-emerald-700 hover:bg-emerald-600 focus:bg-emerald-700 focus-visible:outline-none !no-underline">
+				<a href="mailto:sales@payto.money?subject=Pro%20Organization" class="inline-flex items-center justify-center gap-2 px-8 py-3 font-semibold text-white transition duration-300 rounded-lg bg-emerald-700 hover:bg-emerald-600 focus:bg-emerald-700 focus-visible:outline-none !no-underline">
 					<span>Enter details by email</span>
 				</a>
 			</header>
