@@ -1,35 +1,35 @@
 import JSZip from 'jszip';
 import forge from 'node-forge';
-import { getImageUrls, getBarcodeConfig, getTitleText, formatter } from './paypass-operator.helper';
-import { getValidBackgroundColor, getValidForegroundColor } from './color-validation.helper';
 import {
 	getPaypassLocalizedValueForLocale as getPaypassLocalizedValue
 } from './paypass-i18n.helper';
 import { locales as availableLocales } from '$i18n/i18n-util';
+import { formatAmount } from './paypass-operator.helper';
 
 export interface AppleWalletPayPassConfig {
 	serialId: string;
 	passTypeIdentifier: string;
 	teamIdentifier: string | undefined;
-	locale: string;
-	companyName: string | null;
-	orgName: string;
-	hostname: string;
-	props: any;
-	design: any;
-	kvData: any;
-	currency: string | undefined;
-	bareLink: string;
-	expirationDate: string | null;
-	memberAddress: string;
 	p12Base64: string | undefined;
 	p12Password: string | undefined;
 	wwdrPem: string | undefined;
-	isDev: boolean;
-	devServerUrl: string;
-	explorerUrl: string | null;
-	customCurrencyData: any;
-	proUrl: string;
+	companyName: string | null;
+	orgName: string;
+	logoUrl?: string;
+	iconUrl?: string;
+	titleText?: string;
+	amountType?: { recurring: boolean; donate: boolean };
+	amountObject?: { value: string; recurrence?: { value?: string } };
+	purposeText?: string;
+	subheaderText?: string;
+	hexBackgroundColor?: string;
+	hexForegroundColor?: string;
+	hexLabelColor?: string;
+	barcode: any;
+	donate?: boolean;
+	rtl?: boolean;	// Right-to-left support (manual swap)
+	locale?: string;
+	payload: any;	// Full payload with all data (same shape as Android helper)
 	fetch: typeof fetch;
 }
 
@@ -41,7 +41,7 @@ export interface AppleWalletPayPassConfig {
 const APPLE_LOCALES = Array.from(
 	new Set(
 		availableLocales
-			.map(locale => locale.replace(/_/g, '-'))
+			.map((locale) => locale.replace(/_/g, '-'))
 			.filter(Boolean)
 	)
 );
@@ -167,8 +167,10 @@ export function signAppleManifestPKCS7({
 	for (const safeContent of p12.safeContents) {
 		for (const safeBag of safeContent.safeBags) {
 			if (safeBag.type === forge.pki.oids.pkcs8ShroudedKeyBag) {
+                // @ts-ignore forge types
 				privateKey = safeBag.key || null;
 			} else if (safeBag.type === forge.pki.oids.certBag) {
+                // @ts-ignore forge types
 				cert = safeBag.cert || cert;
 			}
 		}
@@ -200,6 +202,69 @@ export function signAppleManifestPKCS7({
 }
 
 /* ----------------------------------------------------------------
+ * Helpers shared with Google-style logic
+ * ---------------------------------------------------------------- */
+
+/**
+ * Format destination address the same way as Android helper (grouping, casing).
+ */
+function formatAddressText(payload: any): string | null {
+	const props = payload?.props || {};
+	const addr = props.destination;
+	if (!addr || typeof addr !== 'string') return null;
+
+	if (['xcb', 'xce'].includes(props.network)) {
+		return addr.match(/.{1,4}/g)?.join(' ').toUpperCase() || addr.toUpperCase();
+	} else if (props.network === 'other' && ['xab'].includes(props.other)) {
+		return addr.match(/.{1,4}/g)?.join(' ').toUpperCase() || addr.toUpperCase();
+	}
+	return addr.match(/.{1,4}/g)?.join(' ') || addr;
+}
+
+/**
+ * Build localized “amount + recurrence” text similar to Google Wallet card row.
+ */
+function buildAmountText(
+	amountObject: { value: string; recurrence?: { value?: string } } | undefined,
+	locale: string,
+	rtl: boolean | undefined
+): string | undefined {
+	if (!amountObject || !amountObject.value) return undefined;
+
+	const translations = {
+		day: getPaypassLocalizedValue('common.recurring.day', locale) || 'd',
+		week: getPaypassLocalizedValue('common.recurring.week', locale) || 'w',
+		month: getPaypassLocalizedValue('common.recurring.month', locale) || 'm',
+		year: getPaypassLocalizedValue('common.recurring.year', locale) || 'y'
+	};
+
+	return formatAmount(amountObject, translations, !!rtl);
+}
+
+/**
+ * Build the "network" text similar to Android text module.
+ */
+function buildNetworkText(payload: any, locale: string): string | undefined {
+	const props = payload?.props || {};
+	const network = props.network;
+
+	if (!network) return undefined;
+
+	if (network === 'void') {
+		const cashText = getPaypassLocalizedValue('paypass.cash', locale) || 'Cash';
+		const transportText = props.transport ? String(props.transport).toUpperCase() : '';
+		return transportText ? `${cashText} / ${transportText}` : cashText;
+	}
+
+	const chainWord = getPaypassLocalizedValue('paypass.chain', locale) || 'Chain';
+	const chainPart = payload.chainId ? ` / ${chainWord}: ${payload.chainId}` : '';
+	const baseNetwork = (network === 'other' ? props.other : network) || '';
+	if (!baseNetwork) return undefined;
+
+	return String(baseNetwork).toUpperCase() + chainPart;
+}
+
+/* ----------------------------------------------------------------
  * Main builder
  * ---------------------------------------------------------------- */
 
@@ -212,25 +277,26 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 		serialId,
 		passTypeIdentifier,
 		teamIdentifier,
-		locale,
-		companyName,
-		orgName,
-		hostname,
-		props,
-		design,
-		kvData,
-		currency,
-		bareLink,
-		expirationDate,
-		memberAddress,
 		p12Base64,
 		p12Password,
 		wwdrPem,
-		isDev,
-		devServerUrl,
-		explorerUrl,
-		customCurrencyData,
-		proUrl,
+		companyName,
+		orgName,
+		logoUrl,
+		iconUrl,
+		titleText,
+		amountType,
+		amountObject,
+		purposeText,
+		subheaderText, // not directly supported on Apple card front
+		hexBackgroundColor,
+		hexForegroundColor,
+		hexLabelColor,
+		barcode,
+		donate,
+		rtl,
+		locale,
+		payload,
 		fetch: fetchFn
 	} = config;
 
@@ -242,8 +308,11 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 		throw new Error('Apple signing configuration missing (P12/WWDR).');
 	}
 
-	const isDonate = !!props.params?.donate?.value;
-	const isRecurring = !!props.params?.rc?.value;
+	const passLocale = (locale || 'en').replace(/_/g, '-');
+	const props = payload?.props || {};
+	const params = props.params || {};
+	const isDonate = !!(amountType?.donate || donate);
+	const isRecurring = !!(amountType?.recurring || amountObject?.recurrence?.value);
 
 	// Decide header key like Google: payment / donation / recurring*
 	let paymentHeaderKey = 'paypass.payment';
@@ -251,273 +320,490 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 	else if (isRecurring) paymentHeaderKey = 'paypass.recurringPayment';
 	else if (isDonate) paymentHeaderKey = 'paypass.donation';
 
-	// For Apple, labels (and some values) are KEYS, resolved via pass.strings
 	const paymentLabelKey = paymentHeaderKey;
 	const amountLabelKey = 'paypass.amount';
-	const typeLabelKey = 'paypass.type';
-	const itemLabelKey = 'paypass.purpose';
-	const messageLabelKey = 'paypass.message';
+	const purposeLabelKey = 'paypass.purpose';
+	const networkLabelKey = 'paypass.network';
+	const addressLabelKey = 'paypass.address';
 	const splitLabelKey = 'paypass.split';
-	const viewTransactionsKey = 'paypass.viewTransactions';
-	const proLabelKey = 'paypass.activatePro';
-	const issuerLabelKey = 'paypass.beneficiary';
-	const accountAddressKey = 'paypass.accountAddress';
+	const messageLabelKey = 'paypass.message';
+	const beneficiaryLabelKey = 'paypass.beneficiary';
+	const ibanLabelKey = 'paypass.iban';
+	const bicLabelKey = 'paypass.bic';
+	const bicOroricLabelKey = 'paypass.bicOroric';
+	const accountNumberLabelKey = 'paypass.accountNumber';
+	const routingNumberLabelKey = 'paypass.routingNumber';
+	const accountAliasLabelKey = 'paypass.accountAlias';
+	const idLabelKey = 'paypass.id';
+	const accountIdLabelKey = 'paypass.accountId';
 	const paymentLocationKey = 'paypass.paymentLocation';
+	const viewTransactionsKey = 'paypass.viewTransactions';
+	const onlinePaypassKey = 'paypass.onlinePaypass';
+	const topUpCryptoCardKey = 'paypass.topUpCryptoCard';
+	const swapCurrencyKey = 'paypass.swapCurrency';
+	const activateProKey = 'paypass.activatePro';
+	const sendOfflineTxKey = 'paypass.sendOfflineTransaction';
 
-	const titleForLogo = getTitleText(hostname, props, currency);
-	const logoText = String(titleForLogo || companyName);
+	const addressText = formatAddressText(payload);
+	const networkText = buildNetworkText(payload, passLocale);
+	const amountText = buildAmountText(amountObject, passLocale, rtl);
+
+	const logoText =
+		(titleText && titleText.trim().length > 0
+			? titleText.trim()
+			: orgName && orgName.trim().length > 0
+			? orgName.trim()
+			: companyName || 'PayPass');
+
+	const description =
+		companyName && companyName.trim().length > 0
+			? `PayPass by ${companyName}`
+			: 'PayPass';
+
+	const backgroundColor = hexBackgroundColor || '#2A3950';
+	const foregroundColor = hexForegroundColor || '#9AB1D6';
+	const labelColor = hexLabelColor || '#FFFFFF';
 
 	const basicData: any = {
+		formatVersion: 1,
 		serialNumber: serialId,
 		passTypeIdentifier,
+		teamIdentifier,
 		organizationName: orgName,
 		logoText,
-		description: 'PayPass by ' + companyName,
-		backgroundColor: getValidBackgroundColor(design, kvData, '#2A3950'),
-		foregroundColor: getValidForegroundColor(design, kvData, '#9AB1D6'),
-		labelColor: getValidForegroundColor(design, kvData, '#9AB1D6'),
-		appLaunchURL: bareLink,
-		...(hostname === 'void' && (props.network === 'geo' || props.network === 'plus')
-			? {
-				locations: [
-					{
-						latitude: props.params.lat?.value,
-						longitude: props.params.lon?.value,
-						// store key, value is resolved by pass.strings
-						relevantText: paymentLocationKey
-					}
-				]
-			}
-			: {})
+		description,
+		backgroundColor,
+		foregroundColor,
+		labelColor,
+		appLaunchURL: payload.fullLink || payload.basicLink
 	};
 
-	if (expirationDate) {
-		basicData.expirationDate = expirationDate;
+	// Optional expiration
+	if (payload.expirationDate) {
+		basicData.expirationDate = payload.expirationDate;
 	}
 
-	// Normalize split config (support both props.params.split and props.split)
-	const splitConfig = (props.params && props.params.split) || props.split;
+	// Optional location (like Google Wallet locations)
+	if (params.loc?.lat && params.loc.lon) {
+		basicData.locations = [
+			{
+				latitude: params.loc.lat,
+				longitude: params.loc.lon,
+				// key – value localized via pass.strings
+				relevantText: paymentLocationKey
+			}
+		];
+	} else if (Array.isArray(payload.merchantLocations) && payload.merchantLocations.length > 0) {
+		basicData.locations = payload.merchantLocations
+			.filter(
+				(loc: any) =>
+					typeof loc?.latitude === 'number' &&
+					typeof loc?.longitude === 'number'
+			)
+			.map((loc: any) => ({
+				latitude: loc.latitude,
+				longitude: loc.longitude,
+				relevantText: paymentLocationKey
+			}));
+	}
 
-	const amountValue =
-		props.params.amount?.value && Number(props.params.amount.value) > 0
-			? formatter(
-					currency,
-					kvData?.currencyLocale || undefined,
-					customCurrencyData
-			  ).format(Number(props.params.amount.value))
-			: 'Custom Amount';
-
-	const typeValue = isRecurring
-		? `Recurring ${String(props.params.rc.value).toUpperCase()}`
-		: 'One-time';
-
-	const networkPart =
-		hostname && hostname === 'void'
-			? 'CASH'
-			: hostname.toUpperCase() +
-			  (props.network ? ': ' + String(props.network).toUpperCase() : '');
-
-	// Prepare barcode with localized alternate text via key
-	const baseBarcode = getBarcodeConfig(design.barcode || 'qr', bareLink).apple;
-	const barcodeAltKey = isDonate ? 'paypass.scanToDonate' : 'paypass.scanToPay';
-	const barcode = {
-		...baseBarcode,
-		altText: barcodeAltKey
+	// StoreCard structure (front of the pass)
+	const storeCard: any = {
+		headerFields: [] as any[],
+		primaryFields: [] as any[],
+		secondaryFields: [] as any[],
+		auxiliaryFields: [] as any[],
+		backFields: [] as any[]
 	};
 
-	const storeCard = {
-		headerFields: [
-			{
-				key: 'payment',
-				label: paymentLabelKey, // key → localized in pass.strings
-				value: networkPart
-			}
-		],
-		primaryFields: [
-			{
-				key: 'amount',
-				label: amountLabelKey, // key
-				value: amountValue
-			}
-		],
-		secondaryFields: [
-			...(design.item
-				? [
-						{
-							key: 'item',
-							label: itemLabelKey, // key
-							value: design.item
-						}
-				  ]
-				: []),
-			{
-				key: 'type',
-				label: typeLabelKey, // key
-				value: typeValue
-			},
-			...(hostname === 'ican'
-				? [
-						{
-							key: 'received',
-							label: viewTransactionsKey, // key
-							value: viewTransactionsKey, // also key (shows "Click to view…" via localization)
-							attributedValue: explorerUrl || '',
-							dataDetectorTypes: ['PKDataDetectorTypeLink']
-						}
-				  ]
-				: [])
-		],
-		auxiliaryFields: [
-			// Split
-			...(props.params.amount?.value &&
-			Number(props.params.amount.value) > 0 &&
-			splitConfig?.value
-				? [
-						{
-							key: 'split',
-							label: splitLabelKey, // key
-							value: splitConfig.isPercent
-								? `${Number(splitConfig.value)}%`
-								: formatter(
-										currency,
-										kvData?.currencyLocale || undefined,
-										customCurrencyData
-								  ).format(Number(splitConfig.value))
-						}
-				  ]
-				: []),
+	// Header: payment type + network
+	if (networkText) {
+		storeCard.headerFields.push({
+			key: 'network',
+			label: networkLabelKey, // key → localized via pass.strings
+			value: networkText
+		});
+	} else {
+		storeCard.headerFields.push({
+			key: 'payment',
+			label: paymentLabelKey,
+			value: getPaypassLocalizedValue('paypass.paypass', passLocale) || 'PayPass'
+		});
+	}
 
-			// Message
-			...(props.params.message?.value
-				? [
-						{
-							key: 'message',
-							label: messageLabelKey, // key
-							value: props.params.message.value
-						}
-				  ]
-				: []),
+	// Primary: Amount (formatted similar to Google)
+	if (amountText) {
+		storeCard.primaryFields.push({
+			key: 'amount',
+			label: paymentLabelKey, // e.g. "Payment", "Donation", etc.
+			value: amountText
+		});
+	} else if (amountObject?.value) {
+		storeCard.primaryFields.push({
+			key: 'amount',
+			label: amountLabelKey,
+			value: amountObject.value
+		});
+	}
 
-			// Split receiving address
-			...(props.params.amount?.value &&
-			Number(props.params.amount.value) > 0 &&
-			splitConfig?.value &&
-			splitConfig?.address
-				? [
-						{
-							key: 'split-address',
-							label: accountAddressKey, // key
-							value: splitConfig.address
-						}
-				  ]
-				: []),
+	// Secondary: Purpose + Address
+	if (purposeText && purposeText.trim().length > 0) {
+		storeCard.secondaryFields.push({
+			key: 'purpose',
+			label: purposeLabelKey,
+			value: purposeText.trim()
+		});
+	}
 
-			// Pro link
-			{
-				key: 'pro',
-				label: proLabelKey, // key
-				value: proLabelKey, // key
-				attributedValue: proUrl,
-				dataDetectorTypes: ['PKDataDetectorTypeLink']
-			}
-		],
-		backFields: [
-			...(hostname === 'ican'
-				? [
-						{
-							key: 'balance',
-							label: viewTransactionsKey,
-							value: viewTransactionsKey,
-							attributedValue: explorerUrl || '',
-							dataDetectorTypes: ['PKDataDetectorTypeLink']
-						}
-				  ]
-				: []),
-			{
-				key: 'issuer',
-				label: issuerLabelKey, // key
-				value: `This PayPass is issued by: ${kvData?.name || companyName}`,
-				attributedValue: `${kvData?.url || (kvData?.name ? '' : 'https://payto.money')}`,
-				dataDetectorTypes: ['PKDataDetectorTypeLink']
-			}
-		]
-	};
+	if (addressText) {
+		storeCard.secondaryFields.push({
+			key: 'address',
+			label: addressLabelKey,
+			value: addressText
+		});
+	}
 
+	// Auxiliary: split payment, message, pro/swap/explorer links, etc.
+	const splitPayment = payload.splitPayment;
+	if (splitPayment && splitPayment.value > 0) {
+		const splitValue = splitPayment.isPercent
+			? `${splitPayment.value}%`
+			: splitPayment.formattedValue || String(splitPayment.value);
+		storeCard.auxiliaryFields.push({
+			key: 'split',
+			label: splitLabelKey,
+			value: splitValue
+		});
+
+		if (splitPayment.address) {
+			storeCard.auxiliaryFields.push({
+				key: 'split-address',
+				label: addressLabelKey,
+				value: splitPayment.address
+			});
+		}
+	}
+
+	if (params.message?.value) {
+		storeCard.auxiliaryFields.push({
+			key: 'message',
+			label: messageLabelKey,
+			value: params.message.value
+		});
+	}
+
+	// Links: explorer, external, pro, swap (as "tap to open" via dataDetectorTypes)
+	if (payload.explorerUrl) {
+		storeCard.auxiliaryFields.push({
+			key: 'explorer',
+			label: viewTransactionsKey,
+			value: viewTransactionsKey,
+			attributedValue: payload.explorerUrl,
+			dataDetectorTypes: ['PKDataDetectorTypeLink']
+		});
+	}
+
+	if (payload.externalLink) {
+		storeCard.auxiliaryFields.push({
+			key: 'online',
+			label: onlinePaypassKey,
+			value: onlinePaypassKey,
+			attributedValue: payload.externalLink,
+			dataDetectorTypes: ['PKDataDetectorTypeLink']
+		});
+	}
+
+	if (props.network === 'xcb' && payload.proUrl) {
+		storeCard.auxiliaryFields.push({
+			key: 'pro',
+			label: activateProKey,
+			value: activateProKey,
+			attributedValue: payload.proUrl,
+			dataDetectorTypes: ['PKDataDetectorTypeLink']
+		});
+	}
+
+	if (payload.swapUrl) {
+		storeCard.auxiliaryFields.push({
+			key: 'swap',
+			label: swapCurrencyKey,
+			value: swapCurrencyKey,
+			attributedValue: payload.swapUrl,
+			dataDetectorTypes: ['PKDataDetectorTypeLink']
+		});
+	}
+
+	if (props.network === 'xcb') {
+		storeCard.auxiliaryFields.push({
+			key: 'offline',
+			label: sendOfflineTxKey,
+			value: sendOfflineTxKey,
+			attributedValue: 'sms:+12019715152',
+			dataDetectorTypes: ['PKDataDetectorTypeLink']
+		});
+	}
+
+	// Back fields: issuer + network-specific details (IBAN, ACH, UPI, PIX, INTRA, VOID, etc.)
+	storeCard.backFields.push({
+		key: 'issuer',
+		label: beneficiaryLabelKey,
+		value:
+			getPaypassLocalizedValue('paypass.beneficiary', passLocale) ||
+			'Beneficiary',
+		attributedValue: payload.linkBaseUrl || 'https://payto.money',
+		dataDetectorTypes: ['PKDataDetectorTypeLink']
+	});
+
+	// Network specific
+	if (props.network === 'iban') {
+		const iban = props.iban?.match(/.{1,4}/g)?.join(' ').toUpperCase() || props.iban?.toUpperCase();
+		if (iban) {
+			storeCard.backFields.push({
+				key: 'iban',
+				label: ibanLabelKey,
+				value: iban
+			});
+		}
+		const bic = props.bic?.toUpperCase();
+		if (bic) {
+			storeCard.backFields.push({
+				key: 'bic',
+				label: bicLabelKey,
+				value: bic
+			});
+		}
+		if (params.receiverName?.value) {
+			storeCard.backFields.push({
+				key: 'beneficiary',
+				label: beneficiaryLabelKey,
+				value: params.receiverName.value
+			});
+		}
+		if (params.message?.value) {
+			storeCard.backFields.push({
+				key: 'message-iban',
+				label: messageLabelKey,
+				value: params.message.value
+			});
+		}
+	} else if (props.network === 'ach') {
+		if (props.accountNumber) {
+			storeCard.backFields.push({
+				key: 'accountNumber',
+				label: accountNumberLabelKey,
+				value: props.accountNumber
+			});
+		}
+		const routingNumber = props.routingNumber?.toUpperCase();
+		if (routingNumber) {
+			storeCard.backFields.push({
+				key: 'routingNumber',
+				label: routingNumberLabelKey,
+				value: routingNumber
+			});
+		}
+		if (params.receiverName?.value) {
+			storeCard.backFields.push({
+				key: 'beneficiary',
+				label: beneficiaryLabelKey,
+				value: params.receiverName.value
+			});
+		}
+	} else if (props.network === 'upi') {
+		if (props.accountAlias) {
+			storeCard.backFields.push({
+				key: 'accountAlias',
+				label: accountAliasLabelKey,
+				value: props.accountAlias
+			});
+		}
+		if (params.receiverName?.value) {
+			storeCard.backFields.push({
+				key: 'beneficiary',
+				label: beneficiaryLabelKey,
+				value: params.receiverName.value
+			});
+		}
+		if (params.message?.value) {
+			storeCard.backFields.push({
+				key: 'message-upi',
+				label: messageLabelKey,
+				value: params.message.value
+			});
+		}
+	} else if (props.network === 'pix') {
+		if (props.accountAlias) {
+			storeCard.backFields.push({
+				key: 'accountAlias',
+				label: accountAliasLabelKey,
+				value: props.accountAlias
+			});
+		}
+		if (params.receiverName?.value) {
+			storeCard.backFields.push({
+				key: 'beneficiary',
+				label: beneficiaryLabelKey,
+				value: params.receiverName.value
+			});
+		}
+		if (params.id?.value) {
+			storeCard.backFields.push({
+				key: 'id',
+				label: idLabelKey,
+				value: params.id.value
+			});
+		}
+		if (params.message?.value) {
+			storeCard.backFields.push({
+				key: 'message-pix',
+				label: messageLabelKey,
+				value: params.message.value
+			});
+		}
+	} else if (props.network === 'bic') {
+		const bic = props.bic?.toUpperCase();
+		if (bic) {
+			storeCard.backFields.push({
+				key: 'bic',
+				label: bicOroricLabelKey,
+				value: bic
+			});
+		}
+	} else if (props.network === 'intra') {
+		const bic = props.bic?.toUpperCase();
+		if (bic) {
+			storeCard.backFields.push({
+				key: 'bic',
+				label: bicOroricLabelKey,
+				value: bic
+			});
+		}
+		if (props.id) {
+			storeCard.backFields.push({
+				key: 'accountId',
+				label: accountIdLabelKey,
+				value: props.id
+			});
+		}
+		if (params.receiverName?.value) {
+			storeCard.backFields.push({
+				key: 'beneficiary',
+				label: beneficiaryLabelKey,
+				value: params.receiverName.value
+			});
+		}
+		if (params.message?.value) {
+			storeCard.backFields.push({
+				key: 'message-intra',
+				label: messageLabelKey,
+				value: params.message.value
+			});
+		}
+	} else if (props.network === 'void') {
+		if (params.receiverName?.value) {
+			storeCard.backFields.push({
+				key: 'beneficiary',
+				label: beneficiaryLabelKey,
+				value: params.receiverName.value
+			});
+		}
+		if (params.message?.value) {
+			storeCard.backFields.push({
+				key: 'message-void',
+				label: messageLabelKey,
+				value: params.message.value
+			});
+		}
+	}
+
+	// NFC
 	const passData: any = {
 		...basicData,
-		formatVersion: 1,
-		teamIdentifier,
 		storeCard,
 		nfc: {
-			message: bareLink,
+			message: payload.basicLink,
 			requiresAuthentication: true
-		},
-		barcodes: [barcode],
-		...(kvData?.beacons ? { beacons: kvData.beacons } : {})
+		}
 	};
 
-	// 1) Prepare files: pass.json + images + localization
+	// Barcode
+	const barcodeAltText = isDonate
+		? getPaypassLocalizedValue('paypass.scanToDonate', passLocale) || 'Scan to donate'
+		: getPaypassLocalizedValue('paypass.scanToPay', passLocale) || 'Scan to pay';
+
+	const baseBarcode =
+		barcode && typeof barcode === 'object'
+			? barcode
+			: {
+					format: 'PKBarcodeFormatQR',
+					message: payload.basicLink,
+					messageEncoding: 'iso-8859-1'
+			  };
+
+	const appleBarcode = {
+		...baseBarcode,
+		altText: barcodeAltText
+	};
+
+	passData.barcodes = [appleBarcode];
+
+	/* ----------------------------------------------------------------
+	 * 1) pass.json
+	 * ---------------------------------------------------------------- */
+
 	const files: Record<string, ArrayBuffer> = {};
 	files['pass.json'] = new TextEncoder().encode(JSON.stringify(passData, null, 2)).buffer;
 
-	// Apple-style localization: one pass.strings per supported locale
+	/* ----------------------------------------------------------------
+	 * 2) Localization: one pass.strings per supported locale
+	 * ---------------------------------------------------------------- */
+
 	for (const loc of APPLE_LOCALES) {
 		const stringsContent = buildApplePassStringsForLocale(loc);
 		const path = `${loc}.lproj/pass.strings`;
 		files[path] = new TextEncoder().encode(stringsContent).buffer;
 	}
 
-	// Load images using unified image URLs
-	const imageUrls = getImageUrls(kvData, memberAddress, isDev, devServerUrl);
-	const defaultImages: Record<string, ArrayBuffer> = {};
+	/* ----------------------------------------------------------------
+	 * 3) Images: icon + logo from config (similar to Google helper)
+	 * ---------------------------------------------------------------- */
 
-	await Promise.all([
-		fetchFn(imageUrls.apple.icon)
-			.then(r => (r.ok ? r.arrayBuffer() : null))
-			.then(b => {
-				if (b) defaultImages['icon.png'] = b;
-			})
-			.catch(() => {}),
-		fetchFn(imageUrls.apple.icon2x)
-			.then(r => (r.ok ? r.arrayBuffer() : null))
-			.then(b => {
-				if (b) defaultImages['icon@2x.png'] = b;
-			})
-			.catch(() => {}),
-		fetchFn(imageUrls.apple.icon3x)
-			.then(r => (r.ok ? r.arrayBuffer() : null))
-			.then(b => {
-				if (b) defaultImages['icon@3x.png'] = b;
-			})
-			.catch(() => {}),
-		fetchFn(imageUrls.apple.logo)
-			.then(r => (r.ok ? r.arrayBuffer() : null))
-			.then(b => {
-				if (b) defaultImages['logo.png'] = b;
-			})
-			.catch(() => {}),
-		fetchFn(imageUrls.apple.logo2x)
-			.then(r => (r.ok ? r.arrayBuffer() : null))
-			.then(b => {
-				if (b) defaultImages['logo@2x.png'] = b;
-			})
-			.catch(() => {}),
-		fetchFn(imageUrls.apple.logo3x)
-			.then(r => (r.ok ? r.arrayBuffer() : null))
-			.then(b => {
-				if (b) defaultImages['logo@3x.png'] = b;
-			})
-			.catch(() => {})
-	]);
+	const imageFetches: Promise<void>[] = [];
 
-	for (const [name, ab] of Object.entries(defaultImages)) {
-		files[name] = ab;
+	if (iconUrl) {
+		imageFetches.push(
+			fetchFn(iconUrl)
+				.then((r) => (r.ok ? r.arrayBuffer() : null))
+				.then((buf) => {
+					if (buf) files['icon.png'] = buf;
+				})
+				.catch(() => {})
+		);
 	}
 
-	// 2) manifest.json (SHA-1)
+	if (logoUrl) {
+		imageFetches.push(
+			fetchFn(logoUrl)
+				.then((r) => (r.ok ? r.arrayBuffer() : null))
+				.then((buf) => {
+					if (buf) files['logo.png'] = buf;
+				})
+				.catch(() => {})
+		);
+	}
+
+	await Promise.all(imageFetches);
+
+	/* ----------------------------------------------------------------
+	 * 4) manifest.json (SHA-1)
+	 * ---------------------------------------------------------------- */
+
 	const manifestText = await buildAppleManifest(files);
 
-	// 3) signature (PKCS#7 DER detached)
+	/* ----------------------------------------------------------------
+	 * 5) signature (PKCS#7 DER detached)
+	 * ---------------------------------------------------------------- */
+
 	const signatureBytes = signAppleManifestPKCS7({
 		manifestText,
 		p12Base64,
@@ -525,7 +811,10 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 		wwdrPem
 	});
 
-	// 4) package zip
+	/* ----------------------------------------------------------------
+	 * 6) Package zip (.pkpass)
+	 * ---------------------------------------------------------------- */
+
 	const zip = new JSZip();
 	for (const [name, ab] of Object.entries(files)) zip.file(name, ab);
 	zip.file('manifest.json', manifestText);

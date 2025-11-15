@@ -1,6 +1,6 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestEvent } from '@sveltejs/kit';
-import { getValidBackgroundColor } from '$lib/helpers/color-validation.helper';
+import { getValidBackgroundColor, getValidForegroundColor, getAutoTextColor } from '$lib/helpers/color-validation.helper';
 import { getLink } from '$lib/helpers/get-link.helper';
 import { getCurrency } from '$lib/helpers/get-currency.helper';
 import { getExplorerUrl } from '$lib/helpers/tx-explorer.helper';
@@ -234,6 +234,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 		const purposeText = getPurposeText(design);
 		const codeText = getCodeText(isDonate, 'scan');
 		const locale = kvData?.data?.google?.locale || data.locale || design.lang || 'en';
+		const backgroundColor = getValidBackgroundColor(design, kvData, '#2A3950');
 
 		/* ---------------- OS switch ---------------- */
 
@@ -270,7 +271,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				purposeText: purposeText,
 				amountType: { recurring: isRecurring, donate: isDonate },
 				amountObject: finalAmount,
-				hexBackgroundColor: getValidBackgroundColor(design, kvData, '#2A3950'),
+				hexBackgroundColor: backgroundColor,
 				barcode: getBarcodeConfig(design.barcode || 'qr', bareLink, codeText).google,
 				donate: isDonate,
 				rtl: isRtl,
@@ -321,6 +322,8 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 
 		} else if (os === 'ios') {
 
+			const foregroundColor = getValidForegroundColor(design, kvData, '#9AB1D6');
+
 			const pkpassBlob = await buildAppleWalletPayPass({
 				serialId,
 				passTypeIdentifier,
@@ -328,22 +331,36 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				p12Base64,
 				p12Password,
 				wwdrPem,
-				locale,
 				companyName,
 				orgName,
-				hostname,
-				props,
-				design,
-				kvData,
-				currency,
-				bareLink,
-				expirationDate,
-				memberAddress,
-				isDev,
-				devServerUrl,
-				explorerUrl,
-				customCurrencyData,
-				proUrl,
+				titleText: titleText || undefined,
+				purposeText: purposeText,
+				amountType: { recurring: isRecurring, donate: isDonate },
+				amountObject: finalAmount,
+				hexBackgroundColor: backgroundColor,
+				hexForegroundColor: foregroundColor,
+				hexLabelColor: getAutoTextColor(backgroundColor, foregroundColor),
+				barcode: getBarcodeConfig(design.barcode || 'qr', bareLink, codeText).apple,
+				donate: isDonate,
+				rtl: isRtl,
+				locale,
+				payload: {
+					basicLink: getLink(hostname, props),
+					fullLink: getLink(hostname, props, design, false),
+					externalLink: getLink(hostname, props, design, true),
+					explorerUrl: explorerUrl || undefined,
+					proUrl,
+					swapUrl: swapUrlLink,
+					linkBaseUrl,
+					props,
+					expirationDate,
+					chainId,
+					redemptionIssuers: kvData?.data?.google?.redemptionIssuers || [],
+					enableSmartTap: kvData?.data?.google?.enableSmartTap || true,
+					merchantLocations: kvData?.data?.google?.merchantLocation || [],
+					splitPayment,
+					swap
+				},
 				fetch
 			});
 
