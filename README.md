@@ -181,12 +181,13 @@ Issuing authorities[^authority] deliver an object like this example to the email
       - Example: `[ { "latitude": 40.7128, "longitude": -74.0060 } ]`
   - `apple`: Apple Wallet data
     - `locale`: The locale used for Apple Wallet data (e.g., `"en-GB"`, `"de"`, `"sk"`)
-      - Default: parsed or provided in the request
+      - Default: parsed or provided in the request (overrides the auto-detected locale only for Apple passes)
     - `beacons`: Custom iBeacon proximity triggers to PayPasses (array of objects, max 10)
-      - `proximityUUID`: The UUID of the iBeacon
-      - `relevantText`: The text displayed when the iBeacon is in range
-      - `name`: The name of the iBeacon
-      - Default: none
+      - `proximityUUID`: The UUID of the iBeacon (required)
+      - `relevantText`: The text displayed when the iBeacon is in range (optional)
+      - `name`: Friendly name for the beacon (optional, stored in the pass for reference)
+      - `major` / `minor`: Optional numbers if you need to scope to specific beacon instances
+      - Default: none (when provided, these beacons are embedded into the `.pkpass`)
   - Default: none
 
 - **`customCurrency`** (optional): Custom currency definitions for non-standard currencies or tokens.

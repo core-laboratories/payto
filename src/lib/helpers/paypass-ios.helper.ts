@@ -17,6 +17,13 @@ export interface AppleWalletPayPassConfig {
 	orgName: string;
 	logoUrl?: string;
 	iconUrl?: string;
+	beacons?: Array<{
+		proximityUUID: string;
+		relevantText?: string;
+		major?: number;
+		minor?: number;
+		name?: string;
+	}>;
 	titleText?: string;
 	amountType?: { recurring: boolean; donate: boolean };
 	amountObject?: { value: string; recurrence?: { value?: string } };
@@ -285,6 +292,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 		logoUrl,
 		iconUrl,
 		titleText,
+		beacons,
 		amountType,
 		amountObject,
 		purposeText,
@@ -405,6 +413,30 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 				longitude: loc.longitude,
 				relevantText: paymentLocationKey
 			}));
+	}
+
+	// Attach beacons (iBeacon proximity triggers)
+	if (Array.isArray(beacons) && beacons.length > 0) {
+		const normalizedBeacons = beacons
+			.filter(
+				(b) => b && typeof b.proximityUUID === 'string' && b.proximityUUID.trim().length > 0
+			)
+			.slice(0, 10)
+			.map((b) => {
+				const beacon: any = {
+					proximityUUID: b.proximityUUID.trim()
+				};
+				if (b.relevantText) beacon.relevantText = b.relevantText;
+				if (typeof b.major === 'number' && Number.isFinite(b.major)) beacon.major = Math.trunc(b.major);
+				if (typeof b.minor === 'number' && Number.isFinite(b.minor)) beacon.minor = Math.trunc(b.minor);
+				if (b.name) beacon.name = b.name;
+				return beacon;
+			})
+			.filter((b) => !!b.proximityUUID);
+
+		if (normalizedBeacons.length > 0) {
+			basicData.beacons = normalizedBeacons;
+		}
 	}
 
 	// StoreCard structure (front of the pass)

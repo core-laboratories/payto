@@ -15,11 +15,11 @@ export { getTitleText, getTitleTextBarcode } from './get-title-name.helper';
  * @param devServerUrl - Development server URL
  * @returns Object with Apple and Google Wallet image URLs
  */
-export function getImageUrls(kvData: any, address: string, isDev: boolean, devServerUrl: string) {
+export function getImageUrls(kvData: any, address: string, network: string | null | undefined, isDev: boolean, devServerUrl: string) {
 	const baseUrl = isDev ? devServerUrl : 'https://payto.money';
 
 	return {
-		// Apple Wallet images (packed in zip)
+		// Apple Wallet images (must be PNG → never use blockies SVG)
 		apple: {
 			icon: kvData?.icons?.apple?.icon || `${baseUrl}/images/paypass/apple-wallet/icon.png`,
 			icon2x: kvData?.icons?.apple?.icon2x || `${baseUrl}/images/paypass/apple-wallet/icon@2x.png`,
@@ -28,12 +28,20 @@ export function getImageUrls(kvData: any, address: string, isDev: boolean, devSe
 			logo2x: kvData?.icons?.apple?.logo2x || `${baseUrl}/images/paypass/apple-wallet/logo@2x.png`,
 			logo3x: kvData?.icons?.apple?.logo3x || `${baseUrl}/images/paypass/apple-wallet/logo@3x.png`
 		},
-		// Google Wallet images (URLs)
+
+		// Google Wallet images — CAN use blockies SVG
 		google: {
-			logo: kvData?.icons?.google?.logo || (address && !isDev ? `${baseUrl}/blo/${address}` : `${baseUrl}/images/paypass/google-wallet/logo.png`), //logo beside the title text
-			...(kvData?.icons?.google?.icon && { icon: kvData?.icons?.google?.icon }), // icon - additional decorative image in the top left corner
-			hero: kvData?.icons?.google?.hero || `${baseUrl}/images/paypass/google-wallet/hero.png`, // hero image
-			fullWidth: kvData?.icons?.google?.fullWidth || `${baseUrl}/images/paypass/google-wallet/full-width.png` // full-width image - displayed at the top of the card
+			logo:
+				kvData?.icons?.google?.logo ||
+				(network && ['ican', 'iban', 'ach', 'upi', 'pix', 'bic', 'intra'].includes(network) && address && !isDev
+					? `${baseUrl}/blo/${address}`
+					: `${baseUrl}/images/paypass/google-wallet/logo.png`),
+
+			// optional decorative icon
+			...(kvData?.icons?.google?.icon && { icon: kvData?.icons?.google?.icon }),
+
+			hero: kvData?.icons?.google?.hero || `${baseUrl}/images/paypass/google-wallet/hero.png`,
+			fullWidth: kvData?.icons?.google?.fullWidth || `${baseUrl}/images/paypass/google-wallet/full-width.png`
 		}
 	};
 }
