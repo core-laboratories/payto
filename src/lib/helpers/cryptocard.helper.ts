@@ -206,8 +206,8 @@ export interface CardBrandDefinition {
 }
 
 export const CARD_BRANDS: CardBrandDefinition[] = [
-	{ name: 'Visa', prefixes: ['4'], lengths: [13, 16, 19], publicDigits: 8 },
-	{ name: 'Mastercard', prefixes: [[51, 55], [2221, 2720]], lengths: [16], publicDigits: 8 },
+	{ name: 'Visa', prefixes: ['4'], lengths: [13, 16, 19], publicDigits: 6 },
+	{ name: 'Mastercard', prefixes: [[51, 55], [2221, 2720]], lengths: [16], publicDigits: 6 },
 	{ name: 'American Express', prefixes: ['34', '37'], lengths: [15], publicDigits: 6 },
 	{ name: 'Discover', prefixes: ['6011', [622126, 622925], [644, 649], '65'], lengths: [16, 19], publicDigits: 6 },
 	{ name: 'Diners Club International', prefixes: ['36', [38, 39], [300, 305]], lengths: [14, 16], publicDigits: 6 },
@@ -217,8 +217,7 @@ export const CARD_BRANDS: CardBrandDefinition[] = [
 	{ name: 'RuPay', prefixes: ['60', [6521, 6522], '81'], lengths: [16], publicDigits: 6 },
 	{ name: 'Elo', prefixes: ['4011', '4312', '4389', '4514', '4576', '5041', [5067, 5090], '6277', '6363', [6504, 6509], '6516', [6550, 6551]], lengths: [16], publicDigits: 6 },
 	{ name: 'Troy', prefixes: ['9792'], lengths: [16], publicDigits: 6 },
-	{ name: 'Mir', prefixes: [[2200, 2204]], lengths: [16], publicDigits: 6 },
-	{ name: 'Core', prefixes: ['9933'], lengths: [16], publicDigits: 6 }
+	{ name: 'Mir', prefixes: [[2200, 2204]], lengths: [16], publicDigits: 6 }
 ];
 
 const defaultDigitsRegex = /\D/g;
