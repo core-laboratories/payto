@@ -41,7 +41,7 @@ export interface AppleWalletPayPassConfig {
 }
 
 /* ----------------------------------------------------------------
- * Apple localization config (Google-style key reuse)
+ * Apple localization config
  * ---------------------------------------------------------------- */
 
 // All locales we support for Apple Wallet
@@ -53,7 +53,7 @@ const APPLE_LOCALES = Array.from(
 	)
 );
 
-// All keys we want available in Apple pass.strings (mirrors Google usage)
+// All keys we want available in Apple pass.strings
 const APPLE_I18N_KEYS = [
 	'paypass.paypass',
 	'paypass.pay',
@@ -209,7 +209,7 @@ export function signAppleManifestPKCS7({
 }
 
 /* ----------------------------------------------------------------
- * Helpers shared with Google-style logic
+ * Helpers shared
  * ---------------------------------------------------------------- */
 
 /**
@@ -229,7 +229,7 @@ function formatAddressText(payload: any): string | null {
 }
 
 /**
- * Build localized “amount + recurrence” text similar to Google Wallet card row.
+ * Build localized “amount + recurrence” text.
  */
 function buildAmountText(
 	amountObject: { value: string; recurrence?: { value?: string } } | undefined,
@@ -277,7 +277,7 @@ function buildNetworkText(payload: any, locale: string): string | undefined {
 
 /**
  * Build Apple Wallet PayPass (.pkpass file) with proper PKCS#7 signature
- * and Apple-style localization (.lproj/pass.strings) using Google-style keys.
+ * and Apple-style localization (.lproj/pass.strings).
  */
 export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig): Promise<Blob> {
 	const {
@@ -374,7 +374,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 
 	const basicData: any = {
 		formatVersion: 1,
-		serialNumber: serialId,
+		serialNumber: serialId.slice(0, 64),
 		passTypeIdentifier,
 		teamIdentifier,
 		organizationName: orgName,
@@ -391,17 +391,18 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 		basicData.expirationDate = payload.expirationDate;
 	}
 
-	// Optional location (like Google Wallet locations)
+	// Optional location
 	if (params.loc?.lat && params.loc.lon) {
 		basicData.locations = [
 			{
-				latitude: params.loc.lat,
-				longitude: params.loc.lon,
+				latitude: Number(params.loc.lat),
+				longitude: Number(params.loc.lon),
 				// key – value localized via pass.strings
-				relevantText: paymentLocationKey
+				relevantText: payload.props.params?.message?.value || paymentLocationKey
 			}
 		];
-	} else if (Array.isArray(payload.merchantLocations) && payload.merchantLocations.length > 0) {
+	}
+	if (Array.isArray(payload.merchantLocations) && payload.merchantLocations.length > 0) {
 		basicData.locations = payload.merchantLocations
 			.filter(
 				(loc: any) =>
@@ -411,7 +412,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 			.map((loc: any) => ({
 				latitude: loc.latitude,
 				longitude: loc.longitude,
-				relevantText: paymentLocationKey
+				relevantText: loc.relevantText || paymentLocationKey
 			}));
 	}
 
@@ -463,7 +464,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 		});
 	}
 
-	// Primary: Amount (formatted similar to Google)
+	// Primary: Amount
 	if (amountText) {
 		storeCard.primaryFields.push({
 			key: 'amount',
@@ -797,7 +798,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 	}
 
 	/* ----------------------------------------------------------------
-	 * 3) Images: icon + logo from config (similar to Google helper)
+	 * 3) Images: icon + logo from config
 	 * ---------------------------------------------------------------- */
 
 	const imageFetches: Promise<void>[] = [];

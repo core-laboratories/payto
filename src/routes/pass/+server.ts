@@ -11,10 +11,7 @@ import {
 	getLocationCode,
 	getPurposeText,
 	getBarcodeConfig,
-	generateToken,
 	verifyToken,
-	getFormattedDateTime,
-	getFileId,
 	formatter,
 	getCodeText,
 	getVerifiedOrganizationName,
@@ -54,7 +51,7 @@ const proUrlLink = `${linkBaseUrl}/activate/pro`;
 const swapUrlLink = env.PUBLIC_SWAP_URL || `${linkBaseUrl}/swap`;
 
 // Enable stats
-const enableStats = PUBLIC_ENABLE_STATS === 'true' ? true : false;
+const enableStats = PUBLIC_ENABLE_STATS === 'true';
 const apiTokenTimeout = parseInt(env.PRIVATE_API_TOKEN_TIMEOUT || '1', 10);
 
 /* ------------------ optional Supabase stats ------------------ */
@@ -64,66 +61,71 @@ if (enableStats) {
 	const supabaseUrl = env.PRIVATE_SUPABASE_URL;
 	const supabaseKey = env.PRIVATE_SUPABASE_KEY;
 	if (!supabaseUrl || !supabaseKey) {
-		console.warn('Supabase credentials not found. Stats will be disabled.');
+		console.warn('Supabase credentials not found. Stats disabled.');
 	} else {
 		supabase = createClient(supabaseUrl, supabaseKey);
 	}
 }
 
 /* ----------------------------------------------------------------
- * Route
+ * Route handler
  * ---------------------------------------------------------------- */
 
 export async function POST({ request, url, fetch }: RequestEvent) {
 	const contentType = request.headers.get('content-type') || '';
 	let data: any = {};
 
-	// Authority bootstrap
+	/* ---------------- Parse payload ---------------- */
+
 	let authorityField: string | null = null;
-	let authorityItem: string = 'payto';
+	let authorityItem = 'payto';
 	let kvData: any = null;
 	let authority: string | null = null;
 
-	// Accept JSON or multipart/form-data
 	if (contentType.includes('application/json')) {
 		const jsonData = await request.json();
 		authorityField = jsonData.authority || null;
 		data = jsonData;
 		data.os = data.os || '';
 	} else {
-		const formData = await request.formData();
-		authorityField = (formData.get('authority') as string) || url.searchParams.get('authority');
-		data.hostname = formData.get('hostname') as string;
-		data.props = formData.get('props') ? JSON.parse(formData.get('props') as string) : null;
-		data.design = formData.get('design') ? JSON.parse(formData.get('design') as string) : null;
-		data.authority = formData.get('authority') as string;
-		data.membership = formData.get('membership') as string;
-		data.os = (formData.get('os') as string) || url.searchParams.get('os') || '';
-		data.locale = (formData.get('locale') as string) || url.searchParams.get('locale') || null;
+		const form = await request.formData();
+		authorityField = (form.get('authority') as string) || url.searchParams.get('authority');
 
-		const formDestination = formData.get('destination') as string;
-		if (formDestination && data.props) data.props.destination = formDestination;
+		data.hostname = form.get('hostname') as string;
+		data.props = form.get('props') ? JSON.parse(form.get('props') as string) : null;
+		data.design = form.get('design') ? JSON.parse(form.get('design') as string) : null;
+		data.authority = form.get('authority') as string;
+		data.membership = form.get('membership') as string;
+		data.os = (form.get('os') as string) || url.searchParams.get('os') || '';
+		data.locale = (form.get('locale') as string) || url.searchParams.get('locale') || null;
+
+		const dest = form.get('destination') as string;
+		if (dest && data.props) data.props.destination = dest;
 	}
 
-	// Load authority KV
+	/* ---------------- Authority config ---------------- */
+
 	if (authorityField) {
 		authorityItem = authorityField.toLowerCase();
 		kvData = await KV.get(authorityItem);
-		if (kvData && (!kvData.id || !kvData.identifier)) {
-			throw error(400, `Invalid or missing configuration for authority: ${authorityItem}`);
+		if (!kvData?.id || !kvData?.identifier) {
+			throw error(400, `Invalid authority: ${authorityItem}`);
 		}
 		authority = kvData.id;
 	}
 
-	// Authorization flow
+	/* ---------------- Authorization ---------------- */
+
 	let isAuthorized = false;
+
 	if (authority && kvData) {
-		if (kvData.api?.allowed === true) {
+		if (kvData.api?.allowed) {
 			const authHeader = request.headers.get('authorization');
-			const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
-			if (bearerToken && kvData.api?.secret) {
+			const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
+
+			if (token && kvData.api.secret) {
 				const payload = { authority: authorityItem };
-				if (verifyToken(bearerToken, payload, kvData.api.secret, apiTokenTimeout)) {
+				if (verifyToken(token, payload, kvData.api.secret, apiTokenTimeout)) {
 					isAuthorized = true;
 				} else {
 					throw error(403, 'Invalid or expired API token');
@@ -132,92 +134,104 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				throw error(403, 'API access requires bearer token');
 			}
 		}
-		if (!isAuthorized && kvData.postForm === true) isAuthorized = true;
+
+		if (!isAuthorized && kvData.postForm) isAuthorized = true;
 	}
+
 	if (!isAuthorized) {
 		const origin = request.headers.get('origin');
-		if (origin !== url.origin) throw error(403, 'Unauthorized request origin');
+		if (origin !== url.origin) throw error(403, 'Unauthorized origin');
 	}
+
+	/* ---------------- Begin generating pass ---------------- */
 
 	try {
 		const props = data.props;
 		const design = data.design || {};
 		const hostname = data.hostname;
 		const membership = data.membership;
-		const os = (data.os || url.searchParams.get('os') || '').toLowerCase();
+		const os = (data.os || '').toLowerCase();
 
-		if (!hostname) throw error(400, 'Missing required field: hostname');
-		if (!props) throw error(400, 'Missing required field: props');
-		if (!os || (os !== 'ios' && os !== 'android')) throw error(400, 'Missing or invalid required field: os (must be "ios" or "android")');
+		if (!hostname) throw error(400, 'Missing hostname');
+		if (!props) throw error(400, 'Missing props');
+		if (os !== 'ios' && os !== 'android') throw error(400, 'os must be "ios" or "android"');
 
-		for (const field of ['network', 'params']) {
-			if (!props[field]) throw error(400, `Missing required field in props: ${field}`);
-		}
+		if (!props.network) throw error(400, 'Missing props.network');
+		if (!props.params) throw error(400, 'Missing props.params');
 
-		// Basic data
 		const network = getNetwork(props, hostname as ITransitionType);
-		if (!network) throw error(400, 'Invalid network');
 		const destination = getAddress(props, hostname as ITransitionType);
+
+		if (!network) throw error(400, 'Invalid network');
 		if (!destination) throw error(400, 'Invalid destination');
 
-		// Build shared business data
+		/* ---------------- Shared fields ---------------- */
+
 		const bareLink = getLink(hostname, props);
-		const designOrg = design.org ? design.org : null;
+
 		const originator = kvData?.id || 'payto';
 		const originatorName = kvData?.name;
 		const memberAddress = membership || destination;
 
-		const serialId = getFileId([originator, memberAddress, destination, hostname, network]);
+		/* -------- Identifier (shared between Apple & Google) -------- */
+
+		const originatorSafe = originator.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'payto';
+		const randomComponent = crypto.randomUUID().replace(/[^a-zA-Z0-9]/g, '').slice(0, 24);
+
+		// guaranteed <= 63 chars => valid Apple serialNumber
+		const baseIdentifier = `${originatorSafe}.${randomComponent}`.slice(0, 63);
+		const serialId = baseIdentifier;
+
+		/* ------------------------------------------------------------- */
+
 		const explorerUrl = getExplorerUrl(network, { address: destination }, true, linkBaseUrl);
 		const customCurrencyData = kvData?.customCurrency || {};
 		const currency = getCurrency(props, network as ITransitionType, true);
-		const proUrl = `${proUrlLink}?origin=${encodeURIComponent(originator)}&subscriber=${encodeURIComponent(memberAddress)}&destination=${encodeURIComponent(destination)}&network=${encodeURIComponent(network as string)}`;
+
+		const proUrl =
+			`${proUrlLink}?origin=${encodeURIComponent(originator)}&subscriber=${encodeURIComponent(memberAddress)}&destination=${encodeURIComponent(destination)}&network=${encodeURIComponent(network as string)}`;
+
 		const expirationDate = getExpirationDate(props.params?.dl?.value);
 		const chainId = props.params.chainId?.value;
 		const isRecurring = !!props.params.rc?.value;
 		const isRtl = String(props.params.rtl?.value || '') === '1';
 		const isDonate = String(props.params.donate?.value || '') === '1';
-		const splitPayment = (
-			!!props.params.split?.value &&
-			props.params.split?.value > 0 &&
-			props.params.split?.value < props.params.amount?.value &&
-			props.params.split?.address &&
+
+		/* ---------------- Split payment ---------------- */
+
+		const splitPayment =
+			props.params.split?.value &&
+			props.params.split.value > 0 &&
+			props.params.split.value < props.params.amount?.value &&
+			props.params.split.address &&
 			destination &&
 			props.params.split.address.toLowerCase() !== destination.toLowerCase()
-		)
-			? {
-					value: props.params.split.value,
-					formattedValue: formatter(currency, (kvData?.currencyLocale || undefined), customCurrencyData).format(Number(props.params.split.value)),
-					isPercent: props.params.split.isPercent,
-					address: props.params.split.address
-			  }
-			: null;
-		const swap = props.params.swap?.value ? props.params.swap.value : null;
+				? {
+						value: props.params.split.value,
+						formattedValue: formatter(currency, kvData?.currencyLocale, customCurrencyData).format(Number(props.params.split.value)),
+						isPercent: props.params.split.isPercent,
+						address: props.params.split.address
+				  }
+				: null;
+
+		const swap = props.params.swap?.value || null;
 
 		const companyName = standardizeOrg(originatorName);
 		const orgName = await getVerifiedOrganizationName({
-			org: designOrg,
+			org: design.org || null,
 			kvName: originatorName,
 			address: destination,
-			network: network
+			network
 		});
 
-		// pkpass filename: CompanyName or PayPass - destination address - YYMMDDHHmm.pkpass
-		const filenameCompanyBase =
-			companyName && companyName.trim().length > 0 ? companyName.trim() : 'PayPass';
+		/* ---------------- pkpass file naming ---------------- */
 
-		const safeCompany = filenameCompanyBase
-			.replace(/[^a-zA-Z0-9]+/g, '-')
-			.replace(/-+/g, '-')
-			.replace(/^-|-$/g, '');
+		const filenameCompanyBase = (companyName && companyName.trim()) || 'PayPass';
 
-		const safeDestination = (destination || '')
-			.replace(/[^a-zA-Z0-9]+/g, '-')
-			.replace(/-+/g, '-')
-			.replace(/^-|-$/g, '');
+		const safeCompany = filenameCompanyBase.replace(/[^a-zA-Z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+		const safeDestination = destination.replace(/[^a-zA-Z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
 
 		const now = new Date();
-		// YYMMDDHHmm
 		const dtPart =
 			String(now.getFullYear()).slice(2) +
 			String(now.getMonth() + 1).padStart(2, '0') +
@@ -225,126 +239,141 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			String(now.getHours()).padStart(2, '0') +
 			String(now.getMinutes()).padStart(2, '0');
 
-		const pkpassFilename = `${safeCompany || 'PayPass'}-${safeDestination || 'address'}-${dtPart}.pkpass`;
+		const pkpassFilename = `${safeCompany}-${safeDestination}-${dtPart}.pkpass`;
+
+		/* ---------------- Location decode ---------------- */
 
 		if (hostname === 'void' && network === 'plus') {
-			const plusCoordinates = getLocationCode(props.params.loc?.value || '');
-			props.params.lat = { value: plusCoordinates[0] };
-			props.params.lon = { value: plusCoordinates[1] };
+			const coords = getLocationCode(props.params.loc?.value || '');
+			props.params.lat = { value: coords[0] };
+			props.params.lon = { value: coords[1] };
 		}
+
+		/* ---------------- Amount formatting ---------------- */
 
 		const amountValue =
 			props.params.amount?.value && Number(props.params.amount.value) > 0
-				? formatter(currency, (kvData?.currencyLocale || undefined), customCurrencyData).format(
-						Number(props.params.amount.value)
-				  )
+				? formatter(currency, kvData?.currencyLocale, customCurrencyData).format(Number(props.params.amount.value))
 				: null;
-		const finalAmount = (() => {
-			if (!amountValue) return undefined;
-			if (isRecurring && props.params.rc?.value) {
-				return {
-					value: amountValue,
-					recurrence: { value: props.params.rc.value }
-				};
-			}
-			return { value: amountValue };
-		})();
+
+		const finalAmount =
+			amountValue
+				? isRecurring
+					? { value: amountValue, recurrence: { value: props.params.rc.value } }
+					: { value: amountValue }
+				: undefined;
+
+		/* ---------------- Images, title, text ---------------- */
 
 		const imageUrls = getImageUrls(kvData, destination, network, isDev, devServerUrl);
+
 		const titleText = getTitleText(hostname, destination, props, currency, true);
 		const purposeText = getPurposeText(design);
 		const codeText = getCodeText(isDonate, 'scan');
+
 		const fallbackLocale = data.locale || design.lang || 'en';
 		const googleLocale = kvData?.data?.google?.locale || fallbackLocale;
 		const appleLocale = kvData?.data?.apple?.locale || fallbackLocale;
+
 		const appleBeacons = Array.isArray(kvData?.data?.apple?.beacons) ? kvData.data.apple.beacons : undefined;
+
 		const backgroundColor = getValidBackgroundColor(design, kvData, '#2A3950');
 
+		/* ---------------------------------------------------
+		 * At this point OS-specific code begins.
+		 * Next message continues with Android + iOS sections.
+		 * --------------------------------------------------- */
 		/* ---------------- OS switch ---------------- */
 
 		if (os === 'android') {
-
 			/* -------------------------------------------------------------
-			 * Class & Object ID generation
-			 * -------------------------------------------------------------
-			 * Use stable prefix per originator (authority) for classId
-			 * and generate unique objectId for each pass instance.
+			 * Android / Google Wallet
 			 * ------------------------------------------------------------- */
 
-			const originatorSafe = originator.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-			const classRandom = crypto.randomUUID().replace(/[^a-zA-Z0-9]/g, '').slice(0, 24) || `${Date.now()}`;
-			const classId = `${gwIssuerId}.${originatorSafe}.${classRandom}`.slice(0, 255);
+			const originatorSafeAndroid = originatorSafe;
+			const classRandom =
+				crypto.randomUUID().replace(/[^a-zA-Z0-9]/g, '').slice(0, 24) || `${Date.now()}`;
+			const classId = `${gwIssuerId}.${originatorSafeAndroid}.${classRandom}`.slice(0, 255);
 
-			const base = `${gwIssuerId}.paypass.${originatorSafe}`;
-			const uniquePart = `${serialId}`.replace(/[^a-zA-Z0-9]/g, '').slice(0, 16);
-			const ts = Math.floor(Date.now() / 1000);
-			const nonce = crypto.randomUUID().split('-')[0];
-			const objectId = `${base}.${uniquePart}-${ts}-${nonce}`.replace(/[^a-zA-Z0-9._-]/g, '').slice(0, 64);
+			// Google Wallet objectId must be issuerId + '.' + identifier, total length <= 64
+			const maxObjectIdLength = 64;
+			const issuerPrefix = `${gwIssuerId}.`;
+			const maxIdentifierLength = maxObjectIdLength - issuerPrefix.length;
+			const identifierPart = baseIdentifier.slice(0, Math.max(1, maxIdentifierLength));
+			const objectId = `${issuerPrefix}${identifierPart}`;
 
-			const { saveUrl, classId: finalClassId, gwObject, gwClass } = await buildGoogleWalletPayPassSaveLink({
-				issuerId: gwIssuerId,
-				saEmail: gwSaEmail,
-				saPrivateKeyPem: gwSaKeyPem,
-				classId,
-				logoUrl: imageUrls.google.logo,
-				iconUrl: imageUrls.google.icon,
-				heroUrl: imageUrls.google.hero,
-				companyName,
-				orgName,
-				titleText: titleText || undefined,
-				purposeText: purposeText,
-				amountType: { recurring: isRecurring, donate: isDonate },
-				amountObject: finalAmount,
-				hexBackgroundColor: backgroundColor,
-				barcode: getBarcodeConfig(design.barcode || 'qr', bareLink, codeText).google,
-				donate: isDonate,
-				rtl: isRtl,
-				locale: googleLocale,
-				payload: {
-					id: objectId,
-					basicLink: getLink(hostname, props),
-					fullLink: getLink(hostname, props, design, false),
-					externalLink: getLink(hostname, props, design, true),
-					explorerUrl: explorerUrl || undefined,
-					proUrl,
-					swapUrl: swapUrlLink,
-					linkBaseUrl,
-					props,
-					expirationDate,
-					chainId,
-					redemptionIssuers: kvData?.data?.google?.redemptionIssuers || [],
-					enableSmartTap: kvData?.data?.google?.enableSmartTap || true,
-					merchantLocations: kvData?.data?.google?.merchantLocation || [],
-					splitPayment,
-					swap
-				}
-			});
+			const { saveUrl, classId: finalClassId, gwObject, gwClass } =
+				await buildGoogleWalletPayPassSaveLink({
+					issuerId: gwIssuerId,
+					saEmail: gwSaEmail,
+					saPrivateKeyPem: gwSaKeyPem,
+					classId,
+					logoUrl: imageUrls.google.logo,
+					iconUrl: imageUrls.google.icon,
+					heroUrl: imageUrls.google.hero,
+					companyName,
+					orgName,
+					titleText: titleText || undefined,
+					amountType: { recurring: isRecurring, donate: isDonate },
+					amountObject: finalAmount,
+					purposeText,
+					hexBackgroundColor: backgroundColor,
+					barcode: getBarcodeConfig(design.barcode || 'qr', bareLink, codeText).google,
+					donate: isDonate,
+					rtl: isRtl,
+					locale: googleLocale,
+					payload: {
+						id: objectId,
+						basicLink: getLink(hostname, props),
+						fullLink: getLink(hostname, props, design, false),
+						externalLink: getLink(hostname, props, design, true),
+						explorerUrl: explorerUrl || undefined,
+						proUrl,
+						swapUrl: swapUrlLink,
+						linkBaseUrl,
+						props,
+						expirationDate,
+						chainId,
+						redemptionIssuers: kvData?.data?.google?.redemptionIssuers || [],
+						enableSmartTap: kvData?.data?.google?.enableSmartTap ?? true,
+						merchantLocations: kvData?.data?.google?.merchantLocation || [],
+						splitPayment,
+						swap
+					}
+				});
 
 			// Optional stats logging
 			if (enableStats && supabase) {
 				try {
 					// @ts-ignore
-					await (supabase as any).from('passes_stats')
-						.insert([{
-							hostname,
-							network,
-							currency,
-							...(props.params.amount?.value ? { amount: props.params.amount.value } : {}),
-							...(design.org ? { custom_org: true } : {}),
-							...(props.params.donate?.value ? { donate: true } : {}),
-							...(props.params.rc?.value ? { recurring: true } : {}),
-							os: 'android',
-							...(authority ? { authority } : {})
-						}])
+					await (supabase as any)
+						.from('passes_stats')
+						.insert([
+							{
+								hostname,
+								network,
+								currency,
+								...(props.params.amount?.value
+									? { amount: props.params.amount.value }
+									: {}),
+								...(design.org ? { custom_org: true } : {}),
+								...(props.params.donate?.value ? { donate: true } : {}),
+								...(props.params.rc?.value ? { recurring: true } : {}),
+								os: 'android',
+								...(authority ? { authority } : {})
+							}
+						])
 						.select();
 				} catch (e) {
-					console.warn('Failed to insert stats:', e);
+					console.warn('Failed to insert stats (android):', e);
 				}
 			}
 
 			return json({ saveUrl, id: objectId, classId: finalClassId, gwObject, gwClass });
-
 		} else if (os === 'ios') {
+			/* -------------------------------------------------------------
+			 * iOS / Apple Wallet
+			 * ------------------------------------------------------------- */
 
 			const foregroundColor = getValidForegroundColor(design, kvData, '#9AB1D6');
 
@@ -359,8 +388,9 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				orgName,
 				logoUrl: imageUrls.apple.logo,
 				iconUrl: imageUrls.apple.icon,
+				beacons: appleBeacons,
 				titleText: titleText || undefined,
-				purposeText: purposeText,
+				purposeText,
 				amountType: { recurring: isRecurring, donate: isDonate },
 				amountObject: finalAmount,
 				hexBackgroundColor: backgroundColor,
@@ -370,7 +400,6 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 				donate: isDonate,
 				rtl: isRtl,
 				locale: appleLocale,
-				beacons: appleBeacons,
 				payload: {
 					basicLink: getLink(hostname, props),
 					fullLink: getLink(hostname, props, design, false),
@@ -382,9 +411,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 					props,
 					expirationDate,
 					chainId,
-					redemptionIssuers: kvData?.data?.google?.redemptionIssuers || [],
-					enableSmartTap: kvData?.data?.google?.enableSmartTap || true,
-					merchantLocations: kvData?.data?.google?.merchantLocation || [],
+					merchantLocations: kvData?.data?.apple?.merchantLocation || [],
 					splitPayment,
 					swap
 				},
@@ -394,40 +421,48 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			if (enableStats && pkpassBlob && supabase) {
 				try {
 					// @ts-ignore
-					await (supabase as any).from('passes_stats')
-						.insert([{
-							hostname,
-							network,
-							currency,
-							...(props.params.amount?.value ? { amount: props.params.amount.value } : {}),
-							...(design.org ? { custom_org: true } : {}),
-							...(props.params.donate?.value ? { donate: true } : {}),
-							...(props.params.rc?.value ? { recurring: true } : {}),
-							os: 'ios',
-							...(authority ? { authority } : {})
-						}])
+					await (supabase as any)
+						.from('passes_stats')
+						.insert([
+							{
+								hostname,
+								network,
+								currency,
+								...(props.params.amount?.value
+									? { amount: props.params.amount.value }
+									: {}),
+								...(design.org ? { custom_org: true } : {}),
+								...(props.params.donate?.value ? { donate: true } : {}),
+								...(props.params.rc?.value ? { recurring: true } : {}),
+								os: 'ios',
+								...(authority ? { authority } : {})
+							}
+						])
 						.select();
 				} catch (e) {
-					console.warn('Failed to insert stats:', e);
+					console.warn('Failed to insert stats (ios):', e);
 				}
 			}
 
 			return new Response(pkpassBlob, {
 				headers: {
 					'Content-Type': 'application/vnd.apple.pkpass',
-					'Content-Disposition': `attachment; filename="${pkpassFilename}"; filename*=UTF-8''${encodeURIComponent(pkpassFilename)}`
+					'Content-Disposition': `attachment; filename="${pkpassFilename}"; filename*=UTF-8''${encodeURIComponent(
+						pkpassFilename
+					)}`
 				}
 			});
-
 		} else {
 			throw error(400, 'Invalid OS');
 		}
 	} catch (err: any) {
 		console.error('Failed to generate pass:', err);
+
 		if (err && typeof err === 'object' && 'status' in err && 'body' in err) {
 			const httpErr = err as { status: number; body: { message?: string } };
 			throw error(httpErr.status, httpErr.body?.message || 'Failed to generate pass');
 		}
+
 		throw error(500, err instanceof Error ? err.message : 'Failed to generate pass');
 	}
 }
