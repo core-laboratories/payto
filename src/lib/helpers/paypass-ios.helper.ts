@@ -792,10 +792,10 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 	const passData: any = {
 		...basicData,
 		storeCard,
-		nfc: {
+		/*nfc: {
 			message: payload.basicLink,
 			requiresAuthentication: true
-		}
+		}*/
 	};
 
 	// Barcode

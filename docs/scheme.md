@@ -260,9 +260,7 @@ payto://void/geo?loc=48.8582,2.2945
 
 Always validate the authenticity and correctness of PAYTO URIs. For irreversible assets, users must confirm the recipient address and amount before initiating a transfer.
 
-## Normative References
-
-- [RFC3986]: https://www.rfc-editor.org/rfc/rfc3986 (URI: Generic Syntax)
-- [RFC8905]: https://www.rfc-editor.org/rfc/rfc8905 (The 'payto' URI Scheme for Payments)
-- [ORIC]: https://payto.onl/solutions/oric (Organizational Routing Identifier Code)
-- [ICAN]: https://payto.onl/solutions/ican (International Crypto Asset Network)
+[RFC3986]: https://www.rfc-editor.org/rfc/rfc3986 (URI: Generic Syntax)
+[RFC8905]: https://www.rfc-editor.org/rfc/rfc8905 (The 'payto' URI Scheme for Payments)
+[ORIC]: https://payto.onl/solutions/oric (Organizational Routing Identifier Code)
+[ICAN]: https://payto.onl/solutions/ican (International Crypto Asset Network)
