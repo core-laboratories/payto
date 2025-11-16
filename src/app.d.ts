@@ -36,9 +36,9 @@ interface ITransportType {
 interface ITransportTypes {
 	ican: ITransportType[];
 	iban: ITransportType[];
+	ach: ITransportType[];
 	upi: ITransportType[];
 	pix: ITransportType[];
-	ach: ITransportType[];
 	bic: ITransportType[];
 	intra: ITransportType[];
 	void: ITransportType[];

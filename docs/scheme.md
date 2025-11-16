@@ -2,302 +2,267 @@
 
 ## Specification: PAYTO Uniform Resource Identifier (URI) Scheme
 
-This memo introduces an interim URI scheme for resources that identify a payment recipient. Typically, these resources are resolved by making a payment to the designated recipient. However, resolution may also include non-financial operations, such as sending a message to the recipient. This interpretation expands upon [RFC 8905][RFC8905].
+This memo introduces an interim URI scheme for resources that identify a payment recipient. Resolution of a PAYTO URI usually results in making a payment to the designated recipient, but may also include non‑financial operations (e.g., sending a message). This expands upon [RFC 8905][RFC8905].
 
 ## PAYTO URI Scheme
 
 ### Introduction
 
-The PAYTO URI scheme designates the recipient of a payment. The resource designated by this URI is the recipient itself. Typically, when a PAYTO URI is "dereferenced" (used within a context that expects a URI to provide a representation of the resource it identifies), a payment is made to the designated recipient.
+The PAYTO URI scheme designates the recipient and parameters of a payment or related action. When a PAYTO URI is dereferenced, client applications can construct a transfer form prefilled with the encoded parameters.
 
 ### Scheme Syntax
 
-This document defines the 'payto' [Uniform Resource Identifier (URI)][RFC3986] scheme to designate transfer form data for payments.
-
-The general syntax is:
+PAYTO is a [URI][RFC3986] with an authority indicating the payment network or transport and an optional query for parameters.
 
 ```txt
 payto-URI = "payto://" authority path-abempty [ "?" opts ]
-    opts = opt *( "&" opt )
-    opt-name = generic-opt / authority-specific-opt
-    opt-value = *pchar
-    opt = opt-name "=" opt-value
-    generic-opt = "amount" / "receiver-name" / "sender-name" /
-                  "message" / "instruction"
-    authority-specific-opt = ALPHA *( ALPHA / DIGIT / "-" / "." )
-    authority = ALPHA *( ALPHA / DIGIT / "-" / "." )
+opts      = opt *( "&" opt )
+opt       = opt-name "=" opt-value
+
+; Common options (appear across multiple authorities)
+opt-name  = "amount" / "fiat" / "dl" / "rc" / "split" / "swap" /
+            "receiver-name" / "sender-name" / "message" / "id" /
+            "org" / "item" / "color-f" / "color-b" / "barcode" /
+            authority-specific-opt
+
+authority = ALPHA *( ALPHA / DIGIT / "-" / "." )
 ```
 
-### Operations
+Notes:
 
-The primary operation on a PAYTO URI is its resolution. This is typically accomplished by making a payment to the designated recipient.
+- All query values are URL‑encoded.
+- Unknown parameters MUST be ignored by clients.
 
-## PayTo Functionalities
+## Supported Authorities (Networks/Transports)
 
-### Network
+### ICAN (International Crypto Asset Network)
 
-Supported payment types:
+- Constructors (examples): `xcb` (Core), `btc`, `eth`, `ltc`, `xmr`, `other`
+- Form: `payto://{type}/{address}[@{chain_id}]?{options}`
+- Address may be a direct address or a name service record depending on `{type}`.
 
-- ICAN (International Crypto Asset Network)
-- CASH (Void)
+What it is: ICAN represents crypto-asset rails (public or enterprise chains). Transfers are settled on-chain. Assets can be native coins or tokens. Optional `@{chain_id}` disambiguates sub‑nets (e.g., parachains, L2s). See also [ICAN][ICAN].
 
-Constructors:
+Typical use: consumer P2P/P2B payments, donations, or machine-to-machine transfers using crypto.
 
-For ICAN:
+### IBAN (International Bank Account Number)
 
-- `xcb` (Core Blockchain)
-- `btc` (Bitcoin)
-- `eth` (Ethereum)
-- `ltc` (Litecoin)
-- `xmr` (Monero)
-- Other (user-defined)
+- Form: `payto://iban/{iban}?{options}`
 
-Example: `payto://${type}/${address}`
+What it is: A standardized international bank account format used across many countries. IBAN identifies the destination account and country for bank transfers.
 
-Note: Avoid using the `type` for predefined payment types.
+Typical use: bank credit transfers (SEPA/Swift) where the receiver is identified by an IBAN; optional metadata such as beneficiary name and message are supported.
 
-For CASH:
+### ACH (Automated Clearing House)
 
-- `geo` (Geolocation)
-- `plus` (Google Plus Code)
-- Other (user-defined)
+- Form: `payto://ach/{account}?{options}`
 
-Example: `payto://void/${type}`
+What it is: A batch‑clearing network (primarily US) that settles bank payments in batches. Amounts are expressed in currency with decimals (not cents).
 
-### Address
+Typical use: payroll, invoicing, and lower‑cost bank transfers where settlement latency is acceptable.
 
-The address field specifies the recipient's address for the payment. The address can be a cryptocurrency wallet address or a name service of the network (NS).
+### UPI (Unified Payments Interface)
 
-Supported payment types:
+- Form: `payto://upi/{vpa}?{options}`
 
-- ICAN (International Crypto Asset Network)
+What it is: A real‑time retail payment system in India, addressed by VPA (Virtual Payment Address). Supports metadata (beneficiary name, message).
 
-Example: `payto://xcb/${address}`
+Typical use: instant P2P/P2M QR‑based payments within the UPI ecosystem.
 
-### Token Code / Address
+### PIX (Central Bank of Brazil)
 
-The token code field specifies the token code for the payment. The token code can be a well-known token on the network (for example, listed on CoinGecko) or a token address of the smart contract.
+- Form: `payto://pix/{key}?{options}`
 
-Supported payment types:
+What it is: Brazil’s instant payment system operated by the Central Bank. Addressed by a PIX key (phone/email/tax id/random).
 
-- ICAN (International Crypto Asset Network)
+Typical use: instant transfers 24/7 to individuals and businesses using the receiver’s PIX key.
 
-Example: `payto://xcb/${address}?amount=${token_code}:${amount}`
+### BIC / ORIC (Routing Identifiers)
 
-### Chain ID
+- BIC (Bank Identifier Code) identifies a financial institution.
+- ORIC (Organizational Routing Identifier Code) extends routing for organizations and private networks (see [ORIC solution][ORIC]).
+- Both are supported under the `bic` authority; the path may contain a BIC or an ORIC string. For intra‑bank payments, you can also place the BIC/ORIC as a `bic` query parameter on `intra`.
+- Forms:
+  - `payto://bic/{bic_or_oric}?{options}`
+  - `payto://intra/{account_id}?bic={bic_or_oric}&{options}`
 
-The chain ID field specifies the blockchain network for the transaction. The chain ID can be the ID of the network such as parachains or enterprise networks. Chain ID is added after the address field, prefixed with `@`.
+What it is: Routing identifiers for bank/organizational networks. Use BIC for SWIFT institutions; use ORIC for private/enterprise routing domains where applicable.
 
-Supported payment types:
+Typical use: lookups and routing where an institution or organization code is the primary locator (with the actual account supplied via `iban`, `intra`, etc.).
 
-- ICAN (International Crypto Asset Network)
+### INTRA (Intra‑bank account)
 
-Example: `payto://${type}/${address}@${chain_id}`
+- Used for transfers within the same banking group or private networks.
+- Fields include an internal account identifier and optionally a bank routing identifier (BIC/ORIC).
+- Form: `payto://intra/{account_id}?{options}`
+- Common options: `bic={bic_or_oric}`, `receiver-name`, `message`, `amount`
 
-### Amount
+What it is: Internal account routing within a single bank or a closed banking group. `bic` may hold a BIC or an ORIC value to route inside private or organizational networks.
 
-The amount field specifies the number of assets to be sent. The amount is separated by `:` from the asset code. The asset code is the requested asset on the network (mostly token code or address). The asset code is an optional field and separated by the character `:`. If no asset code is present, the default network currency is used. The amount cannot be negative. The decimal point is marked by `.`.
-
-Supported payment types:
-
-- ICAN (International Crypto Asset Network)
-- IBAN (International Bank Account Number)
-- ACH (Automated Clearing House)
-- UPI (Unified Payments Interface)
-- PIX (Central Bank of Brazil)
-- BIC (Bank Identifier Code)
-- CASH (Void)
-
-Example: `payto://${type}/${address}?amount=${asset_code}:${amount}`
-
-Note: ACH uses the currency noted with a decimal place and is not recalculated to cents.
-
-### Fiat Currency
-
-The fiat field specifies the fiat currency for the transaction. The fiat currency is separated by `:` from the amount. The fiat currency is the government-issued money. The fiat currency is an optional field and separated by the character `:`.
-
-Note: ICAN has Fiat defined in a separate field.
-
-Supported payment types:
-
-- ICAN (International Crypto Asset Network)
-- IBAN (International Bank Account Number)
-- ACH (Automated Clearing House)
-- UPI (Unified Payments Interface)
-- PIX (Central Bank of Brazil)
-- BIC (Bank Identifier Code)
-- CASH (Void)
+Typical use: fast, on‑us transfers between accounts of the same institution or group.
 
 Examples:
 
-- `payto://iban/${address}?amount=${fiat_currency}:${amount}`
-- `payto://xcb/${address}?amount=${asset_code}:${amount}&fiat=${fiat_currency}`
+```txt
+payto://intra/ACC123456?bic=ABCDUS33&amount=eur:25.00&receiver-name=Acme
+payto://intra/ID-98765?amount=eur:10.50&message=Internal%20transfer
+```
 
-### Expiration (Deadline)
+### CASH (Void transport)
 
-The expiration field specifies the expiration date and time for the transaction. The expiration date and time is expressed in the local timezone and converted to a UNIX timestamp in seconds. Another way it can be defined is as minutes (1-60) from the current time. The expiration time is an optional field. Value as timestamp cannot be lower than the current time, otherwise the payment will be expired. The defined breakpoint is excluded. If the timestamp is in the last 30 minutes, the countdown will be shown. If the minutes value is defined, the countdown will be shown.
+- Transports: `geo`, `plus`, `other`
+- Forms:
+  - Geolocation: `payto://void/geo?loc={lat},{lon}`
+  - Plus Code:   `payto://void/plus?loc={plus_code}`
+  - Other:       `payto://void/other?loc={custom}`
 
-Supported payment types:
+What it is: Off‑ledger/pay‑in‑person flows where the target is a physical location or out‑of‑band rendezvous. Used for cash/physical settlement scenarios.
 
-- ICAN (International Crypto Asset Network)
+Typical use: show a location for hand‑off, ATM‑like interactions, or location‑anchored vouchers.
 
-Example: `payto://xcb/${address}?amount=${asset_code}:${amount}&dl=${expiration}`
+## Parameters
 
-### Recurring payments
+### amount
 
-The recurring field specifies the recurrence of the payment. The recurring payment is an optional field. The recurring payment is prefixed with `rc` and the value is `y` for yearly, `m` for monthly, `w` for weekly, and `d` for daily. If `d` is prefixed with a number between `2-365`, it indicates the recurrence every "number" of days. Due to varying month lengths, if a chosen day doesn't exist in a subsequent month, the payment will execute on the last day of that month.
+Specifies the requested amount and optionally asset on ICAN.
 
-Supported payment types:
+- ICAN (tokenized): `amount={asset_code}:{amount}` (e.g. `ctn:12.5`)
+- ICAN (native):    `amount={amount}` (uses default network currency)
+- IBAN/ACH/UPI/PIX/BIC/CASH: `amount={fiat_code}:{amount}` or `{amount}` as supported by the network
+- Decimal separator is `.`. Amount must be non‑negative.
 
-- ICAN (International Crypto Asset Network)
-- IBAN (International Bank Account Number)
-- ACH (Automated Clearing House)
-- UPI (Unified Payments Interface)
-- PIX (Central Bank of Brazil)
+Examples:
 
-Example: `payto://${type}/${address}?amount=${asset_code}:${amount}&rc=${recurring}`
+```txt
+payto://xcb/Xx...x?amount=ctn:25.00
+payto://iban/DE89...3704?amount=eur:199.90
+```
 
-### Transaction split
+### fiat (ICAN only)
 
-The split field specifies the split of the transaction. The split is an optional field. The value is the amount to be deducted followed by `@` and the second address in the network to deposit that amount. If the split is prefixed with `p:` it indicates that the value is in percentage. Value cannot be higher than the amount and both should be defined. In case of percentage, the maximum value is 100. If split is correctly defined, two transactions will be streamed.
+Fiat currency used for display/conversion on crypto (ICAN).
 
-Supported payment types:
+```txt
+payto://xcb/Xx...x?amount=ctn:25.00&fiat=eur
+```
 
-- ICAN (International Crypto Asset Network)
+### dl (deadline / expiration)
 
-Example: `payto://xcb/${address}?amount=${asset_code}:${amount}&split=p:${split}@${split_address}`
+Expiration as ISO timestamp, UNIX seconds, or minutes from now (1–60). Value earlier than current time marks the request as expired.
 
-### Swap
+```txt
+payto://xcb/Xx...x?amount=ctn:10&dl=2025-12-31T23:59:59Z
+payto://xcb/Xx...x?amount=ctn:10&dl=1735689599
+payto://xcb/Xx...x?amount=ctn:10&dl=15   ; 15 minutes
+```
 
-The **Swap** functionality in the PAYTO URI scheme enables automatic asset conversion during ICAN payments. By including the `swap` parameter in the URI, users can specify an asset code to which the payment amount should be automatically converted. This feature facilitates seamless transactions where the recipient prefers to receive a different asset than the one sent by the payer.
+### rc (recurring)
 
-For instance, a URI formatted as `payto://xcb/${address}?swap=${asset_code}` will instruct the payment system to convert the incoming asset to the specified `asset_code` before completing the transaction. The conversion rate and fees are determined at the time of the swap, ensuring that the recipient receives the specified asset in their preferred form.
+Recurrence schedule. Supported:
 
-#### Supported use case
+- `y` yearly, `m` monthly, `w` weekly, `d` daily
+- `Nd` daily every N days, where `N` is 2–365 (e.g., `2d`, `45d`)
 
-- Simplifies payments by enabling direct asset conversion.
-- Ensures recipients can receive payments in their desired asset.
-- Reduces manual conversion steps post-payment.
+```txt
+payto://xcb/Xx...x?amount=ctn:9.99&rc=m
+payto://iban/DE89...3704?amount=eur:25&rc=30d
+```
+
+### split (ICAN)
+
+Split an amount to a secondary address; two transfers are streamed.
+
+- Absolute: `split={value}@{address}`
+- Percentage: `split=p:{percent}@{address}` (0 < percent ≤ 100)
+- `value` must be ≤ `amount`.
+
+```txt
+payto://xcb/Xx...x?amount=ctn:100&split=p:10@Xy...y
+```
+
+### swap (ICAN)
+
+Request on‑the‑fly asset conversion to `asset_code` for the recipient.
+
+```txt
+payto://xcb/Xx...x?amount=ctn:20&swap=ctn
+```
+
+### receiver-name / sender-name / message
+
+Optional metadata used by banking rails and passes.
+
+```txt
+payto://iban/DE89...3704?amount=eur:99.5&receiver-name=Acme%20GmbH&message=Invoice%20123
+```
+
+### id (PIX)
+
+Optional transaction identifier.
+
+```txt
+payto://pix/abc-123?amount=brl:15&id=INV-2025-0001
+```
+
+### loc (CASH transports)
+
+Geolocation or Plus Code as described under CASH.
+
+## Pass (Presentation) Options
+
+These parameters influence wallet card presentation and are optional.
+
+- `org` Company name (≤ 25 chars)
+- `item` Item/purpose (≤ 40 chars)
+- `color-f` Foreground color hex without `#` (e.g. `9AB1D6`)
+- `color-b` Background color hex without `#` (e.g. `2A3950`)
+- `barcode` One of `qr`, `pdf417`, `aztec` (default `qr`)
+- `donate` `1` for donation flow
+
+Colors are validated using a minimum Euclidean distance of 100 between foreground and background.
 
 Example:
 
 ```txt
-payto://xcb/recipientAddress?swap=ctn
+payto://xcb/Xx...x?amount=ctn:12.3&org=Acme&item=Coffee&color-f=9AB1D6&color-b=2A3950&barcode=qr&donate=1
 ```
 
-### IBAN
+## Comprehensive Examples
 
-The IBAN field specifies the IBAN for the transaction. The IBAN is the International Bank Account Number. The IBAN is a required field.
+ICAN with chain, split, swap, deadline, recurring (every 30 days):
 
-Supported payment types:
+```txt
+payto://xcb/Xx...x@777?amount=ctn:100&fiat=eur&split=p:10@Xy...y&swap=ctn&dl=30&rc=30d
+```
 
-- IBAN (International Bank Account Number)
+IBAN with receiver name and message:
 
-Example: `payto://iban/${iban}?amount=${fiat_currency}:${amount}`
+```txt
+payto://iban/DE89370400440532013000?amount=eur:199.90&receiver-name=Acme%20GmbH&message=Invoice%23123
+payto://bic/ABCDUS33?amount=eur:49.99
+payto://bic/ORIC-ACME-001?amount=eur:15.00
+payto://intra/ACC-001?bic=ORIC-ACME-001&amount=eur:12.00
+```
 
-### BIC / SWIFT
+PIX with identifier:
 
-The BIC field specifies the BIC for the transaction. The BIC is the Bank Identifier Code. The BIC is a required field.
+```txt
+payto://pix/abc-key-123?amount=brl:15&id=INV-2025-0001
+```
 
-Supported payment types:
+CASH with geolocation:
 
-- IBAN (International Bank Account Number)
-- BIC (Bank Identifier Code)
+```txt
+payto://void/geo?loc=48.8582,2.2945
+```
 
-Examples:
+## Security Considerations
 
-- `payto://iban/${iban}?amount=${fiat_currency}:${amount}`
-- `payto://bic/${bic}?amount=${fiat_currency}:${amount}`
+Always validate the authenticity and correctness of PAYTO URIs. For irreversible assets, users must confirm the recipient address and amount before initiating a transfer.
 
-### Beneficiary Full Name
+## Normative References
 
-The beneficiary field specifies the full name of the beneficiary for the transaction. The beneficiary is the recipient of the payment. The beneficiary is an optional or required field.
-
-Supported payment types:
-
-- IBAN (International Bank Account Number)
-- ACH (Automated Clearing House)
-- UPI (Unified Payments Interface)
-- PIX (Central Bank of Brazil)
-- CASH (Void)
-
-Example: `payto://iban/${iban}?amount=${fiat_currency}:${amount}&receiver-name=${beneficiary}`
-
-### Message for Beneficiary / Message / Description
-
-The message field specifies the message for the beneficiary. The message is an optional field.
-
-Supported payment types:
-
-- IBAN (International Bank Account Number)
-- UPI (Unified Payments Interface)
-- PIX (Central Bank of Brazil)
-- CASH (Void)
-
-Example: `payto://iban/${iban}?amount=${fiat_currency}:${amount}&message=${message}`
-
-### Transaction ID
-
-The transaction ID field specifies the unique identifier for the transaction. The transaction ID is an optional field.
-
-Supported payment types:
-
-- PIX (Central Bank of Brazil)
-
-Example: `payto://pix/${pix}?amount=${fiat_currency}:${amount}&id=${transaction_id}`
-
-### Location
-
-The location field specifies the geolocation (or other identifier) for the transaction to take place. The location is expressed in latitude and longitude (in decimal degrees) for transport network `geo`; in plus code (from Google) for transport network `plus` and `other` can be custom defined. The location is a required field. Latitude and longitude are divided by `,`.
-
-You can generate:
-
-- [Geolocation](https://www.latlong.net/)
-- [Google Plus Code](https://plus.codes/)
-
-Supported payment types:
-
-- CASH (Void)
-
-Examples:
-
-- `payto://void/geo?loc=${latitude},${longitude}`
-- `payto://void/plus?loc=${plus_code}`
-
-Open navigation apps with the payto locations are possible via the [geo URI scheme](https://en.wikipedia.org/wiki/Geo_URI_scheme) or [comgooglemaps URI scheme](https://developers.google.com/maps/documentation/urls/get-started#universal-cross-platform-syntax), alternatively any other map application.
-
-### Pass
-
-The PAYTO URI scheme is designed to be flexible and extensible. It allows for the inclusion of additional parameters to support various payment types and use-cases. The scheme is intended to be used in a wide range of applications, including web browsers, mobile apps, and other software that handles payments. For these purposes, you can define the payment instruction with some of the possibilities:
-
-- Company name (`org`) - 25 characters max
-- Item name (`item`) - 40 characters max
-- Foreground color (`color-f`)
-- Background color (`color-b`)
-- Barcode type (`barcode`)
-
-Foreground and background color are defined in hexadecimal format (without `#` sign). They are compared between each other with Color Euclidean distance. Minimum distance is 100.
-
-Default barcode type is `qr`. Supported types are `qr`, `pdf417`, `aztec`.
-
-Example: `payto://xcb/${address}?amount=${asset_code}:${amount}&org=${company_name}&item=${item_name}&color-f=${foreground_color}&color-b=${background_color}&barcode=${barcode_type}`
-
-### Donations
-
-The PAYTO URI scheme can be used to facilitate donations to charitable organizations, non-profit groups, and other causes. The scheme allows to indicate donations (`donate`) with boolean value `1` for true and `0` or missing the declaration for false.
-
-Example: `payto://xcb/${address}?amount=${asset_code}:${amount}&donate=1`
-
-### Security Considerations
-
-Always validate the authenticity and correctness of PAYTO URIs. Due to the irreversible nature of crypto asset transactions, users should confirm both the recipient's address and the amount before initiating a transfer.
-
-### Normative References
-
-[RFC3986]: https://www.rfc-editor.org/rfc/rfc3986 (Berners-Lee, T., Fielding, R., and L. Masinter, "Uniform Resource Identifier URI: Generic Syntax", STD 66, RFC 3986, DOI 10.17487/RFC3986, January 2005.)
-
-RFC3986: (Berners-Lee, T., Fielding, R., and L. Masinter, "Uniform Resource Identifier URI: Generic Syntax", STD 66, RFC 3986, DOI 10.17487/RFC3986, January 2005.)
-
-[RFC8905]: https://www.rfc-editor.org/rfc/rfc8905 (Thaler, D., "The 'payto' URI Scheme for Payments", RFC 8905, DOI 10.17487/RFC8905, October 2020.)
-
-RFC8905: (Thaler, D.), "The 'payto' URI Scheme for Payments", RFC
+- [RFC3986]: https://www.rfc-editor.org/rfc/rfc3986 (URI: Generic Syntax)
+- [RFC8905]: https://www.rfc-editor.org/rfc/rfc8905 (The 'payto' URI Scheme for Payments)
+- [ORIC]: https://payto.onl/solutions/oric (Organizational Routing Identifier Code)
+- [ICAN]: https://payto.onl/solutions/ican (International Crypto Asset Network)
