@@ -34,9 +34,9 @@ export interface AppleWalletPayPassConfig {
 	hexLabelColor?: string;
 	barcode: any;
 	donate?: boolean;
-	rtl?: boolean;	// Right-to-left support (manual swap)
+	rtl?: boolean;
 	locale?: string;
-	payload: any;	// Full payload with all data (same shape as Android helper)
+	payload: any;
 	fetch: typeof fetch;
 }
 
@@ -44,7 +44,6 @@ export interface AppleWalletPayPassConfig {
  * Apple localization config
  * ---------------------------------------------------------------- */
 
-// All locales we support for Apple Wallet
 const APPLE_LOCALES = Array.from(
 	new Set(
 		availableLocales
@@ -53,7 +52,6 @@ const APPLE_LOCALES = Array.from(
 	)
 );
 
-// All keys we want available in Apple pass.strings
 const APPLE_I18N_KEYS = [
 	'paypass.paypass',
 	'paypass.pay',
@@ -91,9 +89,6 @@ const APPLE_I18N_KEYS = [
 	'paypass.scanToPay'
 ];
 
-/**
- * Escape a string for use in a .strings file.
- */
 function escapeStringsValue(value: string): string {
 	return value
 		.replace(/\\/g, '\\\\')
@@ -101,10 +96,6 @@ function escapeStringsValue(value: string): string {
 		.replace(/\r?\n/g, '\\n');
 }
 
-/**
- * Build contents of pass.strings for a given locale using existing paypass i18n keys.
- * Keys are kept as-is (e.g. "paypass.payment") so we can reuse them across platforms.
- */
 function buildApplePassStringsForLocale(locale: string): string {
 	const lines: string[] = [];
 
@@ -123,18 +114,12 @@ function buildApplePassStringsForLocale(locale: string): string {
  * Manifest + signature helpers
  * ---------------------------------------------------------------- */
 
-/**
- * Build Apple Wallet manifest (SHA-1 hashes of all files)
- * @param files - Record of filename to ArrayBuffer
- * @returns JSON string of manifest
- */
 export async function buildAppleManifest(files: Record<string, ArrayBuffer>): Promise<string> {
 	const manifest: Record<string, string> = {};
 
 	for (const [name, content] of Object.entries(files)) {
 		const u8 = new Uint8Array(content);
 
-		// Properly convert bytes for forge
 		const buffer = forge.util.createBuffer();
 		for (let i = 0; i < u8.length; i++) {
 			buffer.putByte(u8[i]);
@@ -148,11 +133,6 @@ export async function buildAppleManifest(files: Record<string, ArrayBuffer>): Pr
 	return JSON.stringify(manifest, null, 2);
 }
 
-/**
- * Sign Apple Wallet manifest with PKCS#7 (CMS) detached signature
- * @param config - Signing configuration
- * @returns Uint8Array of signature bytes
- */
 export function signAppleManifestPKCS7({
 	manifestText,
 	p12Base64,
@@ -174,15 +154,16 @@ export function signAppleManifestPKCS7({
 	for (const safeContent of p12.safeContents) {
 		for (const safeBag of safeContent.safeBags) {
 			if (safeBag.type === forge.pki.oids.pkcs8ShroudedKeyBag) {
-				// @ts-ignore forge types
 				privateKey = safeBag.key || null;
 			} else if (safeBag.type === forge.pki.oids.certBag) {
-				// @ts-ignore forge types
 				cert = safeBag.cert || cert;
 			}
 		}
 	}
-	if (!privateKey || !cert) throw new Error('Failed to extract key/cert from P12');
+
+	if (!privateKey || !cert) {
+		throw new Error('Failed to extract key/cert from P12');
+	}
 
 	const wwdrCert = forge.pki.certificateFromPem(wwdrPem);
 
@@ -209,12 +190,9 @@ export function signAppleManifestPKCS7({
 }
 
 /* ----------------------------------------------------------------
- * Helpers shared
+ * Helpers
  * ---------------------------------------------------------------- */
 
-/**
- * Format destination address the same way as Android helper (grouping, casing).
- */
 function formatAddressText(payload: any): string | null {
 	const props = payload?.props || {};
 	const addr = props.destination;
@@ -228,9 +206,6 @@ function formatAddressText(payload: any): string | null {
 	return addr.match(/.{1,4}/g)?.join(' ') || addr;
 }
 
-/**
- * Build localized “amount + recurrence” text.
- */
 function buildAmountText(
 	amountObject: { value: string; recurrence?: { value?: string } } | undefined,
 	locale: string,
@@ -248,9 +223,6 @@ function buildAmountText(
 	return formatAmount(amountObject, translations, !!rtl);
 }
 
-/**
- * Build the "network" text similar to Android text module.
- */
 function buildNetworkText(payload: any, locale: string): string | undefined {
 	const props = payload?.props || {};
 	const network = props.network;
@@ -266,19 +238,13 @@ function buildNetworkText(payload: any, locale: string): string | undefined {
 	const chainWord = getPaypassLocalizedValue('paypass.chain', locale) || 'Chain';
 	const chainPart = payload.chainId ? ` / ${chainWord}: ${payload.chainId}` : '';
 	const baseNetwork = (network === 'other' ? props.other : network) || '';
-	if (!baseNetwork) return undefined;
 
 	return String(baseNetwork).toUpperCase() + chainPart;
 }
-
 /* ----------------------------------------------------------------
  * Main builder
  * ---------------------------------------------------------------- */
 
-/**
- * Build Apple Wallet PayPass (.pkpass file) with proper PKCS#7 signature
- * and Apple-style localization (.lproj/pass.strings).
- */
 export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig): Promise<Blob> {
 	const {
 		serialId,
@@ -296,7 +262,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 		amountType,
 		amountObject,
 		purposeText,
-		subheaderText, // not directly supported on Apple card front
+		subheaderText,
 		hexBackgroundColor,
 		hexForegroundColor,
 		hexLabelColor,
@@ -308,7 +274,6 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 		fetch: fetchFn
 	} = config;
 
-	// Validate Apple signing configuration
 	if (!teamIdentifier) {
 		throw new Error('Apple signing configuration missing: Team identifier is required');
 	}
@@ -322,7 +287,6 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 	const isDonate = !!(amountType?.donate || donate);
 	const isRecurring = !!(amountType?.recurring || amountObject?.recurrence?.value);
 
-	// Decide header key like Google: payment / donation / recurring*
 	let paymentHeaderKey = 'paypass.payment';
 	if (isRecurring && isDonate) paymentHeaderKey = 'paypass.recurringDonation';
 	else if (isRecurring) paymentHeaderKey = 'paypass.recurringPayment';
@@ -382,17 +346,15 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 		description,
 		backgroundColor,
 		foregroundColor,
-		labelColor,
-		appLaunchURL: payload.fullLink || payload.basicLink
+		labelColor
 	};
 
-	// Optional expiration
+	const hasLocationParams = params.loc?.lat && params.loc.lon;
 	if (payload.expirationDate) {
 		basicData.expirationDate = payload.expirationDate;
 	}
 
-	// Optional location
-	if (params.loc?.lat && params.loc.lon) {
+	if (hasLocationParams) {
 		basicData.locations = [
 			{
 				latitude: Number(params.loc.lat),
@@ -414,7 +376,6 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 			}));
 	}
 
-	// Attach beacons (iBeacon proximity triggers)
 	if (Array.isArray(beacons) && beacons.length > 0) {
 		const normalizedBeacons = beacons
 			.filter(
@@ -438,16 +399,14 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 		}
 	}
 
-	// StoreCard structure (front of the pass)
 	const storeCard: any = {
-		headerFields: [] as any[],
-		primaryFields: [] as any[],
-		secondaryFields: [] as any[],
-		auxiliaryFields: [] as any[],
-		backFields: [] as any[]
+		headerFields: [],
+		primaryFields: [],
+		secondaryFields: [],
+		auxiliaryFields: [],
+		backFields: []
 	};
 
-	// Header: payment type + network
 	if (networkText) {
 		storeCard.headerFields.push({
 			key: 'network',
@@ -462,7 +421,6 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 		});
 	}
 
-	// Secondary: Purpose + Address
 	if (purposeText && purposeText.trim().length > 0) {
 		storeCard.secondaryFields.push({
 			key: 'purpose',
@@ -479,12 +437,12 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 		});
 	}
 
-	// Auxiliary: split payment, message, pro/swap/explorer links, etc.
 	const splitPayment = payload.splitPayment;
 	if (splitPayment && splitPayment.value > 0) {
 		const splitValue = splitPayment.isPercent
 			? `${splitPayment.value}%`
 			: splitPayment.formattedValue || String(splitPayment.value);
+
 		storeCard.auxiliaryFields.push({
 			key: 'split',
 			label: splitLabelKey,
@@ -508,7 +466,6 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 		});
 	}
 
-	// Links: explorer, external, pro, swap (as "tap to open" via dataDetectorTypes)
 	if (payload.explorerUrl) {
 		storeCard.auxiliaryFields.push({
 			key: 'explorer',
@@ -558,8 +515,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 			dataDetectorTypes: ['PKDataDetectorTypeLink']
 		});
 	}
-
-	// Back fields: issuer + network-specific details (IBAN, ACH, UPI, PIX, INTRA, VOID, etc.)
+	// Back fields: issuer + network-specific details
 	storeCard.backFields.push({
 		key: 'issuer',
 		label: beneficiaryLabelKey,
@@ -570,7 +526,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 		dataDetectorTypes: ['PKDataDetectorTypeLink']
 	});
 
-	// Network specific
+	// Network specific: IBAN
 	if (props.network === 'iban') {
 		const iban = props.iban?.match(/.{1,4}/g)?.join(' ').toUpperCase() || props.iban?.toUpperCase();
 		if (iban) {
@@ -602,7 +558,10 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 				value: params.message.value
 			});
 		}
-	} else if (props.network === 'ach') {
+	}
+
+	// ACH
+	else if (props.network === 'ach') {
 		if (props.accountNumber) {
 			storeCard.backFields.push({
 				key: 'accountNumber',
@@ -625,7 +584,10 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 				value: params.receiverName.value
 			});
 		}
-	} else if (props.network === 'upi') {
+	}
+
+	// UPI
+	else if (props.network === 'upi') {
 		if (props.accountAlias) {
 			storeCard.backFields.push({
 				key: 'accountAlias',
@@ -647,7 +609,10 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 				value: params.message.value
 			});
 		}
-	} else if (props.network === 'pix') {
+	}
+
+	// PIX
+	else if (props.network === 'pix') {
 		if (props.accountAlias) {
 			storeCard.backFields.push({
 				key: 'accountAlias',
@@ -676,7 +641,10 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 				value: params.message.value
 			});
 		}
-	} else if (props.network === 'bic') {
+	}
+
+	// BIC-only
+	else if (props.network === 'bic') {
 		const bic = props.bic?.toUpperCase();
 		if (bic) {
 			storeCard.backFields.push({
@@ -685,7 +653,10 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 				value: bic
 			});
 		}
-	} else if (props.network === 'intra') {
+	}
+
+	// INTRA
+	else if (props.network === 'intra') {
 		const bic = props.bic?.toUpperCase();
 		if (bic) {
 			storeCard.backFields.push({
@@ -715,7 +686,10 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 				value: params.message.value
 			});
 		}
-	} else if (props.network === 'void') {
+	}
+
+	// VOID / Cash / Transport
+	else if (props.network === 'void') {
 		if (params.receiverName?.value) {
 			storeCard.backFields.push({
 				key: 'beneficiary',
@@ -733,7 +707,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 	}
 
 	/* ----------------------------------------------------------------
-	 * Primary fields
+	 *  Primary fields (two-column layout like Android)
 	 * ---------------------------------------------------------------- */
 
 	const hasPurposePrimary = !!(purposeText && purposeText.trim().length > 0);
@@ -761,17 +735,14 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 
 	if (hasPurposePrimary || hasAmountPrimary) {
 		if (!rtl) {
-			// LTR: Purpose on the left, Amount on the right
 			if (hasPurposePrimary) pushPurposePrimary();
 			if (hasAmountPrimary) pushAmountPrimary();
 		} else {
-			// RTL: Amount on the left, Purpose on the right
 			if (hasAmountPrimary) pushAmountPrimary();
 			if (hasPurposePrimary) pushPurposePrimary();
 		}
 	}
 
-	// Final fallback: ensure at least one primary field
 	if (!storeCard.primaryFields || storeCard.primaryFields.length === 0) {
 		if (addressText) {
 			storeCard.primaryFields.push({
@@ -792,10 +763,10 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 	const passData: any = {
 		...basicData,
 		storeCard,
-		/*nfc: {
+		nfc: {
 			message: payload.basicLink,
 			requiresAuthentication: true
-		}*/
+		}
 	};
 
 	// Barcode
@@ -818,7 +789,6 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 	};
 
 	passData.barcodes = [appleBarcode];
-
 	/* ----------------------------------------------------------------
 	 * 1) pass.json
 	 * ---------------------------------------------------------------- */
