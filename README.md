@@ -100,6 +100,13 @@ Issuing authorities[^authority] deliver an object like this example to the email
     },
     "apple": { // Apple Wallet data
       "locale": "en", // The locale used for Apple Wallet data (e.g., `"en-GB"`, `"de"`, `"sk"`)
+      "merchantLocation": [
+        {
+          "latitude": 40.7128,
+          "longitude": -74.0060,
+          "relevantText": "You're near my store"
+        }
+      ],
       "beacons": [ // Custom iBeacon proximity triggers to PayPasses
         {
           "proximityUUID": "F8F589E9-C07E-58B0-AEAB-A36BE4D48FAC", // The UUID of the iBeacon
@@ -182,6 +189,12 @@ Issuing authorities[^authority] deliver an object like this example to the email
   - `apple`: Apple Wallet data
     - `locale`: The locale used for Apple Wallet data (e.g., `"en-GB"`, `"de"`, `"sk"`)
       - Default: parsed or provided in the request (overrides the auto-detected locale only for Apple passes)
+    - `merchantLocation`: Merchant location for Apple Wallet (array of objects, max 10)
+      - `latitude`: Latitude (number)
+      - `longitude`: Longitude (number)
+      - `relevantText`: The text displayed when the location is in range (optional)
+      - Default: none
+      - Example: `[ { "latitude": 40.7128, "longitude": -74.0060, "relevantText": "You're near my store" } ]`
     - `beacons`: Custom iBeacon proximity triggers to PayPasses (array of objects, max 10)
       - `proximityUUID`: The UUID of the iBeacon (required)
       - `relevantText`: The text displayed when the iBeacon is in range (optional)
