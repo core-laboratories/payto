@@ -213,8 +213,8 @@
 </script>
 
 <svelte:head>
-	<title>Crypto Card Top Up</title>
-	<meta name="description" content="Crypto Card Top Up - Direct Asset Transfers without intermediaries." />
+	<title>CryptoCard Top Up</title>
+	<meta name="description" content="CryptoCard Top Up - Direct Asset Transfers without intermediaries." />
 </svelte:head>
 
 <div class="min-h-screen p-4 sm:p-6 lg:p-8">
@@ -233,7 +233,7 @@
 			>
 				<div class="absolute top-4 left-4">
 					<span class="text-white text-xs sm:text-sm font-semibold bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
-						Crypto Card
+						CryptoCard
 					</span>
 				</div>
 

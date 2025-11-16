@@ -174,10 +174,10 @@ export function signAppleManifestPKCS7({
 	for (const safeContent of p12.safeContents) {
 		for (const safeBag of safeContent.safeBags) {
 			if (safeBag.type === forge.pki.oids.pkcs8ShroudedKeyBag) {
-                // @ts-ignore forge types
+				// @ts-ignore forge types
 				privateKey = safeBag.key || null;
 			} else if (safeBag.type === forge.pki.oids.certBag) {
-                // @ts-ignore forge types
+				// @ts-ignore forge types
 				cert = safeBag.cert || cert;
 			}
 		}
@@ -397,12 +397,10 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 			{
 				latitude: Number(params.loc.lat),
 				longitude: Number(params.loc.lon),
-				// key – value localized via pass.strings
-				relevantText: payload.props.params?.message?.value || paymentLocationKey
+				relevantText: params.message?.value || paymentLocationKey
 			}
 		];
-	}
-	if (Array.isArray(payload.merchantLocations) && payload.merchantLocations.length > 0) {
+	} else if (Array.isArray(payload.merchantLocations) && payload.merchantLocations.length > 0) {
 		basicData.locations = payload.merchantLocations
 			.filter(
 				(loc: any) =>
@@ -453,7 +451,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 	if (networkText) {
 		storeCard.headerFields.push({
 			key: 'network',
-			label: networkLabelKey, // key → localized via pass.strings
+			label: networkLabelKey,
 			value: networkText
 		});
 	} else {
@@ -461,21 +459,6 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 			key: 'payment',
 			label: paymentLabelKey,
 			value: getPaypassLocalizedValue('paypass.paypass', passLocale) || 'PayPass'
-		});
-	}
-
-	// Primary: Amount
-	if (amountText) {
-		storeCard.primaryFields.push({
-			key: 'amount',
-			label: paymentLabelKey, // e.g. "Payment", "Donation", etc.
-			value: amountText
-		});
-	} else if (amountObject?.value) {
-		storeCard.primaryFields.push({
-			key: 'amount',
-			label: amountLabelKey,
-			value: amountObject.value
 		});
 	}
 
@@ -745,6 +728,62 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 				key: 'message-void',
 				label: messageLabelKey,
 				value: params.message.value
+			});
+		}
+	}
+
+	/* ----------------------------------------------------------------
+	 * Primary fields
+	 * ---------------------------------------------------------------- */
+
+	const hasPurposePrimary = !!(purposeText && purposeText.trim().length > 0);
+	const hasAmountPrimary = !!(amountText || amountObject?.value);
+
+	const pushAmountPrimary = () => {
+		if (!hasAmountPrimary) return;
+		const value = amountText || amountObject!.value;
+		const label = amountText ? paymentLabelKey : amountLabelKey;
+		storeCard.primaryFields.push({
+			key: 'amount',
+			label,
+			value
+		});
+	};
+
+	const pushPurposePrimary = () => {
+		if (!hasPurposePrimary) return;
+		storeCard.primaryFields.push({
+			key: 'purpose-primary',
+			label: purposeLabelKey,
+			value: purposeText!.trim()
+		});
+	};
+
+	if (hasPurposePrimary || hasAmountPrimary) {
+		if (!rtl) {
+			// LTR: Purpose on the left, Amount on the right
+			if (hasPurposePrimary) pushPurposePrimary();
+			if (hasAmountPrimary) pushAmountPrimary();
+		} else {
+			// RTL: Amount on the left, Purpose on the right
+			if (hasAmountPrimary) pushAmountPrimary();
+			if (hasPurposePrimary) pushPurposePrimary();
+		}
+	}
+
+	// Final fallback: ensure at least one primary field
+	if (!storeCard.primaryFields || storeCard.primaryFields.length === 0) {
+		if (addressText) {
+			storeCard.primaryFields.push({
+				key: 'address-primary',
+				label: addressLabelKey,
+				value: addressText
+			});
+		} else {
+			storeCard.primaryFields.push({
+				key: 'paypass-primary',
+				label: paymentLabelKey,
+				value: getPaypassLocalizedValue('paypass.paypass', passLocale) || 'PayPass'
 			});
 		}
 	}
