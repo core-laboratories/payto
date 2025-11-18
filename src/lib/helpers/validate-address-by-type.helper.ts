@@ -127,7 +127,7 @@ export function validateAddressByType(
 	if (normalizedNetwork === 'xcb' || normalizedNetwork === 'xce' || normalizedNetwork === 'xab') {
 		const result = validateWalletAddress(trimmedAddress, {
 			network: ['ican', 'ns'],
-			nsDomains: ['card'],
+			nsDomains: [{ domain: 'card', maxLabelLength: 64, emojiAllowed: false }],
 			testnet: isTestnetAllowed
 		});
 

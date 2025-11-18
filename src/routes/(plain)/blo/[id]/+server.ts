@@ -11,7 +11,9 @@ export async function GET({ params }: { params: { id: string } }) {
 
 	try {
 		// Validate the address using blockchain-wallet-validator
-		const validation = validateWalletAddress(address);
+		const validation = validateWalletAddress(address, {
+			nsDomains: [{ domain: 'card', maxLabelLength: 64, emojiAllowed: false }]
+		});
 
 		if (!validation.isValid) {
 			throw error(400, 'Invalid blockchain address');
