@@ -86,8 +86,11 @@
 	const isGenerating = writable(false);
 	const userOS = writable<'ios' | 'android' | 'unknown'>('unknown');
 
-	$: showApple = $userOS === 'ios' || $userOS === 'unknown';
-	$: showGoogle = $userOS === 'android' || $userOS === 'unknown';
+	const isAndroidEnabled = true;
+	const isAppleEnabled = true;
+
+	$: showApple = isAppleEnabled && ($userOS === 'ios' || $userOS === 'android' || $userOS === 'unknown');
+	$: showGoogle = isAndroidEnabled && ($userOS === 'android' || $userOS === 'unknown');
 
 	const GENERATION_TIMEOUT = 30000; // 30 seconds timeout
 
@@ -437,7 +440,7 @@
 				<!-- Apple Wallet Button -->
 				{#if showApple}
 					<button
-						class="w-full sm:w-1/2 py-2 px-3 text-center text-white border border-gray-700 bg-gray-700 hover:bg-gray-600 rounded-lg transition duration-200 outline-none focus-visible:ring focus-visible:ring-green-800 focus-visible:ring-offset-2 active:scale-(0.99) disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-4"
+						class={`w-full ${showGoogle ? 'sm:w-1/2' : ''} py-2 px-3 text-center text-white border border-gray-700 bg-gray-700 hover:bg-gray-600 rounded-lg transition duration-200 outline-none focus-visible:ring focus-visible:ring-green-800 focus-visible:ring-offset-2 active:scale-(0.99) disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-4`}
 						type="button"
                         onclick={() => downloadPass('ios')}
 						disabled={!hostname || $isGenerating}
@@ -446,6 +449,7 @@
 						<span class="flex items-start flex-col gap-1 leading-none">
 							<span class="text-sm text-gray-300">Add PayPass to</span>
 							<span class="font-medium text-white">Apple Wallet</span>
+							{#if $userOS === 'android'}<span class="text-xs text-gray-400">or Google Wallet</span>{/if}
 						</span>
 					</button>
 				{/if}
@@ -453,7 +457,7 @@
 				<!-- Google Wallet Button -->
 				{#if showGoogle}
 					<button
-						class="w-full sm:w-1/2 py-2 px-3 text-center text-white border border-gray-700 bg-gray-700 hover:bg-gray-600 rounded-lg transition duration-200 outline-none focus-visible:ring focus-visible:ring-green-800 focus-visible:ring-offset-2 active:scale-(0.99) disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-4"
+						class={`w-full ${showApple ? 'sm:w-1/2' : ''} py-2 px-3 text-center text-white border border-gray-700 bg-gray-700 hover:bg-gray-600 rounded-lg transition duration-200 outline-none focus-visible:ring focus-visible:ring-green-800 focus-visible:ring-offset-2 active:scale-(0.99) disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-4`}
 						type="button"
                         onclick={() => downloadPass('android')}
 						disabled={!hostname || $isGenerating}
