@@ -36,7 +36,7 @@ export const addressSchema = z.object({
 				ctx.value.destination,
 				{
 					network: ['ican', 'ns'],
-					nsDomains: ['card'],
+					nsDomains: [{ domain: 'card', maxLabelLength: 64, emojiAllowed: false }],
 					testnet: isTestnetAllowed
 				}
 			);
