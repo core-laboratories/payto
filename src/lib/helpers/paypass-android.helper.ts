@@ -121,6 +121,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 	);
 
 	// Defaults
+	const fullClassId = classId.startsWith(`${issuerId}.`) ? classId : `${issuerId}.${classId}`;
 	const issuerName = companyName || 'PayPass';
 
 	// ---------------- Text Modules ----------------
@@ -617,7 +618,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 	})();
 
 	const gwClass: any = {
-		id: classId,
+		id: fullClassId,
 		issuerName: issuerName,
 		multipleDevicesAndHoldersAllowedStatus: publicEnv.PUBLIC_GW_MULTIPLE_STATUS ? publicEnv.PUBLIC_GW_MULTIPLE_STATUS : 'ONE_USER_ALL_DEVICES',
 		...(hexBackgroundColor ? { hexBackgroundColor } : {}),
@@ -685,8 +686,8 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		};
 
 	const gwObject: any = {
-		id: payload.id,
-		classId: classId,
+		id: `${issuerId}.${payload.id}`,
+		classId: fullClassId,
 		state: 'active',
 		...(validTimeInterval ? {
 			validTimeInterval
@@ -802,7 +803,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 
 	return {
 		saveUrl: `https://pay.google.com/gp/v/save/${jwt}`,
-		classId,
+		classId: fullClassId,
 		gwObject,
 		gwClass
 	};
