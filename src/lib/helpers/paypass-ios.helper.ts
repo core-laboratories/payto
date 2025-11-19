@@ -319,6 +319,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 	const swapCurrencyKey = 'paypass.swapCurrency';
 	const activateProKey = 'paypass.activatePro';
 	const sendOfflineTxKey = 'paypass.sendOfflineTransaction';
+	const paypassKey = 'paypass.paypass';
 
 	const addressText = formatAddressText(
 		payload?.props?.destination,
@@ -329,11 +330,9 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 	const networkText = buildNetworkText(payload, passLocale);
 
 	const logoText =
-		(titleText && titleText.trim().length > 0
-			? titleText.trim()
-			: orgName && orgName.trim().length > 0
+		orgName && orgName.trim().length > 0
 			? orgName.trim()
-			: companyName || 'PayPass');
+			: companyName || addressText;
 
 	const description =
 		companyName && companyName.trim().length > 0
@@ -349,7 +348,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 		serialNumber: serialId.slice(0, 64),
 		passTypeIdentifier,
 		teamIdentifier,
-		organizationName: orgName,
+		organizationName: companyName || 'PayTo',
 		logoText,
 		description,
 		backgroundColor,
@@ -434,7 +433,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 
 	genericCard.primaryFields.push({
 		key: 'address',
-		value: logoText
+		value: titleText
 	});
 
 	/* ----------------------------------------------------------------
