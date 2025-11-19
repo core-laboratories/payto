@@ -216,33 +216,6 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		});
 	}
 
-	// Swap
-	if (payload.swap) {
-		const swapLangI18nKey = 'paypass.swapFor';
-		const swapHeaderLoc = getPaypassLocalizedString(swapLangI18nKey);
-		textMods.push({
-			id: 'swap',
-			header: swapHeaderLoc?.defaultValue || 'Swap for',
-			headerI18nKey: swapLangI18nKey,
-			body: payload.swap,
-			onPass: false
-		});
-	}
-
-	// Split payment
-	if (payload.splitPayment && payload.splitPayment.value > 0) {
-		const splitLangI18nKey = 'paypass.split';
-		const splitHeaderLoc = getPaypassLocalizedString(splitLangI18nKey);
-
-		textMods.push({
-			id: 'split',
-			header: splitHeaderLoc?.defaultValue || 'Split',
-			headerI18nKey: splitLangI18nKey,
-			body: rtl ? `${payload.splitPayment.address} ← ${payload.splitPayment.isPercent ? payload.splitPayment.value.toString() + '%' : payload.splitPayment.formattedValue}` : `${payload.splitPayment.isPercent ? payload.splitPayment.value.toString() + '%' : payload.splitPayment.formattedValue} ➜ ${payload.splitPayment.address}`,
-			onPass: false
-		});
-	}
-
 	if (payload.props.network === 'iban') {
 		const iban = payload.props.iban?.match(/.{1,4}/g)?.join(' ').toUpperCase() || payload.props.iban?.toUpperCase();
 		if (iban) {
@@ -500,12 +473,39 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		}
 	}
 
+	// Swap
+	if (payload.swap) {
+		const swapLangI18nKey = 'paypass.swapFor';
+		const swapHeaderLoc = getPaypassLocalizedString(swapLangI18nKey);
+		textMods.push({
+			id: 'swap',
+			header: swapHeaderLoc?.defaultValue || 'Swap for',
+			headerI18nKey: swapLangI18nKey,
+			body: payload.swap,
+			onPass: false
+		});
+	}
+
+	// Split payment
+	if (payload.splitPayment && payload.splitPayment.value > 0) {
+		const splitLangI18nKey = 'paypass.split';
+		const splitHeaderLoc = getPaypassLocalizedString(splitLangI18nKey);
+
+		textMods.push({
+			id: 'split',
+			header: splitHeaderLoc?.defaultValue || 'Split',
+			headerI18nKey: splitLangI18nKey,
+			body: rtl ? `${payload.splitPayment.address} ← ${payload.splitPayment.isPercent ? payload.splitPayment.value.toString() + '%' : payload.splitPayment.formattedValue}` : `${payload.splitPayment.isPercent ? payload.splitPayment.value.toString() + '%' : payload.splitPayment.formattedValue} ➜ ${payload.splitPayment.address}`,
+			onPass: false
+		});
+	}
+
 	// Debug mode
 	if (isDebug) {
 		textMods.push({
 			id: 'debug',
 			header: 'Debug',
-			body: JSON.stringify(payload) + '\n\n' + JSON.stringify(textMods),
+			body: JSON.stringify(payload),
 			onPass: false
 		});
 	}
