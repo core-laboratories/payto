@@ -12,12 +12,16 @@ export { getTitleText, getTitleTextBarcode } from './get-title-name.helper';
  * @param kvData - KV data with icon overrides
  * @param address - Address for generating identicon
  * @param isDev - Whether in development mode
- * @param devServerUrl - Development server URL
+ * @param baseUrl - Base URL
  * @returns Object with Apple and Google Wallet image URLs
  */
-export function getImageUrls(kvData: any, address: string, network: string | null | undefined, isDev: boolean, devServerUrl: string) {
-	const baseUrl = isDev ? devServerUrl : 'https://payto.money';
-
+export function getImageUrls(
+	kvData: any,
+	address: string,
+	network: string | null | undefined,
+	isDev: boolean,
+	baseUrl: string
+) {
 	return {
 		// Apple Wallet images (must be PNG → never use blockies SVG)
 		apple: {

@@ -840,27 +840,54 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 
 	const imageFetches: Promise<void>[] = [];
 
-	if (iconUrl) {
-		imageFetches.push(
-			fetchFn(iconUrl)
-				.then((r) => (r.ok ? r.arrayBuffer() : null))
-				.then((buf) => {
-					if (buf) files['icon.png'] = buf;
-				})
-				.catch(() => {})
-		);
+	if (!iconUrl) {
+		throw new Error('iconUrl is required for Apple Wallet pass');
 	}
 
-	if (logoUrl) {
-		imageFetches.push(
-			fetchFn(logoUrl)
-				.then((r) => (r.ok ? r.arrayBuffer() : null))
-				.then((buf) => {
-					if (buf) files['logo.png'] = buf;
-				})
-				.catch(() => {})
-		);
+	imageFetches.push(
+		fetchFn(iconUrl)
+			.then((r) => {
+				if (!r.ok) {
+					throw new Error(`Failed to fetch icon.png (status ${r.status}) from: ${iconUrl}`);
+				}
+				return r.arrayBuffer();
+			})
+			.then((buf) => {
+				if (!buf || buf.byteLength === 0) {
+					throw new Error(`icon.png is empty or invalid: ${iconUrl}`);
+				}
+				files['icon.png'] = buf;
+			})
+			.catch((e) => {
+				console.error('Error fetching icon.png:', e);
+				throw e;
+			})
+	);
+
+
+	if (!logoUrl) {
+		throw new Error('logoUrl is required for Apple Wallet pass');
 	}
+
+	imageFetches.push(
+		fetchFn(logoUrl)
+			.then((r) => {
+				if (!r.ok) {
+					throw new Error(`Failed to fetch logo.png (status ${r.status}) from: ${logoUrl}`);
+				}
+				return r.arrayBuffer();
+			})
+			.then((buf) => {
+				if (!buf || buf.byteLength === 0) {
+					throw new Error(`logo.png is empty or invalid: ${logoUrl}`);
+				}
+				files['logo.png'] = buf;
+			})
+			.catch((e) => {
+				console.error('Error fetching logo.png:', e);
+				throw e;
+			})
+	);
 
 	await Promise.all(imageFetches);
 
