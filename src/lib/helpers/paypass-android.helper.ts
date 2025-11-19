@@ -2,7 +2,7 @@ import * as jose from 'jose';
 import { env as publicEnv } from '$env/dynamic/public';
 import { calculateNotifications } from './paypass-notifications.helper';
 import { getPaypassLocalizedString, type LocalizedText, getPaypassLocalizedValueForLocale as getPaypassLocalizedValue } from './paypass-i18n.helper';
-import { formatAmount } from './paypass-operator.helper';
+import { formatAmount, formatAddressText } from './paypass-operator.helper';
 
 const isDebug = false;
 
@@ -114,15 +114,11 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 	}
 
 	// ---------------- Address formatting ----------------
-	const addressText = payload.props.destination ? (() => {
-		const addr = payload.props.destination;
-		if (['xcb', 'xce'].includes(payload.props.network)) {
-			return addr.match(/.{1,4}/g)?.join(' ').toUpperCase() || addr.toUpperCase();
-		} else if (payload.props.network === "other" && ['xab'].includes(payload.props.other)) {
-			return addr.match(/.{1,4}/g)?.join(' ').toUpperCase() || addr.toUpperCase();
-		}
-		return addr.match(/.{1,4}/g)?.join(' ') || addr;
-	})() : null;
+	const addressText = formatAddressText(
+		payload.props.destination,
+		payload.props.network,
+		payload.props.other
+	);
 
 	// Defaults
 	const issuerName = companyName || 'PayPass';
@@ -217,33 +213,6 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 			headerI18nKey: headerI18nKey,
 			body: formatAmount(amountObject, translations, rtl),
 			onPass: true
-		});
-	}
-
-	// Swap
-	if (payload.swap) {
-		const swapLangI18nKey = 'paypass.swapFor';
-		const swapHeaderLoc = getPaypassLocalizedString(swapLangI18nKey);
-		textMods.push({
-			id: 'swap',
-			header: swapHeaderLoc?.defaultValue || 'Swap for',
-			headerI18nKey: swapLangI18nKey,
-			body: payload.swap,
-			onPass: false
-		});
-	}
-
-	// Split payment
-	if (payload.splitPayment && payload.splitPayment.value > 0) {
-		const splitLangI18nKey = 'paypass.split';
-		const splitHeaderLoc = getPaypassLocalizedString(splitLangI18nKey);
-
-		textMods.push({
-			id: 'split',
-			header: splitHeaderLoc?.defaultValue || 'Split',
-			headerI18nKey: splitLangI18nKey,
-			body: rtl ? `${payload.splitPayment.address} ← ${payload.splitPayment.isPercent ? payload.splitPayment.value.toString() + '%' : payload.splitPayment.formattedValue}` : `${payload.splitPayment.isPercent ? payload.splitPayment.value.toString() + '%' : payload.splitPayment.formattedValue} ➜ ${payload.splitPayment.address}`,
-			onPass: false
 		});
 	}
 
@@ -504,12 +473,39 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		}
 	}
 
+	// Swap
+	if (payload.swap) {
+		const swapLangI18nKey = 'paypass.swapFor';
+		const swapHeaderLoc = getPaypassLocalizedString(swapLangI18nKey);
+		textMods.push({
+			id: 'swap',
+			header: swapHeaderLoc?.defaultValue || 'Swap for',
+			headerI18nKey: swapLangI18nKey,
+			body: payload.swap,
+			onPass: false
+		});
+	}
+
+	// Split payment
+	if (payload.splitPayment && payload.splitPayment.value > 0) {
+		const splitLangI18nKey = 'paypass.split';
+		const splitHeaderLoc = getPaypassLocalizedString(splitLangI18nKey);
+
+		textMods.push({
+			id: 'split',
+			header: splitHeaderLoc?.defaultValue || 'Split',
+			headerI18nKey: splitLangI18nKey,
+			body: rtl ? `${payload.splitPayment.address} ← ${payload.splitPayment.isPercent ? payload.splitPayment.value.toString() + '%' : payload.splitPayment.formattedValue}` : `${payload.splitPayment.isPercent ? payload.splitPayment.value.toString() + '%' : payload.splitPayment.formattedValue} ➜ ${payload.splitPayment.address}`,
+			onPass: false
+		});
+	}
+
 	// Debug mode
 	if (isDebug) {
 		textMods.push({
 			id: 'debug',
 			header: 'Debug',
-			body: JSON.stringify(payload) + '\n\n' + JSON.stringify(textMods),
+			body: JSON.stringify(payload),
 			onPass: false
 		});
 	}

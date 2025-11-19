@@ -6,7 +6,7 @@
  * @returns {string | null} The formatted URL or `null` if the currency is not supported.
  */
 export function getExplorerUrl(currency: string, data: Record<string, string>, proxy: boolean = false, urlBase: string = 'https://payto.money'): string | null {
-	const normalizedCurrency = currency.toUpperCase();
+	const normalizedCurrency = currency.toLowerCase();
 	let url = null;
 
 	const explorers = [
@@ -63,6 +63,38 @@ export function getExplorerUrl(currency: string, data: Record<string, string>, p
 			url: 'https://tronscan.org/#/address/${address}'
 		}
 	]
+
+	const chainData: Record<string, Array<{ value: string; url: string }>> = {
+		eth: [
+			{
+				value: '1',
+				url: 'https://etherscan.io/address/${address}'
+			},
+			{
+				value: '56',
+				url: 'https://bscscan.com/address/${address}'
+			},
+			{
+				value: '137',
+				url: 'https://polygonscan.com/address/${address}'
+			},
+			{
+				value: '8453',
+				url: 'https://basescan.org/address/${address}'
+			}
+		]
+	};
+
+	// If we have a chain ID and the network type matches, look up the specific chain
+	if (data?.chain && Number(data.chain) > 0 && normalizedCurrency) {
+		const chainsForNetwork = chainData[normalizedCurrency];
+		if (chainsForNetwork) {
+			const chain = chainsForNetwork.find(c => c.value === String(data.chain));
+			if (chain) {
+				return chain.url.replace('${address}', data.address);
+			}
+		}
+	}
 
 	const explorer = explorers.find(explorer => explorer.value === normalizedCurrency);
 	if (!explorer) {

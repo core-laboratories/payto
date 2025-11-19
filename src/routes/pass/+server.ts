@@ -184,15 +184,11 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 
 		/* ------------------------------------------------------------- */
 
-		const explorerUrl = getExplorerUrl(network, { address: destination }, true, linkBaseUrl);
+		const chainId = props.params.chainId?.value;
+		const explorerUrl = getExplorerUrl(network, { address: destination, chain: chainId }, true, linkBaseUrl);
 		const customCurrencyData = kvData?.customCurrency || {};
 		const currency = getCurrency(props, network as ITransitionType, true);
-
-		const proUrl =
-			`${proUrlLink}?origin=${encodeURIComponent(originator)}&subscriber=${encodeURIComponent(memberAddress)}&destination=${encodeURIComponent(destination)}&network=${encodeURIComponent(network as string)}`;
-
 		const expirationDate = getExpirationDate(props.params?.dl?.value);
-		const chainId = props.params.chainId?.value;
 		const isRecurring = !!props.params.rc?.value;
 		const isRtl = String(props.params.rtl?.value || '') === '1';
 		const isDonate = String(props.params.donate?.value || '') === '1';
@@ -202,7 +198,8 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 		const splitPayment =
 			props.params.split?.value &&
 			props.params.split.value > 0 &&
-			props.params.split.value < props.params.amount?.value &&
+			props.params.amount?.value &&
+			(props.params.split.isPercent ? Number(props.params.split.value) <= 100 : Number(props.params.split.value) <= Number(props.params.amount.value)) &&
 			props.params.split.address &&
 			destination &&
 			props.params.split.address.toLowerCase() !== destination.toLowerCase()
@@ -279,10 +276,6 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 
 		const backgroundColor = getValidBackgroundColor(design, kvData, '#2A3950');
 
-		/* ---------------------------------------------------
-		 * At this point OS-specific code begins.
-		 * Next message continues with Android + iOS sections.
-		 * --------------------------------------------------- */
 		/* ---------------- OS switch ---------------- */
 
 		if (os === 'android') {
@@ -301,6 +294,8 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			const maxIdentifierLength = maxObjectIdLength - issuerPrefix.length;
 			const identifierPart = baseIdentifier.slice(0, Math.max(1, maxIdentifierLength));
 			const objectId = `${issuerPrefix}${identifierPart}`;
+			const proUrl = `${proUrlLink}?origin=${encodeURIComponent(originator)}&subscriber=${encodeURIComponent(memberAddress)}&destination=${encodeURIComponent(destination)}&network=${encodeURIComponent(network as string)}&os=android${googleLocale ? `&lang=${encodeURIComponent(googleLocale)}` : ''}`;
+			const swapUrl = `${swapUrlLink}${googleLocale ? `&lang=${encodeURIComponent(googleLocale)}` : ''}`;
 
 			const { saveUrl, classId: finalClassId, gwObject, gwClass } =
 				await buildGoogleWalletPayPassSaveLink({
@@ -329,7 +324,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 						externalLink: getLink(hostname, props, design, true),
 						explorerUrl: explorerUrl || undefined,
 						proUrl,
-						swapUrl: swapUrlLink,
+						swapUrl,
 						linkBaseUrl,
 						props,
 						expirationDate,
@@ -354,7 +349,13 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 								network,
 								currency,
 								...(props.params.amount?.value
-									? { amount: props.params.amount.value }
+									? (() => {
+										const numValue = Number(props.params.amount.value);
+										if (Number.isFinite(numValue) && numValue > 0 && numValue <= Number.MAX_SAFE_INTEGER) {
+											return { amount: numValue };
+										}
+										return {};
+									})()
 									: {}),
 								...(design.org ? { custom_org: true } : {}),
 								...(props.params.donate?.value ? { donate: true } : {}),
@@ -376,6 +377,8 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			 * ------------------------------------------------------------- */
 
 			const foregroundColor = getValidForegroundColor(design, kvData, '#9AB1D6');
+			const proUrl = `${proUrlLink}?origin=${encodeURIComponent(originator)}&subscriber=${encodeURIComponent(memberAddress)}&destination=${encodeURIComponent(destination)}&network=${encodeURIComponent(network as string)}&os=ios${appleLocale ? `&lang=${encodeURIComponent(appleLocale)}` : ''}`;
+			const swapUrl = `${swapUrlLink}${appleLocale ? `&lang=${encodeURIComponent(appleLocale)}` : ''}`;
 
 			const pkpassBlob = await buildAppleWalletPayPass({
 				serialId,
@@ -406,7 +409,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 					externalLink: getLink(hostname, props, design, true),
 					explorerUrl: explorerUrl || undefined,
 					proUrl,
-					swapUrl: swapUrlLink,
+					swapUrl,
 					linkBaseUrl,
 					props,
 					expirationDate,
@@ -429,7 +432,13 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 								network,
 								currency,
 								...(props.params.amount?.value
-									? { amount: props.params.amount.value }
+									? (() => {
+										const numValue = Number(props.params.amount.value);
+										if (Number.isFinite(numValue) && numValue > 0 && numValue <= Number.MAX_SAFE_INTEGER) {
+											return { amount: numValue };
+										}
+										return {};
+									})()
 									: {}),
 								...(design.org ? { custom_org: true } : {}),
 								...(props.params.donate?.value ? { donate: true } : {}),
