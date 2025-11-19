@@ -31,19 +31,40 @@ import { getAddress } from '$lib/helpers/get-address.helper';
  * Env vars
  * ---------------------------------------------------------------- */
 
+// Helper for decoding b64
+function base64ToUtf8(b64: string | undefined, name: string): string {
+	if (!b64) {
+		throw new Error(`${name} environment variable is missing`);
+	}
+
+	// Cloudflare Workers / browser: atob is available
+	if (typeof atob === 'function') {
+		const binary = atob(b64);
+		const bytes = new Uint8Array(binary.length);
+		for (let i = 0; i < binary.length; i++) {
+			bytes[i] = binary.charCodeAt(i);
+		}
+		return new TextDecoder().decode(bytes);
+	}
+
+	// Node (local dev)
+	// eslint-disable-next-line n/no-unsupported-features/node-builtins
+	return Buffer.from(b64, 'base64').toString('utf8');
+}
+
 // Apple Wallet
 const teamIdentifier = env.PRIVATE_PASS_TEAM_IDENTIFIER;
 const passTypeIdentifier = env.PRIVATE_PASS_TYPE_IDENTIFIER;
 const p12Base64 = env.PRIVATE_PASS_P12_BASE64;
 const p12Password = env.PRIVATE_PASS_P12_PASSWORD;
 const wwdrPem_b64 = env.PRIVATE_WWDR_PEM;
-const wwdrPem = Buffer.from(wwdrPem_b64, 'base64').toString('utf8');
+const wwdrPem = base64ToUtf8(wwdrPem_b64, 'PRIVATE_WWDR_PEM');
 
 // Google Wallet
 const gwIssuerId = env.PRIVATE_GW_ISSUER_ID;
 const gwSaEmail = env.PRIVATE_GW_SA_EMAIL;
 const gwSaKeyPem_b64 = env.PRIVATE_GW_SA_PRIVATE_KEY;
-const gwSaKeyPem = Buffer.from(gwSaKeyPem_b64, 'base64').toString('utf8');
+const gwSaKeyPem = base64ToUtf8(gwSaKeyPem_b64, 'PRIVATE_GW_SA_PRIVATE_KEY');
 const isDev = import.meta.env.DEV;
 const devServerUrl = publicEnv.PUBLIC_DEV_SERVER_URL || `http://localhost:${import.meta.env.VITE_DEV_SERVER_PORT || 5173}`;
 
