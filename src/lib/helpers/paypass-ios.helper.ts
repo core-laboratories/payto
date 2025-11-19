@@ -407,7 +407,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 		}
 	}
 
-	const storeCard: any = {
+	const genericCard: any = {
 		headerFields: [],
 		primaryFields: [],
 		secondaryFields: [],
@@ -421,7 +421,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 
 	// Network
 	if (networkText) {
-		storeCard.headerFields.push({
+		genericCard.headerFields.push({
 			key: 'network',
 			label: networkLabelKey,
 			value: networkText
@@ -432,7 +432,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 	*  Primary fields
 	* ---------------------------------------------------------------- */
 
-	storeCard.primaryFields.push({
+	genericCard.primaryFields.push({
 		key: 'address',
 		value: logoText
 	});
@@ -448,7 +448,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 		if (!hasAmountSecondary) return;
 		const value = amountText || amountObject!.value;
 		const label = amountText ? paymentLabelKey : amountLabelKey;
-		storeCard.secondaryFields.push({
+		genericCard.secondaryFields.push({
 			key: 'amount',
 			label,
 			value
@@ -457,7 +457,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 
 	const pushPurposeSecondary = () => {
 		if (!hasPurposeSecondary) return;
-		storeCard.secondaryFields.push({
+		genericCard.secondaryFields.push({
 			key: 'purpose',
 			label: purposeLabelKey,
 			value: purposeText!.trim()
@@ -480,7 +480,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 
 	// Address
 	if (addressText) {
-		storeCard.backFields.push({
+		genericCard.backFields.push({
 			key: 'address-back',
 			label: props.network === 'iban' ? ibanLabelKey : addressLabelKey,
 			value: addressText
@@ -489,7 +489,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 
 	// Network
 	if (networkText) {
-		storeCard.backFields.push({
+		genericCard.backFields.push({
 			key: 'network-back',
 			label: networkLabelKey,
 			value: networkText
@@ -498,7 +498,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 
 	// Item
 	if (purposeText && purposeText.trim().length > 0) {
-		storeCard.backFields.push({
+		genericCard.backFields.push({
 			key: 'purpose',
 			label: purposeLabelKey,
 			value: purposeText.trim()
@@ -507,7 +507,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 
 	// Amount
 	if (amountText) {
-		storeCard.backFields.push({
+		genericCard.backFields.push({
 			key: 'amount',
 			label: amountLabelKey,
 			value: amountText
@@ -518,21 +518,21 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 	if (props.network === 'iban') {
 		const bic = props.bic?.toUpperCase();
 		if (bic) {
-			storeCard.backFields.push({
+			genericCard.backFields.push({
 				key: 'bic',
 				label: bicLabelKey,
 				value: bic
 			});
 		}
 		if (params.receiverName?.value) {
-			storeCard.backFields.push({
+			genericCard.backFields.push({
 				key: 'beneficiary',
 				label: beneficiaryLabelKey,
 				value: params.receiverName.value
 			});
 		}
 		if (params.message?.value) {
-			storeCard.backFields.push({
+			genericCard.backFields.push({
 				key: 'message-iban',
 				label: messageLabelKey,
 				value: params.message.value
@@ -543,7 +543,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 	// ACH
 	else if (props.network === 'ach') {
 		if (props.accountNumber) {
-			storeCard.backFields.push({
+			genericCard.backFields.push({
 				key: 'accountNumber',
 				label: accountNumberLabelKey,
 				value: props.accountNumber
@@ -551,14 +551,14 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 		}
 		const routingNumber = props.routingNumber?.toUpperCase();
 		if (routingNumber) {
-			storeCard.backFields.push({
+			genericCard.backFields.push({
 				key: 'routingNumber',
 				label: routingNumberLabelKey,
 				value: routingNumber
 			});
 		}
 		if (params.receiverName?.value) {
-			storeCard.backFields.push({
+			genericCard.backFields.push({
 				key: 'beneficiary',
 				label: beneficiaryLabelKey,
 				value: params.receiverName.value
@@ -569,21 +569,21 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 	// UPI
 	else if (props.network === 'upi') {
 		if (props.accountAlias) {
-			storeCard.backFields.push({
+			genericCard.backFields.push({
 				key: 'accountAlias',
 				label: accountAliasLabelKey,
 				value: props.accountAlias
 			});
 		}
 		if (params.receiverName?.value) {
-			storeCard.backFields.push({
+			genericCard.backFields.push({
 				key: 'beneficiary',
 				label: beneficiaryLabelKey,
 				value: params.receiverName.value
 			});
 		}
 		if (params.message?.value) {
-			storeCard.backFields.push({
+			genericCard.backFields.push({
 				key: 'message-upi',
 				label: messageLabelKey,
 				value: params.message.value
@@ -594,28 +594,28 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 	// PIX
 	else if (props.network === 'pix') {
 		if (props.accountAlias) {
-			storeCard.backFields.push({
+			genericCard.backFields.push({
 				key: 'accountAlias',
 				label: accountAliasLabelKey,
 				value: props.accountAlias
 			});
 		}
 		if (params.receiverName?.value) {
-			storeCard.backFields.push({
+			genericCard.backFields.push({
 				key: 'beneficiary',
 				label: beneficiaryLabelKey,
 				value: params.receiverName.value
 			});
 		}
 		if (params.id?.value) {
-			storeCard.backFields.push({
+			genericCard.backFields.push({
 				key: 'id',
 				label: idLabelKey,
 				value: params.id.value
 			});
 		}
 		if (params.message?.value) {
-			storeCard.backFields.push({
+			genericCard.backFields.push({
 				key: 'message-pix',
 				label: messageLabelKey,
 				value: params.message.value
@@ -627,7 +627,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 	else if (props.network === 'bic') {
 		const bic = props.bic?.toUpperCase();
 		if (bic) {
-			storeCard.backFields.push({
+			genericCard.backFields.push({
 				key: 'bic',
 				label: bicOroricLabelKey,
 				value: bic
@@ -639,28 +639,28 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 	else if (props.network === 'intra') {
 		const bic = props.bic?.toUpperCase();
 		if (bic) {
-			storeCard.backFields.push({
+			genericCard.backFields.push({
 				key: 'bic',
 				label: bicOroricLabelKey,
 				value: bic
 			});
 		}
 		if (props.id) {
-			storeCard.backFields.push({
+			genericCard.backFields.push({
 				key: 'accountId',
 				label: accountIdLabelKey,
 				value: props.id
 			});
 		}
 		if (params.receiverName?.value) {
-			storeCard.backFields.push({
+			genericCard.backFields.push({
 				key: 'beneficiary',
 				label: beneficiaryLabelKey,
 				value: params.receiverName.value
 			});
 		}
 		if (params.message?.value) {
-			storeCard.backFields.push({
+			genericCard.backFields.push({
 				key: 'message-intra',
 				label: messageLabelKey,
 				value: params.message.value
@@ -671,14 +671,14 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 	// VOID / Cash / Transport
 	else if (props.network === 'void') {
 		if (params.receiverName?.value) {
-			storeCard.backFields.push({
+			genericCard.backFields.push({
 				key: 'beneficiary',
 				label: beneficiaryLabelKey,
 				value: params.receiverName.value
 			});
 		}
 		if (params.message?.value) {
-			storeCard.backFields.push({
+			genericCard.backFields.push({
 				key: 'message-void',
 				label: messageLabelKey,
 				value: params.message.value
@@ -688,7 +688,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 
 	// Swap
 	if (payload.swap) {
-		storeCard.backFields.push({
+		genericCard.backFields.push({
 			key: 'swap',
 			label: swapCurrencyKey,
 			value: payload.swap
@@ -698,7 +698,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 	// Split payment
 	const splitPayment = payload.splitPayment;
 	if (splitPayment && splitPayment.value > 0) {
-		storeCard.backFields.push({
+		genericCard.backFields.push({
 			key: 'split',
 			label: splitLabelKey,
 			value: rtl ? `${splitPayment.address} ← ${splitPayment.isPercent ? splitPayment.value.toString() + '%' : splitPayment.formattedValue}` : `${splitPayment.isPercent ? splitPayment.value.toString() + '%' : splitPayment.formattedValue} ➜ ${splitPayment.address}`
@@ -711,7 +711,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 
 	// Location
 	if (hasLocationParams) {
-		storeCard.backFields.push({
+		genericCard.backFields.push({
 			key: 'location',
 			label: 'paypass.paymentLocation',
 			attributedValue: `<a href="geo:${Number(params.loc.lat)},${Number(params.loc.lon)}">📍 Open Location</a>`,
@@ -721,7 +721,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 
 	// Explorer
 	if (payload.explorerUrl) {
-		storeCard.backFields.push({
+		genericCard.backFields.push({
 			key: 'explorer',
 			label: 'paypass.viewTransactions',
 			attributedValue: `<a href="${payload.explorerUrl}">🔍 ${getPaypassLocalizedValue(viewTransactionsKey, passLocale) || 'View Transactions'}</a>`,
@@ -731,7 +731,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 
 	// Online PayPass
 	if (payload.externalLink) {
-		storeCard.backFields.push({
+		genericCard.backFields.push({
 			key: 'online',
 			label: 'paypass.onlinePaypass',
 			attributedValue: `<a href="${payload.externalLink}">📄 ${getPaypassLocalizedValue(onlinePaypassKey, passLocale) || 'Online PayPass'}</a>`,
@@ -741,7 +741,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 
 	// Crypto Card
 	if (payload.props.network === 'xcb') {
-		storeCard.backFields.push({
+		genericCard.backFields.push({
 			key: 'crypto-card',
 			label: 'paypass.topUpCryptoCard',
 			attributedValue: `<a href="${payload.linkBaseUrl}/card">💳 ${getPaypassLocalizedValue(topUpCryptoCardKey, passLocale) || 'Top up Crypto Card'}</a>`,
@@ -751,7 +751,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 
 	// Swap Currency
 	if (payload.swapUrl) {
-		storeCard.backFields.push({
+		genericCard.backFields.push({
 			key: 'swap',
 			label: 'paypass.swapCurrency',
 			attributedValue: `<a href="${payload.swapUrl}">💱 ${getPaypassLocalizedValue(swapCurrencyKey, passLocale) || 'Swap Currency'}</a>`,
@@ -761,7 +761,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 
 	// Activate Pro
 	if (payload.props.network === 'xcb' && payload.proUrl) {
-		storeCard.backFields.push({
+		genericCard.backFields.push({
 			key: 'pro',
 			label: 'paypass.activatePro',
 			attributedValue: `<a href="${payload.proUrl}">🔗 ${getPaypassLocalizedValue(activateProKey, passLocale) || 'Activate Pro'}</a>`,
@@ -771,7 +771,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 
 	// Send Offline Transaction
 	if (payload.props.network === 'xcb') {
-		storeCard.backFields.push({
+		genericCard.backFields.push({
 			key: 'offline',
 			label: 'paypass.sendOfflineTransaction',
 			attributedValue: `<a href="sms:+12019715152">📟 ${getPaypassLocalizedValue(sendOfflineTxKey, passLocale) || 'Send Offline Transaction'}</a>`,
@@ -781,7 +781,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 
 	// Debug
 	if (isDebug) {
-		storeCard.backFields.push({
+		genericCard.backFields.push({
 			key: 'debug',
 			label: 'Debug',
 			value: JSON.stringify(payload)
@@ -791,7 +791,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 	// NFC
 	const passData: any = {
 		...basicData,
-		storeCard,
+		generic: genericCard,
 		/*nfc: {
 			message: payload.basicLink,
 			requiresAuthentication: true
