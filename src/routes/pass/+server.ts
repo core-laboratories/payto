@@ -187,10 +187,6 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 		const explorerUrl = getExplorerUrl(network, { address: destination }, true, linkBaseUrl);
 		const customCurrencyData = kvData?.customCurrency || {};
 		const currency = getCurrency(props, network as ITransitionType, true);
-
-		const proUrl =
-			`${proUrlLink}?origin=${encodeURIComponent(originator)}&subscriber=${encodeURIComponent(memberAddress)}&destination=${encodeURIComponent(destination)}&network=${encodeURIComponent(network as string)}`;
-
 		const expirationDate = getExpirationDate(props.params?.dl?.value);
 		const chainId = props.params.chainId?.value;
 		const isRecurring = !!props.params.rc?.value;
@@ -301,6 +297,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			const maxIdentifierLength = maxObjectIdLength - issuerPrefix.length;
 			const identifierPart = baseIdentifier.slice(0, Math.max(1, maxIdentifierLength));
 			const objectId = `${issuerPrefix}${identifierPart}`;
+			const proUrl = `${proUrlLink}?origin=${encodeURIComponent(originator)}&subscriber=${encodeURIComponent(memberAddress)}&destination=${encodeURIComponent(destination)}&network=${encodeURIComponent(network as string)}&os=android`;
 
 			const { saveUrl, classId: finalClassId, gwObject, gwClass } =
 				await buildGoogleWalletPayPassSaveLink({
@@ -376,6 +373,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			 * ------------------------------------------------------------- */
 
 			const foregroundColor = getValidForegroundColor(design, kvData, '#9AB1D6');
+			const proUrl = `${proUrlLink}?origin=${encodeURIComponent(originator)}&subscriber=${encodeURIComponent(memberAddress)}&destination=${encodeURIComponent(destination)}&network=${encodeURIComponent(network as string)}&os=ios`;
 
 			const pkpassBlob = await buildAppleWalletPayPass({
 				serialId,
