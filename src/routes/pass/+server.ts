@@ -351,7 +351,13 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 								network,
 								currency,
 								...(props.params.amount?.value
-									? { amount: props.params.amount.value }
+									? (() => {
+										const numValue = Number(props.params.amount.value);
+										if (Number.isFinite(numValue) && numValue > 0 && numValue <= Number.MAX_SAFE_INTEGER) {
+											return { amount: numValue };
+										}
+										return {};
+									})()
 									: {}),
 								...(design.org ? { custom_org: true } : {}),
 								...(props.params.donate?.value ? { donate: true } : {}),
@@ -427,7 +433,13 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 								network,
 								currency,
 								...(props.params.amount?.value
-									? { amount: props.params.amount.value }
+									? (() => {
+										const numValue = Number(props.params.amount.value);
+										if (Number.isFinite(numValue) && numValue > 0 && numValue <= Number.MAX_SAFE_INTEGER) {
+											return { amount: numValue };
+										}
+										return {};
+									})()
 									: {}),
 								...(design.org ? { custom_org: true } : {}),
 								...(props.params.donate?.value ? { donate: true } : {}),
