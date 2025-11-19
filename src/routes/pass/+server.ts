@@ -65,7 +65,7 @@ const gwIssuerId = env.PRIVATE_GW_ISSUER_ID;
 const gwSaEmail = env.PRIVATE_GW_SA_EMAIL;
 const gwSaKeyPem_b64 = env.PRIVATE_GW_SA_PRIVATE_KEY;
 const gwSaKeyPem = base64ToUtf8(gwSaKeyPem_b64, 'PRIVATE_GW_SA_PRIVATE_KEY');
-const isDev = import.meta.env.DEV;
+const isDev = (import.meta.env.DEV || publicEnv.PUBLIC_ENV === 'preview')
 const devServerUrl = publicEnv.PUBLIC_DEV_SERVER_URL || `http://localhost:${import.meta.env.VITE_DEV_SERVER_PORT || 5173}`;
 
 // Base URL for links
@@ -104,6 +104,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 	let authorityItem = 'payto';
 	let kvData: any = null;
 	let authority: string | null = null;
+	const baseOrigin = url.origin;
 
 	if (contentType.includes('application/json')) {
 		const jsonData = await request.json();
@@ -163,7 +164,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 
 	if (!isAuthorized) {
 		const origin = request.headers.get('origin');
-		if (origin !== url.origin) throw error(403, 'Unauthorized origin');
+		if (origin !== baseOrigin) throw error(403, 'Unauthorized origin');
 	}
 
 	/* ---------------- Begin generating pass ---------------- */
@@ -285,7 +286,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 
 		/* ---------------- Images, title, text ---------------- */
 
-		const imageUrls = getImageUrls(kvData, destination, network, isDev, devServerUrl);
+		const imageUrls = getImageUrls(kvData, destination, network, isDev, linkBaseUrl);
 
 		const titleText = getTitleText(hostname, destination, props, currency, true);
 		const purposeText = getPurposeText(design);

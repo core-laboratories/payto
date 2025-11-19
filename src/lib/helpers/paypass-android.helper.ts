@@ -121,7 +121,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 	);
 
 	// Defaults
-	const fullClassId = classId.startsWith(`${issuerId}.`) ? classId : `${issuerId}.${classId}`;
+	const fullClassId = classId;
 	const issuerName = companyName || 'PayPass';
 
 	// ---------------- Text Modules ----------------
@@ -686,7 +686,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		};
 
 	const gwObject: any = {
-		id: `${issuerId}.${payload.id}`,
+		id: payload.id,
 		classId: fullClassId,
 		state: 'active',
 		...(validTimeInterval ? {
