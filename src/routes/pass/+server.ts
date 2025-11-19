@@ -36,14 +36,14 @@ const teamIdentifier = env.PRIVATE_PASS_TEAM_IDENTIFIER;
 const passTypeIdentifier = env.PRIVATE_PASS_TYPE_IDENTIFIER;
 const p12Base64 = env.PRIVATE_PASS_P12_BASE64;
 const p12Password = env.PRIVATE_PASS_P12_PASSWORD;
-const wwdrPem_escaped = env.PRIVATE_WWDR_PEM;
-const wwdrPem = wwdrPem_escaped.replace(/\\n/g, '\n');
+const wwdrPem_b64 = env.PRIVATE_WWDR_PEM;
+const wwdrPem = Buffer.from(wwdrPem_b64, 'base64').toString('utf8');
 
 // Google Wallet
 const gwIssuerId = env.PRIVATE_GW_ISSUER_ID;
 const gwSaEmail = env.PRIVATE_GW_SA_EMAIL;
-const gwSaKeyPem_escaped = env.PRIVATE_GW_SA_PRIVATE_KEY;
-const gwSaKeyPem = gwSaKeyPem_escaped.replace(/\\n/g, '\n');
+const gwSaKeyPem_b64 = env.PRIVATE_GW_SA_PRIVATE_KEY;
+const gwSaKeyPem = Buffer.from(gwSaKeyPem_b64, 'base64').toString('utf8');
 const isDev = import.meta.env.DEV;
 const devServerUrl = publicEnv.PUBLIC_DEV_SERVER_URL || `http://localhost:${import.meta.env.VITE_DEV_SERVER_PORT || 5173}`;
 
