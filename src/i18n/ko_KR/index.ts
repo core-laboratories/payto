@@ -8,7 +8,7 @@ const ko_KRPartial: DeepPartial<Translation> = {
 		customAmount: '직접 입력',
 		tap: '탭하기',
 		scan: '스캔',
-		hereTo: '여기에서',
+		hereTo: '여기를',
 		withCash: '현금으로',
 		via: '통해',
 		expiresIn: '만료일',
@@ -24,7 +24,7 @@ const ko_KRPartial: DeepPartial<Translation> = {
 		payment: '결제',
 		purposePay: '결제',
 		purposeDonate: '기부',
-		verifiedBusiness: '인증된 비즈니스',
+		verifiedBusiness: '인증된 사업자',
 		verifiedWebsite: '인증된 웹사이트'
 	},
 	paymentButton: {

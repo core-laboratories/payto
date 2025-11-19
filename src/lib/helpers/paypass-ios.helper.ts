@@ -6,6 +6,8 @@ import {
 import { locales as availableLocales } from '$i18n/i18n-util';
 import { formatAmount, formatAddressText } from './paypass-operator.helper';
 
+const isDebug = true;
+
 export interface AppleWalletPayPassConfig {
 	serialId: string;
 	passTypeIdentifier: string;
@@ -397,7 +399,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 		backFields: []
 	};
 
-	if (networkText) {
+	/*if (networkText) {
 		storeCard.headerFields.push({
 			key: 'network',
 			label: networkLabelKey,
@@ -694,7 +696,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 				value: params.message.value
 			});
 		}
-	}
+	}*/
 
 	/* ----------------------------------------------------------------
 	 *  Primary fields (two-column layout like Android)
@@ -753,14 +755,14 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 	const passData: any = {
 		...basicData,
 		storeCard,
-		nfc: {
+		/*nfc: {
 			message: payload.basicLink,
 			requiresAuthentication: true
-		}
+		}*/
 	};
 
 	// Barcode
-	const barcodeAltText = isDonate
+	/*const barcodeAltText = isDonate
 		? getPaypassLocalizedValue('paypass.scanToDonate', passLocale) || 'Scan to donate'
 		: getPaypassLocalizedValue('paypass.scanToPay', passLocale) || 'Scan to pay';
 
@@ -778,7 +780,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 		altText: barcodeAltText
 	};
 
-	passData.barcodes = [appleBarcode];
+	passData.barcodes = [appleBarcode];*/
 	/* ----------------------------------------------------------------
 	 * 1) pass.json
 	 * ---------------------------------------------------------------- */
