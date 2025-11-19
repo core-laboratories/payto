@@ -71,11 +71,11 @@
 	let cardholderInput = $state('');
 	let cardInputRef: HTMLInputElement | null = $state(null);
 	let cardholderInputRef: HTMLInputElement | null = $state(null);
-	let cardValidationState = $state<'empty' | 'valid' | 'invalid'>('empty');
+	let cardValidationState = $state<'empty' | 'valid' | 'invalid' | 'warning'>('empty');
 	let cardholderValidationState = $state<'empty' | 'valid' | 'invalid'>('empty');
 	let detectedBrandDefinition = $state<CardBrandDefinition | null>(null);
 	let publicCardPart = $state('');
-	let previousCardValidationState: 'empty' | 'valid' | 'invalid' = 'empty';
+	let previousCardValidationState: 'empty' | 'valid' | 'invalid' | 'warning' = 'empty';
 	let showMaskedCardNumber = $state(false);
 
 	const cardDigits = $derived(cardNumber.replace(digitsRegex, ''));
@@ -93,7 +93,7 @@
 				: 'Card Brand'
 	);
 	const cardNumberInputValue = $derived(
-		cardValidationState === 'valid' && showMaskedCardNumber
+		(cardValidationState === 'valid' || cardValidationState === 'warning') && showMaskedCardNumber
 			? maskFormattedNumber(cardNumber, publicCardPart.length, cardDigits.length)
 			: cardNumber
 	);
@@ -104,17 +104,39 @@
 		cardNumber = formatCardNumber(value);
 
 		const digits = cardNumber.replace(digitsRegex, '');
-		const brandMatch = detectCardBrand(digits, CARD_BRANDS);
-		detectedBrandDefinition = brandMatch;
+	const digitsLength = digits.length;
+	const brandMatch = detectCardBrand(digits, CARD_BRANDS);
+	detectedBrandDefinition = brandMatch;
 
-		if (!digits.length) {
+	const markCensoredWarning = () => {
+		if (!brandMatch) return;
+		cardValidationState = 'warning';
+		const totalLength = digits.length;
+		const lastFourLength = Math.min(4, totalLength);
+		const publicLength = Math.min(
+			brandMatch.publicDigits,
+			Math.max(totalLength - lastFourLength, 0)
+		);
+		publicCardPart = digits.slice(0, publicLength);
+		showMaskedCardNumber = false;
+	};
+
+	if (!digitsLength) {
 			cardValidationState = 'empty';
 			publicCardPart = '';
 			showMaskedCardNumber = false;
 			return;
 		}
 
-		if (!brandMatch) {
+	if (digitsLength > MAX_CARD_DIGITS) {
+		cardValidationState = 'invalid';
+		publicCardPart = '';
+		cardNumber = formatCardNumber(digits.slice(0, MAX_CARD_DIGITS));
+		showMaskedCardNumber = false;
+		return;
+	}
+
+	if (!brandMatch) {
 			cardValidationState = 'invalid';
 			publicCardPart = '';
 			showMaskedCardNumber = false;
@@ -133,36 +155,53 @@
 			return;
 		}
 
-		if (digits.length > maxLength) {
-			cardValidationState = 'invalid';
-			publicCardPart = '';
-			cardNumber = formatCardNumber(digits.slice(0, maxLength));
-			showMaskedCardNumber = false;
-			return;
-		}
+	if (digits.length > maxLength) {
+		cardValidationState = 'invalid';
+		publicCardPart = '';
+		cardNumber = formatCardNumber(digits.slice(0, maxLength));
+		showMaskedCardNumber = false;
+		return;
+	}
 
-		const luhnValid = hasValidLength && luhnCheckHelper(cardNumber, digitsRegex);
+	// Check for censored numbers (zeros in the middle section) only when card has valid length
+	// Only check after Luhn validation fails, to distinguish from invalid cards
+	const luhnValid = hasValidLength && luhnCheckHelper(cardNumber, digitsRegex);
 
-		if (luhnValid) {
-			cardValidationState = 'valid';
-			const totalLength = digits.length;
-			const lastFourLength = Math.min(4, totalLength);
-			const publicLength = Math.min(
-				brandMatch.publicDigits,
-				Math.max(totalLength - lastFourLength, 0)
-			);
-			publicCardPart = digits.slice(0, publicLength);
+	if (hasValidLength && !luhnValid) {
+		const publicDigits = brandMatch.publicDigits; // First 6 digits
+		const lastFourStart = digits.length - 4; // Last 4 digits start position
 
-			if (previousCardValidationState !== 'valid') {
-				setTimeout(() => cardholderInputRef?.focus(), 100);
+		// Middle section is between publicDigits and lastFourStart
+		if (lastFourStart > publicDigits) {
+			const middleSection = digits.slice(publicDigits, lastFourStart);
+			// If middle section is all zeros, it's a censored number
+			if (middleSection.length > 0 && /^[0]+$/.test(middleSection)) {
+				markCensoredWarning();
+				return;
 			}
-
-			showMaskedCardNumber = true;
-		} else {
-			cardValidationState = 'invalid';
-			publicCardPart = '';
-			showMaskedCardNumber = false;
 		}
+	}
+
+	if (luhnValid) {
+		cardValidationState = 'valid';
+		const totalLength = digits.length;
+		const lastFourLength = Math.min(4, totalLength);
+		const publicLength = Math.min(
+			brandMatch.publicDigits,
+			Math.max(totalLength - lastFourLength, 0)
+		);
+		publicCardPart = digits.slice(0, publicLength);
+
+		if (previousCardValidationState !== 'valid') {
+			setTimeout(() => cardholderInputRef?.focus(), 100);
+		}
+
+		showMaskedCardNumber = true;
+	} else {
+		cardValidationState = 'invalid';
+		publicCardPart = '';
+		showMaskedCardNumber = false;
+	}
 
 		previousCardValidationState = cardValidationState;
 	}
@@ -207,7 +246,7 @@
 			cardholderInput = nickname;
 			const lettersOnlyLen = nickname.replace(/ /g, '').length;
 			cardholderValidationState =
-				lettersOnlyLen >= 2 ? 'valid' : 'invalid';
+				lettersOnlyLen >= 3 ? 'valid' : 'invalid';
 		}
 	});
 </script>
@@ -278,9 +317,11 @@
 								oninput={handleCardNumberInput}
 								onfocus={() => (showMaskedCardNumber = false)}
 								onblur={() => {
-									if (cardValidationState === 'valid') showMaskedCardNumber = true;
+									if (cardValidationState === 'valid' || cardValidationState === 'warning') {
+										showMaskedCardNumber = true;
+									}
 								}}
-								class="w-full bg-white/10 backdrop-blur-sm border-2 rounded-lg px-3 py-2 outline-none text-xl sm:text-2xl text-white placeholder-white/50 zephirum focus:outline-none transition-colors {cardValidationState === 'valid' ? 'border-green-400 focus:border-green-400' : cardValidationState === 'invalid' ? 'border-red-400 focus:border-red-400' : 'border-white/30 focus:border-white/50'}"
+								class="w-full bg-white/10 backdrop-blur-sm border-2 rounded-lg px-3 py-2 outline-none text-xl sm:text-2xl text-white placeholder-white/50 zephirum focus:outline-none transition-colors {cardValidationState === 'valid' ? 'border-green-400 focus:border-green-400' : cardValidationState === 'invalid' ? 'border-red-400 focus:border-red-400' : cardValidationState === 'warning' ? 'border-amber-400 focus:border-amber-400' : 'border-white/30 focus:border-white/50'}"
 								maxlength={cardNumberInputMaxLength}
 								autocomplete="off"
 							/>
@@ -304,7 +345,7 @@
 
 									const letters = sanitized.replace(/ /g, '').length;
 									cardholderValidationState =
-										!sanitized.length ? 'empty' : letters >= 2 ? 'valid' : 'invalid';
+										!sanitized.length ? 'empty' : letters >= 3 ? 'valid' : 'invalid';
 								}}
 								class="bg-white/10 backdrop-blur-sm border-2 rounded-lg px-3 py-2 text-xs sm:text-sm text-white placeholder-white/50 uppercase zephirum tracking-wide focus:outline-none transition-colors {cardholderValidationState === 'valid' ? 'border-green-400 focus:border-green-400' : cardholderValidationState === 'invalid' ? 'border-red-400 focus:border-red-400' : 'border-white/30 focus:border-white/50'}"
 								maxlength="26"
@@ -320,7 +361,11 @@
 
 			<button
 				onclick={handleProceed}
-				disabled={wip || cardValidationState !== 'valid' || cardholderValidationState !== 'valid'}
+				disabled={
+					wip ||
+					(cardValidationState !== 'valid' && cardValidationState !== 'warning') ||
+					cardholderValidationState !== 'valid'
+				}
 				class="w-full bg-green-500 hover:bg-green-600 disabled:bg-gray-500 disabled:cursor-not-allowed disabled:hover:bg-gray-500 text-white font-semibold py-3 px-6 rounded-lg transition-colors shadow-lg"
 			>
 				Top Up
@@ -332,6 +377,7 @@
 					<li>If the card is not registered, funds will be returned without fees.</li>
 					<li>If the card is connected to an exchange service, supported assets are auto-converted to fiat.</li>
 					<li>If conversion fails or no exchange service exists, funds are returned without fees.</li>
+					<li>You can replace censured numbers with zeros.</li>
 				</ul>
 			</div>
 		</div>

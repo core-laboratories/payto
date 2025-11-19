@@ -4,7 +4,7 @@ import {
 	getPaypassLocalizedValueForLocale as getPaypassLocalizedValue
 } from './paypass-i18n.helper';
 import { locales as availableLocales } from '$i18n/i18n-util';
-import { formatAmount } from './paypass-operator.helper';
+import { formatAmount, formatAddressText } from './paypass-operator.helper';
 
 export interface AppleWalletPayPassConfig {
 	serialId: string;
@@ -192,20 +192,6 @@ export function signAppleManifestPKCS7({
 /* ----------------------------------------------------------------
  * Helpers
  * ---------------------------------------------------------------- */
-
-function formatAddressText(payload: any): string | null {
-	const props = payload?.props || {};
-	const addr = props.destination;
-	if (!addr || typeof addr !== 'string') return null;
-
-	if (['xcb', 'xce'].includes(props.network)) {
-		return addr.match(/.{1,4}/g)?.join(' ').toUpperCase() || addr.toUpperCase();
-	} else if (props.network === 'other' && ['xab'].includes(props.other)) {
-		return addr.match(/.{1,4}/g)?.join(' ').toUpperCase() || addr.toUpperCase();
-	}
-	return addr.match(/.{1,4}/g)?.join(' ') || addr;
-}
-
 function buildAmountText(
 	amountObject: { value: string; recurrence?: { value?: string } } | undefined,
 	locale: string,
@@ -316,7 +302,11 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 	const activateProKey = 'paypass.activatePro';
 	const sendOfflineTxKey = 'paypass.sendOfflineTransaction';
 
-	const addressText = formatAddressText(payload);
+	const addressText = formatAddressText(
+		payload?.props?.destination,
+		payload?.props?.network,
+		payload?.props?.other
+	);
 	const networkText = buildNetworkText(payload, passLocale);
 	const amountText = buildAmountText(amountObject, passLocale, rtl);
 

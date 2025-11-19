@@ -326,6 +326,30 @@ export function formatAmount(
 		case 'y':
 			return buildText(translations.year);
 		default:
-			return rtl ? `${object.recurrence.value} / ${object.value} 🔁` : `🔁 ${object.value} / ${object.recurrence.value}`;
+			return rtl ? `${object.recurrence.value} / ${object.value} 🔁` : `🔁 ${object.value} / ${object.recurrence.value}`;
 	}
+}
+
+/**
+ * Format address text for display in wallet passes
+ * Formats addresses with spaces every 4 characters, with uppercase for specific networks
+ * @param destination - Destination address string
+ * @param network - Network type (e.g., 'xcb', 'xce', 'other')
+ * @param other - Other network identifier (e.g., 'xab')
+ * @returns Formatted address string or null if destination is not provided
+ */
+export function formatAddressText(
+	destination: string | null | undefined,
+	network?: string | null,
+	other?: string | null
+): string | null {
+	if (!destination || typeof destination !== 'string') return null;
+
+	const addr = destination;
+	if (['xcb', 'xce'].includes(network || '')) {
+		return addr.match(/.{1,4}/g)?.join(' ').toUpperCase() || addr.toUpperCase();
+	} else if (network === 'other' && ['xab'].includes(other || '')) {
+		return addr.match(/.{1,4}/g)?.join(' ').toUpperCase() || addr.toUpperCase();
+	}
+	return addr.match(/.{1,4}/g)?.join(' ') || addr;
 }

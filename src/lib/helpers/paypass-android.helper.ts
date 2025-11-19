@@ -2,7 +2,7 @@ import * as jose from 'jose';
 import { env as publicEnv } from '$env/dynamic/public';
 import { calculateNotifications } from './paypass-notifications.helper';
 import { getPaypassLocalizedString, type LocalizedText, getPaypassLocalizedValueForLocale as getPaypassLocalizedValue } from './paypass-i18n.helper';
-import { formatAmount } from './paypass-operator.helper';
+import { formatAmount, formatAddressText } from './paypass-operator.helper';
 
 const isDebug = false;
 
@@ -114,15 +114,11 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 	}
 
 	// ---------------- Address formatting ----------------
-	const addressText = payload.props.destination ? (() => {
-		const addr = payload.props.destination;
-		if (['xcb', 'xce'].includes(payload.props.network)) {
-			return addr.match(/.{1,4}/g)?.join(' ').toUpperCase() || addr.toUpperCase();
-		} else if (payload.props.network === "other" && ['xab'].includes(payload.props.other)) {
-			return addr.match(/.{1,4}/g)?.join(' ').toUpperCase() || addr.toUpperCase();
-		}
-		return addr.match(/.{1,4}/g)?.join(' ') || addr;
-	})() : null;
+	const addressText = formatAddressText(
+		payload.props.destination,
+		payload.props.network,
+		payload.props.other
+	);
 
 	// Defaults
 	const issuerName = companyName || 'PayPass';
