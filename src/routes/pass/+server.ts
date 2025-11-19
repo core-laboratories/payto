@@ -295,7 +295,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			const identifierPart = baseIdentifier.slice(0, Math.max(1, maxIdentifierLength));
 			const objectId = `${issuerPrefix}${identifierPart}`;
 			const proUrl = `${proUrlLink}?origin=${encodeURIComponent(originator)}&subscriber=${encodeURIComponent(memberAddress)}&destination=${encodeURIComponent(destination)}&network=${encodeURIComponent(network as string)}&os=android${googleLocale ? `&lang=${encodeURIComponent(googleLocale)}` : ''}`;
-			const swapUrl = `${swapUrlLink}${googleLocale ? `&lang=${encodeURIComponent(googleLocale)}` : ''}`;
+			const swapUrl = swapUrlLink;
 
 			const { saveUrl, classId: finalClassId, gwObject, gwClass } =
 				await buildGoogleWalletPayPassSaveLink({
@@ -378,7 +378,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 
 			const foregroundColor = getValidForegroundColor(design, kvData, '#9AB1D6');
 			const proUrl = `${proUrlLink}?origin=${encodeURIComponent(originator)}&subscriber=${encodeURIComponent(memberAddress)}&destination=${encodeURIComponent(destination)}&network=${encodeURIComponent(network as string)}&os=ios${appleLocale ? `&lang=${encodeURIComponent(appleLocale)}` : ''}`;
-			const swapUrl = `${swapUrlLink}${appleLocale ? `&lang=${encodeURIComponent(appleLocale)}` : ''}`;
+			const swapUrl = swapUrlLink;
 
 			const pkpassBlob = await buildAppleWalletPayPass({
 				serialId,
