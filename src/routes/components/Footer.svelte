@@ -10,7 +10,7 @@
 			<div class="flex items-center justify-center gap-1">
 				<a href="https://github.com/core-laboratories/core-license#readme" target="_blank" rel="noreferrer" class="flex items-center"><span class="text-xl no-underline">⊛</span></a>
 				<span>2023-{new Date().getFullYear()}</span>
-				<span>CORE Labs</span>
+				<a href="https://github.com/core-laboratories" target="_blank" rel="noreferrer" class="transition-all duration-200">CORE Labs</a>
 			</div>
 			<div class="flex items-center justify-center gap-1">A <a
 				class="transition-all duration-200"

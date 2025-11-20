@@ -253,7 +253,7 @@
 									</div>
 									<div>
 										<a href="/pro#plus" target="_blank" class="font-semibold mr-2 px-2 py-0.5 text-xs rounded-sm bg-emerald-500 text-gray-700! no-underline! hover:bg-emerald-400">Pro+</a>
-										<span>FIAT</span>
+										<span>Fiat</span>
 									</div>
 								</div>
 								<a href="/pro" target="_blank" rel="noreferrer" class="button is-full bs-12 py-2 px-3 text-center !text-white italic border border-gray-700 bg-gray-700 rounded-md text-sm hover:opacity-100 transition duration-200 font-bold">
