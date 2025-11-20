@@ -98,42 +98,49 @@
 			return;
 		}
 
-		if (!proPrice) {
-			errorMessage = 'Pro price is required';
-			return;
-		}
-
 		isSubmitting = true;
 		errorMessage = '';
 		successMessage = '';
 
 		try {
-			const formData = new FormData();
-			formData.append('origin', origin || 'payto');
-			formData.append('subscriber', subscriber || '');
-			formData.append('destination', destination || '');
-			formData.append('network', network || '');
-			formData.append('orginid', originId || '');
-			formData.append('os', os || '');
-			formData.append('lang', lang || 'en');
+			const requestBody: any = {
+				origin: origin || 'payto',
+				subscriber: subscriber || '',
+				destination: destination || '',
+				network: network || '',
+				originid: originId || '',
+				os: (os || '').toUpperCase(),
+				lang: lang || 'en'
+			};
 
 			if (emailChecked && emailValue) {
-				formData.append('email', emailValue);
+				requestBody.email = emailValue;
 			}
 			if (telegramChecked && telegramValue) {
-				formData.append('telegram', telegramValue);
+				requestBody.telegram = telegramValue;
 			}
 
 			const response = await fetch(`${apiBaseUrl}/subscription`, {
 				method: 'POST',
-				body: formData
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(requestBody)
 			});
 
-			if (response.ok) {
+			if (response.status === 201) {
+				// New registration - go to payment step
+				const data = await response.json();
 				currentStep = 2;
-				successMessage = 'Notification setup successful!';
+				successMessage = data.message || 'Notification setup successful!';
+			} else if (response.status === 200) {
+				// Update existing subscription - show success and reload status
+				const data = await response.json();
+				successMessage = data.message || 'Notification providers updated successfully.';
+				await loadSubscriptionStatus();
 			} else {
-				errorMessage = 'Unable to send data. Please try again later.';
+				const errorData = await response.json().catch(() => ({}));
+				errorMessage = errorData.message || 'Unable to send data. Please try again later.';
 			}
 		} catch (error) {
 			errorMessage = 'Unable to send data. Please try again later.';
@@ -445,6 +452,36 @@
 						{isSubmitting ? 'Sending…' : 'Create or Update notifications'}
 					</button>
 
+					{#if isSubscribed && subscriptionExpiresAt}
+						<!-- Optional top-up for existing subscribers -->
+						<div class="w-full mt-4 p-4 bg-gray-700/50 border border-gray-600 rounded-md">
+							<p class="text-center text-sm text-gray-300 mb-3">Extend your subscription</p>
+							<div class="text-center text-lg font-bold mb-3">Pay CTN {formatter('CTN', 'currency').format(Number(proPrice))} for 30 days</div>
+							<div class="flex items-center gap-2 mb-3">
+								<input
+									type="text"
+									value={ctnAddress.toUpperCase()}
+									readonly
+									class="flex-1 p-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm"
+									onfocus={(e) => (e.target as HTMLInputElement)?.select()}
+								/>
+								<button
+									onclick={copyAddress}
+									class="px-3 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-md transition-colors"
+									title="Copy address"
+								>
+									<Copy class="inline-block w-4 h-4" />
+								</button>
+							</div>
+							<button
+								onclick={handlePayFromWallet}
+								class="w-full font-semibold bg-emerald-600 text-white py-2 px-4 rounded-md hover:bg-emerald-700 transition-colors"
+							>
+								Top up with CTN
+							</button>
+						</div>
+					{/if}
+
 					<button
 						type="button"
 						onclick={handleCancelNotification}
@@ -454,8 +491,8 @@
 						{isCancelling ? 'Cancelling…' : 'Cancel All Notifications'}
 					</button>
 				</form>
-			{:else}
-				<!-- Step 2: Payment -->
+			{:else if currentStep === 2}
+				<!-- Step 2: Payment (only for new registrations) -->
 				<div class="w-full flex flex-col gap-4">
 					<p class="text-center text-sm text-gray-400">Service duration is based on your payment amount.<br />All payments are non-refundable. You can extend your service at any time.</p>
 					<div class="text-center text-lg font-bold">Pay CTN {formatter('CTN', 'currency').format(Number(proPrice))} for 30 days</div>
