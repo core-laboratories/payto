@@ -3,8 +3,8 @@
 
 	export let children: Component | null = null;
 	export let classValue: string = '';
-	export let title: string = 'PayTo:Money — Direct Asset Transfers';
-	export let description: string = 'Direct Asset Transfers without intermediaries. Send and receive digital assets peer-to-peer.';
+	export let title: string = 'PayTo:Money — Payments Without Borders';
+	export let description: string = 'Payments Without Borders without intermediaries. Send and receive digital assets peer-to-peer.';
 	export let image: string = 'https://payto.money/icons/android-chrome-512x512.png';
 </script>
 

@@ -23,10 +23,10 @@
 					<h4>
 						<span class="text-2xl">CTN</span>
 						<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500">{formatter('CTN', 'currency').format(Number(env.PUBLIC_PRO_PRICE))}</span>
-						<span class="text-sm">/month</span>
+						<span class="text-sm">/30 days</span>
 					</h4>
 					<a href="/?pass=1#pass" class="inline-flex items-center justify-center gap-2 px-8 py-3 font-semibold text-white transition duration-300 rounded-lg bg-emerald-700 hover:bg-emerald-600 focus:bg-emerald-700 focus-visible:outline-none !no-underline">
-						<span>Create and activate in PayPass</span>
+						<span>Create and activate inside a PayPass</span>
 					</a>
 				</header>
 				<div class="px-6 pt-2 pb-4">
@@ -68,7 +68,7 @@
 				<header class="flex flex-col gap-4 p-4 text-slate-400">
 					<h3 class="text-xl font-bold text-green-300">
 						Pro<span class="text-2xl text-emerald-500">+</span>
-						<span class="block text-sm font-normal text-slate-400">PayTo:FIAT</span>
+						<span class="block text-sm font-normal text-slate-400">PayTo:Fiat</span>
 					</h3>
 					<a href="/pro/partners" class="inline-flex items-center justify-center gap-2 px-8 py-3 font-semibold text-white transition duration-300 rounded-lg bg-emerald-700 hover:bg-emerald-600 focus:bg-emerald-700 focus-visible:outline-none !no-underline">
 						<span>Register with a partner</span>
@@ -85,13 +85,17 @@
 							<div>Digital asset support</div>
 						</li>
 						<li class="flex items-start gap-2">
+							<Plus class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
+							<div>CryptoCard acceptance for Fiat top-ups</div>
+						</li>
+						<li class="flex items-start gap-2">
 							<CircleCheck class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
 							<div>Dedicated partner support</div>
 						</li>
 					</ul>
 				</div>
 				<footer class="p-6 text-sm text-center border-t border-emerald-800 bg-gray-700/75 mt-auto">
-					Passes for FIAT
+					Passes for Fiat
 				</footer>
 			</div>
 		</div>
@@ -119,11 +123,11 @@
 				<ul class="grid grid-cols-1 md:grid-cols-2 gap-4">
 					<li class="flex items-start gap-2">
 						<Plus class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
-						<span>Issue PayPasses via POST form or API</span>
+						<span>Issue PayPasses via POST form or the API</span>
 					</li>
 					<li class="flex items-start gap-2">
 						<Plus class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
-						<div>White-label PayPass</div>
+						<div>White-label PayPasses</div>
 					</li>
 					<li class="flex items-start gap-2">
 						<Plus class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
@@ -135,10 +139,10 @@
 					</li>
 					<li class="flex items-start gap-2">
 						<Plus class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
-						<div>Green badge for Wallets after KYB verification</div>
+						<div>Green badge for wallets after KYB verification</div>
 					</li>
 					<li class="flex items-start gap-2">
-						<Plus class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
+						<CircleCheck class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
 						<div>Smart Tap (NFC) support for Google Wallet</div>
 					</li>
 					<li class="flex items-start gap-2">

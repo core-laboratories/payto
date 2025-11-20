@@ -253,7 +253,7 @@
 
 <svelte:head>
 	<title>CryptoCard Top Up</title>
-	<meta name="description" content="CryptoCard Top Up - Direct Asset Transfers without intermediaries." />
+	<meta name="description" content="CryptoCard Top Up - Payments Without Borders without intermediaries." />
 </svelte:head>
 
 <div class="min-h-screen p-4 sm:p-6 lg:p-8">
