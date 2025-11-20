@@ -167,19 +167,36 @@
 			return;
 		}
 
+		if (!destination) {
+			errorMessage = 'Destination is required';
+			return;
+		}
+
 		isCancelling = true;
 		errorMessage = '';
 		successMessage = '';
 
 		try {
-			// TODO: Replace with actual endpoint call
-			// const response = await fetch(cancelEndpoint, { method: 'POST', ... });
-			// if (response.ok) {
-			// 	successMessage = 'Notifications cancelled successfully.';
-			// } else {
-			// 	errorMessage = 'Unable to cancel notifications. Please try again later.';
-			// }
-			console.log('Cancel notification endpoint will be called here');
+			const response = await fetch(`${apiBaseUrl}/cancel`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					destination,
+					originid: originId
+				})
+			});
+
+			if (response.ok) {
+				const data = await response.json();
+				successMessage = data.message || 'Notifications cancelled successfully.';
+				// Reload subscription status to update the UI
+				await loadSubscriptionStatus();
+			} else {
+				const errorData = await response.json().catch(() => ({}));
+				errorMessage = errorData.message || 'Unable to cancel notifications. Please try again later.';
+			}
 		} catch (error) {
 			errorMessage = 'Unable to cancel notifications. Please try again later.';
 		} finally {
