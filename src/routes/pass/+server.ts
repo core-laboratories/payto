@@ -311,7 +311,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			const classRandom =
 				crypto.randomUUID().replace(/[^a-zA-Z0-9]/g, '').slice(0, 24) || `${Date.now()}`;
 			const classId = `${gwIssuerId}.${originatorSafeAndroid}.${classRandom}`.slice(0, 255);
-			const originId = crypto.randomUUID().replace(/[^a-zA-Z0-9]/g, '').slice(0, 34);
+			const originId = crypto.randomUUID().replace(/[^a-zA-Z0-9]/g, '').slice(0, 32);
 
 			// Google Wallet objectId must be issuerId + '.' + identifier, total length <= 64
 			const maxObjectIdLength = 64;
@@ -402,7 +402,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 			 * ------------------------------------------------------------- */
 
 			const foregroundColor = getValidForegroundColor(design, kvData, '#9AB1D6');
-			const originId = crypto.randomUUID().replace(/[^a-zA-Z0-9]/g, '').slice(0, 34);
+			const originId = crypto.randomUUID().replace(/[^a-zA-Z0-9]/g, '').slice(0, 32);
 			const proUrl = `${proUrlLink}?originid=${encodeURIComponent(originId)}&origin=${encodeURIComponent(originator)}&subscriber=${encodeURIComponent(memberAddress)}&destination=${encodeURIComponent(destination)}&network=${encodeURIComponent(network as string)}&os=ios${appleLocale ? `&lang=${encodeURIComponent(appleLocale)}` : ''}`;
 			const swapUrl = swapUrlLink;
 
