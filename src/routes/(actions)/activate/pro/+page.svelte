@@ -16,7 +16,7 @@
 	const os = page.url.searchParams.get('os');
 	const lang = page.url.searchParams.get('lang');
 
-	const url = env.PUBLIC_WEB_ACTIVATION_URL || 'https://activate.payto.money';
+	const apiBaseUrl = env.PUBLIC_WEB_ACTIVATION_URL || 'https://subscription.payto.money/api/v1';
 	const ctnAddress = env.PUBLIC_PRO_CTN_ADDRESS || '';
 	const proPrice = env.PUBLIC_PRO_PRICE || '';
 
@@ -31,6 +31,7 @@
 	let successMessage = $state('');
 	let isSubscriberActive = $state<boolean | null>(null);
 	let subscriptionExpiresAt = $state<string | null>(null);
+	let isSubscribed = $state<boolean | null>(null);
 	let isLoadingSubscription = $state(true);
 
 	// Add validation state stores
@@ -123,7 +124,7 @@
 				formData.append('telegram', telegramValue);
 			}
 
-			const response = await fetch(url, {
+			const response = await fetch(`${apiBaseUrl}/subscription`, {
 				method: 'POST',
 				body: formData
 			});
@@ -193,28 +194,40 @@
 	}
 
 	async function loadSubscriptionStatus() {
-		if (!originId || !subscriber) {
+		if (!subscriber) {
 			isLoadingSubscription = false;
 			return;
 		}
 
 		try {
-			// TODO: Replace with actual endpoint
-			// Expected response format: { active: boolean, expiresAt: string | null }
-			// const response = await fetch(`${url}/subscription-status?originid=${originId}&subscriber=${subscriber}`);
-			// if (response.ok) {
-			// 	const data = await response.json();
-			// 	isSubscriberActive = data.active || false;
-			// 	subscriptionExpiresAt = data.expiresAt || null;
-			// } else {
-			// 	isSubscriberActive = false;
-			// 	subscriptionExpiresAt = null;
-			// }
+			const response = await fetch(`${apiBaseUrl}/is_subscribed?address=${encodeURIComponent(subscriber)}`);
 
-			// Placeholder for now
-			isSubscriberActive = false;
-			subscriptionExpiresAt = null;
+			if (response.status === 404) {
+				// Wallet not found - not registered
+				isSubscribed = false;
+				isSubscriberActive = false;
+				subscriptionExpiresAt = null;
+			} else if (response.ok) {
+				const data = await response.json();
+				isSubscribed = data.subscribed || false;
+				isSubscriberActive = data.active || false;
+
+				// Convert expires_at timestamp to ISO string if present
+				if (data.expires_at) {
+					const expiresDate = new Date(data.expires_at * 1000); // Convert Unix timestamp to Date
+					subscriptionExpiresAt = expiresDate.toISOString();
+				} else {
+					subscriptionExpiresAt = null;
+				}
+			} else {
+				// Error response
+				isSubscribed = false;
+				isSubscriberActive = false;
+				subscriptionExpiresAt = null;
+			}
 		} catch (error) {
+			// Network or other error
+			isSubscribed = false;
 			isSubscriberActive = false;
 			subscriptionExpiresAt = null;
 		} finally {
@@ -275,10 +288,10 @@
 					<p class="text-sm text-gray-400">More secure than in-pass notifications. Your passes are not copied to our servers; we only require your basic data.</p>
 				</div>
 
-				{#if !isLoadingSubscription && (isSubscriberActive !== null)}
+				{#if !isLoadingSubscription && (isSubscribed !== null)}
 					<div class="w-full p-3 bg-amber-500/10 border border-amber-500/30 rounded-md">
 						<p class="text-amber-400 text-sm">
-							{#if isSubscriberActive && subscriptionExpiresAt}
+							{#if isSubscribed && subscriptionExpiresAt}
 								You are an active subscriber until {formatSubscriptionDate(subscriptionExpiresAt)}
 							{:else}
 								You are not an active subscriber yet.
