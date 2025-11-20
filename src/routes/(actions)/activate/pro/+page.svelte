@@ -284,13 +284,6 @@
 <Page>
 	<Row>
 		<div class="max-w-[600px] w-[400px] mx-auto md:w-lg md:my-4 w-full flex flex-col justify-center items-center gap-6 rounded-lg p-6 bg-gray-800/80 relative">
-			<button
-				onclick={handleClose}
-				class="absolute top-4 right-4 p-2 text-gray-400 hover:text-white transition-colors rounded-md hover:bg-gray-700/50"
-				aria-label="Close"
-			>
-				<X class="w-5 h-5" />
-			</button>
 			<h1 class="text-2xl font-bold">Activate Pro</h1>
 
 			{#if !subscriber || !destination || !network || !originId || !origin || !os}
@@ -408,7 +401,7 @@
 									<Info class="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
 									<div class="flex-1">
 										<p class="text-blue-400 text-sm mb-1">
-											<strong>Important:</strong> You must initialize the Telegram bot before receiving notifications.
+											<strong>Important:</strong> Please initialize the Telegram bot with <code class="bg-gray-700/50 px-1 py-0.5 rounded-md text-xs">/start</code> before you can receive notifications for each new address.
 										</p>
 										<a
 											href={`https://t.me/${env.PUBLIC_TG_BOT_NAME}`}
