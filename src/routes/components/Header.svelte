@@ -82,6 +82,6 @@
 				</span>
 			</h1>
 		</a>
-		<span class="text-core arimo-400 text-lg italic">Direct Asset Transfers</span>
+		<span class="text-core arimo-400 text-lg italic">Payments Without Borders</span>
 	</div>
 </header>

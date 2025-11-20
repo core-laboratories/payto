@@ -18,7 +18,7 @@
 				target="_blank"
 				rel="noreferrer"
 			>PayTo Alliance</a>
-			Initiative
+			“Plan ₡” Initiative
 			</div>
 		</div>
 	</div>
