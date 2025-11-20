@@ -456,7 +456,8 @@
 						<!-- Optional top-up for existing subscribers -->
 						<div class="w-full mt-4 p-4 bg-gray-700/50 border border-gray-600 rounded-md">
 							<p class="text-center text-sm text-gray-300 mb-3">Extend your subscription</p>
-							<div class="text-center text-lg font-bold mb-3">Pay CTN {formatter('CTN', 'currency').format(Number(proPrice))} for 30 days</div>
+							<div class="text-center text-lg font-bold">Pay any amount of CTN.</div>
+							<div class="text-center text-sm text-gray-300 mb-3">{formatter('CTN', 'currency').format(Number(proPrice))} for 30 days</div>
 							<div class="flex items-center gap-2 mb-3">
 								<input
 									type="text"
@@ -495,7 +496,8 @@
 				<!-- Step 2: Payment (only for new registrations) -->
 				<div class="w-full flex flex-col gap-4">
 					<p class="text-center text-sm text-gray-400">Service duration is based on your payment amount.<br />All payments are non-refundable. You can extend your service at any time.</p>
-					<div class="text-center text-lg font-bold">Pay CTN {formatter('CTN', 'currency').format(Number(proPrice))} for 30 days</div>
+					<div class="text-center text-lg font-bold">Pay any amount of CTN.</div>
+					<div class="text-center text-sm text-gray-300 mb-3">{formatter('CTN', 'currency').format(Number(proPrice))} for 30 days</div>
 					<div class="flex items-center gap-2">
 						<input
 							type="text"
