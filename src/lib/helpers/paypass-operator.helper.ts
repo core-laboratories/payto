@@ -7,6 +7,30 @@ import { verifyOrganization } from '$lib/helpers/oric.helper';
 import { verifyWebsite } from '$lib/helpers/fintag.helper';
 export { getTitleText, getTitleTextBarcode } from './get-title-name.helper';
 
+
+/**
+ * Decode base64 string to UTF-8 (Cloudflare-compatible)
+ */
+export function base64ToUtf8(b64: string | undefined): string {
+	if (!b64) {
+		throw new Error('Base64 string is missing');
+	}
+
+	// Cloudflare Workers / browser: atob is available
+	if (typeof atob === 'function') {
+		const binary = atob(b64);
+		const bytes = new Uint8Array(binary.length);
+		for (let i = 0; i < binary.length; i++) {
+			bytes[i] = binary.charCodeAt(i);
+		}
+		return new TextDecoder().decode(bytes);
+	}
+
+	// Node (local dev)
+	// eslint-disable-next-line n/no-unsupported-features/node-builtins
+	return Buffer.from(b64, 'base64').toString('utf8');
+}
+
 /**
  * Get image URLs for Apple and Google Wallet passes
  * @param kvData - KV data with icon overrides
@@ -229,7 +253,7 @@ export function generateToken(payload: any, secret: string, expirationMinutes: n
  * Verify a token against payload and check expiration
  * @param token - Token to verify
  * @param payload - Expected payload data
- * @param secret - Secret key for HMAC
+ * @param secret - Secret key for HMAC encoded with base64
  * @param expirationMinutes - Token expiration time in minutes (default: 1)
  * @returns True if token is valid and not expired
  */
@@ -238,7 +262,7 @@ export function verifyToken(token: string, payload: any, secret: string, expirat
 		...payload,
 		exp: Date.now() + (expirationMinutes * 60 * 1000)
 	};
-	const expectedToken = generateToken(payload, secret, expirationMinutes);
+	const expectedToken = generateToken(payload, base64ToUtf8(secret), expirationMinutes);
 
 	if (token !== expectedToken) return false;
 	if (tokenData.exp < Date.now()) return false;
