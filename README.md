@@ -60,9 +60,9 @@ Issuing authorities[^authority] deliver an object like this example to the email
 
 ```jsonc
 {
-  "id": "pingchb2", // ORIC in lowercase, no spaces
-  "name": "Ping Exchange", // Organization name
-  "url": "https://ping.exchange", // Organization website
+  "id": "pingchb2", // ID in lowercase, no spaces
+  "name": "Ping Exchange", // Name of the organization
+  "url": "https://ping.exchange", // Website of the organization
   "icons": { // Organization icons
     "apple": { // Apple Wallet icons
       "icon": "https://…/icons/apple/icon.png", // Icon 29x29 px
@@ -129,14 +129,14 @@ Issuing authorities[^authority] deliver an object like this example to the email
   "postForm": false, // If true, allows Pass generation via HTML form submission from any origin
   "api": { // API access configuration for programmatic Pass generation
     "allowed": false, // Set to `true` to enable API access
-    "secret": "your-api-secret-here" // Your API secret key used to generate bearer tokens (HMAC-SHA256)
+    "secret": "your-api-secret-here" // Your API secret key encoded with base64 used to generate bearer tokens (HMAC-SHA256)
   }
 }
 ```
 
 #### Authority Object Fields
 
-- **`id`** (required): The unique authority ID of the Pass. Must be a valid ORIC (Organization Registry Identification Code) in lowercase, no spaces.
+- **`id`** (required): The unique authority ID of the Pass. Must be a valid ID in lowercase, no spaces.
   - Example: `"pingchb2"`
 
 - **`name`** (required): The organization name displayed on the Pass. If set, it overrides the user's custom organization name.
@@ -219,7 +219,7 @@ Issuing authorities[^authority] deliver an object like this example to the email
 
 - **`api`** (optional): API access configuration for programmatic Pass generation.
   - `allowed`: Set to `true` to enable API access
-  - `secret`: Your API secret key used to generate bearer tokens (HMAC-SHA256)
+  - `secret`: Your API secret key encoded with base64 used to generate bearer tokens (HMAC-SHA256)
   - Default: `{ "allowed": false, "secret": "" }`
   - Note: When API is enabled, requests must include `Authorization: Bearer <token>` header
   - Token format: HMAC-SHA256 hash of payload + expiration timestamp (default: 1 minute, configurable via `PRIVATE_API_TOKEN_TIMEOUT` env var)
@@ -334,14 +334,14 @@ Both `postForm` and API accept the same payload structure for generating Passes.
 
 #### Example 2: ICAN Payment (API Request)
 
-```bash
-curl -X POST https://payto.money/pass?authority=oric \
+```json
+curl -X POST https://payto.money/pass?authority=your_id \
   -H "Authorization: Bearer YOUR_TOKEN_HERE" \
   -H "Content-Type: application/json" \
   -d '{
     "hostname": "ican",
     "props": {
-      "network": "core",
+      "network": "xcb",
       "destination": "cb7147879011ea207df5b35a24ca6f0859dcfb145999",
       "params": {
         "amount": { "value": "100.50" },
@@ -365,7 +365,7 @@ curl -X POST https://payto.money/pass?authority=oric \
 
 ```html
 <!-- Using destination field to override props.destination -->
-<form method="POST" action="https://payto.money/pass?authority=oric" enctype="application/x-www-form-urlencoded">
+<form method="POST" action="https://payto.money/pass?authority=your_id" enctype="application/x-www-form-urlencoded">
   <input type="hidden" name="hostname" value="ican" />
 
   <!-- User can input their own address -->
