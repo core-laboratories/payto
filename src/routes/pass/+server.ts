@@ -147,8 +147,11 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 	/* ---------------- Authorization ---------------- */
 
 	let isAuthorized = false;
+	const isFormSubmission = !contentType.includes('application/json');
+	const isApiRequest = contentType.includes('application/json');
 
 	if (authority && kvData) {
+		// Check for API token first
 		if (kvData.api?.allowed) {
 			const authHeader = request.headers.get('authorization');
 			const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
@@ -160,17 +163,43 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 				} else {
 					throw error(403, 'Invalid or expired API token');
 				}
-			} else if (!kvData.postForm) {
+			} else if (isApiRequest) {
+				// For API requests, if api.allowed is true but no token, require token
 				throw error(403, 'API access requires bearer token');
 			}
 		}
 
-		if (!isAuthorized && kvData.postForm) isAuthorized = true;
+		// Check for postForm permission (allows form submissions from any origin)
+		if (!isAuthorized && kvData.postForm && isFormSubmission) {
+			isAuthorized = true;
+		}
 	}
 
+	// If still not authorized, check origin (for same-origin requests)
 	if (!isAuthorized) {
 		const origin = request.headers.get('origin');
-		if (origin !== baseOrigin) throw error(403, 'Unauthorized origin');
+
+		// Allow requests with no origin header (e.g., Postman, curl) if:
+		// 1. postForm is enabled and it's a form submission, OR
+		// 2. api.allowed is enabled and it's an API request (JSON) - but token should have been checked above
+		if (!origin && authority && kvData) {
+			if (kvData.postForm && isFormSubmission) {
+				isAuthorized = true;
+			} else if (kvData.api?.allowed && isApiRequest) {
+				// API requests with api.allowed should have been authorized by token above
+				// If we reach here, it means no token was provided, which should have thrown an error
+				// But if somehow we get here, don't authorize
+			}
+		}
+
+		if (!isAuthorized) {
+			if (origin && origin !== baseOrigin) {
+				throw error(403, 'Unauthorized origin');
+			} else if (!origin && !authority) {
+				// No authority and no origin - this is a same-origin request from the web app
+				isAuthorized = true;
+			}
+		}
 	}
 
 	/* ---------------- Begin generating pass ---------------- */
