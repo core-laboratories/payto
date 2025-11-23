@@ -356,12 +356,12 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 		labelColor
 	};
 
-	const hasLocationParams = params.loc?.lat && params.loc.lon;
+	const hasLocationParams = params?.loc?.lat && params?.loc?.lon;
 	if (payload.expirationDate) {
 		basicData.expirationDate = payload.expirationDate;
 	}
 
-	if (hasLocationParams) {
+	if (hasLocationParams && params?.loc) {
 		basicData.locations = [
 			{
 				latitude: Number(params.loc.lat),
@@ -709,7 +709,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 	 * ---------------------------------------------------------------- */
 
 	// Location
-	if (hasLocationParams) {
+	if (hasLocationParams && params?.loc) {
 		genericCard.backFields.push({
 			key: 'location',
 			label: 'paypass.paymentLocation',

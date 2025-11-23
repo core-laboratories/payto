@@ -717,11 +717,11 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 
 		smartTapRedemptionValue: payload.basicLink,
 
-		locations: payload.props.params.loc?.lat && payload.props.params.loc.lon ? [
+		locations: payload.props?.params?.loc?.lat && payload.props?.params?.loc?.lon ? [
 			{
 				latitude: payload.props.params.loc.lat,
 				longitude: payload.props.params.loc.lon,
-				relevantText: payload.props.params.message?.value
+				relevantText: payload.props.params?.message?.value
 					? payload.props.params.message.value
 					: getPaypassLocalizedValue('paypass.paymentLocation', locale) || 'Payment Location'
 			}
@@ -731,7 +731,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 
 		linksModuleData: {
 			uris: [
-				...(payload.props.params.loc?.lat && payload.props.params.loc.lon ? [{
+				...(payload.props?.params?.loc?.lat && payload.props?.params?.loc?.lon ? [{
 					kind: 'walletobjects#uri',
 					uri: `https://www.google.com/maps/dir/?api=1&origin=Current+Location&destination=${payload.props.params.loc.lat},${payload.props.params.loc.lon}`,
 					description: getPaypassLocalizedValue('paypass.navigateToLocation', locale) || 'Navigate to Location'
