@@ -138,7 +138,7 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 	if (authorityField) {
 		authorityItem = authorityField.toLowerCase();
 		kvData = await KV.get(authorityItem);
-		if (!kvData?.id || !kvData?.identifier) {
+		if (!kvData?.id) {
 			throw error(400, `Invalid authority: ${authorityItem}`);
 		}
 		authority = kvData.id;
