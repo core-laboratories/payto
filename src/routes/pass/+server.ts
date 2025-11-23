@@ -352,7 +352,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 							{
 								hostname,
 								network,
-								currency,
+								...(currency && currency.length <= 5 ? { currency: currency.toLowerCase() } : {}),
 								...(props.params.amount?.value
 									? (() => {
 										const numValue = Number(props.params.amount.value);
@@ -436,7 +436,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 							{
 								hostname,
 								network,
-								currency,
+								...(currency && currency.length <= 5 ? { currency: currency.toLowerCase() } : {}),
 								...(props.params.amount?.value
 									? (() => {
 										const numValue = Number(props.params.amount.value);
