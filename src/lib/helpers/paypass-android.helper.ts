@@ -697,7 +697,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 			displayText: { defaultValue: { language: locale, value: getPaypassLocalizedValue('paypass.pay', locale) || 'Pay' } },
 			webAppLinkInfo: {
 				appTarget: {
-					targetUri: { uri: payload.fullLink, description: getPaypassLocalizedValue('paypass.pay', locale) || 'Pay' }
+					targetUri: { uri: `payto://${payload.props.network}`, description: getPaypassLocalizedValue('paypass.pay', locale) || 'Pay' }
 				}
 			}
 		},

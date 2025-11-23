@@ -426,13 +426,15 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 				}
 			}
 
-			// Default: Redirect to Google Wallet save URL
-			// Use ?noRedirect=1 or ?format=json to get JSON response instead
+			// For form submissions: always redirect to Google Wallet (for pure HTML forms)
+			// For API calls (JSON): return JSON unless noRedirect is explicitly set
 			const noRedirect = url.searchParams.get('noRedirect') === '1' || url.searchParams.get('format') === 'json';
 			const wantsJson = request.headers.get('accept')?.includes('application/json') && !request.headers.get('accept')?.includes('text/html');
 
-			if (!noRedirect && !wantsJson) {
-				// Redirect directly to Google Wallet save URL (default behavior)
+			// Always redirect for form submissions (pure HTML forms)
+			// For JSON API calls, redirect unless explicitly requesting JSON
+			if (isFormSubmission || (!noRedirect && !wantsJson)) {
+				// Redirect directly to Google Wallet save URL (302 redirect for form submissions)
 				return new Response(null, {
 					status: 302,
 					headers: {
@@ -441,7 +443,7 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 				});
 			}
 
-			// Return JSON response (when explicitly requested)
+			// Return JSON response (for API calls when explicitly requested)
 			return json({ saveUrl, id: objectId, classId: finalClassId, gwObject, gwClass });
 		} else if (os === 'ios') {
 			/* -------------------------------------------------------------
