@@ -74,7 +74,14 @@ if (enableStats) {
  * Route handler
  * ---------------------------------------------------------------- */
 
-export async function POST({ request, url, fetch }: RequestEvent) {
+export async function POST({ request, url, fetch, platform }: RequestEvent) {
+	// Initialize KV from platform binding (binding name should match wrangler.toml, typically 'KV')
+	// In Cloudflare Workers, platform.env contains the KV bindings
+	const platformEnv = platform as { env?: { KV?: any } } | undefined;
+	if (platformEnv?.env?.KV) {
+		KV.init(platformEnv.env.KV);
+	}
+
 	const contentType = request.headers.get('content-type') || '';
 	let data: any = {};
 
