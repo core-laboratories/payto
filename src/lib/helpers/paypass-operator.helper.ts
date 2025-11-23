@@ -102,19 +102,28 @@ export function getExpirationDate(deadlineValue: number | string | null | undefi
 
 export async function getVerifiedOrganizationName({
 	org,
-	kvName,
+	kvData,
 	address,
 	network
 }: {
 	org?: string | null;
-	kvName?: string | null;
+	kvData?: any | null;
 	address?: string | null;
 	network?: string | null;
 }): Promise<string> {
 	const fallback = 'PayPass';
 
-	if (kvName) {
-		return `${kvName} ✅`;
+	if (kvData && kvData.name && kvData.oric && address) {
+		try {
+			const oricResult = await verifyOrganization(kvData.oric, address);
+			if (oricResult.isVerified) {
+				return `${kvData.name} ✅`;
+			}
+		} catch (error) {
+			// Ignore ORIC verification failure and fall back to other checks
+		}
+	} else if (kvData && kvData.name) {
+		return kvData.name;
 	}
 
 	const sanitized = standardizeOrg(org ?? null);

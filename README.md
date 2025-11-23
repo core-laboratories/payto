@@ -61,6 +61,7 @@ Issuing authorities[^authority] deliver an object like this example to the email
 ```jsonc
 {
   "id": "pingchb2", // ID in lowercase, no spaces
+  "oric": "PINGCHB2", // ORIC/BIC code of the organization (optional)
   "name": "Ping Exchange", // Name of the organization
   "url": "https://ping.exchange", // Website of the organization
   "icons": { // Organization icons
@@ -138,6 +139,10 @@ Issuing authorities[^authority] deliver an object like this example to the email
 
 - **`id`** (required): The unique authority ID of the Pass. Must be a valid ID in lowercase, no spaces.
   - Example: `"pingchb2"`
+
+- **`oric`** (optional): The ORIC/BIC code of the organization. If set, it is used to verify the organization name. It will be marked as verified if the organization name matches the receiving address.
+  - Example: `"PINGCHB2"`
+  - Default: none
 
 - **`name`** (required): The organization name displayed on the Pass. If set, it overrides the user's custom organization name.
   - Example: `"PayTo"`, `"My Company Inc."`
