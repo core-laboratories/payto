@@ -212,7 +212,6 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 		if (os !== 'ios' && os !== 'android') throw error(400, 'os must be "ios" or "android"');
 
 		if (!props.network) throw error(400, 'Missing props.network');
-		if (!props.params) throw error(400, 'Missing props.params');
 
 		const network = getNetwork(props, hostname as ITransitionType);
 		const destination = getAddress(props, hostname as ITransitionType);
