@@ -145,7 +145,8 @@
 			const selectedOs = osOverride ?? get(userOS);
 			formData.append('os', selectedOs);
 
-			const response = await fetch('/pass', {
+			// Add noRedirect=1 for web UI to get JSON response (default is redirect)
+			const response = await fetch('/pass?noRedirect=1', {
 				method: 'POST',
 				body: formData
 			});
