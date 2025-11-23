@@ -98,6 +98,7 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 		KV.init(platformEnv.env.KV);
 	}
 
+	const isDebug = url.searchParams.get('debug') === '1';
 	const contentType = request.headers.get('content-type') || '';
 	const userAgent = request.headers.get('user-agent');
 	let data: any = {};
@@ -139,6 +140,12 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 		authorityItem = authorityField.toLowerCase();
 		kvData = await KV.get(authorityItem);
 		if (!kvData?.id || !kvData?.identifier) {
+			if (isDebug) {
+				throw error(400, JSON.stringify({
+					message: `Invalid authority: ${authorityItem}`,
+					debug: { authorityItem, kvDataFound: !!kvData }
+				}, null, 2));
+			}
 			throw error(400, `Invalid authority: ${authorityItem}`);
 		}
 		authority = kvData.id;
@@ -150,34 +157,71 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 	const isFormSubmission = !contentType.includes('application/json');
 	const isApiRequest = contentType.includes('application/json');
 
+	const debugInfo: any = {
+		authority: authorityItem,
+		hasKvData: !!kvData,
+		contentType,
+		isFormSubmission,
+		isApiRequest,
+		origin: request.headers.get('origin'),
+		baseOrigin,
+		kvDataConfig: kvData ? {
+			apiAllowed: kvData.api?.allowed,
+			postForm: kvData.postForm,
+			hasApiSecret: !!kvData.api?.secret
+		} : null
+	};
+
 	if (authority && kvData) {
 		// Check for API token first
 		if (kvData.api?.allowed) {
 			const authHeader = request.headers.get('authorization');
 			const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
 
+			debugInfo.apiCheck = {
+				hasAuthHeader: !!authHeader,
+				hasToken: !!token,
+				tokenPrefix: authHeader?.substring(0, 20) || null
+			};
+
 			if (token && kvData.api.secret) {
 				const payload = { authority: authorityItem };
 				if (verifyToken(token, payload, kvData.api.secret, apiTokenTimeout)) {
 					isAuthorized = true;
+					debugInfo.authorizedBy = 'api_token';
 				} else {
-					throw error(403, 'Invalid or expired API token');
+					const errorMsg = 'Invalid or expired API token';
+					if (isDebug) {
+						throw error(403, JSON.stringify({ message: errorMsg, debug: debugInfo }, null, 2));
+					}
+					throw error(403, errorMsg);
 				}
 			} else if (isApiRequest) {
 				// For API requests, if api.allowed is true but no token, require token
-				throw error(403, 'API access requires bearer token');
+				const errorMsg = 'API access requires bearer token';
+				if (isDebug) {
+					throw error(403, JSON.stringify({ message: errorMsg, debug: debugInfo }, null, 2));
+				}
+				throw error(403, errorMsg);
 			}
 		}
 
 		// Check for postForm permission (allows form submissions from any origin)
 		if (!isAuthorized && kvData.postForm && isFormSubmission) {
 			isAuthorized = true;
+			debugInfo.authorizedBy = 'postForm';
 		}
 	}
 
 	// If still not authorized, check origin (for same-origin requests)
 	if (!isAuthorized) {
 		const origin = request.headers.get('origin');
+		debugInfo.originCheck = {
+			origin,
+			baseOrigin,
+			originMatches: origin === baseOrigin,
+			hasNoOrigin: !origin
+		};
 
 		// Allow requests with no origin header (e.g., Postman, curl) if:
 		// 1. postForm is enabled and it's a form submission, OR
@@ -185,21 +229,37 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 		if (!origin && authority && kvData) {
 			if (kvData.postForm && isFormSubmission) {
 				isAuthorized = true;
+				debugInfo.authorizedBy = 'postForm_no_origin';
 			} else if (kvData.api?.allowed && isApiRequest) {
 				// API requests with api.allowed should have been authorized by token above
 				// If we reach here, it means no token was provided, which should have thrown an error
 				// But if somehow we get here, don't authorize
+				debugInfo.reason = 'api_allowed_but_no_token';
 			}
 		}
 
 		if (!isAuthorized) {
 			if (origin && origin !== baseOrigin) {
-				throw error(403, 'Unauthorized origin');
+				const errorMsg = 'Unauthorized origin';
+				if (isDebug) {
+					throw error(403, JSON.stringify({ message: errorMsg, debug: debugInfo }, null, 2));
+				}
+				throw error(403, errorMsg);
 			} else if (!origin && !authority) {
 				// No authority and no origin - this is a same-origin request from the web app
 				isAuthorized = true;
+				debugInfo.authorizedBy = 'same_origin_no_authority';
 			}
 		}
+	}
+
+	debugInfo.finalAuthorized = isAuthorized;
+
+	// Store debug info for potential inclusion in response
+	if (isDebug) {
+		console.log('Authorization Debug:', JSON.stringify(debugInfo, null, 2));
+		// Also store in a way that can be included in successful responses
+		(data as any).__debugInfo = debugInfo;
 	}
 
 	/* ---------------- Begin generating pass ---------------- */
@@ -430,7 +490,11 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 				}
 			}
 
-			return json({ saveUrl, id: objectId, classId: finalClassId, gwObject, gwClass });
+			const response: any = { saveUrl, id: objectId, classId: finalClassId, gwObject, gwClass };
+			if (isDebug && (data as any).__debugInfo) {
+				response.debug = (data as any).__debugInfo;
+			}
+			return json(response);
 		} else if (os === 'ios') {
 			/* -------------------------------------------------------------
 			 * iOS / Apple Wallet
