@@ -139,7 +139,7 @@
 					</li>
 					<li class="flex items-start gap-2">
 						<Plus class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
-						<div>Green badge for wallets after KYB verification</div>
+						<div>Green badge for issuer wallet if ORIC is assigned and pass</div>
 					</li>
 					<li class="flex items-start gap-2">
 						<CircleCheck class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
