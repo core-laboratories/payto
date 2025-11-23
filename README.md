@@ -301,11 +301,11 @@ Both `postForm` and API accept the same payload structure for generating Passes.
   - Auto-detected from user agent if not specified
   - Determines which wallet integration to use
 
-#### Example 1: ICAN Payment (HTML Form)
+#### Example 1: ICAN Payment HTML Form with OS autodetected
 
 ```html
 <!-- Form submission from external website -->
-<form method="POST" action="https://payto.money/pass?authority=oric">
+<form method="POST" action="https://payto.money/pass?authority=your_id">
   <input type="hidden" name="hostname" value="ican" />
 
   <input type="hidden" name="props" value='{
@@ -332,9 +332,41 @@ Both `postForm` and API accept the same payload structure for generating Passes.
 </form>
 ```
 
-#### Example 2: ICAN Payment (API Request)
+#### Example 2: ICAN Payment HTML Form with OS as button value
 
-```json
+```html
+<!-- Form submission from external website -->
+<form method="POST" action="https://payto.money/pass?authority=your_id">
+  <input type="hidden" name="hostname" value="ican" />
+
+  <input type="hidden" name="props" value='{
+    "network": "xcb",
+    "destination": "cb7147879011ea207df5b35a24ca6f0859dcfb145999",
+    "params": {
+      "amount": { "value": "10.50" },
+      "message": { "value": "Invoice #INV-2024-001" },
+      "id": { "value": "INV-2024-001" },
+      "rc": { "value": "monthly" }
+    }
+  }' />
+
+  <input type="hidden" name="design" value='{
+    "colorF": "#10B981",
+    "colorB": "#065F46",
+    "barcode": "qr",
+    "lang": "en",
+    "org": "My Company Inc.",
+    "item": "Premium Subscription"
+  }' />
+
+  <button type="submit" name="os" value="android">Add to Google Wallet</button>
+  <button type="submit" name="os" value="ios">Add to Apple Wallet</button>
+</form>
+```
+
+#### Example 3: ICAN Payment (API Request)
+
+```bash
 curl -X POST https://payto.money/pass?authority=your_id \
   -H "Authorization: Bearer YOUR_TOKEN_HERE" \
   -H "Content-Type: application/json" \

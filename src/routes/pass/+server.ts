@@ -74,6 +74,22 @@ if (enableStats) {
  * Route handler
  * ---------------------------------------------------------------- */
 
+/**
+ * Detect OS from User-Agent header
+ * @param userAgent - User-Agent header string
+ * @returns 'ios', 'android', or empty string if not detected
+ */
+function detectOSFromUserAgent(userAgent: string | null): string {
+	if (!userAgent) return '';
+	const ua = userAgent.toLowerCase();
+	if (/iphone|ipad|ipod/.test(ua)) {
+		return 'ios';
+	} else if (/android/.test(ua)) {
+		return 'android';
+	}
+	return '';
+}
+
 export async function POST({ request, url, fetch, platform }: RequestEvent) {
 	// Initialize KV from platform binding (binding name should match wrangler.toml, typically 'KV')
 	// In Cloudflare Workers, platform.env contains the KV bindings
@@ -83,6 +99,7 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 	}
 
 	const contentType = request.headers.get('content-type') || '';
+	const userAgent = request.headers.get('user-agent');
 	let data: any = {};
 
 	/* ---------------- Parse payload ---------------- */
@@ -97,7 +114,8 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 		const jsonData = await request.json();
 		authorityField = jsonData.authority || null;
 		data = jsonData;
-		data.os = data.os || '';
+		// Auto-detect OS if not provided
+		data.os = data.os || detectOSFromUserAgent(userAgent);
 	} else {
 		const form = await request.formData();
 		authorityField = (form.get('authority') as string) || url.searchParams.get('authority');
@@ -107,7 +125,8 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 		data.design = form.get('design') ? JSON.parse(form.get('design') as string) : null;
 		data.authority = form.get('authority') as string;
 		data.membership = form.get('membership') as string;
-		data.os = (form.get('os') as string) || url.searchParams.get('os') || '';
+		// Auto-detect OS if not provided in form or query params
+		data.os = (form.get('os') as string) || url.searchParams.get('os') || detectOSFromUserAgent(userAgent);
 		data.locale = (form.get('locale') as string) || url.searchParams.get('locale') || null;
 
 		const dest = form.get('destination') as string;
