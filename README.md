@@ -341,7 +341,7 @@ Both `postForm` and API accept the same payload structure for generating Passes.
 
 ```html
 <!-- Form submission from external website -->
-<form method="POST" target="_blank" action="https://payto.money/pass?authority=your_id">
+<form method="POST" action="https://payto.money/pass?authority=your_id">
   <input type="hidden" name="hostname" value="ican" />
 
   <input type="hidden" name="props" value='{
@@ -364,44 +364,12 @@ Both `postForm` and API accept the same payload structure for generating Passes.
     "item": "Premium Subscription"
   }' />
 
-  <button type="submit" name="os" value="android">Add to Google Wallet</button>
-</form>
-```
-
-#### Example 3: ICAN Payment - HTML Form for Apple Wallet
-
-```html
-<!-- Form submission from external website -->
-<form method="POST" target="_blank" action="https://payto.money/pass?authority=your_id">
-  <input type="hidden" name="hostname" value="ican" />
-
-  <input type="hidden" name="props" value='{
-    "network": "xcb",
-    "destination": "cb7147879011ea207df5b35a24ca6f0859dcfb145999",
-    "params": {
-      "amount": { "value": "10.50" },
-      "message": { "value": "Invoice #INV-2024-001" },
-      "id": { "value": "INV-2024-001" },
-      "rc": { "value": "monthly" }
-    }
-  }' />
-
-  <input type="hidden" name="design" value='{
-    "colorF": "#10B981",
-    "colorB": "#065F46",
-    "barcode": "qr",
-    "lang": "en",
-    "org": "My Company Inc.",
-    "item": "Premium Subscription"
-  }' />
-
+  <button type="submit" name="os" value="android" formtarget="_blank">Add to Google Wallet</button>
   <button type="submit" name="os" value="ios">Add to Apple Wallet</button>
 </form>
 ```
 
-Note: If you don't need target="_blank" you can remove it from the form method and combine iOS and Android buttons. Or simply keep one button with autodetection of OS.
-
-#### Example 4: ICAN Payment (API Request)
+#### Example 3: ICAN Payment (API Request)
 
 ```bash
 curl -X POST https://payto.money/pass?authority=your_id \
