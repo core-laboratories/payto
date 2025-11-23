@@ -270,7 +270,7 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 		const companyName = standardizeOrg(originatorName);
 		const orgName = await getVerifiedOrganizationName({
 			org: design.org || null,
-			kvName: originatorName,
+			kvData: kvData || null,
 			address: destination,
 			network
 		});
