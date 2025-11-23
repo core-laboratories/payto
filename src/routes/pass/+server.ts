@@ -179,6 +179,26 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 	if (!isAuthorized) {
 		const origin = request.headers.get('origin');
 
+		// For POST form requests with postForm enabled, verify origin matches kvData.url if configured
+		if (isFormSubmission && authority && kvData && kvData.postForm && origin) {
+			if (kvData.url) {
+				try {
+					const configuredUrl = new URL(kvData.url);
+					const originUrl = new URL(origin);
+					// Match origin (protocol + hostname + port)
+					if (originUrl.origin !== configuredUrl.origin) {
+						throw error(403, 'Origin does not match configured URL');
+					}
+					isAuthorized = true;
+				} catch (urlError) {
+					// If URL parsing fails, fall through to other checks
+					if (urlError && typeof urlError === 'object' && 'status' in urlError) {
+						throw urlError;
+					}
+				}
+			}
+		}
+
 		// Allow requests with no origin header (e.g., Postman, curl) if:
 		// 1. postForm is enabled and it's a form submission, OR
 		// 2. api.allowed is enabled and it's an API request (JSON) - but token should have been checked above
