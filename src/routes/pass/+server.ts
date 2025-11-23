@@ -238,21 +238,21 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 
 		/* ------------------------------------------------------------- */
 
-		const chainId = props.params.chainId?.value;
+		const chainId = props.params?.chainId?.value;
 		const explorerUrl = getExplorerUrl(network, { address: destination, chain: chainId }, true, linkBaseUrl);
 		const customCurrencyData = kvData?.customCurrency || {};
 		const currency = getCurrency(props, network as ITransitionType, true);
 		const expirationDate = getExpirationDate(props.params?.dl?.value);
-		const isRecurring = !!props.params.rc?.value;
-		const isRtl = String(props.params.rtl?.value || '') === '1';
-		const isDonate = String(props.params.donate?.value || '') === '1';
+		const isRecurring = !!props.params?.rc?.value;
+		const isRtl = String(props.params?.rtl?.value || '') === '1';
+		const isDonate = String(props.params?.donate?.value || '') === '1';
 
 		/* ---------------- Split payment ---------------- */
 
 		const splitPayment =
-			props.params.split?.value &&
+			props.params?.split?.value &&
 			props.params.split.value > 0 &&
-			props.params.amount?.value &&
+			props.params?.amount?.value &&
 			(props.params.split.isPercent ? Number(props.params.split.value) <= 100 : Number(props.params.split.value) <= Number(props.params.amount.value)) &&
 			props.params.split.address &&
 			destination &&
@@ -265,7 +265,7 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 				  }
 				: null;
 
-		const swap = props.params.swap?.value || null;
+		const swap = props.params?.swap?.value || null;
 
 		const companyName = standardizeOrg(originatorName);
 		const orgName = await getVerifiedOrganizationName({
@@ -295,6 +295,7 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 		/* ---------------- Location decode ---------------- */
 
 		if (hostname === 'void' && network === 'plus') {
+			if (!props.params) props.params = {};
 			const coords = getLocationCode(props.params.loc?.value || '');
 			props.params.lat = { value: coords[0] };
 			props.params.lon = { value: coords[1] };
@@ -303,14 +304,14 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 		/* ---------------- Amount formatting ---------------- */
 
 		const amountValue =
-			props.params.amount?.value && Number(props.params.amount.value) > 0
+			props.params?.amount?.value && Number(props.params.amount.value) > 0
 				? formatter(currency, kvData?.currencyLocale, customCurrencyData).format(Number(props.params.amount.value))
 				: null;
 
 		const finalAmount =
 			amountValue
 				? isRecurring
-					? { value: amountValue, recurrence: { value: props.params.rc.value } }
+					? { value: amountValue, recurrence: { value: props.params?.rc?.value } }
 					: { value: amountValue }
 				: undefined;
 
@@ -403,7 +404,7 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 								hostname,
 								network,
 								...(currency && currency.length <= 5 ? { currency: currency.toLowerCase() } : {}),
-								...(props.params.amount?.value
+								...(props.params?.amount?.value
 									? (() => {
 										const numValue = Number(props.params.amount.value);
 										if (Number.isFinite(numValue) && numValue > 0 && numValue <= Number.MAX_SAFE_INTEGER) {
@@ -413,8 +414,8 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 									})()
 									: {}),
 								...(design.org ? { custom_org: true } : {}),
-								...(props.params.donate?.value ? { donate: true } : {}),
-								...(props.params.rc?.value ? { recurring: true } : {}),
+								...(props.params?.donate?.value ? { donate: true } : {}),
+								...(props.params?.rc?.value ? { recurring: true } : {}),
 								os: 'android',
 								...(authority ? { authority } : {})
 							}
@@ -503,7 +504,7 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 								hostname,
 								network,
 								...(currency && currency.length <= 5 ? { currency: currency.toLowerCase() } : {}),
-								...(props.params.amount?.value
+								...(props.params?.amount?.value
 									? (() => {
 										const numValue = Number(props.params.amount.value);
 										if (Number.isFinite(numValue) && numValue > 0 && numValue <= Number.MAX_SAFE_INTEGER) {
@@ -513,8 +514,8 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 									})()
 									: {}),
 								...(design.org ? { custom_org: true } : {}),
-								...(props.params.donate?.value ? { donate: true } : {}),
-								...(props.params.rc?.value ? { recurring: true } : {}),
+								...(props.params?.donate?.value ? { donate: true } : {}),
+								...(props.params?.rc?.value ? { recurring: true } : {}),
 								os: 'ios',
 								...(authority ? { authority } : {})
 							}

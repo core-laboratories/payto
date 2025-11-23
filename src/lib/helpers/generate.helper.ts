@@ -18,41 +18,41 @@ export const generateLink = (payload: IPayload[] = [], props: Record<string, any
 		.filter((payload) => (payload.value !== undefined || payload.query === true))
 		.reduce((acc, payload) => acc.concat('/', payload.value || (payload.placeholder ? payload.placeholder : '')), 'payto:/');
 
-	const { amount, currency, design, split, fiat, swap, ...rest } = props.params;
-	const validParams = Object.entries<{ value: string | undefined; mandatory?: boolean }>(rest)
-		.filter(([_, param]) => param.mandatory || Boolean(param.value))
+	const { amount, currency, design, split, fiat, swap, ...rest } = props.params || {};
+	const validParams = Object.entries<{ value: string | undefined; mandatory?: boolean }>(rest || {})
+		.filter(([_, param]) => param && (param.mandatory || Boolean(param.value)))
 		.map(([key, param]) => [kebabize(key), param.value]);
 
 	const searchParams = new URLSearchParams(validParams as string[][]);
 
 	if (props.params) {
 		// Amount transformer
-		if (amount.mandatory) {
+		if (amount?.mandatory) {
 			searchParams.set(
 				'amount',
-				currency.value
+				currency?.value
 				? caseCurrency(currency.value) + ':' + amount.value
 				: amount.value
 			);
-		} else if (amount.value || currency.value) {
+		} else if (amount?.value || currency?.value) {
 			searchParams.set(
 				'amount',
-				(amount.value && currency.value)
+				(amount?.value && currency?.value)
 				? caseCurrency(currency.value) + ':' + amount.value
-				: (currency.value ? caseCurrency(currency.value) + ':' : amount.value)
+				: (currency?.value ? caseCurrency(currency.value) + ':' : amount?.value)
 			);
 		}
 
-		if (fiat && fiat.value) {
+		if (fiat?.value) {
 			searchParams.set('fiat', fiat.value.toLowerCase());
 		}
 
-		if (swap && swap.value) {
+		if (swap?.value) {
 			searchParams.set('swap', swap.value.toLowerCase());
 		}
 
 		// Split transformer
-		if (split && split.value && split.address && amount.value>0 && ((!split.isPercent && split.value<amount.value) || (split.isPercent && split.value<100))) {
+		if (split?.value && split.address && amount?.value && amount.value > 0 && ((!split.isPercent && split.value < amount.value) || (split.isPercent && split.value < 100))) {
 			searchParams.set(
 				'split',
 				split.isPercent
