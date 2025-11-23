@@ -15,7 +15,8 @@ import {
 	formatter,
 	getCodeText,
 	getVerifiedOrganizationName,
-	getExpirationDate
+	getExpirationDate,
+	base64ToUtf8
 } from '$lib/helpers/paypass-operator.helper';
 import { getTitleText } from '$lib/helpers/get-title-name.helper';
 import { buildGoogleWalletPayPassSaveLink } from '$lib/helpers/paypass-android.helper';
@@ -31,40 +32,19 @@ import { getAddress } from '$lib/helpers/get-address.helper';
  * Env vars
  * ---------------------------------------------------------------- */
 
-// Helper for decoding b64
-function base64ToUtf8(b64: string | undefined, name: string): string {
-	if (!b64) {
-		throw new Error(`${name} environment variable is missing`);
-	}
-
-	// Cloudflare Workers / browser: atob is available
-	if (typeof atob === 'function') {
-		const binary = atob(b64);
-		const bytes = new Uint8Array(binary.length);
-		for (let i = 0; i < binary.length; i++) {
-			bytes[i] = binary.charCodeAt(i);
-		}
-		return new TextDecoder().decode(bytes);
-	}
-
-	// Node (local dev)
-	// eslint-disable-next-line n/no-unsupported-features/node-builtins
-	return Buffer.from(b64, 'base64').toString('utf8');
-}
-
 // Apple Wallet
 const teamIdentifier = env.PRIVATE_PASS_TEAM_IDENTIFIER;
 const passTypeIdentifier = env.PRIVATE_PASS_TYPE_IDENTIFIER;
 const p12Base64 = env.PRIVATE_PASS_P12_BASE64;
 const p12Password = env.PRIVATE_PASS_P12_PASSWORD;
 const wwdrPem_b64 = env.PRIVATE_WWDR_PEM;
-const wwdrPem = base64ToUtf8(wwdrPem_b64, 'PRIVATE_WWDR_PEM');
+const wwdrPem = base64ToUtf8(wwdrPem_b64);
 
 // Google Wallet
 const gwIssuerId = env.PRIVATE_GW_ISSUER_ID;
 const gwSaEmail = env.PRIVATE_GW_SA_EMAIL;
 const gwSaKeyPem_b64 = env.PRIVATE_GW_SA_PRIVATE_KEY;
-const gwSaKeyPem = base64ToUtf8(gwSaKeyPem_b64, 'PRIVATE_GW_SA_PRIVATE_KEY');
+const gwSaKeyPem = base64ToUtf8(gwSaKeyPem_b64);
 const isDev = (import.meta.env.DEV || publicEnv.PUBLIC_ENV === 'preview')
 const devServerUrl = publicEnv.PUBLIC_DEV_SERVER_URL || `http://localhost:${import.meta.env.VITE_DEV_SERVER_PORT || 5173}`;
 
@@ -94,7 +74,14 @@ if (enableStats) {
  * Route handler
  * ---------------------------------------------------------------- */
 
-export async function POST({ request, url, fetch }: RequestEvent) {
+export async function POST({ request, url, fetch, platform }: RequestEvent) {
+	// Initialize KV from platform binding (binding name should match wrangler.toml, typically 'KV')
+	// In Cloudflare Workers, platform.env contains the KV bindings
+	const platformEnv = platform as { env?: { KV?: any } } | undefined;
+	if (platformEnv?.env?.KV) {
+		KV.init(platformEnv.env.KV);
+	}
+
 	const contentType = request.headers.get('content-type') || '';
 	let data: any = {};
 
@@ -372,7 +359,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 							{
 								hostname,
 								network,
-								currency,
+								...(currency && currency.length <= 5 ? { currency: currency.toLowerCase() } : {}),
 								...(props.params.amount?.value
 									? (() => {
 										const numValue = Number(props.params.amount.value);
@@ -456,7 +443,7 @@ export async function POST({ request, url, fetch }: RequestEvent) {
 							{
 								hostname,
 								network,
-								currency,
+								...(currency && currency.length <= 5 ? { currency: currency.toLowerCase() } : {}),
 								...(props.params.amount?.value
 									? (() => {
 										const numValue = Number(props.params.amount.value);

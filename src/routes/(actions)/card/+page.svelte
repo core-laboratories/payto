@@ -338,14 +338,32 @@
 									const raw = (e.target as HTMLInputElement).value;
 									const upper = raw.toUpperCase().replace(/[^A-Z ]+/g, '');
 									const collapsed = upper.replace(/\s+/g, ' ');
-									const sanitized = collapsed.trim();
-									(e.target as HTMLInputElement).value = sanitized;
+									// Remove leading spaces but allow spaces in the middle and at the end while typing
+									const noLeadingSpaces = collapsed.replace(/^\s+/, '');
+									(e.target as HTMLInputElement).value = noLeadingSpaces;
 
-									cardholderInput = sanitized;
+									cardholderInput = noLeadingSpaces;
 
-									const letters = sanitized.replace(/ /g, '').length;
+									// Check for trailing space - mark as invalid if present
+									const hasTrailingSpace = noLeadingSpaces.endsWith(' ');
+									const letters = noLeadingSpaces.replace(/ /g, '').length;
+
+									if (!noLeadingSpaces.length) {
+										cardholderValidationState = 'empty';
+									} else if (hasTrailingSpace) {
+										cardholderValidationState = 'invalid';
+									} else {
+										cardholderValidationState = letters >= 3 ? 'valid' : 'invalid';
+									}
+								}}
+								onblur={(e) => {
+									// On blur, trim trailing spaces
+									const trimmed = (e.target as HTMLInputElement).value.trim();
+									(e.target as HTMLInputElement).value = trimmed;
+									cardholderInput = trimmed;
+									const letters = trimmed.replace(/ /g, '').length;
 									cardholderValidationState =
-										!sanitized.length ? 'empty' : letters >= 3 ? 'valid' : 'invalid';
+										!trimmed.length ? 'empty' : letters >= 3 ? 'valid' : 'invalid';
 								}}
 								class="bg-white/10 backdrop-blur-sm border-2 rounded-lg px-3 py-2 text-xs sm:text-sm text-white placeholder-white/50 uppercase zephirum tracking-wide focus:outline-none transition-colors {cardholderValidationState === 'valid' ? 'border-green-400 focus:border-green-400' : cardholderValidationState === 'invalid' ? 'border-red-400 focus:border-red-400' : 'border-white/30 focus:border-white/50'}"
 								maxlength="26"
