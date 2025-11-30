@@ -331,7 +331,7 @@
 							</div>
 						{/if}
 						<p>
-							Compatibility: Desktop - Chromium from version 121 & enabled flags (Experimental Web Platform Features); Opera; Safari. Mobile - All major browsers.
+							<code class="text-xs">payto://</code> opens installed apps that support the PayTo protocol. If you don't have an app installed that handles PayTo links, clicking the link will not open anything. <code class="text-xs">web+payto://</code> is for web applications and will not open installed apps.
 						</p>
 					</div>
 				{/if}
