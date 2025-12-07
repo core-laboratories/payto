@@ -598,11 +598,29 @@
 		return infoDisplay;
 	}
 
-	function getIdenticon(address: string | Readable<string> | undefined): string {
-		if (!address) return '';
-		const addr = typeof address === 'string' ? address : get(address);
-		if (!addr) return '';
-		return blo(addr);
+	function getIdenticon(data: string | Readable<string> | undefined | FlexiblePaytoData | ITransactionState): string {
+		if (!data) return '';
+		let address: string | undefined;
+		if (typeof data === 'string') {
+			address = data;
+		} else if (typeof data === 'object' && 'hostname' in data && data.hostname === 'intra' && 'bic' in data && 'address' in data) {
+			address = `${data.bic}/${data.address}`;
+		} else if (typeof data === 'object' && 'subscribe' in data) {
+			// It's a Readable store - get the value first
+			const storeValue = get(data);
+			address = typeof storeValue === 'string' ? storeValue : (storeValue as any)?.address;
+		} else if (typeof data === 'object' && 'address' in data) {
+			// It's an object with address property (FlexiblePaytoData or ITransactionState)
+			const addr = data.address;
+			if (typeof addr === 'string') {
+				address = addr;
+			} else if (addr && typeof addr === 'object' && 'subscribe' in addr) {
+				// address is a Readable store - get its value
+				address = get(addr);
+			}
+		}
+		if (!address || typeof address !== 'string') return '';
+		return blo(address);
 	}
 
 	// Function to check if a payment is expired
@@ -1047,7 +1065,7 @@
 						{:else if $paytoData.address}
 							<div class="flex items-center justify-center mb-2">
 								<div class="flex items-center justify-center">
-									<img src={getIdenticon($paytoData.address)} alt="ID" class="w-14 h-14 rounded-full" />
+									<img src={getIdenticon($paytoData)} alt="ID" class="w-14 h-14 rounded-full" />
 								</div>
 							</div>
 						{/if}

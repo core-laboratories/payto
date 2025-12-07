@@ -16,8 +16,9 @@ export const getAddress = (address: ITransactionState | string | null | undefine
 			case 'upi':
 			case 'pix':
 			case 'bic':
-			case 'intra':
 				return address;
+			case 'intra':
+				return paytoData?.accountNumber ? paytoData.accountNumber : address;
 			case 'void':
 				// For void, use location from paytoData if available
 				return paytoData?.location || address;
