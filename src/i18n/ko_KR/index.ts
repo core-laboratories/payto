@@ -74,7 +74,7 @@ const ko_KRPartial: DeepPartial<Translation> = {
 		navigateToLocation: '위치로 이동',
 		viewTransactions: '거래 보기',
 		onlinePaypass: '온라인 PayPass',
-		topUpCryptoCard: '암호화 카드 충전',
+		topUpCryptoCard: 'CryptoCard 충전',
 		swapCurrency: '통화 교환',
 		activatePro: 'Pro 활성화',
 		sendOfflineTransaction: '오프라인 거래 전송'

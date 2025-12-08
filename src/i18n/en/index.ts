@@ -71,7 +71,7 @@ const en = {
 		navigateToLocation: 'Navigate to Location',
 		viewTransactions: 'View Transactions',
 		onlinePaypass: 'Online PayPass',
-		topUpCryptoCard: 'Top up Crypto Card',
+		topUpCryptoCard: 'Top up CryptoCard',
 		swapCurrency: 'Swap Currency',
 		activatePro: 'Activate Pro',
 		sendOfflineTransaction: 'Send Offline Transaction'

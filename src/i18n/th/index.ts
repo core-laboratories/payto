@@ -74,7 +74,7 @@ const th_THPartial: DeepPartial<Translation> = {
 		navigateToLocation: 'นำทางไปยังสถานที่',
 		viewTransactions: 'ดูธุรกรรม',
 		onlinePaypass: 'PayPass ออนไลน์',
-		topUpCryptoCard: 'เติมเงินบัตรคริปโต',
+		topUpCryptoCard: 'เติมเงิน CryptoCard',
 		swapCurrency: 'แลกเปลี่ยนสกุลเงิน',
 		activatePro: 'เปิดใช้งาน Pro',
 		sendOfflineTransaction: 'ส่งธุรกรรมออฟไลน์'

@@ -74,7 +74,7 @@ const vi_VNPartial: DeepPartial<Translation> = {
 		navigateToLocation: 'Đi đến địa điểm',
 		viewTransactions: 'Xem giao dịch',
 		onlinePaypass: 'PayPass trực tuyến',
-		topUpCryptoCard: 'Nạp thẻ crypto',
+		topUpCryptoCard: 'Nạp CryptoCard',
 		swapCurrency: 'Đổi tiền tệ',
 		activatePro: 'Kích hoạt Pro',
 		sendOfflineTransaction: 'Gửi giao dịch ngoại tuyến'

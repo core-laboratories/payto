@@ -74,7 +74,7 @@ const fa_IRPartial: DeepPartial<Translation> = {
 		navigateToLocation: 'رفتن به محل',
 		viewTransactions: 'مشاهده تراکنش‌ها',
 		onlinePaypass: 'PayPass آنلاین',
-		topUpCryptoCard: 'شارژ کارت کریپتو',
+		topUpCryptoCard: 'شارژ CryptoCard',
 		swapCurrency: 'تعویض ارز',
 		activatePro: 'فعال‌سازی Pro',
 		sendOfflineTransaction: 'ارسال تراکنش آفلاین'

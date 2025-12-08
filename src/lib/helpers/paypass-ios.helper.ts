@@ -38,6 +38,7 @@ export interface AppleWalletPayPassConfig {
 	donate?: boolean;
 	rtl?: boolean;
 	locale?: string;
+	oric?: string | null;
 	payload: any;
 	fetch: typeof fetch;
 }
@@ -275,6 +276,7 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 		rtl,
 		locale,
 		payload,
+		oric,
 		fetch: fetchFn
 	} = config;
 
@@ -738,12 +740,12 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 		});
 	}
 
-	// Crypto Card
-	if (payload.props.network === 'xcb') {
+	// CryptoCard top-up
+	if (oric && payload.cardTopupUrl) {
 		genericCard.backFields.push({
 			key: 'crypto-card',
 			label: 'paypass.topUpCryptoCard',
-			attributedValue: `<a href="${payload.linkBaseUrl}/card">💳 ${getPaypassLocalizedValue(topUpCryptoCardKey, passLocale) || 'Top up Crypto Card'}</a>`,
+			attributedValue: `<a href="${payload.cardTopupUrl}">💳 ${getPaypassLocalizedValue(topUpCryptoCardKey, passLocale) || 'Top up CryptoCard'}</a>`,
 			dataDetectorTypes: ['PKDataDetectorTypeLink']
 		});
 	}

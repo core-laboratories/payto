@@ -74,7 +74,7 @@ const skPartial: DeepPartial<Translation> = {
 		navigateToLocation: 'Navigovať na miesto',
 		viewTransactions: 'Zobraziť transakcie',
 		onlinePaypass: 'Online PayPass',
-		topUpCryptoCard: 'Dobiť krypto kartu',
+		topUpCryptoCard: 'Dobiť KryptoKartu',
 		swapCurrency: 'Zameniť menu',
 		activatePro: 'Aktivovať Pro',
 		sendOfflineTransaction: 'Odoslať offline transakciu'

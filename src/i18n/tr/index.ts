@@ -74,7 +74,7 @@ const tr_TRPartial: DeepPartial<Translation> = {
 		navigateToLocation: 'Konuma git',
 		viewTransactions: 'İşlemleri görüntüle',
 		onlinePaypass: 'Çevrimiçi PayPass',
-		topUpCryptoCard: 'Kripto kartı yükle',
+		topUpCryptoCard: 'CryptoCard yükle',
 		swapCurrency: 'Para birimi değiştir',
 		activatePro: 'Pro’yu etkinleştir',
 		sendOfflineTransaction: 'Çevrimdışı işlem gönder'
