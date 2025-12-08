@@ -74,7 +74,7 @@ const cs_CZPartial: DeepPartial<Translation> = {
 		navigateToLocation: 'Navigovat na místo',
 		viewTransactions: 'Zobrazit transakce',
 		onlinePaypass: 'Online PayPass',
-		topUpCryptoCard: 'Dobít krypto kartu',
+		topUpCryptoCard: 'Dobít KryptoKartu',
 		swapCurrency: 'Zaměnit měnu',
 		activatePro: 'Aktivovat Pro',
 		sendOfflineTransaction: 'Odeslat offline transakci'

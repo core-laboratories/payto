@@ -281,7 +281,7 @@ type RootTranslation = {
 		 */
 		onlinePaypass: string
 		/**
-		 * T​o​p​ ​u​p​ ​C​r​y​p​t​o​ ​C​a​r​d
+		 * T​o​p​ ​u​p​ ​C​r​y​p​t​o​C​a​r​d
 		 */
 		topUpCryptoCard: string
 		/**
@@ -548,7 +548,7 @@ export type TranslationFunctions = {
 		 */
 		onlinePaypass: () => LocalizedString
 		/**
-		 * Top up Crypto Card
+		 * Top up CryptoCard
 		 */
 		topUpCryptoCard: () => LocalizedString
 		/**

@@ -74,7 +74,7 @@ const jaPartial: DeepPartial<Translation> = {
 		navigateToLocation: '場所へナビ',
 		viewTransactions: '取引を表示',
 		onlinePaypass: 'オンライン PayPass',
-		topUpCryptoCard: '暗号カードをチャージ',
+		topUpCryptoCard: 'CryptoCard をチャージ',
 		swapCurrency: '通貨を交換',
 		activatePro: 'Pro を有効化',
 		sendOfflineTransaction: 'オフライン取引を送信'

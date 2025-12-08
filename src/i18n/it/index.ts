@@ -74,7 +74,7 @@ const it_ITPartial: DeepPartial<Translation> = {
 		navigateToLocation: 'Naviga al luogo',
 		viewTransactions: 'Visualizza transazioni',
 		onlinePaypass: 'PayPass online',
-		topUpCryptoCard: 'Ricarica carta crypto',
+		topUpCryptoCard: 'Ricarica CryptoCard',
 		swapCurrency: 'Cambia valuta',
 		activatePro: 'Attiva Pro',
 		sendOfflineTransaction: 'Invia transazione offline'

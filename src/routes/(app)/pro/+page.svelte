@@ -142,16 +142,16 @@
 						<div>Green badge for issuer wallet if ORIC is assigned and pass</div>
 					</li>
 					<li class="flex items-start gap-2">
-						<CircleCheck class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
+						<Plus class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
 						<div>Smart Tap (NFC) support for Google Wallet</div>
 					</li>
 					<li class="flex items-start gap-2">
-						<CircleCheck class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
-						<div>Define redemption issuers for Google Wallet</div>
+						<Plus class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
+						<div>Possibility to top up CryptoCard (ORIC required)</div>
 					</li>
 					<li class="flex items-start gap-2">
-						<CircleCheck class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
-						<div>Custom development available (charged per feature)</div>
+						<Plus class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
+						<div>Define redemption issuers for Google Wallet</div>
 					</li>
 				</ul>
 			</div>

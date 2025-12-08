@@ -16,26 +16,27 @@ type TextModConfig = {
 };
 
 export interface GoogleWalletPayPassConfig {
-	issuerId: string | undefined;
-	saEmail: string | undefined;
-	saPrivateKeyPem: string | undefined;
+	amountObject?: { value: string; recurrence?: { value?: string } };
+	amountType?: { recurring: boolean; donate: boolean };
+	barcode: any;
 	classId: string;
 	companyName: string | null;
-	orgName: string;
-	logoUrl: string;
-	iconUrl: string;
-	heroUrl?: string;
-	titleText?: string;
-	amountType?: { recurring: boolean; donate: boolean };
-	amountObject?: { value: string; recurrence?: { value?: string } };
-	purposeText?: string;
-	subheaderText?: string;
-	hexBackgroundColor?: string;
-	barcode: any;
 	donate?: boolean;
-	rtl?: boolean;	// Right-to-left support (manual swap)
+	hexBackgroundColor?: string;
+	heroUrl?: string;
+	iconUrl: string;
+	issuerId: string | undefined;
 	locale?: string;
+	logoUrl: string;
+	orgName: string;
+	oric?: string | null;
 	payload: any;	// Full payload with all data
+	purposeText?: string;
+	rtl?: boolean;	// Right-to-left support (manual swap)
+	saEmail: string | undefined;
+	saPrivateKeyPem: string | undefined;
+	subheaderText?: string;
+	titleText?: string;
 }
 
 export interface GoogleWalletPayPassResult {
@@ -86,26 +87,27 @@ function toGoogleLocalizedString(
 
 export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPassConfig): Promise<GoogleWalletPayPassResult> {
 	const {
-		issuerId,
-		saEmail,
-		saPrivateKeyPem,
+		amountObject,
+		amountType,
+		barcode,
 		classId,
 		companyName,
-		orgName,
-		logoUrl,
-		iconUrl,
-		heroUrl,
-		titleText,
-		amountType,
-		amountObject,
-		purposeText,
-		subheaderText,
-		hexBackgroundColor,
-		barcode,
 		donate,
+		hexBackgroundColor,
+		heroUrl,
+		iconUrl,
+		issuerId,
+		locale = 'en',
+		logoUrl,
+		orgName,
+		oric = null,
 		payload,
+		purposeText,
 		rtl = false,
-		locale = 'en'
+		saEmail,
+		saPrivateKeyPem,
+		subheaderText,
+		titleText
 	} = config;
 
 	// Validate configuration
@@ -746,10 +748,10 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 					uri: payload.externalLink,
 					description: getPaypassLocalizedValue('paypass.onlinePaypass', locale) || 'Online PayPass'
 				}] : []),
-				...(payload.props.network === 'xcb' ? [{
+				...(oric && payload.cardTopupUrl ? [{
 					kind: 'walletobjects#uri',
-					uri: `${payload.linkBaseUrl}/card`,
-					description: getPaypassLocalizedValue('paypass.topUpCryptoCard', locale) || 'Top up Crypto Card'
+					uri: payload.cardTopupUrl,
+					description: getPaypassLocalizedValue('paypass.topUpCryptoCard', locale) || 'Top up CryptoCard'
 				}] : []),
 				...(payload.swapUrl ? [{
 					kind: 'walletobjects#uri',

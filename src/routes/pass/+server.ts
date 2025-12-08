@@ -135,6 +135,7 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 
 	/* ---------------- Authority config ---------------- */
 
+	let oric: string | null = null;
 	if (authorityField) {
 		authorityItem = authorityField.toLowerCase();
 		kvData = await KV.get(authorityItem);
@@ -142,6 +143,24 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 			throw error(400, `Invalid authority: ${authorityItem}`);
 		}
 		authority = kvData.id;
+		oric = kvData.oric || null;
+		if (oric && oric.length > 0) {
+			oric = oric.toUpperCase();
+			try {
+				const oricResponse = await fetch(`https://oric.payto.onl/${oric}`);
+				if (!oricResponse.ok) {
+					oric = null;
+				}
+				const oricData = await oricResponse.json();
+				if (!oricData || !oricData.address) {
+					oric = null;
+				}
+			} catch (error) {
+				oric = null;
+			}
+		} else {
+			oric = null;
+		}
 	}
 
 	/* ---------------- Authorization ---------------- */
@@ -292,7 +311,8 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 			org: design.org || null,
 			kvData: kvData || null,
 			address: destination,
-			network
+			network,
+			oric
 		});
 
 		/* ---------------- pkpass file naming ---------------- */
@@ -371,46 +391,49 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 			const identifierPart = baseIdentifier.slice(0, Math.max(1, maxIdentifierLength));
 			const objectId = `${issuerPrefix}${identifierPart}`;
 			const proUrl = `${proUrlLink}?originid=${encodeURIComponent(originId)}&origin=${encodeURIComponent(originator)}&subscriber=${encodeURIComponent(memberAddress)}&destination=${encodeURIComponent(destination)}&network=${encodeURIComponent(network as string)}&os=android${googleLocale ? `&lang=${encodeURIComponent(googleLocale)}` : ''}`;
-			const swapUrl = swapUrlLink;
+			const swapUrl = `${swapUrlLink}?id=${encodeURIComponent(destination)}&network=${encodeURIComponent(network as string)}${googleLocale ? `&lang=${encodeURIComponent(googleLocale)}` : ''}`;
+			const cardTopupUrl = oric && destination ? `${linkBaseUrl}/card?oric=${encodeURIComponent(kvData.oric.toUpperCase())}${googleLocale ? `&lang=${encodeURIComponent(googleLocale)}` : ''}` : null;
 
 			const { saveUrl, classId: finalClassId, gwObject, gwClass } =
 				await buildGoogleWalletPayPassSaveLink({
+					amountObject: finalAmount,
+					amountType: { recurring: isRecurring, donate: isDonate },
+					barcode: getBarcodeConfig(design.barcode || 'qr', bareLink, codeText).google,
+					classId,
+					companyName,
+					donate: isDonate,
+					hexBackgroundColor: backgroundColor,
+					heroUrl: imageUrls.google.hero,
+					iconUrl: imageUrls.google.icon,
 					issuerId: gwIssuerId,
+					locale: googleLocale,
+					logoUrl: imageUrls.google.logo,
+					orgName,
+					oric,
+					payload: {
+						basicLink: getLink(hostname, props),
+						cardTopupUrl,
+						chainId,
+						enableSmartTap: kvData?.data?.google?.enableSmartTap ?? true,
+						expirationDate,
+						explorerUrl: explorerUrl || undefined,
+						externalLink: getLink(hostname, props, design, true),
+						fullLink: getLink(hostname, props, design, false),
+						id: objectId,
+						linkBaseUrl,
+						merchantLocations: kvData?.data?.google?.merchantLocation || [],
+						props,
+						proUrl,
+						redemptionIssuers: kvData?.data?.google?.redemptionIssuers || [],
+						splitPayment,
+						swap,
+						swapUrl
+					},
+					purposeText,
+					rtl: isRtl,
 					saEmail: gwSaEmail,
 					saPrivateKeyPem: gwSaKeyPem,
-					classId,
-					logoUrl: imageUrls.google.logo,
-					iconUrl: imageUrls.google.icon,
-					heroUrl: imageUrls.google.hero,
-					companyName,
-					orgName,
-					titleText: titleText || undefined,
-					amountType: { recurring: isRecurring, donate: isDonate },
-					amountObject: finalAmount,
-					purposeText,
-					hexBackgroundColor: backgroundColor,
-					barcode: getBarcodeConfig(design.barcode || 'qr', bareLink, codeText).google,
-					donate: isDonate,
-					rtl: isRtl,
-					locale: googleLocale,
-					payload: {
-						id: objectId,
-						basicLink: getLink(hostname, props),
-						fullLink: getLink(hostname, props, design, false),
-						externalLink: getLink(hostname, props, design, true),
-						explorerUrl: explorerUrl || undefined,
-						proUrl,
-						swapUrl,
-						linkBaseUrl,
-						props,
-						expirationDate,
-						chainId,
-						redemptionIssuers: kvData?.data?.google?.redemptionIssuers || [],
-						enableSmartTap: kvData?.data?.google?.enableSmartTap ?? true,
-						merchantLocations: kvData?.data?.google?.merchantLocation || [],
-						splitPayment,
-						swap
-					}
+					titleText: titleText || undefined
 				});
 
 			// Optional stats logging
@@ -472,47 +495,50 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 			const foregroundColor = getValidForegroundColor(design, kvData, '#9AB1D6');
 			const originId = crypto.randomUUID().replace(/[^a-zA-Z0-9]/g, '').slice(0, 32);
 			const proUrl = `${proUrlLink}?originid=${encodeURIComponent(originId)}&origin=${encodeURIComponent(originator)}&subscriber=${encodeURIComponent(memberAddress)}&destination=${encodeURIComponent(destination)}&network=${encodeURIComponent(network as string)}&os=ios${appleLocale ? `&lang=${encodeURIComponent(appleLocale)}` : ''}`;
-			const swapUrl = swapUrlLink;
+			const swapUrl = `${swapUrlLink}?id=${encodeURIComponent(destination)}&network=${encodeURIComponent(network as string)}${appleLocale ? `&lang=${encodeURIComponent(appleLocale)}` : ''}`;
+			const cardTopupUrl = oric && destination ? `${linkBaseUrl}/card?oric=${encodeURIComponent(kvData.oric.toUpperCase())}${appleLocale ? `&lang=${encodeURIComponent(appleLocale)}` : ''}` : null;
 
 			const pkpassBlob = await buildAppleWalletPayPass({
-				serialId,
-				passTypeIdentifier,
-				teamIdentifier,
-				p12Base64,
-				p12Password,
-				wwdrPem,
-				companyName,
-				orgName,
-				logoUrl: imageUrls.apple.logo,
-				iconUrl: imageUrls.apple.icon,
-				beacons: appleBeacons,
-				titleText: titleText || undefined,
-				purposeText,
-				amountType: { recurring: isRecurring, donate: isDonate },
 				amountObject: finalAmount,
+				amountType: { recurring: isRecurring, donate: isDonate },
+				barcode: getBarcodeConfig(design.barcode || 'qr', bareLink, codeText).apple,
+				beacons: appleBeacons,
+				companyName,
+				donate: isDonate,
+				fetch,
 				hexBackgroundColor: backgroundColor,
 				hexForegroundColor: foregroundColor,
 				hexLabelColor: getAutoTextColor(backgroundColor, foregroundColor),
-				barcode: getBarcodeConfig(design.barcode || 'qr', bareLink, codeText).apple,
-				donate: isDonate,
-				rtl: isRtl,
+				iconUrl: imageUrls.apple.icon,
 				locale: appleLocale,
+				logoUrl: imageUrls.apple.logo,
+				orgName,
+				oric,
+				p12Base64,
+				p12Password,
 				payload: {
 					basicLink: getLink(hostname, props),
-					fullLink: getLink(hostname, props, design, false),
-					externalLink: getLink(hostname, props, design, true),
-					explorerUrl: explorerUrl || undefined,
-					proUrl,
-					swapUrl,
-					linkBaseUrl,
-					props,
-					expirationDate,
+					cardTopupUrl,
 					chainId,
+					expirationDate,
+					explorerUrl: explorerUrl || undefined,
+					externalLink: getLink(hostname, props, design, true),
+					fullLink: getLink(hostname, props, design, false),
+					linkBaseUrl,
 					merchantLocations: kvData?.data?.apple?.merchantLocation || [],
+					props,
+					proUrl,
 					splitPayment,
-					swap
+					swap,
+					swapUrl
 				},
-				fetch
+				passTypeIdentifier,
+				purposeText,
+				rtl: isRtl,
+				serialId,
+				teamIdentifier,
+				titleText: titleText || undefined,
+				wwdrPem
 			});
 
 			if (enableStats && pkpassBlob && supabase) {

@@ -104,24 +104,20 @@ export async function getVerifiedOrganizationName({
 	org,
 	kvData,
 	address,
-	network
+	network,
+	oric
 }: {
 	org?: string | null;
 	kvData?: any | null;
 	address?: string | null;
 	network?: string | null;
+	oric?: string | null;
 }): Promise<string> {
 	const fallback = 'PayPass';
 
-	if (kvData && kvData.name && kvData.oric && address) {
-		try {
-			const oricResult = await verifyOrganization(kvData.oric, address);
-			if (oricResult.isVerified) {
-				return `${kvData.name} ✅`;
-			}
-		} catch (error) {
-			// Ignore ORIC verification failure and fall back to other checks
-		}
+	if (oric && address && kvData && kvData.name) {
+		// We verified ORIC before, so we can use it here
+		return `${kvData.name} ✅`;
 	} else if (kvData && kvData.name) {
 		return kvData.name;
 	}

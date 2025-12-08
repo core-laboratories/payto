@@ -74,7 +74,7 @@ const ruPartial: DeepPartial<Translation> = {
 		navigateToLocation: 'Навигировать к месту',
 		viewTransactions: 'Просмотр транзакций',
 		onlinePaypass: 'Онлайн PayPass',
-		topUpCryptoCard: 'Пополнить криптокарту',
+		topUpCryptoCard: 'Пополнить КриптоКарту',
 		swapCurrency: 'Обмен валюты',
 		activatePro: 'Активировать Pro',
 		sendOfflineTransaction: 'Отправить офлайн-транзакцию'

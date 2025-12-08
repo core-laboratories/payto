@@ -74,7 +74,7 @@ const tl_PHPartial: DeepPartial<Translation> = {
 		navigateToLocation: 'Mag-navigate sa lokasyon',
 		viewTransactions: 'Tingnan ang mga transaksyon',
 		onlinePaypass: 'Online PayPass',
-		topUpCryptoCard: 'Mag-top up ng crypto card',
+		topUpCryptoCard: 'Mag-top up ng CryptoCard',
 		swapCurrency: 'Palitan ang currency',
 		activatePro: 'I-activate ang Pro',
 		sendOfflineTransaction: 'Magpadala ng offline na transaksyon'

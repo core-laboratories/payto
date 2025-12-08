@@ -74,7 +74,7 @@ const hi_INPartial: DeepPartial<Translation> = {
 		navigateToLocation: 'स्थान पर नेविगेट करें',
 		viewTransactions: 'लेनदेन देखें',
 		onlinePaypass: 'ऑनलाइन PayPass',
-		topUpCryptoCard: 'क्रिप्टो कार्ड रिचार्ज करें',
+		topUpCryptoCard: 'CryptoCard रिचार्ज करें',
 		swapCurrency: 'मुद्रा बदलें',
 		activatePro: 'Pro सक्रिय करें',
 		sendOfflineTransaction: 'ऑफ़लाइन लेनदेन भेजें'

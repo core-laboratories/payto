@@ -74,7 +74,7 @@ const arPartial: DeepPartial<Translation> = {
 		navigateToLocation: 'انتقل إلى الموقع',
 		viewTransactions: 'عرض المعاملات',
 		onlinePaypass: 'PayPass عبر الإنترنت',
-		topUpCryptoCard: 'إعادة شحن بطاقة التشفير',
+		topUpCryptoCard: 'إعادة شحن CryptoCard',
 		swapCurrency: 'استبدال العملة',
 		activatePro: 'تفعيل Pro',
 		sendOfflineTransaction: 'إرسال معاملة دون اتصال'
