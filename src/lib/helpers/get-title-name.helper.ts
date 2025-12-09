@@ -6,12 +6,20 @@
  * @param prefixed - Whether to prefix the title with the hostname
  * @returns Formatted title text
  */
-export function getTitleText(hostname: string, destination: string, props: any, currency?: string, prefixed: boolean = false): string | null {
+export function getTitleText(hostname: string, destination: string, network: string, props: any, currency?: string, prefixed: boolean = false): string | null {
 	if (hostname === 'ican') {
 		const currencyValue = currency || props.currency;
 		const currencyText = currencyValue && currencyValue.length < 6
 			? currencyValue.toUpperCase()
-			: (currencyValue ? shortenTitle(currencyValue) : shortenTitle(hostname));
+			: (
+				currencyValue ?
+					shortenTitle(currencyValue) :
+					(
+						network ?
+							shortenTitle(network) :
+							shortenTitle(hostname)
+					)
+			);
 		return prefixed ? currencyText + ' ' + shortenTitle(destination) : shortenTitle(destination);
 	} else if (hostname === 'iban' || hostname === 'ach' || hostname === 'bic') {
 		return prefixed ? hostname.toUpperCase() + ' ' + shortenTitle(destination) : shortenTitle(destination);
