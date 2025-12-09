@@ -359,7 +359,7 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 
 		const imageUrls = getImageUrls(kvData, destination, network, isDev, linkBaseUrl);
 
-		const titleText = getTitleText(hostname, destination, props, currency, true);
+		const titleText = getTitleText(hostname, destination, network, props, currency, true);
 		const purposeText = getPurposeText(design);
 		const codeText = getCodeText(isDonate, 'scan');
 
