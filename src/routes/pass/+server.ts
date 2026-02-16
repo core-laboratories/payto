@@ -436,34 +436,36 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 					titleText: titleText || undefined
 				});
 
-			// Optional stats logging
+			// Optional stats logging (requires PUBLIC_ENABLE_STATS=true and Supabase env)
 			if (enableStats && supabase) {
 				try {
+					const statsRow = {
+						hostname,
+						network,
+						...(currency && currency.length <= 5 ? { currency: currency.toLowerCase() } : {}),
+						...(props.params?.amount?.value
+							? (() => {
+								const numValue = Number(props.params.amount.value);
+								if (Number.isFinite(numValue) && numValue > 0 && numValue <= Number.MAX_SAFE_INTEGER) {
+									return { amount: numValue };
+								}
+								return {};
+							})()
+							: {}),
+						...(design.org ? { custom_org: true } : {}),
+						...(props.params?.donate?.value ? { donate: true } : {}),
+						...(props.params?.rc?.value ? { recurring: true } : {}),
+						os: 'android',
+						...(authority ? { authority } : {})
+					};
 					// @ts-ignore
-					await (supabase as any)
+					const { error: insertError } = await (supabase as any)
 						.from('passes_stats')
-						.insert([
-							{
-								hostname,
-								network,
-								...(currency && currency.length <= 5 ? { currency: currency.toLowerCase() } : {}),
-								...(props.params?.amount?.value
-									? (() => {
-										const numValue = Number(props.params.amount.value);
-										if (Number.isFinite(numValue) && numValue > 0 && numValue <= Number.MAX_SAFE_INTEGER) {
-											return { amount: numValue };
-										}
-										return {};
-									})()
-									: {}),
-								...(design.org ? { custom_org: true } : {}),
-								...(props.params?.donate?.value ? { donate: true } : {}),
-								...(props.params?.rc?.value ? { recurring: true } : {}),
-								os: 'android',
-								...(authority ? { authority } : {})
-							}
-						])
+						.insert([statsRow])
 						.select();
+					if (insertError) {
+						console.warn('Stats insert failed (android):', insertError.message ?? insertError);
+					}
 				} catch (e) {
 					console.warn('Failed to insert stats (android):', e);
 				}
@@ -541,33 +543,36 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 				wwdrPem
 			});
 
+			// Optional stats logging (requires PUBLIC_ENABLE_STATS=true, Supabase env, and successful pkpass build)
 			if (enableStats && pkpassBlob && supabase) {
 				try {
+					const statsRow = {
+						hostname,
+						network,
+						...(currency && currency.length <= 5 ? { currency: currency.toLowerCase() } : {}),
+						...(props.params?.amount?.value
+							? (() => {
+								const numValue = Number(props.params.amount.value);
+								if (Number.isFinite(numValue) && numValue > 0 && numValue <= Number.MAX_SAFE_INTEGER) {
+									return { amount: numValue };
+								}
+								return {};
+							})()
+							: {}),
+						...(design.org ? { custom_org: true } : {}),
+						...(props.params?.donate?.value ? { donate: true } : {}),
+						...(props.params?.rc?.value ? { recurring: true } : {}),
+						os: 'ios',
+						...(authority ? { authority } : {})
+					};
 					// @ts-ignore
-					await (supabase as any)
+					const { error: insertError } = await (supabase as any)
 						.from('passes_stats')
-						.insert([
-							{
-								hostname,
-								network,
-								...(currency && currency.length <= 5 ? { currency: currency.toLowerCase() } : {}),
-								...(props.params?.amount?.value
-									? (() => {
-										const numValue = Number(props.params.amount.value);
-										if (Number.isFinite(numValue) && numValue > 0 && numValue <= Number.MAX_SAFE_INTEGER) {
-											return { amount: numValue };
-										}
-										return {};
-									})()
-									: {}),
-								...(design.org ? { custom_org: true } : {}),
-								...(props.params?.donate?.value ? { donate: true } : {}),
-								...(props.params?.rc?.value ? { recurring: true } : {}),
-								os: 'ios',
-								...(authority ? { authority } : {})
-							}
-						])
+						.insert([statsRow])
 						.select();
+					if (insertError) {
+						console.warn('Stats insert failed (ios):', insertError.message ?? insertError);
+					}
 				} catch (e) {
 					console.warn('Failed to insert stats (ios):', e);
 				}
