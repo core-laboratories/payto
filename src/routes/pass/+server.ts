@@ -45,7 +45,7 @@ const gwIssuerId = env.PRIVATE_GW_ISSUER_ID;
 const gwSaEmail = env.PRIVATE_GW_SA_EMAIL;
 const gwSaKeyPem_b64 = env.PRIVATE_GW_SA_PRIVATE_KEY;
 const gwSaKeyPem = base64ToUtf8(gwSaKeyPem_b64);
-const isDev = (import.meta.env.DEV || publicEnv.PUBLIC_ENV === 'preview')
+const isDev = import.meta.env.DEV || publicEnv.PUBLIC_ENV === 'preview';
 const devServerUrl = publicEnv.PUBLIC_DEV_SERVER_URL || `http://localhost:${import.meta.env.VITE_DEV_SERVER_PORT || 5173}`;
 
 // Base URL for links
@@ -68,6 +68,44 @@ if (enableStats) {
 	} else {
 		supabase = createClient(supabaseUrl, supabaseKey);
 	}
+}
+
+/* ----------------------------------------------------------------
+ * Helpers for stats normalization
+ * ---------------------------------------------------------------- */
+
+/**
+ * Strict boolean parsing for common inputs.
+ * Returns null when value is missing/unknown (caller can coalesce to false if desired).
+ */
+function parseBool(v: unknown): boolean | null {
+	if (v === null || v === undefined) return null;
+	if (typeof v === 'boolean') return v;
+	if (typeof v === 'number') return v !== 0;
+	if (typeof v === 'string') {
+		const s = v.trim().toLowerCase();
+		if (s === '') return null;
+		if (['1', 'true', 'yes', 'y', 'on'].includes(s)) return true;
+		if (['0', 'false', 'no', 'n', 'off'].includes(s)) return false;
+		return null;
+	}
+	return null;
+}
+
+/**
+ * Parse amount as a positive finite number, otherwise null.
+ * (Optional) normalizes comma decimal.
+ */
+function parseAmount(v: unknown): number | null {
+	if (v === null || v === undefined) return null;
+	const s = String(v).trim();
+	if (!s) return null;
+
+	const normalized = s.replace(',', '.');
+	const num = Number(normalized);
+	if (!Number.isFinite(num) || num <= 0) return null;
+
+	return num;
 }
 
 /* ----------------------------------------------------------------
@@ -282,9 +320,14 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 		const customCurrencyData = kvData?.customCurrency || {};
 		const currency = getCurrency(props, network as ITransitionType, true);
 		const expirationDate = getExpirationDate(props.params?.dl?.value);
-		const isRecurring = !!props.params?.rc?.value;
+
+		// Use strict parsing for booleans to avoid "0"/"false" truthiness bugs
+		const donateFlag = parseBool(props.params?.donate?.value) ?? false;
+		const recurringFlag = parseBool(props.params?.rc?.value) ?? false;
+
 		const isRtl = String(props.params?.rtl?.value || '') === '1';
-		const isDonate = String(props.params?.donate?.value || '') === '1';
+		const isDonate = donateFlag; // used for pass generation
+		const isRecurring = recurringFlag; // used for pass generation
 
 		/* ---------------- Split payment ---------------- */
 
@@ -379,8 +422,7 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 			 * ------------------------------------------------------------- */
 
 			const originatorSafeAndroid = originatorSafe;
-			const classRandom =
-				crypto.randomUUID().replace(/[^a-zA-Z0-9]/g, '').slice(0, 24) || `${Date.now()}`;
+			const classRandom = crypto.randomUUID().replace(/[^a-zA-Z0-9]/g, '').slice(0, 24) || `${Date.now()}`;
 			const classId = `${gwIssuerId}.${originatorSafeAndroid}.${classRandom}`.slice(0, 255);
 			const originId = crypto.randomUUID().replace(/[^a-zA-Z0-9]/g, '').slice(0, 32);
 
@@ -390,81 +432,79 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 			const maxIdentifierLength = maxObjectIdLength - issuerPrefix.length;
 			const identifierPart = baseIdentifier.slice(0, Math.max(1, maxIdentifierLength));
 			const objectId = `${issuerPrefix}${identifierPart}`;
+
 			const proUrl = `${proUrlLink}?originid=${encodeURIComponent(originId)}&origin=${encodeURIComponent(originator)}&subscriber=${encodeURIComponent(memberAddress)}&destination=${encodeURIComponent(destination)}&network=${encodeURIComponent(network as string)}&os=android${googleLocale ? `&lang=${encodeURIComponent(googleLocale)}` : ''}`;
 			const swapUrl = `${swapUrlLink}?id=${encodeURIComponent(destination)}&network=${encodeURIComponent(network as string)}${googleLocale ? `&lang=${encodeURIComponent(googleLocale)}` : ''}`;
 			const cardTopupUrl = oric && destination ? `${linkBaseUrl}/card?oric=${encodeURIComponent(kvData.oric.toUpperCase())}${googleLocale ? `&lang=${encodeURIComponent(googleLocale)}` : ''}` : null;
 
-			const { saveUrl, classId: finalClassId, gwObject, gwClass } =
-				await buildGoogleWalletPayPassSaveLink({
-					amountObject: finalAmount,
-					amountType: { recurring: isRecurring, donate: isDonate },
-					barcode: getBarcodeConfig(design.barcode || 'qr', bareLink, codeText).google,
-					classId,
-					companyName,
-					donate: isDonate,
-					hexBackgroundColor: backgroundColor,
-					heroUrl: imageUrls.google.hero,
-					iconUrl: imageUrls.google.icon,
-					issuerId: gwIssuerId,
-					locale: googleLocale,
-					logoUrl: imageUrls.google.logo,
-					orgName,
-					oric,
-					payload: {
-						basicLink: getLink(hostname, props),
-						cardTopupUrl,
-						chainId,
-						enableSmartTap: kvData?.data?.google?.enableSmartTap ?? true,
-						expirationDate,
-						explorerUrl: explorerUrl || undefined,
-						externalLink: getLink(hostname, props, design, true),
-						fullLink: getLink(hostname, props, design, false),
-						id: objectId,
-						linkBaseUrl,
-						merchantLocations: kvData?.data?.google?.merchantLocation || [],
-						props,
-						proUrl,
-						redemptionIssuers: kvData?.data?.google?.redemptionIssuers || [],
-						splitPayment,
-						swap,
-						swapUrl
-					},
-					purposeText,
-					rtl: isRtl,
-					saEmail: gwSaEmail,
-					saPrivateKeyPem: gwSaKeyPem,
-					titleText: titleText || undefined
-				});
+			const { saveUrl, classId: finalClassId, gwObject, gwClass } = await buildGoogleWalletPayPassSaveLink({
+				amountObject: finalAmount,
+				amountType: { recurring: isRecurring, donate: isDonate },
+				barcode: getBarcodeConfig(design.barcode || 'qr', bareLink, codeText).google,
+				classId,
+				companyName,
+				donate: isDonate,
+				hexBackgroundColor: backgroundColor,
+				heroUrl: imageUrls.google.hero,
+				iconUrl: imageUrls.google.icon,
+				issuerId: gwIssuerId,
+				locale: googleLocale,
+				logoUrl: imageUrls.google.logo,
+				orgName,
+				oric,
+				payload: {
+					basicLink: getLink(hostname, props),
+					cardTopupUrl,
+					chainId,
+					enableSmartTap: kvData?.data?.google?.enableSmartTap ?? true,
+					expirationDate,
+					explorerUrl: explorerUrl || undefined,
+					externalLink: getLink(hostname, props, design, true),
+					fullLink: getLink(hostname, props, design, false),
+					id: objectId,
+					linkBaseUrl,
+					merchantLocations: kvData?.data?.google?.merchantLocation || [],
+					props,
+					proUrl,
+					redemptionIssuers: kvData?.data?.google?.redemptionIssuers || [],
+					splitPayment,
+					swap,
+					swapUrl
+				},
+				purposeText,
+				rtl: isRtl,
+				saEmail: gwSaEmail,
+				saPrivateKeyPem: gwSaKeyPem,
+				titleText: titleText || undefined
+			});
 
-			// Optional stats logging (requires PUBLIC_ENABLE_STATS=true and Supabase env)
+			// Optional stats logging (successful Android pass generation only)
 			if (enableStats && supabase) {
 				try {
 					const statsRow = {
 						hostname,
 						network,
-						...(currency && currency.length <= 5 ? { currency: currency.toLowerCase() } : {}),
-						...(props.params?.amount?.value
-							? (() => {
-								const numValue = Number(props.params.amount.value);
-								if (Number.isFinite(numValue) && numValue > 0 && numValue <= Number.MAX_SAFE_INTEGER) {
-									return { amount: numValue };
-								}
-								return {};
-							})()
-							: {}),
-						...(design.org ? { custom_org: true } : {}),
-						...(props.params?.donate?.value ? { donate: true } : {}),
-						...(props.params?.rc?.value ? { recurring: true } : {}),
+						currency: currency && currency.length <= 5 ? currency.toLowerCase() : null,
+						amount: parseAmount(props.params?.amount?.value),
+						custom_org: !!design.org,
+						donate: donateFlag,
+						recurring: recurringFlag,
+						split: !!splitPayment,
 						os: 'android',
-						...(authority ? { authority } : {})
+						authority: authority ?? null,
+						color_b: backgroundColor ?? null
 					};
+
 					// @ts-ignore
-					const { error: insertError } = await (supabase as any)
-						.from('passes_stats')
-						.insert([statsRow])
-						.select();
+					const { error: insertError } = await (supabase as any).from('passes_stats').insert([statsRow]);
+
 					if (insertError) {
-						console.warn('Stats insert failed (android):', insertError.message ?? insertError);
+						console.warn('Stats insert failed (android):', {
+							message: insertError.message,
+							code: (insertError as any).code,
+							details: (insertError as any).details,
+							hint: (insertError as any).hint
+						});
 					}
 				} catch (e) {
 					console.warn('Failed to insert stats (android):', e);
@@ -486,7 +526,7 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 			return new Response(null, {
 				status: 302,
 				headers: {
-					'Location': saveUrl
+					Location: saveUrl
 				}
 			});
 		} else if (os === 'ios') {
@@ -543,35 +583,34 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 				wwdrPem
 			});
 
-			// Optional stats logging (requires PUBLIC_ENABLE_STATS=true, Supabase env, and successful pkpass build)
+			// Optional stats logging (successful iOS pass generation only)
 			if (enableStats && pkpassBlob && supabase) {
 				try {
 					const statsRow = {
 						hostname,
 						network,
-						...(currency && currency.length <= 5 ? { currency: currency.toLowerCase() } : {}),
-						...(props.params?.amount?.value
-							? (() => {
-								const numValue = Number(props.params.amount.value);
-								if (Number.isFinite(numValue) && numValue > 0 && numValue <= Number.MAX_SAFE_INTEGER) {
-									return { amount: numValue };
-								}
-								return {};
-							})()
-							: {}),
-						...(design.org ? { custom_org: true } : {}),
-						...(props.params?.donate?.value ? { donate: true } : {}),
-						...(props.params?.rc?.value ? { recurring: true } : {}),
+						currency: currency && currency.length <= 5 ? currency.toLowerCase() : null,
+						amount: parseAmount(props.params?.amount?.value),
+						custom_org: !!design.org,
+						donate: donateFlag,
+						recurring: recurringFlag,
+						split: !!splitPayment,
 						os: 'ios',
-						...(authority ? { authority } : {})
+						authority: authority ?? null,
+						color_b: backgroundColor ?? null,
+						color_f: foregroundColor ?? null
 					};
+
 					// @ts-ignore
-					const { error: insertError } = await (supabase as any)
-						.from('passes_stats')
-						.insert([statsRow])
-						.select();
+					const { error: insertError } = await (supabase as any).from('passes_stats').insert([statsRow]);
+
 					if (insertError) {
-						console.warn('Stats insert failed (ios):', insertError.message ?? insertError);
+						console.warn('Stats insert failed (ios):', {
+							message: insertError.message,
+							code: (insertError as any).code,
+							details: (insertError as any).details,
+							hint: (insertError as any).hint
+						});
 					}
 				} catch (e) {
 					console.warn('Failed to insert stats (ios):', e);
@@ -581,9 +620,7 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 			return new Response(pkpassBlob, {
 				headers: {
 					'Content-Type': 'application/vnd.apple.pkpass',
-					'Content-Disposition': `attachment; filename="${pkpassFilename}"; filename*=UTF-8''${encodeURIComponent(
-						pkpassFilename
-					)}`
+					'Content-Disposition': `attachment; filename="${pkpassFilename}"; filename*=UTF-8''${encodeURIComponent(pkpassFilename)}`
 				}
 			});
 		} else {
