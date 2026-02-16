@@ -5,5 +5,9 @@ export const load = ({ url }: { url: URL }) => {
 		const newPath = url.pathname.slice(4);
 		const query = url.search ? url.search : '';
 		throw redirect(307, '/show/payto%3A%2F%2F' + encodeURIComponent(newPath) + encodeURIComponent(query));
+	} else if (url.pathname.startsWith('/pay')) {
+		const newPath = url.pathname.slice(4);
+		const query = url.search ? url.search : '';
+		throw redirect(307, '/show/payto%3A%2F%2F' + encodeURIComponent(newPath) + encodeURIComponent(query));
 	}
 };

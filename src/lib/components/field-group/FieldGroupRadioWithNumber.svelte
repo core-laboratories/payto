@@ -30,11 +30,20 @@
 		classValue = ''
 	} = $props();
 
-	// Define reactive state using `$state`
-	let internalCheckedValue = $state(defaultChecked || options[0]?.value || '');
-	let numberValueStore = $state(numberValue);
+	// Initial values from props via $derived so they stay reactive
+	const initialChecked = $derived(defaultChecked || options[0]?.value || '');
+	const initialNumber = $derived(numberValue);
 
-	// Derived state using `$derived`
+	// Local state for user interaction; synced from props when they change
+	let internalCheckedValue = $state('');
+	let numberValueStore = $state(0);
+
+	$effect(() => {
+		internalCheckedValue = initialChecked;
+		numberValueStore = initialNumber;
+	});
+
+	// Derived state using $derived
 	const computedOutput = $derived(
 		internalCheckedValue === 'd' && numberValueStore > 1
 			? `${numberValueStore}d`
