@@ -110,6 +110,12 @@ export const generateLink = (payload: IPayload[] = [], props: Record<string, any
 		link += '?' + uriNormalize(searchParams.toString());
 	}
 
+	// Token/asset: append with literal colon (no %3A) for PayPass/links
+	if (currency?.value) {
+		const assetVal = caseCurrency(currency.value) + ':';
+		link += (link.includes('?') ? '&' : '?') + 'asset=' + assetVal;
+	}
+
 	return link;
 };
 

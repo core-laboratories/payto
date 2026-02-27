@@ -11,25 +11,44 @@ export function getLinkHostname(hostname: string, props: { other?: string; trans
 }
 
 /**
+ * Build asset query value for token code or smart contract: "ctn:" or "0x…:".
+ */
+function getAssetParam(currencyValue: string | undefined): string | undefined {
+	if (!currencyValue?.trim()) return undefined;
+	const isSmartContract = currencyValue.startsWith('0x') || currencyValue.length > 10;
+	const value = isSmartContract ? currencyValue : currencyValue.toLowerCase();
+	return `${value}:`;
+}
+
+/**
  * Pay button URI for wallet passes (Google Pay, etc.).
  * - ICAN + other: payto://{props.other}
  * - Void + transport other: payto://void/{props.other}
  * - Else: payto://{props.network}
+ * - When token/currency is set, appends ?asset=ctn: or ?asset={smart_contract}:
  */
 export function getPayButtonUri(props: {
 	network?: string;
 	other?: string;
 	transport?: string;
+	params?: { currency?: { value?: string } };
 }): string {
-	if (!props?.network) return 'payto://';
+	let base = 'payto://';
+	if (!props?.network) return base;
 	if (props.network === 'other') {
 		const authority = props.other || props.network;
-		return authority ? `payto://${authority}` : 'payto://';
+		base = authority ? `payto://${authority}` : base;
+	} else if (props.network === 'void' && props.transport === 'other' && props.other) {
+		base = `payto://void/${props.other}`;
+	} else {
+		base = `payto://${props.network}`;
 	}
-	if (props.network === 'void' && props.transport === 'other' && props.other) {
-		return `payto://void/${props.other}`;
+	const assetParam = getAssetParam(props?.params?.currency?.value);
+	if (assetParam) {
+		// Keep colon literal (no %3A); token/smart-contract values are safe for query
+		base += '?asset=' + assetParam;
 	}
-	return `payto://${props.network}`;
+	return base;
 }
 
 /**
