@@ -101,7 +101,8 @@
 	function handleAddressInput(event: Event) {
 		const value = (event.target as HTMLInputElement).value;
 		addressValue = value;
-		validateAddress(value);
+		// Use validateCurrentAddress so in "other" mode we pass .other (e.g. xab) and the validator actually runs
+		validateCurrentAddress();
 	}
 
 	function resetAddress() {
@@ -129,34 +130,38 @@
 
 			if (!result.success) {
 				const error = result.error.issues[0];
-				addressValidated = true;
-				addressError = true;
-				addressTestnet = error.path.includes('testnet');
-				addressEnterprise = error.path.includes('enterprise');
-				addressMsg = error.message;
-
-				// Check error type from params
 				const errorType = 'params' in error ? error.params?.errorType : undefined;
 				const isAllowed = 'params' in error ? error.params?.allowed : undefined;
+				const isTestnetPath = error.path.includes('testnet');
+				const isEnterprisePath = error.path.includes('enterprise');
 
-				if (errorType === 'testnet_warning' && isAllowed) {
+				addressValidated = true;
+				addressMsg = error.message;
+
+				// Testnet: always show orange warning when detected; only add to URL when allowed
+				if (errorType === 'testnet_warning' || isTestnetPath) {
 					addressError = false;
-					addressMsg = 'Testnet address detected';
+					addressTestnet = true;
+					addressEnterprise = false;
 					addressNetworkType = 'testnet';
-					$constructor.networks.ican.destination = value;
-				} else if (errorType === 'enterprise_warning' && isAllowed) {
-					addressError = false;
-					addressMsg = 'Enterprise address detected';
-					addressNetworkType = 'enterprise';
-					$constructor.networks.ican.destination = value;
-				} else {
-					addressNetworkType = undefined;
-					$constructor.networks.ican.destination = undefined;
-				}
+					addressMsg = error.message || 'Testnet address detected';
+					$constructor.networks.ican.destination = isAllowed ? value : undefined;
 
-				if (error.path.includes('testnet')) {
 					$constructor.networks.ican.other = $constructor.networks.ican.network;
 					$constructor.networks.ican.network = 'other';
+				} else if (errorType === 'enterprise_warning' || isEnterprisePath) {
+					addressError = false;
+					addressTestnet = false;
+					addressEnterprise = true;
+					addressNetworkType = 'enterprise';
+					addressMsg = error.message || 'Enterprise address detected';
+					$constructor.networks.ican.destination = isAllowed ? value : undefined;
+				} else {
+					addressError = true;
+					addressTestnet = false;
+					addressEnterprise = false;
+					addressNetworkType = undefined;
+					$constructor.networks.ican.destination = undefined;
 				}
 			} else {
 				addressValidated = true;
