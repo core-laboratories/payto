@@ -234,10 +234,10 @@
 			}
 		}
 
-		if ($constructor.networks.ican.network === 'other' && otherNetworkValue && addressValue) {
-			validateAddress(addressValue, otherNetworkValue);
-		} else if (addressValue) {
-			validateAddress(addressValue);
+		if ($constructor.networks.ican.network === 'other' && otherNetworkValue) {
+			validateAddress(addressValue ?? '', otherNetworkValue);
+		} else {
+			validateAddress(addressValue ?? '');
 		}
 	}
 
