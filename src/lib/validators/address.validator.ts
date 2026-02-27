@@ -28,7 +28,10 @@ export const addressSchema = z.object({
 		return;
 	}
 
-	switch (ctx.value.network) {
+	// Normalize for switch (e.g. "XAB" from other field) and only validate networks known to blockchain-wallet-validator
+	const networkLower = (ctx.value.network ?? '').toLowerCase();
+
+	switch (networkLower) {
 		case 'xcb':
 		case 'xce':
 		case 'xab':
@@ -82,7 +85,7 @@ export const addressSchema = z.object({
 					state.networks.ican.network = 'xce';
 					return state;
 				});
-			} else if (icanResult.network !== 'ns' && icanResult.network !== ctx.value.network) {
+			} else if (icanResult.network !== 'ns' && icanResult.network !== networkLower) {
 				ctx.issues.push({
 					code: 'custom',
 					message: 'Different CORE network detected',
@@ -288,6 +291,10 @@ export const addressSchema = z.object({
 					}
 				});
 			}
+			break;
+
+		default:
+			// Unknown network (e.g. custom "other" value not in blockchain-wallet-validator): skip validation
 			break;
 	}
 });
