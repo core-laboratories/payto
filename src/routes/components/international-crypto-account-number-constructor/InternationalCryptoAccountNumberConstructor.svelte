@@ -37,7 +37,10 @@
 	let splitAddressNetworkType = $state<'testnet' | 'enterprise' | 'mainnet' | undefined>(undefined);
 
 	let timeDateValue = $state('');
-	let classUpperValue = $state('uppercase');
+	// Uppercase (Tailwind) only while length ≤10 so it updates on every keystroke; longer = case as inserted
+	let tokenUpperCaseClass = $derived(
+		($constructor.networks.ican.params?.currency?.value ?? '').length <= 10 ? 'uppercase' : ''
+	);
 	let tokens = $derived(TRANSPORT.ican.find(item => item.value === $constructor.networks.ican.network)?.tokens);
 
 	let previousClearedState = false;
@@ -81,7 +84,6 @@
 	});
 
 	$effect(() => {
-		classUpperValue = $constructor.networks.ican.params?.currency?.value?.toLowerCase()?.startsWith('0x') ? '' : 'uppercase';
 		if ($constructor.isCleared && !previousClearedState) {
 			resetAddress();
 			resetSplitAddress();
@@ -437,7 +439,7 @@
 				<FieldGroupText
 					placeholder="e.g. CTN; 0x1ab…"
 					bind:value={$constructor.networks.ican.params.currency.value}
-					classValue={`tracking-widest placeholder:tracking-normal [&:not(:placeholder-shown)]:font-code ${classUpperValue} ${$constructor.networks.ican.params?.currency?.value ? 'pr-10' : ''}`}
+					classValue={`tracking-widest placeholder:tracking-normal [&:not(:placeholder-shown)]:font-code ${tokenUpperCaseClass} ${$constructor.networks.ican.params?.currency?.value ? 'pr-10' : ''}`}
 				/>
 				{#if $constructor.networks.ican.params?.currency?.value && tokenWellKnownLookup !== 'idle' && tokenWellKnownLookup !== 'loading'}
 					<span
