@@ -110,6 +110,12 @@ export const generateLink = (payload: IPayload[] = [], props: Record<string, any
 		link += '?' + uriNormalize(searchParams.toString());
 	}
 
+	// Token/asset: append with literal colon (no %3A) for PayPass/links
+	if (currency?.value) {
+		const assetVal = caseCurrency(currency.value) + ':';
+		link += (link.includes('?') ? '&' : '?') + 'asset=' + assetVal;
+	}
+
 	return link;
 };
 
@@ -451,16 +457,30 @@ export const getWebLink = ({
 		? (publicEnv.PUBLIC_DEV_SERVER_URL || (`http://localhost:${import.meta.env.VITE_DEV_SERVER_PORT || 5173}`))
 		: 'https://payto.money';
 
-	const finalPayload = payload ?? [
-		{
-			value: networkData.network === 'other'
-				? networkData.other?.toLowerCase()
-				: networkData.network
-		},
-		{
-			value: networkData.destination
-		}
-	];
+	const secondSegment =
+		networkData.network === 'void'
+			? networkData.transport === 'other' && networkData.other
+				? networkData.other
+				: networkData.transport
+			: undefined;
+
+	const finalPayload =
+		payload ??
+		(networkData.network === 'void'
+			? [
+					{ value: 'void' },
+					...(secondSegment ? [{ value: secondSegment }] : []),
+					{ value: networkData.destination }
+				]
+			: [
+					{
+						value:
+							networkData.network === 'other'
+								? networkData.other?.toLowerCase()
+								: networkData.network
+					},
+					{ value: networkData.destination }
+				]);
 
 	const props = {
 		...networkData,

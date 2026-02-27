@@ -1,7 +1,7 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestEvent } from '@sveltejs/kit';
 import { getValidBackgroundColor, getValidForegroundColor, getAutoTextColor } from '$lib/helpers/color-validation.helper';
-import { getLink } from '$lib/helpers/get-link.helper';
+import { getLink, getLinkHostname } from '$lib/helpers/get-link.helper';
 import { getCurrency } from '$lib/helpers/get-currency.helper';
 import { getExplorerUrl } from '$lib/helpers/tx-explorer.helper';
 import { KV } from '$lib/helpers/kv.helper';
@@ -297,8 +297,8 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 		if (!destination) throw error(400, 'Invalid destination');
 
 		/* ---------------- Shared fields ---------------- */
-
-		const bareLink = getLink(hostname, props);
+		const linkHostname = getLinkHostname(hostname, props);
+		const bareLink = getLink(linkHostname, props);
 
 		const originator = kvData?.id || 'payto';
 		const originatorName = kvData?.name;
@@ -453,14 +453,14 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 				orgName,
 				oric,
 				payload: {
-					basicLink: getLink(hostname, props),
+					basicLink: getLink(linkHostname, props),
 					cardTopupUrl,
 					chainId,
 					enableSmartTap: kvData?.data?.google?.enableSmartTap ?? true,
 					expirationDate,
 					explorerUrl: explorerUrl || undefined,
-					externalLink: getLink(hostname, props, design, true),
-					fullLink: getLink(hostname, props, design, false),
+					externalLink: getLink(linkHostname, props, design, true),
+					fullLink: getLink(linkHostname, props, design, false),
 					id: objectId,
 					linkBaseUrl,
 					merchantLocations: kvData?.data?.google?.merchantLocation || [],
@@ -559,13 +559,13 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 				p12Base64,
 				p12Password,
 				payload: {
-					basicLink: getLink(hostname, props),
+					basicLink: getLink(linkHostname, props),
 					cardTopupUrl,
 					chainId,
 					expirationDate,
 					explorerUrl: explorerUrl || undefined,
-					externalLink: getLink(hostname, props, design, true),
-					fullLink: getLink(hostname, props, design, false),
+					externalLink: getLink(linkHostname, props, design, true),
+					fullLink: getLink(linkHostname, props, design, false),
 					linkBaseUrl,
 					merchantLocations: kvData?.data?.apple?.merchantLocation || [],
 					props,

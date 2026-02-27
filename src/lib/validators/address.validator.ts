@@ -14,8 +14,11 @@ const moneroTestnetRegex = /^[9A][12s-z][1-9A-HJ-NP-Za-km-z]{93}$/;
 
 export const addressSchema = z.object({
 	network: z.string(),
-	destination: z.string()
+	destination: z.string(),
+	/** When true, validation is for split address — do not update store (keeps network dropdown unchanged) */
+	__split: z.optional(z.boolean())
 }).check((ctx) => {
+	const skipStoreUpdate = ctx.value.__split === true;
 
 	if (!ctx.value.network) {
 		ctx.issues.push({
@@ -28,7 +31,10 @@ export const addressSchema = z.object({
 		return;
 	}
 
-	switch (ctx.value.network) {
+	// Normalize for switch (e.g. "XAB" from other field) and only validate networks known to blockchain-wallet-validator
+	const networkLower = (ctx.value.network ?? '').toLowerCase();
+
+	switch (networkLower) {
 		case 'xcb':
 		case 'xce':
 		case 'xab':
@@ -48,10 +54,12 @@ export const addressSchema = z.object({
 					input: ctx.value,
 					params: { errorType: 'invalid_address' }
 				});
-				constructor.update(state => {
-					state.networks.ican.network = 'xcb';
-					return state;
-				});
+				if (!skipStoreUpdate) {
+					constructor.update(state => {
+						state.networks.ican.network = 'xcb';
+						return state;
+					});
+				}
 			} else if (icanResult.metadata?.isTestnet) {
 				ctx.issues.push({
 					code: 'custom',
@@ -63,10 +71,12 @@ export const addressSchema = z.object({
 						allowed: isTestnetAllowed
 					}
 				});
-				constructor.update(state => {
-					state.networks.ican.network = icanResult.network || 'xab';
-					return state;
-				});
+				if (!skipStoreUpdate) {
+					constructor.update(state => {
+						state.networks.ican.network = icanResult.network || 'xab';
+						return state;
+					});
+				}
 			} else if (icanResult.network === 'xce') {
 				ctx.issues.push({
 					code: 'custom',
@@ -78,11 +88,13 @@ export const addressSchema = z.object({
 						allowed: isEnterpriseAllowed
 					}
 				});
-				constructor.update(state => {
-					state.networks.ican.network = 'xce';
-					return state;
-				});
-			} else if (icanResult.network !== 'ns' && icanResult.network !== ctx.value.network) {
+				if (!skipStoreUpdate) {
+					constructor.update(state => {
+						state.networks.ican.network = 'xce';
+						return state;
+					});
+				}
+			} else if (icanResult.network !== 'ns' && icanResult.network !== networkLower) {
 				ctx.issues.push({
 					code: 'custom',
 					message: 'Different CORE network detected',
@@ -288,6 +300,10 @@ export const addressSchema = z.object({
 					}
 				});
 			}
+			break;
+
+		default:
+			// Unknown network (e.g. custom "other" value not in blockchain-wallet-validator): skip validation
 			break;
 	}
 });

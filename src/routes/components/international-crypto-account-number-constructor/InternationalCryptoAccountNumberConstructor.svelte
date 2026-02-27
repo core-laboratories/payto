@@ -9,12 +9,13 @@
 		FieldGroupRadioWithNumber,
 		ListBox
 	} from '$lib/components';
-	import { ChevronDown, ChevronUp, ArrowLeft } from 'lucide-svelte';
+	import { BookmarkCheck, BookmarkX, ChevronDown, ChevronUp, ArrowLeft } from 'lucide-svelte';
 	import { env as publicEnv } from '$env/dynamic/public';
 
 	const isDebug = (import.meta.env.DEV || publicEnv.PUBLIC_ENV === 'preview')
 
 	import { TRANSPORT } from '$lib/data/transports.data';
+	import { lookupWellKnownToken, WELL_KNOWN_TESTNET_NETWORKS } from '$lib/helpers/well-known-lookup.helper';
 	import { constructor } from '$lib/store/constructor.store';
 	import { fade, fly } from 'svelte/transition';
 	import { addressSchema } from '$lib/validators/address.validator';
@@ -36,15 +37,53 @@
 	let splitAddressNetworkType = $state<'testnet' | 'enterprise' | 'mainnet' | undefined>(undefined);
 
 	let timeDateValue = $state('');
-	let classUpperValue = $state('uppercase');
+	// Uppercase (Tailwind) only while length ≤10 so it updates on every keystroke; longer = case as inserted
+	let tokenUpperCaseClass = $derived(
+		($constructor.networks.ican.params?.currency?.value ?? '').length <= 10 ? 'uppercase' : ''
+	);
 	let tokens = $derived(TRANSPORT.ican.find(item => item.value === $constructor.networks.ican.network)?.tokens);
 
 	let previousClearedState = false;
 
 	let showAdvancedOptions = $state(false);
 
+	// Well-known token registry lookup (see well-known-lookup.helper.ts)
+	let tokenWellKnownLookup = $state<'idle' | 'loading' | true | false>('idle');
+	let tokenWellKnownNetwork = $state<string>('');
+	let tokenWellKnownDebounceId: ReturnType<typeof setTimeout> | null = null;
+
 	$effect(() => {
-		classUpperValue = $constructor.networks.ican.params?.currency?.value?.toLowerCase()?.startsWith('0x') ? '' : 'uppercase';
+		const currencyVal = $constructor.networks.ican.params?.currency?.value ?? '';
+		const network = $constructor.networks.ican.network;
+		const other = $constructor.networks.ican.other;
+		const effectiveNetwork = network === 'other' && other ? other : network;
+		const isTestnetContext =
+			addressNetworkType === 'testnet' ||
+			WELL_KNOWN_TESTNET_NETWORKS.includes((effectiveNetwork || '').toLowerCase());
+
+		if (!currencyVal.trim()) {
+			tokenWellKnownLookup = 'idle';
+			tokenWellKnownNetwork = '';
+			return;
+		}
+		if (tokenWellKnownDebounceId) clearTimeout(tokenWellKnownDebounceId);
+		tokenWellKnownDebounceId = setTimeout(() => {
+			tokenWellKnownDebounceId = null;
+			const lookedUpValue = currencyVal;
+			tokenWellKnownLookup = 'loading';
+			tokenWellKnownNetwork = effectiveNetwork;
+			lookupWellKnownToken(lookedUpValue, effectiveNetwork, isTestnetContext).then((result) => {
+				if (($constructor.networks.ican.params?.currency?.value ?? '').trim() === lookedUpValue.trim()) {
+					tokenWellKnownLookup = result.exists;
+				}
+			});
+		}, 400);
+		return () => {
+			if (tokenWellKnownDebounceId) clearTimeout(tokenWellKnownDebounceId);
+		};
+	});
+
+	$effect(() => {
 		if ($constructor.isCleared && !previousClearedState) {
 			resetAddress();
 			resetSplitAddress();
@@ -101,7 +140,8 @@
 	function handleAddressInput(event: Event) {
 		const value = (event.target as HTMLInputElement).value;
 		addressValue = value;
-		validateAddress(value);
+		// Use validateCurrentAddress so in "other" mode we pass .other (e.g. xab) and the validator actually runs
+		validateCurrentAddress();
 	}
 
 	function resetAddress() {
@@ -129,34 +169,38 @@
 
 			if (!result.success) {
 				const error = result.error.issues[0];
-				addressValidated = true;
-				addressError = true;
-				addressTestnet = error.path.includes('testnet');
-				addressEnterprise = error.path.includes('enterprise');
-				addressMsg = error.message;
-
-				// Check error type from params
 				const errorType = 'params' in error ? error.params?.errorType : undefined;
 				const isAllowed = 'params' in error ? error.params?.allowed : undefined;
+				const isTestnetPath = error.path.includes('testnet');
+				const isEnterprisePath = error.path.includes('enterprise');
 
-				if (errorType === 'testnet_warning' && isAllowed) {
+				addressValidated = true;
+				addressMsg = error.message;
+
+				// Testnet: always show orange warning when detected; only add to URL when allowed
+				if (errorType === 'testnet_warning' || isTestnetPath) {
 					addressError = false;
-					addressMsg = 'Testnet address detected';
+					addressTestnet = true;
+					addressEnterprise = false;
 					addressNetworkType = 'testnet';
-					$constructor.networks.ican.destination = value;
-				} else if (errorType === 'enterprise_warning' && isAllowed) {
-					addressError = false;
-					addressMsg = 'Enterprise address detected';
-					addressNetworkType = 'enterprise';
-					$constructor.networks.ican.destination = value;
-				} else {
-					addressNetworkType = undefined;
-					$constructor.networks.ican.destination = undefined;
-				}
+					addressMsg = error.message || 'Testnet address detected';
+					$constructor.networks.ican.destination = isAllowed ? value : undefined;
 
-				if (error.path.includes('testnet')) {
 					$constructor.networks.ican.other = $constructor.networks.ican.network;
 					$constructor.networks.ican.network = 'other';
+				} else if (errorType === 'enterprise_warning' || isEnterprisePath) {
+					addressError = false;
+					addressTestnet = false;
+					addressEnterprise = true;
+					addressNetworkType = 'enterprise';
+					addressMsg = error.message || 'Enterprise address detected';
+					$constructor.networks.ican.destination = isAllowed ? value : undefined;
+				} else {
+					addressError = true;
+					addressTestnet = false;
+					addressEnterprise = false;
+					addressNetworkType = undefined;
+					$constructor.networks.ican.destination = undefined;
 				}
 			} else {
 				addressValidated = true;
@@ -190,10 +234,10 @@
 			}
 		}
 
-		if ($constructor.networks.ican.network === 'other' && otherNetworkValue && addressValue) {
-			validateAddress(addressValue, otherNetworkValue);
-		} else if (addressValue) {
-			validateAddress(addressValue);
+		if ($constructor.networks.ican.network === 'other' && otherNetworkValue) {
+			validateAddress(addressValue ?? '', otherNetworkValue);
+		} else {
+			validateAddress(addressValue ?? '');
 		}
 	}
 
@@ -230,7 +274,8 @@
 		try {
 			const result = addressSchema.safeParse({
 				network: currentNetwork,
-				destination: value
+				destination: value,
+				__split: true
 			});
 
 			if (!result.success) {
@@ -328,6 +373,7 @@
 				<div in:fade>
 					<ListBox
 						id="transport-network"
+						placeholder="Select the Network"
 						bind:value={$constructor.networks.ican.network}
 						items={TRANSPORT.ican}
 						onChange={validateCurrentAddress}
@@ -347,7 +393,7 @@
 						<ArrowLeft class="w-5 h-5" />
 					</button>
 					<input
-						class="w-full h-12 p-3 ps-14 text-start bg-gray-900 rounded-md border-0"
+						class="w-full h-12 p-3 ps-14 text-start bg-gray-900 rounded-md border-0 uppercase"
 						type="text"
 						id="transport-network"
 						placeholder="Other network"
@@ -389,11 +435,34 @@
 	{#if tokens === true}
 		<FieldGroup>
 			<FieldGroupLabel><span class="relative overflow-hidden cursor-help group hover:overflow-visible focus-visible:outline-none border-b border-dotted border-gray-400" aria-describedby="tooltip-tokencode">Token Code<span role="tooltip" id="tooltip-tokencode" class="invisible absolute bottom-full left-1/2 z-10 mb-2 w-48 -translate-x-1/2 rounded bg-slate-700 p-2 text-xs text-white opacity-0 transition-all before:invisible before:absolute before:left-1/2 before:top-full before:z-10 before:mb-2 before:-ml-1 before:border-x-4 before:border-t-4 before:border-x-transparent before:border-t-slate-700 before:opacity-0 before:transition-all before:content-[''] group-hover:visible group-hover:block group-hover:opacity-100 group-hover:before:visible group-hover:before:opacity-100">Token Code from <a href="https://github.com/bchainhub/well-known" target="_blank" rel="noopener">Well-Known registry</a></span></span> / Token Address</FieldGroupLabel>
-			<FieldGroupText
-				placeholder="e.g. CTN; 0x1ab…"
-				bind:value={$constructor.networks.ican.params.currency.value}
-				classValue={`tracking-widest placeholder:tracking-normal [&:not(:placeholder-shown)]:font-code ${classUpperValue}`}
-			/>
+			<div class="relative bg-gray-900 rounded-md">
+				<FieldGroupText
+					placeholder="e.g. CTN; 0x1ab…"
+					bind:value={$constructor.networks.ican.params.currency.value}
+					classValue={`tracking-widest placeholder:tracking-normal [&:not(:placeholder-shown)]:font-code ${tokenUpperCaseClass} ${$constructor.networks.ican.params?.currency?.value ? 'pr-10' : ''}`}
+				/>
+				{#if $constructor.networks.ican.params?.currency?.value && tokenWellKnownLookup !== 'idle' && tokenWellKnownLookup !== 'loading'}
+					<span
+						class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center cursor-help group bg-gray-900 rounded-r-md"
+						aria-describedby="tooltip-wellknown"
+					>
+						{#if tokenWellKnownLookup === true}
+							<BookmarkCheck class="w-5 h-5 text-emerald-500 shrink-0" aria-hidden="true" />
+						{:else}
+							<BookmarkX class="w-5 h-5 text-amber-500 shrink-0" aria-hidden="true" />
+						{/if}
+						<span
+							role="tooltip"
+							id="tooltip-wellknown"
+							class="invisible absolute bottom-full left-1/2 z-10 mb-2 w-52 -translate-x-1/2 rounded bg-slate-700 p-2 text-xs text-white opacity-0 transition-all before:invisible before:absolute before:left-1/2 before:top-full before:z-10 before:mb-2 before:-ml-1 before:border-x-4 before:border-t-4 before:border-x-transparent before:border-t-slate-700 before:opacity-0 before:transition-all before:content-[''] group-hover:visible group-hover:block group-hover:opacity-100 group-hover:before:visible group-hover:before:opacity-100 break-words overflow-hidden"
+						>
+							{tokenWellKnownLookup === true
+								? 'Found in well-known registry'
+								: `Not found in well-known registry for network ${(tokenWellKnownNetwork || '—').toUpperCase()}`}
+						</span>
+					</span>
+				{/if}
+			</div>
 			<FieldGroupAppendix>
 				If left empty, the default is the network currency or local fiat.
 			</FieldGroupAppendix>

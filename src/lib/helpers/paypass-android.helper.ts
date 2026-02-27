@@ -2,6 +2,7 @@ import * as jose from 'jose';
 import { env as publicEnv } from '$env/dynamic/public';
 import { calculateNotifications } from './paypass-notifications.helper';
 import { getPaypassLocalizedString, type LocalizedText, getPaypassLocalizedValueForLocale as getPaypassLocalizedValue } from './paypass-i18n.helper';
+import { getPayButtonUri } from './get-link.helper';
 import { formatAmount, formatAddressText } from './paypass-operator.helper';
 
 const isDebug = false;
@@ -699,7 +700,10 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 			displayText: { defaultValue: { language: locale, value: getPaypassLocalizedValue('paypass.pay', locale) || 'Pay' } },
 			webAppLinkInfo: {
 				appTarget: {
-					targetUri: { uri: `payto://${payload.props.network}`, description: getPaypassLocalizedValue('paypass.pay', locale) || 'Pay' }
+					targetUri: {
+						uri: getPayButtonUri(payload.props),
+						description: getPaypassLocalizedValue('paypass.pay', locale) || 'Pay'
+					}
 				}
 			}
 		},
