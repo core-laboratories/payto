@@ -347,7 +347,7 @@
 						<ArrowLeft class="w-5 h-5" />
 					</button>
 					<input
-						class="w-full h-12 p-3 ps-14 text-start bg-gray-900 rounded-md border-0"
+						class="w-full h-12 p-3 ps-14 text-start bg-gray-900 rounded-md border-0 uppercase"
 						type="text"
 						id="transport-network"
 						placeholder="Other network"
