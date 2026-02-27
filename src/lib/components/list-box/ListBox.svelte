@@ -5,12 +5,13 @@
 	export let items: ({ value: string | number; label: string; ticker?: string; group?: string } | { group: string; items: { value: string | number; label: string; ticker?: string }[] })[] = [];
 	export let value: string | number | undefined;
 	export let id: string = '';
+	export let placeholder: string = 'Select an option';
 	export let onChange: (value: string | number) => void = () => {};
 
 	const expanded = writable(false);
 	let dropdownElement: HTMLDivElement | null = null;
 
-	$: selectedLabel = (value !== undefined && value !== null) ? findSelectedLabel() : 'Select an option';
+	$: selectedLabel = (value !== undefined && value !== null) ? findSelectedLabel() : placeholder;
 
 	function toggle() {
 		expanded.update((e) => !e);
@@ -49,7 +50,7 @@
 				}
 			}
 		}
-		return 'Select an option';
+		return placeholder;
 	}
 </script>
 

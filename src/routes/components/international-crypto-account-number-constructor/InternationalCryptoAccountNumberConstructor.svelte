@@ -235,7 +235,8 @@
 		try {
 			const result = addressSchema.safeParse({
 				network: currentNetwork,
-				destination: value
+				destination: value,
+				__split: true
 			});
 
 			if (!result.success) {
@@ -333,6 +334,7 @@
 				<div in:fade>
 					<ListBox
 						id="transport-network"
+						placeholder="Select the Network"
 						bind:value={$constructor.networks.ican.network}
 						items={TRANSPORT.ican}
 						onChange={validateCurrentAddress}
