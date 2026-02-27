@@ -9,12 +9,13 @@
 		FieldGroupRadioWithNumber,
 		ListBox
 	} from '$lib/components';
-	import { ChevronDown, ChevronUp, ArrowLeft } from 'lucide-svelte';
+	import { BookmarkCheck, BookmarkX, ChevronDown, ChevronUp, ArrowLeft } from 'lucide-svelte';
 	import { env as publicEnv } from '$env/dynamic/public';
 
 	const isDebug = (import.meta.env.DEV || publicEnv.PUBLIC_ENV === 'preview')
 
 	import { TRANSPORT } from '$lib/data/transports.data';
+	import { lookupWellKnownToken, WELL_KNOWN_TESTNET_NETWORKS } from '$lib/helpers/well-known-lookup.helper';
 	import { constructor } from '$lib/store/constructor.store';
 	import { fade, fly } from 'svelte/transition';
 	import { addressSchema } from '$lib/validators/address.validator';
@@ -42,6 +43,42 @@
 	let previousClearedState = false;
 
 	let showAdvancedOptions = $state(false);
+
+	// Well-known token registry lookup (see well-known-lookup.helper.ts)
+	let tokenWellKnownLookup = $state<'idle' | 'loading' | true | false>('idle');
+	let tokenWellKnownNetwork = $state<string>('');
+	let tokenWellKnownDebounceId: ReturnType<typeof setTimeout> | null = null;
+
+	$effect(() => {
+		const currencyVal = $constructor.networks.ican.params?.currency?.value ?? '';
+		const network = $constructor.networks.ican.network;
+		const other = $constructor.networks.ican.other;
+		const effectiveNetwork = network === 'other' && other ? other : network;
+		const isTestnetContext =
+			addressNetworkType === 'testnet' ||
+			WELL_KNOWN_TESTNET_NETWORKS.includes((effectiveNetwork || '').toLowerCase());
+
+		if (!currencyVal.trim()) {
+			tokenWellKnownLookup = 'idle';
+			tokenWellKnownNetwork = '';
+			return;
+		}
+		if (tokenWellKnownDebounceId) clearTimeout(tokenWellKnownDebounceId);
+		tokenWellKnownDebounceId = setTimeout(() => {
+			tokenWellKnownDebounceId = null;
+			const lookedUpValue = currencyVal;
+			tokenWellKnownLookup = 'loading';
+			tokenWellKnownNetwork = effectiveNetwork;
+			lookupWellKnownToken(lookedUpValue, effectiveNetwork, isTestnetContext).then((result) => {
+				if (($constructor.networks.ican.params?.currency?.value ?? '').trim() === lookedUpValue.trim()) {
+					tokenWellKnownLookup = result.exists;
+				}
+			});
+		}, 400);
+		return () => {
+			if (tokenWellKnownDebounceId) clearTimeout(tokenWellKnownDebounceId);
+		};
+	});
 
 	$effect(() => {
 		classUpperValue = $constructor.networks.ican.params?.currency?.value?.toLowerCase()?.startsWith('0x') ? '' : 'uppercase';
@@ -396,11 +433,34 @@
 	{#if tokens === true}
 		<FieldGroup>
 			<FieldGroupLabel><span class="relative overflow-hidden cursor-help group hover:overflow-visible focus-visible:outline-none border-b border-dotted border-gray-400" aria-describedby="tooltip-tokencode">Token Code<span role="tooltip" id="tooltip-tokencode" class="invisible absolute bottom-full left-1/2 z-10 mb-2 w-48 -translate-x-1/2 rounded bg-slate-700 p-2 text-xs text-white opacity-0 transition-all before:invisible before:absolute before:left-1/2 before:top-full before:z-10 before:mb-2 before:-ml-1 before:border-x-4 before:border-t-4 before:border-x-transparent before:border-t-slate-700 before:opacity-0 before:transition-all before:content-[''] group-hover:visible group-hover:block group-hover:opacity-100 group-hover:before:visible group-hover:before:opacity-100">Token Code from <a href="https://github.com/bchainhub/well-known" target="_blank" rel="noopener">Well-Known registry</a></span></span> / Token Address</FieldGroupLabel>
-			<FieldGroupText
-				placeholder="e.g. CTN; 0x1ab…"
-				bind:value={$constructor.networks.ican.params.currency.value}
-				classValue={`tracking-widest placeholder:tracking-normal [&:not(:placeholder-shown)]:font-code ${classUpperValue}`}
-			/>
+			<div class="relative bg-gray-900 rounded-md">
+				<FieldGroupText
+					placeholder="e.g. CTN; 0x1ab…"
+					bind:value={$constructor.networks.ican.params.currency.value}
+					classValue={`tracking-widest placeholder:tracking-normal [&:not(:placeholder-shown)]:font-code ${classUpperValue} ${$constructor.networks.ican.params?.currency?.value ? 'pr-10' : ''}`}
+				/>
+				{#if $constructor.networks.ican.params?.currency?.value && tokenWellKnownLookup !== 'idle' && tokenWellKnownLookup !== 'loading'}
+					<span
+						class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center cursor-help group bg-gray-900 rounded-r-md"
+						aria-describedby="tooltip-wellknown"
+					>
+						{#if tokenWellKnownLookup === true}
+							<BookmarkCheck class="w-5 h-5 text-emerald-500 shrink-0" aria-hidden="true" />
+						{:else}
+							<BookmarkX class="w-5 h-5 text-amber-500 shrink-0" aria-hidden="true" />
+						{/if}
+						<span
+							role="tooltip"
+							id="tooltip-wellknown"
+							class="invisible absolute bottom-full left-1/2 z-10 mb-2 w-52 -translate-x-1/2 rounded bg-slate-700 p-2 text-xs text-white opacity-0 transition-all before:invisible before:absolute before:left-1/2 before:top-full before:z-10 before:mb-2 before:-ml-1 before:border-x-4 before:border-t-4 before:border-x-transparent before:border-t-slate-700 before:opacity-0 before:transition-all before:content-[''] group-hover:visible group-hover:block group-hover:opacity-100 group-hover:before:visible group-hover:before:opacity-100 break-words overflow-hidden"
+						>
+							{tokenWellKnownLookup === true
+								? 'Found in well-known registry'
+								: `Not found in well-known registry for network ${(tokenWellKnownNetwork || '—').toUpperCase()}`}
+						</span>
+					</span>
+				{/if}
+			</div>
 			<FieldGroupAppendix>
 				If left empty, the default is the network currency or local fiat.
 			</FieldGroupAppendix>
