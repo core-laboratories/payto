@@ -148,7 +148,7 @@ payto://xcb/Xx...x?amount=ctn:25.00&fiat=eur
 
 ### dl (deadline / expiration)
 
-Expiration as ISO timestamp, UNIX seconds, or minutes from now (1–60). Value earlier than current time marks the request as expired.
+Expiration as ISO timestamp, UNIX seconds, Unix milliseconds (≥1e12), or minutes from payment (1–400). Numeric values ≤400 are minutes from payment; above 400: seconds if <1e12, else milliseconds. Value earlier than current time marks the request as expired.
 
 ```txt
 payto://xcb/Xx...x?amount=ctn:10&dl=2025-12-31T23:59:59Z

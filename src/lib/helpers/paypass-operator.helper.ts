@@ -74,6 +74,20 @@ export function getImageUrls(
 	};
 }
 
+/** Numeric `dl`: 1–400 = minutes from payment; above 400 = Unix time (seconds if <1e12, else ms). */
+export const DEADLINE_RELATIVE_MINUTES_MAX = 400;
+
+export function deadlineNumericToExpiryMs(deadline: number): number | null {
+	if (Number.isNaN(deadline) || deadline <= 0) return null;
+	if (deadline <= DEADLINE_RELATIVE_MINUTES_MAX) {
+		return Date.now() + deadline * 60 * 1000;
+	}
+	if (deadline < 1e12) {
+		return deadline * 1000;
+	}
+	return deadline;
+}
+
 export function getExpirationDate(deadlineValue: number | string | null | undefined): string | null {
 	if (deadlineValue === null || deadlineValue === undefined || deadlineValue === '') return null;
 
@@ -86,18 +100,8 @@ export function getExpirationDate(deadlineValue: number | string | null | undefi
 	const deadline = Number(deadlineValue);
 	if (Number.isNaN(deadline) || deadline <= 0) return null;
 
-	// Small value (<= 60): minutes from now
-	if (deadline <= 60) {
-		return new Date(Date.now() + deadline * 60 * 1000).toISOString();
-	}
-
-	// < 1e12: treat as Unix seconds
-	if (deadline < 1e12) {
-		return new Date(deadline * 1000).toISOString();
-	}
-
-	// >= 1e12: treat as ms timestamp
-	return new Date(deadline).toISOString();
+	const expiryMs = deadlineNumericToExpiryMs(deadline);
+	return expiryMs === null ? null : new Date(expiryMs).toISOString();
 }
 
 export async function getVerifiedOrganizationName({

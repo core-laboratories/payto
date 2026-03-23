@@ -30,6 +30,10 @@
 	import { standardizeOrg } from '$lib/helpers/standardize.helper';
 	import { validateAddressByType } from '$lib/helpers/validate-address-by-type.helper';
 	import { getTitleTextBarcode } from '$lib/helpers/get-title-name.helper';
+	import {
+		DEADLINE_RELATIVE_MINUTES_MAX,
+		deadlineNumericToExpiryMs
+	} from '$lib/helpers/paypass-operator.helper';
 
 	// @ts-expect-error: Module is untyped
 	import pkg from 'open-location-code/js/src/openlocationcode';
@@ -122,8 +126,8 @@
 		const minutes = Math.floor((totalSeconds % 3600) / 60);
 		const seconds = totalSeconds % 60;
 
-		const lang = typeof $data.lang === 'string' ? $data.lang : (typeof $data.lang === 'object' && 'subscribe' in $data.lang ? get($data.lang) : 'en');
-		const isRtl = typeof $data.rtl === 'boolean' ? $data.rtl : (typeof $data.rtl === 'object' && 'subscribe' in $data.rtl ? get($data.rtl) : false);
+		const lang = typeof $data.lang === 'string' ? $data.lang : ($data.lang != null && typeof $data.lang === 'object' && 'subscribe' in $data.lang ? get($data.lang) : 'en');
+		const isRtl = typeof $data.rtl === 'boolean' ? $data.rtl : ($data.rtl != null && typeof $data.rtl === 'object' && 'subscribe' in $data.rtl ? get($data.rtl) : false);
 
 		// Format time components with leading zeros and localized numbers
 		const formatTime = (h: number, m: number, s: number) => {
@@ -341,7 +345,7 @@
 				[constructorStore, hostnameStore, paytoData],
 				([$constructor, $hostname, $data]) => {
 					const currency = $paytoData?.currency || '';
-					const lang = typeof $data.lang === 'string' ? $data.lang : (typeof $data.lang === 'object' && 'subscribe' in $data.lang ? get($data.lang) : 'en');
+					const lang = typeof $data.lang === 'string' ? $data.lang : ($data.lang != null && typeof $data.lang === 'object' && 'subscribe' in $data.lang ? get($data.lang) : 'en');
 					return new ExchNumberFormat(lang, {
 						style: 'currency',
 						currency,
@@ -421,7 +425,7 @@
 				[constructorStore, hostnameStore, paytoData],
 				([$constructor, $hostname, $data]) => {
 					const currency = $paytoData?.currency || '';
-					const lang = typeof $data.lang === 'string' ? $data.lang : (typeof $data.lang === 'object' && 'subscribe' in $data.lang ? get($data.lang) : 'en');
+					const lang = typeof $data.lang === 'string' ? $data.lang : ($data.lang != null && typeof $data.lang === 'object' && 'subscribe' in $data.lang ? get($data.lang) : 'en');
 					return new ExchNumberFormat(lang, {
 						style: 'currency',
 						currency,
@@ -461,7 +465,7 @@
 			const recurring = $data?.recurring;
 			if (!recurring || typeof recurring !== 'string') return '';
 
-			const lang = typeof $data.lang === 'string' ? $data.lang : (typeof $data.lang === 'object' && 'subscribe' in $data.lang ? get($data.lang) : 'en');
+			const lang = typeof $data.lang === 'string' ? $data.lang : ($data.lang != null && typeof $data.lang === 'object' && 'subscribe' in $data.lang ? get($data.lang) : 'en');
 
 			// Get locale-specific translations for recurring symbols
 			const translations = {
@@ -605,7 +609,7 @@
 			address = data;
 		} else if (typeof data === 'object' && 'hostname' in data && data.hostname === 'intra' && 'bic' in data && 'address' in data) {
 			address = `${data.bic}/${data.address}`;
-		} else if (typeof data === 'object' && 'subscribe' in data) {
+		} else if (data != null && typeof data === 'object' && 'subscribe' in data) {
 			// It's a Readable store - get the value first
 			const storeValue = get(data);
 			address = typeof storeValue === 'string' ? storeValue : (storeValue as any)?.address;
@@ -629,20 +633,26 @@
 
 		const deadlineValue = Number(deadline);
 
-		// If it's a relative deadline (1-60 minutes), rely only on the timer
-		if (deadlineValue >= 1 && deadlineValue <= 60) {
+		// Relative minutes (1–400): rely on the countdown timer
+		if (deadlineValue >= 1 && deadlineValue <= DEADLINE_RELATIVE_MINUTES_MAX) {
 			return $isExpired;
 		}
 
-		// Otherwise, check if the timestamp is in the past
+		if (deadlineValue > DEADLINE_RELATIVE_MINUTES_MAX) {
+			const expiryMs = deadlineValue < 1e12 ? deadlineValue * 1000 : deadlineValue;
+			return expiryMs < Date.now() || $isExpired;
+		}
+
 		return deadlineValue < Math.floor(Date.now() / 1000) || $isExpired;
 	}
 
 	// Define isExpiredPayment as a reactive variable for use in the template
 	$: isExpiredPayment = isPaymentExpired(
-		typeof $paytoData.deadline === 'object' && 'subscribe' in $paytoData.deadline
+		$paytoData.deadline != null &&
+			typeof $paytoData.deadline === 'object' &&
+			'subscribe' in $paytoData.deadline
 			? get($paytoData.deadline)
-			: $paytoData.deadline
+			: ($paytoData.deadline ?? undefined)
 	) || $isExpired;
 
 	// Track previous deadline value to detect changes
@@ -662,55 +672,8 @@
 		}
 
 		// Recalculate the deadline whenever the deadline value changes
-		// Check if deadline is a one or two-digit number (1-60)
-		if (deadlineValue >= 1 && deadlineValue <= 60) {
-			// Treat as minutes from current time
-			deadlineTimestamp = Date.now() + (deadlineValue * 60 * 1000);
-			calculatedDeadlineMs.set(deadlineTimestamp);
-		} else {
-			// Treat as Unix timestamp in seconds
-			deadlineTimestamp = deadlineValue * 1000;
-			calculatedDeadlineMs.set(deadlineTimestamp);
-		}
-
-		const now = Date.now();
-
-		// Set initial expired state
-		const isCurrentlyExpired = deadlineTimestamp <= now;
-		isExpired.set(isCurrentlyExpired);
-
-		// Check if we need to restart the timer (new deadline or different value)
-		const currentDeadlineMs = $calculatedDeadlineMs;
-		const needsTimerRestart = !timerInterval || currentDeadlineMs !== deadlineTimestamp || deadlineChanged;
-
-		// Only start/restart timer if not already expired
-		if (!isCurrentlyExpired) {
-			const timeUntilDeadline = deadlineTimestamp - now;
-
-			// For relative deadlines (1-60 minutes), always show the countdown
-			// For absolute timestamps, always show countdown
-			const isRelativeDeadline = deadlineValue >= 1 && deadlineValue <= 60;
-
-			if (timeUntilDeadline > 0) {
-				expirationTimeMs.set(deadlineTimestamp);
-				timeRemaining.set(timeUntilDeadline);
-				initialTimeMs.set(timeUntilDeadline); // Store initial time for percentage calculation
-
-				// Start/restart timer if needed
-				if (needsTimerRestart) {
-					if (timerInterval) {
-						clearInterval(timerInterval);
-						timerInterval = null;
-					}
-					if (timerTimeout) {
-						clearTimeout(timerTimeout);
-						timerTimeout = null;
-					}
-					startExpirationTimer();
-				}
-			}
-		} else if (isCurrentlyExpired) {
-			// If already expired, clear the timer and ensure expired state is true
+		const parsedExpiryMs = deadlineNumericToExpiryMs(deadlineValue);
+		if (parsedExpiryMs === null) {
 			if (timerInterval) {
 				clearInterval(timerInterval);
 				timerInterval = null;
@@ -719,12 +682,65 @@
 				clearTimeout(timerTimeout);
 				timerTimeout = null;
 			}
+			expirationTimeMs.set(null);
+			initialTimeMs.set(null);
 			timeRemaining.set(0);
-			isExpired.set(true);
-		}
+			isExpired.set(false);
+			calculatedDeadlineMs.set(null);
+			previousDeadlineValue = deadlineValue;
+		} else {
+			deadlineTimestamp = parsedExpiryMs;
+			calculatedDeadlineMs.set(deadlineTimestamp);
 
-		// Update previous deadline value
-		previousDeadlineValue = deadlineValue;
+			const now = Date.now();
+
+			// Set initial expired state
+			const isCurrentlyExpired = deadlineTimestamp <= now;
+			isExpired.set(isCurrentlyExpired);
+
+			// Check if we need to restart the timer (new deadline or different value)
+			const currentDeadlineMs = $calculatedDeadlineMs;
+			const needsTimerRestart = !timerInterval || currentDeadlineMs !== deadlineTimestamp || deadlineChanged;
+
+			// Only start/restart timer if not already expired
+			if (!isCurrentlyExpired) {
+				const timeUntilDeadline = deadlineTimestamp - now;
+
+				if (timeUntilDeadline > 0) {
+					expirationTimeMs.set(deadlineTimestamp);
+					timeRemaining.set(timeUntilDeadline);
+					initialTimeMs.set(timeUntilDeadline); // Store initial time for percentage calculation
+
+					// Start/restart timer if needed
+					if (needsTimerRestart) {
+						if (timerInterval) {
+							clearInterval(timerInterval);
+							timerInterval = null;
+						}
+						if (timerTimeout) {
+							clearTimeout(timerTimeout);
+							timerTimeout = null;
+						}
+						startExpirationTimer();
+					}
+				}
+			} else if (isCurrentlyExpired) {
+				// If already expired, clear the timer and ensure expired state is true
+				if (timerInterval) {
+					clearInterval(timerInterval);
+					timerInterval = null;
+				}
+				if (timerTimeout) {
+					clearTimeout(timerTimeout);
+					timerTimeout = null;
+				}
+				timeRemaining.set(0);
+				isExpired.set(true);
+			}
+
+			// Update previous deadline value
+			previousDeadlineValue = deadlineValue;
+		}
 	} else if (!$paytoData.deadline) {
 		// If deadline is removed, clear the timer and reset expired state
 		if (timerInterval) {

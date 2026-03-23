@@ -272,7 +272,7 @@ Both `postForm` and API accept the same payload structure for generating Passes.
     - **`rc`** (object, optional): Recurring payment
       - `value` (string): Recurrence period (`"daily"`, `"weekly"`, `"monthly"`, `"yearly"`)
     - **`dl`** (object, optional): Deadline/expiration
-      - `value` (number): Unix timestamp or minutes (1-60)
+      - `value` (number): minutes 1–400 from payment, or Unix time if >400 (seconds if <1e12, else ms)
     - **`donate`** (object, optional): Donation flag
       - `value` (number): 0 or 1
     - **`loc`** (object, optional): Location (for `void` payments with `geo` or `plus` network)
