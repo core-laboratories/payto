@@ -126,8 +126,8 @@
 		const minutes = Math.floor((totalSeconds % 3600) / 60);
 		const seconds = totalSeconds % 60;
 
-		const lang = typeof $data.lang === 'string' ? $data.lang : (typeof $data.lang === 'object' && 'subscribe' in $data.lang ? get($data.lang) : 'en');
-		const isRtl = typeof $data.rtl === 'boolean' ? $data.rtl : (typeof $data.rtl === 'object' && 'subscribe' in $data.rtl ? get($data.rtl) : false);
+		const lang = typeof $data.lang === 'string' ? $data.lang : ($data.lang != null && typeof $data.lang === 'object' && 'subscribe' in $data.lang ? get($data.lang) : 'en');
+		const isRtl = typeof $data.rtl === 'boolean' ? $data.rtl : ($data.rtl != null && typeof $data.rtl === 'object' && 'subscribe' in $data.rtl ? get($data.rtl) : false);
 
 		// Format time components with leading zeros and localized numbers
 		const formatTime = (h: number, m: number, s: number) => {
@@ -345,7 +345,7 @@
 				[constructorStore, hostnameStore, paytoData],
 				([$constructor, $hostname, $data]) => {
 					const currency = $paytoData?.currency || '';
-					const lang = typeof $data.lang === 'string' ? $data.lang : (typeof $data.lang === 'object' && 'subscribe' in $data.lang ? get($data.lang) : 'en');
+					const lang = typeof $data.lang === 'string' ? $data.lang : ($data.lang != null && typeof $data.lang === 'object' && 'subscribe' in $data.lang ? get($data.lang) : 'en');
 					return new ExchNumberFormat(lang, {
 						style: 'currency',
 						currency,
@@ -425,7 +425,7 @@
 				[constructorStore, hostnameStore, paytoData],
 				([$constructor, $hostname, $data]) => {
 					const currency = $paytoData?.currency || '';
-					const lang = typeof $data.lang === 'string' ? $data.lang : (typeof $data.lang === 'object' && 'subscribe' in $data.lang ? get($data.lang) : 'en');
+					const lang = typeof $data.lang === 'string' ? $data.lang : ($data.lang != null && typeof $data.lang === 'object' && 'subscribe' in $data.lang ? get($data.lang) : 'en');
 					return new ExchNumberFormat(lang, {
 						style: 'currency',
 						currency,
@@ -465,7 +465,7 @@
 			const recurring = $data?.recurring;
 			if (!recurring || typeof recurring !== 'string') return '';
 
-			const lang = typeof $data.lang === 'string' ? $data.lang : (typeof $data.lang === 'object' && 'subscribe' in $data.lang ? get($data.lang) : 'en');
+			const lang = typeof $data.lang === 'string' ? $data.lang : ($data.lang != null && typeof $data.lang === 'object' && 'subscribe' in $data.lang ? get($data.lang) : 'en');
 
 			// Get locale-specific translations for recurring symbols
 			const translations = {
@@ -609,7 +609,7 @@
 			address = data;
 		} else if (typeof data === 'object' && 'hostname' in data && data.hostname === 'intra' && 'bic' in data && 'address' in data) {
 			address = `${data.bic}/${data.address}`;
-		} else if (typeof data === 'object' && 'subscribe' in data) {
+		} else if (data != null && typeof data === 'object' && 'subscribe' in data) {
 			// It's a Readable store - get the value first
 			const storeValue = get(data);
 			address = typeof storeValue === 'string' ? storeValue : (storeValue as any)?.address;
@@ -648,9 +648,11 @@
 
 	// Define isExpiredPayment as a reactive variable for use in the template
 	$: isExpiredPayment = isPaymentExpired(
-		typeof $paytoData.deadline === 'object' && 'subscribe' in $paytoData.deadline
+		$paytoData.deadline != null &&
+			typeof $paytoData.deadline === 'object' &&
+			'subscribe' in $paytoData.deadline
 			? get($paytoData.deadline)
-			: $paytoData.deadline
+			: ($paytoData.deadline ?? undefined)
 	) || $isExpired;
 
 	// Track previous deadline value to detect changes
