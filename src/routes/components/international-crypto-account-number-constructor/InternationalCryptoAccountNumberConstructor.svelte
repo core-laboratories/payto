@@ -599,12 +599,11 @@
 
 					{#if $constructor.networks.ican.params.dl.isMinutes}
 						<FieldGroupNumber
-							placeholder="e.g. 30 (minutes from execution)"
+							placeholder="e.g. 30 (minutes) or Unix time when above 400"
 							bind:value={$constructor.networks.ican.params.dl.value}
 							min={1}
-							max={60}
 						/>
-						<FieldGroupAppendix>Enter a value between 1-60 minutes from execution.</FieldGroupAppendix>
+						<FieldGroupAppendix>1–400: minutes from payment; above 400: Unix time (seconds if &lt;1e12, else milliseconds).</FieldGroupAppendix>
 					{:else}
 						<FieldGroupDateTime
 							id="expirationInput"
