@@ -390,7 +390,9 @@ const generateMetaTag = (type: ITransitionType, props: Record<string, any>, well
 
 	const content = META_CONTENT[type](props);
 
-	return wellKnown ? `{"${property}": "${content}"}` : `<meta property="${property}" content="${content}" />`;
+	return wellKnown
+		? JSON.stringify([{ [property]: content }])
+		: `<meta property="${property}" content="${content}" />`;
 };
 
 /**
@@ -424,7 +426,11 @@ export const generate = (type: ITransitionType, props: any, payload: IPayload[])
 		{ label: 'Tailwind Payment Button', value: generateTailwindPaymentButton(link, props), type: 'payment' },
 		{ label: 'Tailwind Donation Button', value: generateTailwindDonationButton(generateLink(payload, props, true), props), type: 'donation' },
 		{ label: 'FinTag (Meta Tag)', note: 'Basic payment instructions only.', value: generateMetaTag(type, props) },
-		{ label: 'FinTag (Well-Known)', note: '/.well-known/fintag.json file', value: generateMetaTag(type, props, true) }
+		{
+			label: 'FinTag (Well-Known)',
+			note: '/.well-known/fintag.json as a JSON array of objects, e.g. [{ "ican:xcb": "…" }]',
+			value: generateMetaTag(type, props, true)
+		}
 	];
 };
 

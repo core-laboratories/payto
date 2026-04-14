@@ -196,7 +196,62 @@ export async function getWebsiteFavicon(domain: string): Promise<string | null> 
 }
 
 /**
- * Verify if a website's fintag.json matches a given address
+ * Parses `/.well-known/fintag.json` JSON body.
+ * Root must be a non-empty array of plain objects (not a single `{…}` root).
+ * Entries are merged in order; duplicate keys are overridden by later objects.
+ *
+ * @example [{ "ican:xcb": "cb7147…" }]
+ * @returns Merged key → value map, or `null` if the document is invalid.
+ */
+export function parseFintagJsonArray(raw: unknown): Record<string, unknown> | null {
+	if (!Array.isArray(raw) || raw.length === 0) {
+		return null;
+	}
+
+	const merged = raw.reduce<Record<string, unknown>>((acc, item) => {
+		if (item !== null && typeof item === 'object' && !Array.isArray(item)) {
+			Object.assign(acc, item as Record<string, unknown>);
+		}
+		return acc;
+	}, {});
+
+	return Object.keys(merged).length > 0 ? merged : null;
+}
+
+/**
+ * Returns whether `addressToMatch` equals a value in the merged fintag map (optional `ican:{network}` key checked first when `network` is set).
+ */
+function isAddressMatchInFintag(
+	fintagData: Record<string, unknown>,
+	addressToMatch: string,
+	network: string | undefined
+): boolean {
+	if (network) {
+		const networkKey = `ican:${network.toLowerCase()}`;
+		if (fintagData[networkKey] !== undefined && fintagData[networkKey] !== null) {
+			const fintagAddress = String(fintagData[networkKey]).toLowerCase().trim();
+			if (fintagAddress === addressToMatch) {
+				return true;
+			}
+		}
+	}
+
+	for (const key in fintagData) {
+		if (Object.prototype.hasOwnProperty.call(fintagData, key)) {
+			const value = String(fintagData[key]).toLowerCase().trim();
+			if (value === addressToMatch) {
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+/**
+ * Verify if a website's fintag.json matches a given address.
+ * Expects `/.well-known/fintag.json` to be a JSON array of objects `[{…}]`, per FinTag well-known format.
+ *
  * @param org - Domain name to verify (e.g., "example.com", "sub.domain.org")
  * @param address - Address to match against
  * @param network - Network identifier (e.g., "xcb", "eth") to find the right mapping
@@ -237,40 +292,16 @@ export async function verifyWebsite(org: string, address: string, network?: stri
 			return result;
 		}
 
-		// Parse JSON
-		const fintagData = await response.json();
-
-		if (!fintagData || typeof fintagData !== 'object') {
-			// Invalid JSON structure
+		const raw = await response.json();
+		const fintagData = parseFintagJsonArray(raw);
+		if (!fintagData) {
 			return result;
 		}
 
-		// Check if address matches any value in the fintag.json
-		// If network is provided, check specific key first: "ican:network"
-		// Otherwise, check all values
 		const addressToMatch = address.toLowerCase().trim();
-
-		if (network) {
-			// Try network-specific key first (e.g., "ican:xcb")
-			const networkKey = `ican:${network.toLowerCase()}`;
-			if (fintagData[networkKey]) {
-				const fintagAddress = String(fintagData[networkKey]).toLowerCase().trim();
-				if (fintagAddress === addressToMatch) {
-					result.isVerified = true;
-					return result;
-				}
-			}
-		}
-
-		// Check all values in the JSON object
-		for (const key in fintagData) {
-			if (Object.prototype.hasOwnProperty.call(fintagData, key)) {
-				const value = String(fintagData[key]).toLowerCase().trim();
-				if (value === addressToMatch) {
-					result.isVerified = true;
-					return result;
-				}
-			}
+		if (isAddressMatchInFintag(fintagData, addressToMatch, network)) {
+			result.isVerified = true;
+			return result;
 		}
 	} catch (error) {
 		// Fetch or parse failed
