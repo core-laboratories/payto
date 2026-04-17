@@ -400,7 +400,7 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 
 		/* ---------------- Images, title, text ---------------- */
 
-		const imageUrls = getImageUrls(kvData, destination, network, isDev, linkBaseUrl);
+		const imageUrls = getImageUrls(kvData, destination, network, isDev, linkBaseUrl, hostname);
 
 		const titleText = getTitleText(hostname, destination, network, props, currency, true);
 		const purposeText = getPurposeText(design);

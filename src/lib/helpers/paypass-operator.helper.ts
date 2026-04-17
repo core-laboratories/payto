@@ -5,6 +5,7 @@ import OpenLocationCode from 'open-location-code/js/src/openlocationcode';
 import { standardizeOrg } from '$lib/helpers/standardize.helper';
 import { verifyOrganization } from '$lib/helpers/oric.helper';
 import { verifyWebsite } from '$lib/helpers/fintag.helper';
+import { normalizeAddressForIdenticon } from '$lib/helpers/normalize-identicon-seed.helper';
 export { getTitleText, getTitleTextBarcode } from './get-title-name.helper';
 
 
@@ -44,8 +45,10 @@ export function getImageUrls(
 	address: string,
 	network: string | null | undefined,
 	isDev: boolean,
-	baseUrl: string
+	baseUrl: string,
+	hostname?: string | null
 ) {
+	const identiconAddress = normalizeAddressForIdenticon(address, network ?? undefined, hostname ?? undefined);
 	return {
 		// Apple Wallet images (must be PNG → never use blockies SVG)
 		apple: {
@@ -61,8 +64,11 @@ export function getImageUrls(
 		google: {
 			logo:
 				kvData?.icons?.google?.logo ||
-				(network && ['ican', 'iban', 'ach', 'upi', 'pix', 'bic', 'intra'].includes(network) && address && !isDev
-					? `${baseUrl}/blo/${address}`
+				(network &&
+					['ican', 'iban', 'ach', 'upi', 'pix', 'bic', 'intra', 'xcb', 'xce', 'xab'].includes(network) &&
+					address &&
+					!isDev
+					? `${baseUrl}/blo/${identiconAddress}`
 					: `${baseUrl}/images/paypass/google-wallet/logo.png`),
 
 			// optional decorative icon

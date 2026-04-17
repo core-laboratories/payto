@@ -34,6 +34,7 @@
 		DEADLINE_RELATIVE_MINUTES_MAX,
 		deadlineNumericToExpiryMs
 	} from '$lib/helpers/paypass-operator.helper';
+	import { normalizeAddressForIdenticon } from '$lib/helpers/normalize-identicon-seed.helper';
 
 	// @ts-expect-error: Module is untyped
 	import pkg from 'open-location-code/js/src/openlocationcode';
@@ -602,19 +603,42 @@
 		return infoDisplay;
 	}
 
+	function readStringOrStore(v: string | Readable<string> | undefined): string | undefined {
+		if (v === undefined || v === null) return undefined;
+		if (typeof v === 'string') return v;
+		if (typeof v === 'object' && 'subscribe' in v) return get(v);
+		return undefined;
+	}
+
 	function getIdenticon(data: string | Readable<string> | undefined | FlexiblePaytoData | ITransactionState): string {
 		if (!data) return '';
 		let address: string | undefined;
+		let network: string | undefined;
+		let host: string | undefined;
 		if (typeof data === 'string') {
 			address = data;
 		} else if (typeof data === 'object' && 'hostname' in data && data.hostname === 'intra' && 'bic' in data && 'address' in data) {
 			address = `${data.bic}/${data.address}`;
 		} else if (data != null && typeof data === 'object' && 'subscribe' in data) {
-			// It's a Readable store - get the value first
 			const storeValue = get(data);
-			address = typeof storeValue === 'string' ? storeValue : (storeValue as any)?.address;
+			if (typeof storeValue === 'string') {
+				address = storeValue;
+			} else if (storeValue && typeof storeValue === 'object') {
+				const sv = storeValue as FlexiblePaytoData;
+				network = readStringOrStore(sv.network);
+				host = readStringOrStore(sv.hostname);
+				const rawAddr = (storeValue as any).address;
+				if (typeof rawAddr === 'string') {
+					address = rawAddr;
+				} else if (rawAddr && typeof rawAddr === 'object' && 'subscribe' in rawAddr) {
+					address = get(rawAddr);
+				}
+			}
 		} else if (typeof data === 'object' && 'address' in data) {
 			// It's an object with address property (FlexiblePaytoData or ITransactionState)
+			const d = data as FlexiblePaytoData;
+			network = readStringOrStore(d.network);
+			host = readStringOrStore(d.hostname);
 			const addr = data.address;
 			if (typeof addr === 'string') {
 				address = addr;
@@ -624,7 +648,8 @@
 			}
 		}
 		if (!address || typeof address !== 'string') return '';
-		return blo(address);
+		const seed = normalizeAddressForIdenticon(address, network, host);
+		return blo(seed);
 	}
 
 	// Function to check if a payment is expired
