@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
 import { blo } from '@blockchainhub/blo';
 import { validateWalletAddress } from 'blockchain-wallet-validator';
+import { normalizeBloPathId } from '$lib/helpers/normalize-identicon-seed.helper';
 
 export async function GET({ params }: { params: { id: string } }) {
 	const address = params.id;
@@ -19,8 +20,8 @@ export async function GET({ params }: { params: { id: string } }) {
 			throw error(400, 'Invalid blockchain address');
 		}
 
-		// Generate identicon using blo
-		const identicon = blo(address);
+		// Generate identicon using blo (Core ICAN cb/ce/ab + 40 hex → lowercase for stable output)
+		const identicon = blo(normalizeBloPathId(address));
 
 		// Extract base64 data from data URI
 		const base64Data = identicon.split(',')[1];
