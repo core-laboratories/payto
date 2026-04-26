@@ -30,23 +30,48 @@
 		classValue = ''
 	} = $props();
 
+	function parseRecurringValue(value: string | null, fallbackValue: string, fallbackNumber: number) {
+		if (!value) {
+			return {
+				checked: fallbackValue,
+				number: fallbackNumber
+			};
+		}
+
+		const compoundValue = value.match(/^(\d+)([a-z])$/i);
+		if (compoundValue) {
+			const [, rawNumber, unit] = compoundValue;
+			const matchedOption = options.find((option) => option.value === unit && option.hasNumberInput);
+			if (matchedOption) {
+				return {
+					checked: unit,
+					number: Math.max(numberMin, Math.min(numberMax, Number.parseInt(rawNumber, 10) || fallbackNumber))
+				};
+			}
+		}
+
+		return {
+			checked: value,
+			number: fallbackNumber
+		};
+	}
+
 	// Initial values from props via $derived so they stay reactive
-	const initialChecked = $derived(defaultChecked || options[0]?.value || '');
-	const initialNumber = $derived(numberValue);
+	const initialState = $derived(parseRecurringValue(defaultChecked, options[0]?.value || '', numberValue));
 
 	// Local state for user interaction; synced from props when they change
 	let internalCheckedValue = $state('');
 	let numberValueStore = $state(0);
 
 	$effect(() => {
-		internalCheckedValue = initialChecked;
-		numberValueStore = initialNumber;
+		internalCheckedValue = initialState.checked;
+		numberValueStore = initialState.number;
 	});
 
 	// Derived state using $derived
 	const computedOutput = $derived(
-		internalCheckedValue === 'd' && numberValueStore > 1
-			? `${numberValueStore}d`
+		options.find((option) => option.value === internalCheckedValue)?.hasNumberInput && numberValueStore > 1
+			? `${numberValueStore}${internalCheckedValue}`
 			: internalCheckedValue
 	);
 

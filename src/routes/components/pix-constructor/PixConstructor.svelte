@@ -170,9 +170,9 @@
 	{#if $constructor.networks.pix.isRc}
 		<FieldGroupRadioWithNumber
 			options={[
-				{ name: 'Yearly', value: 'y' },
-				{ name: 'Monthly', value: 'm' },
-				{ name: 'Weekly', value: 'w' },
+				{ name: 'Yearly', value: 'y', hasNumberInput: true },
+				{ name: 'Monthly', value: 'm', hasNumberInput: true },
+				{ name: 'Weekly', value: 'w', hasNumberInput: true },
 				{ name: 'Daily', value: 'd', hasNumberInput: true }
 			]}
 			defaultChecked={$constructor.networks.pix.params.rc.value}
