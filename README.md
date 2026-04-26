@@ -129,8 +129,7 @@ Issuing authorities[^authority] deliver an object like this example to the email
   "currencyLocale": "en-US", // The locale used for currency formatting (e.g., `"en-US"`, `"de-DE"`, `"sk-SK"`)
   "postForm": false, // If true, allows Pass generation via HTML form submission from any origin
   "api": { // API access configuration for programmatic Pass generation
-    "allowed": false, // Set to `true` to enable API access
-    "secret": "your-api-secret-here" // Your API secret key encoded with base64 used to generate bearer tokens (HMAC-SHA256)
+    "allowed": false // Set to `true` to enable API access
   }
 }
 ```
@@ -224,10 +223,50 @@ Issuing authorities[^authority] deliver an object like this example to the email
 
 - **`api`** (optional): API access configuration for programmatic Pass generation.
   - `allowed`: Set to `true` to enable API access
-  - `secret`: Your API secret key encoded with base64 used to generate bearer tokens (HMAC-SHA256)
-  - Default: `{ "allowed": false, "secret": "" }`
+  - Default: `{ "allowed": false }`
   - Note: When API is enabled, requests must include `Authorization: Bearer <token>` header
-  - Token format: HMAC-SHA256 hash of payload + expiration timestamp (default: 1 minute, configurable via `PRIVATE_API_TOKEN_TIMEOUT` env var)
+  - Secret source: one Cloudflare secret per authority
+  - Token format: payload-bound token in the form `{base64url(json)}.{hmac_sha256}`, where the JSON contains the exact issuance payload plus an expiration timestamp (default: 1 minute, configurable via `PRIVATE_API_TOKEN_TIMEOUT` env var)
+
+#### Cloudflare Secret Setup
+
+Per-authority API signing secrets are stored as separate Cloudflare Worker secrets.
+
+Secret name format:
+
+```txt
+PRIVATE_PAYTO_API_SECRET_{AUTHORITY_ID}
+```
+
+Where `{AUTHORITY_ID}` is:
+
+- uppercased
+- non-alphanumeric characters replaced with `_`
+
+Examples:
+
+```txt
+PRIVATE_PAYTO_API_SECRET_PINGCHB2
+PRIVATE_PAYTO_API_SECRET_ACME_PAY
+```
+
+Set each one with Wrangler:
+
+```bash
+wrangler secret put PRIVATE_PAYTO_API_SECRET_PINGCHB2
+```
+
+Paste the authority's HMAC secret as the value, base64-encoded.
+
+Rules:
+
+- one secret per authority
+- each value must be the authority HMAC secret encoded with base64
+- secrets are read server-side only and are never exposed to the client
+
+For local development, you can define the same secret names in your local environment.
+
+If you are migrating from an older setup, `kvData.api.secret` is still accepted as a fallback, but per-authority Cloudflare secrets are now the preferred source.
 
 #### API Access
 
@@ -237,11 +276,21 @@ When `api.allowed` is `true`, you can generate Passes programmatically by:
 2. Including the token in the `Authorization` header: `Bearer <token>`
 3. Token expires after the configured timeout (default: 1 minute, set via `PRIVATE_API_TOKEN_TIMEOUT` environment variable)
 
+The signed payload must match the issuance request body exactly for these fields:
+
+- `authority`
+- `hostname`
+- `props`
+- `design`
+- `membership`
+- `locale`
+
 Both `postForm` and `api.allowed` can be enabled simultaneously. The authorization flow checks:
 
-1. If API is allowed and valid bearer token is provided → authorized
-2. If postForm is allowed → authorized
-3. Otherwise → check origin (must match application origin)
+1. If API is allowed and a valid payload-bound bearer token is provided → authorized
+2. If `postForm` is enabled and the request is same-origin → authorized
+3. If `postForm` is enabled for an external issuer portal and a valid payload-bound form token is provided → authorized
+4. Otherwise → check origin (must match application origin)
 
 ### Pass Generation API
 
@@ -300,6 +349,11 @@ Both `postForm` and API accept the same payload structure for generating Passes.
   - Useful for dynamic destination addresses in HTML forms
   - Only works with `application/x-www-form-urlencoded` requests, not JSON API requests
 
+- **`token`** (string, optional for forms / required for signed external issuance): Payload-bound signature token
+  - For JSON API calls, send this token as `Authorization: Bearer <token>`
+  - For HTML forms, include it as a hidden field named `token`
+  - Required for external signed issuance when the issuer is not the default `payto` issuer
+
 - **`membership`** (string, optional): Member address for tracking
 - **`authority`** (string, optional): Authority ID (auto-populated from URL parameter)
 - **`os`** (string, optional): Target operating system (`"ios"`, `"android"`, or `"unknown"`)
@@ -312,6 +366,7 @@ Both `postForm` and API accept the same payload structure for generating Passes.
 <!-- Form submission from external website -->
 <form method="POST" action="https://payto.money/pass?authority=your_id">
   <input type="hidden" name="hostname" value="ican" />
+  <input type="hidden" name="token" value="PAYLOAD_BOUND_TOKEN_HERE" />
 
   <input type="hidden" name="props" value='{
     "network": "xcb",
@@ -343,6 +398,7 @@ Both `postForm` and API accept the same payload structure for generating Passes.
 <!-- Form submission from external website -->
 <form method="POST" action="https://payto.money/pass?authority=your_id">
   <input type="hidden" name="hostname" value="ican" />
+  <input type="hidden" name="token" value="PAYLOAD_BOUND_TOKEN_HERE" />
 
   <input type="hidden" name="props" value='{
     "network": "xcb",
@@ -404,6 +460,7 @@ curl -X POST https://payto.money/pass?authority=your_id \
 <!-- Using destination field to override props.destination -->
 <form method="POST" action="https://payto.money/pass?authority=your_id" enctype="application/x-www-form-urlencoded">
   <input type="hidden" name="hostname" value="ican" />
+  <input type="hidden" name="token" value="PAYLOAD_BOUND_TOKEN_HERE" />
 
   <!-- User can input their own address -->
   <label for="userAddress">Your Wallet Address:</label>
@@ -430,7 +487,7 @@ curl -X POST https://payto.money/pass?authority=your_id \
 </form>
 ```
 
-**Note:** The form field `destination` will override `props.destination`, allowing users to input their own wallet address dynamically.
+**Note:** The form field `destination` will override `props.destination`, allowing users to input their own wallet address dynamically. If you use signed external issuance, the token must be generated for the final payload after any destination override is applied.
 
 #### Example: Complete Payload
 

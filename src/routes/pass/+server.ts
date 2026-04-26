@@ -128,6 +128,61 @@ function detectOSFromUserAgent(userAgent: string | null): string {
 	return '';
 }
 
+function buildIssuedPayloadEnvelope({
+	authority,
+	hostname,
+	props,
+	design,
+	membership,
+	locale
+}: {
+	authority: string;
+	hostname: string | null | undefined;
+	props: Record<string, unknown> | null | undefined;
+	design: Record<string, unknown> | null | undefined;
+	membership: string | null | undefined;
+	locale: string | null | undefined;
+}) {
+	return {
+		authority,
+		hostname: hostname ?? null,
+		props: props ?? null,
+		design: design ?? null,
+		membership: membership ?? null,
+		locale: locale ?? null
+	};
+}
+
+function getAuthoritySecretEnvKey(authority: string): string {
+	return `PRIVATE_PAYTO_API_SECRET_${authority
+		.toUpperCase()
+		.replace(/[^A-Z0-9]+/g, '_')
+		.replace(/^_+|_+$/g, '')}`;
+}
+
+function getAuthorityApiSecret(
+	authority: string,
+	kvData: any,
+	platformEnv?: { env?: Record<string, string | undefined> }
+): string | null {
+	const envKey = getAuthoritySecretEnvKey(authority);
+	const runtimeSecret = platformEnv?.env?.[envKey];
+	if (typeof runtimeSecret === 'string' && runtimeSecret.length > 0) {
+		return runtimeSecret;
+	}
+
+	const localSecret = env[envKey];
+	if (typeof localSecret === 'string' && localSecret.length > 0) {
+		return localSecret;
+	}
+
+	if (typeof kvData?.api?.secret === 'string' && kvData.api.secret.length > 0) {
+		return kvData.api.secret;
+	}
+
+	return null;
+}
+
 export async function POST({ request, url, fetch, platform }: RequestEvent) {
 	// Initialize KV from platform binding (binding name should match wrangler.toml, typically 'KV')
 	// In Cloudflare Workers, platform.env contains the KV bindings
@@ -150,8 +205,9 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 
 	if (contentType.includes('application/json')) {
 		const jsonData = await request.json();
-		authorityField = jsonData.authority || null;
+		authorityField = jsonData.authority || url.searchParams.get('authority') || null;
 		data = jsonData;
+		data.token = jsonData.token || null;
 		// Auto-detect OS if not provided
 		data.os = data.os || detectOSFromUserAgent(userAgent);
 	} else {
@@ -163,6 +219,7 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 		data.design = form.get('design') ? JSON.parse(form.get('design') as string) : null;
 		data.authority = form.get('authority') as string;
 		data.membership = form.get('membership') as string;
+		data.token = (form.get('token') as string) || url.searchParams.get('token');
 		// Auto-detect OS if not provided in form or query params
 		data.os = (form.get('os') as string) || url.searchParams.get('os') || detectOSFromUserAgent(userAgent);
 		data.locale = (form.get('locale') as string) || url.searchParams.get('locale') || null;
@@ -170,6 +227,20 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 		const dest = form.get('destination') as string;
 		if (dest && data.props) data.props.destination = dest;
 	}
+
+	const origin = request.headers.get('origin');
+	const isSameOriginRequest = origin === baseOrigin;
+	const issuedPayload =
+		authorityField
+			? buildIssuedPayloadEnvelope({
+					authority: authorityField.toLowerCase(),
+					hostname: data.hostname,
+					props: data.props,
+					design: data.design,
+					membership: data.membership,
+					locale: data.locale
+				})
+			: null;
 
 	/* ---------------- Authority config ---------------- */
 
@@ -208,34 +279,43 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 	const isApiRequest = contentType.includes('application/json');
 
 	if (authority && kvData) {
-		// Check for API token first
-		if (kvData.api?.allowed) {
-			const authHeader = request.headers.get('authorization');
-			const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
+		const authorityApiSecret = getAuthorityApiSecret(authorityItem, kvData, platformEnv);
 
-			if (token && kvData.api.secret) {
-				const payload = { authority: authorityItem };
-				if (verifyToken(token, payload, kvData.api.secret, apiTokenTimeout)) {
-					isAuthorized = true;
-				} else {
-					throw error(403, 'Invalid or expired API token');
-				}
-			} else if (isApiRequest) {
-				// For API requests, if api.allowed is true but no token, require token
-				throw error(403, 'API access requires bearer token');
+		// Check for API token first
+		const authHeader = request.headers.get('authorization');
+		const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
+		const requestToken = typeof data.token === 'string' ? data.token : null;
+		const proofToken = bearerToken || requestToken;
+
+		if (proofToken && authorityApiSecret && issuedPayload) {
+			if (verifyToken(proofToken, issuedPayload, authorityApiSecret, apiTokenTimeout)) {
+				isAuthorized = true;
+			} else {
+				throw error(403, 'Invalid, expired, or tampered issuer payload token');
 			}
+		}
+
+		if (!isAuthorized && kvData.api?.allowed && isApiRequest) {
+			throw error(403, 'API access requires a payload-bound bearer token');
 		}
 
 		// Check for postForm permission (allows form submissions from any origin)
 		if (!isAuthorized && kvData.postForm && isFormSubmission) {
+			const requiresSignedFormPayload =
+				authorityItem !== 'payto' &&
+				!isSameOriginRequest &&
+				!!authorityApiSecret;
+
+			if (requiresSignedFormPayload) {
+				throw error(403, 'Signed form token required for this issuer payload');
+			}
+
 			isAuthorized = true;
 		}
 	}
 
 	// If still not authorized, check origin (for same-origin requests)
 	if (!isAuthorized) {
-		const origin = request.headers.get('origin');
-
 		// For POST form requests with postForm enabled, verify origin matches kvData.url if configured
 		if (isFormSubmission && authority && kvData && kvData.postForm && origin) {
 			if (kvData.url) {

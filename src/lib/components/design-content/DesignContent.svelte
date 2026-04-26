@@ -20,6 +20,7 @@
 	import { onMount } from 'svelte';
 
 	export let hostname: ITransitionType | undefined = undefined;
+	export let authority: string | undefined = undefined;
 
 	const barcodeTypes = [
 		{ label: 'QR Code', value: 'qr' },
@@ -142,6 +143,9 @@
 			formData.append('hostname', hostname);
 			formData.append('props', JSON.stringify($constructorStore.networks[hostname]));
 			formData.append('design', JSON.stringify($constructorStore.design));
+			if (authority) {
+				formData.append('authority', authority);
+			}
 			const selectedOs = osOverride ?? get(userOS);
 			formData.append('os', selectedOs);
 
