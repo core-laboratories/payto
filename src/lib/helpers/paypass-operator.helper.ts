@@ -32,6 +32,73 @@ export function base64ToUtf8(b64: string | undefined): string {
 	return Buffer.from(b64, 'base64').toString('utf8');
 }
 
+function utf8ToBase64Url(value: string): string {
+	if (typeof btoa === 'function') {
+		const bytes = new TextEncoder().encode(value);
+		let binary = '';
+		for (const byte of bytes) {
+			binary += String.fromCharCode(byte);
+		}
+		return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+	}
+
+	// eslint-disable-next-line n/no-unsupported-features/node-builtins
+	return Buffer.from(value, 'utf8').toString('base64url');
+}
+
+function base64UrlToUtf8(value: string): string {
+	const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
+	const padded = normalized.padEnd(normalized.length + ((4 - (normalized.length % 4 || 4)) % 4), '=');
+
+	if (typeof atob === 'function') {
+		const binary = atob(padded);
+		const bytes = new Uint8Array(binary.length);
+		for (let i = 0; i < binary.length; i++) {
+			bytes[i] = binary.charCodeAt(i);
+		}
+		return new TextDecoder().decode(bytes);
+	}
+
+	// eslint-disable-next-line n/no-unsupported-features/node-builtins
+	return Buffer.from(padded, 'base64').toString('utf8');
+}
+
+function stableStringify(value: unknown): string {
+	if (value === null || typeof value !== 'object') {
+		return JSON.stringify(value);
+	}
+
+	if (Array.isArray(value)) {
+		return `[${value.map((item) => stableStringify(item)).join(',')}]`;
+	}
+
+	const entries = Object.entries(value)
+		.filter(([, entryValue]) => entryValue !== undefined)
+		.sort(([left], [right]) => left.localeCompare(right));
+
+	return `{${entries
+		.map(([key, entryValue]) => `${JSON.stringify(key)}:${stableStringify(entryValue)}`)
+		.join(',')}}`;
+}
+
+function signTokenPart(value: string, secret: string): string {
+	const hmac = forge.hmac.create();
+	hmac.start('sha256', secret);
+	hmac.update(value);
+	return hmac.digest().toHex();
+}
+
+function generateLegacyToken(payload: any, secret: string, expirationMinutes: number): string {
+	const tokenData = {
+		...payload,
+		exp: Date.now() + (expirationMinutes * 60 * 1000)
+	};
+	const hmac = forge.hmac.create();
+	hmac.start('sha256', secret);
+	hmac.update(JSON.stringify(tokenData));
+	return hmac.digest().toHex();
+}
+
 /**
  * Get image URLs for Apple and Google Wallet passes
  * @param kvData - KV data with icon overrides
@@ -251,17 +318,16 @@ export function getBarcodeConfig(barcodeType: string, message: string, alternate
  * @param payload - Data to include in token
  * @param secret - Secret key for HMAC
  * @param expirationMinutes - Token expiration time in minutes (default: 1)
- * @returns Generated token as hex string
+ * @returns Generated token as `{base64url(payload+exp)}.{signature}`
  */
 export function generateToken(payload: any, secret: string, expirationMinutes: number = 1): string {
 	const tokenData = {
-		...payload,
+		payload,
 		exp: Date.now() + (expirationMinutes * 60 * 1000)
 	};
-	const hmac = forge.hmac.create();
-	hmac.start('sha256', secret);
-	hmac.update(JSON.stringify(tokenData));
-	return hmac.digest().toHex();
+	const encodedPayload = utf8ToBase64Url(stableStringify(tokenData));
+	const signature = signTokenPart(encodedPayload, secret);
+	return `${encodedPayload}.${signature}`;
 }
 
 /**
@@ -273,16 +339,26 @@ export function generateToken(payload: any, secret: string, expirationMinutes: n
  * @returns True if token is valid and not expired
  */
 export function verifyToken(token: string, payload: any, secret: string, expirationMinutes: number = 1): boolean {
-	const tokenData = {
-		...payload,
-		exp: Date.now() + (expirationMinutes * 60 * 1000)
-	};
-	const expectedToken = generateToken(payload, base64ToUtf8(secret), expirationMinutes);
+	const decodedSecret = base64ToUtf8(secret);
+	const [encodedPayload, signature] = token.split('.');
 
-	if (token !== expectedToken) return false;
-	if (tokenData.exp < Date.now()) return false;
+	if (encodedPayload && signature) {
+		try {
+			const expectedSignature = signTokenPart(encodedPayload, decodedSecret);
+			if (expectedSignature !== signature) return false;
 
-	return true;
+			const tokenData = JSON.parse(base64UrlToUtf8(encodedPayload));
+			if (!tokenData || typeof tokenData !== 'object') return false;
+			if (typeof tokenData.exp !== 'number' || tokenData.exp < Date.now()) return false;
+
+			return stableStringify(tokenData.payload ?? null) === stableStringify(payload ?? null);
+		} catch {
+			return false;
+		}
+	}
+
+	const expectedToken = generateLegacyToken(payload, decodedSecret, expirationMinutes);
+	return token === expectedToken;
 }
 
 /**

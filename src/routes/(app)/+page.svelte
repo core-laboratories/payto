@@ -264,6 +264,7 @@
 						<div class="w-full flex-1 min-w-0">
 							<DesignContent
 								bind:hostname={$type}
+								authority={$authority || undefined}
 							/>
 						</div>
 					</div>
