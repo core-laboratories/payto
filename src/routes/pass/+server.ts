@@ -153,6 +153,36 @@ function buildIssuedPayloadEnvelope({
 	};
 }
 
+function getAuthoritySecretEnvKey(authority: string): string {
+	return `PRIVATE_PAYTO_API_SECRET_${authority
+		.toUpperCase()
+		.replace(/[^A-Z0-9]+/g, '_')
+		.replace(/^_+|_+$/g, '')}`;
+}
+
+function getAuthorityApiSecret(
+	authority: string,
+	kvData: any,
+	platformEnv?: { env?: Record<string, string | undefined> }
+): string | null {
+	const envKey = getAuthoritySecretEnvKey(authority);
+	const runtimeSecret = platformEnv?.env?.[envKey];
+	if (typeof runtimeSecret === 'string' && runtimeSecret.length > 0) {
+		return runtimeSecret;
+	}
+
+	const localSecret = env[envKey];
+	if (typeof localSecret === 'string' && localSecret.length > 0) {
+		return localSecret;
+	}
+
+	if (typeof kvData?.api?.secret === 'string' && kvData.api.secret.length > 0) {
+		return kvData.api.secret;
+	}
+
+	return null;
+}
+
 export async function POST({ request, url, fetch, platform }: RequestEvent) {
 	// Initialize KV from platform binding (binding name should match wrangler.toml, typically 'KV')
 	// In Cloudflare Workers, platform.env contains the KV bindings
@@ -249,14 +279,16 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 	const isApiRequest = contentType.includes('application/json');
 
 	if (authority && kvData) {
+		const authorityApiSecret = getAuthorityApiSecret(authorityItem, kvData, platformEnv);
+
 		// Check for API token first
 		const authHeader = request.headers.get('authorization');
 		const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
 		const requestToken = typeof data.token === 'string' ? data.token : null;
 		const proofToken = bearerToken || requestToken;
 
-		if (proofToken && kvData.api?.secret && issuedPayload) {
-			if (verifyToken(proofToken, issuedPayload, kvData.api.secret, apiTokenTimeout)) {
+		if (proofToken && authorityApiSecret && issuedPayload) {
+			if (verifyToken(proofToken, issuedPayload, authorityApiSecret, apiTokenTimeout)) {
 				isAuthorized = true;
 			} else {
 				throw error(403, 'Invalid, expired, or tampered issuer payload token');
@@ -272,7 +304,7 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 			const requiresSignedFormPayload =
 				authorityItem !== 'payto' &&
 				!isSameOriginRequest &&
-				!!kvData.api?.secret;
+				!!authorityApiSecret;
 
 			if (requiresSignedFormPayload) {
 				throw error(403, 'Signed form token required for this issuer payload');

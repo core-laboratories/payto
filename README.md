@@ -129,8 +129,7 @@ Issuing authorities[^authority] deliver an object like this example to the email
   "currencyLocale": "en-US", // The locale used for currency formatting (e.g., `"en-US"`, `"de-DE"`, `"sk-SK"`)
   "postForm": false, // If true, allows Pass generation via HTML form submission from any origin
   "api": { // API access configuration for programmatic Pass generation
-    "allowed": false, // Set to `true` to enable API access
-    "secret": "your-api-secret-here" // Your API secret key encoded with base64 used to generate bearer tokens (HMAC-SHA256)
+    "allowed": false // Set to `true` to enable API access
   }
 }
 ```
@@ -224,10 +223,50 @@ Issuing authorities[^authority] deliver an object like this example to the email
 
 - **`api`** (optional): API access configuration for programmatic Pass generation.
   - `allowed`: Set to `true` to enable API access
-  - `secret`: Your API secret key encoded with base64 used to generate bearer tokens (HMAC-SHA256)
-  - Default: `{ "allowed": false, "secret": "" }`
+  - Default: `{ "allowed": false }`
   - Note: When API is enabled, requests must include `Authorization: Bearer <token>` header
+  - Secret source: one Cloudflare secret per authority
   - Token format: payload-bound token in the form `{base64url(json)}.{hmac_sha256}`, where the JSON contains the exact issuance payload plus an expiration timestamp (default: 1 minute, configurable via `PRIVATE_API_TOKEN_TIMEOUT` env var)
+
+#### Cloudflare Secret Setup
+
+Per-authority API signing secrets are stored as separate Cloudflare Worker secrets.
+
+Secret name format:
+
+```txt
+PRIVATE_PAYTO_API_SECRET_{AUTHORITY_ID}
+```
+
+Where `{AUTHORITY_ID}` is:
+
+- uppercased
+- non-alphanumeric characters replaced with `_`
+
+Examples:
+
+```txt
+PRIVATE_PAYTO_API_SECRET_PINGCHB2
+PRIVATE_PAYTO_API_SECRET_ACME_PAY
+```
+
+Set each one with Wrangler:
+
+```bash
+wrangler secret put PRIVATE_PAYTO_API_SECRET_PINGCHB2
+```
+
+Paste the authority's HMAC secret as the value, base64-encoded.
+
+Rules:
+
+- one secret per authority
+- each value must be the authority HMAC secret encoded with base64
+- secrets are read server-side only and are never exposed to the client
+
+For local development, you can define the same secret names in your local environment.
+
+If you are migrating from an older setup, `kvData.api.secret` is still accepted as a fallback, but per-authority Cloudflare secrets are now the preferred source.
 
 #### API Access
 
