@@ -25,14 +25,14 @@
 		"i18n:watch": "typesafe-i18n"
 	},
 	"devDependencies": {
-		"@cloudflare/workers-types": "^4.20260426.1",
+		"@cloudflare/workers-types": "^4.20260502.1",
 		"@playwright/test": "^1.59.1",
 		"@sveltejs/adapter-cloudflare": "^7.2.8",
 		"@sveltejs/vite-plugin-svelte": "^7.0.0",
 		"@tailwindcss/vite": "^4.2.4",
 		"@types/cookie": "^1.0.0",
 		"@types/open-location-code": "^1.0.1",
-		"eslint": "^10.2.1",
+		"eslint": "^10.3.0",
 		"postcss-load-config": "^6.0.1",
 		"prettier": "^3.8.3",
 		"prettier-plugin-svelte": "^3.5.1",
@@ -40,21 +40,21 @@
 		"typescript": "^6.0.3",
 		"vite": "^8.0.10",
 		"vitest": "^4.1.5",
-		"wrangler": "^4.85.0"
+		"wrangler": "^4.87.0"
 	},
 	"dependencies": {
 		"@blockchainhub/blo": "^1.2.7",
 		"@blockchainhub/ican": "^0.4.3",
 		"@neoconfetti/svelte": "^2.2.2",
-		"@supabase/supabase-js": "^2.104.1",
-		"@sveltejs/kit": "^2.58.0",
+		"@supabase/supabase-js": "^2.105.1",
+		"@sveltejs/kit": "^2.59.0",
 		"@tailwindcss/forms": "^0.5.11",
 		"@types/node-forge": "^1.3.14",
 		"@types/qrcode": "^1.5.6",
 		"blockchain-wallet-validator": "^1.2.1",
 		"device-sherlock": "^0.2.1",
 		"exchange-rounding": "^1.1.8",
-		"jose": "^6.2.2",
+		"jose": "^6.2.3",
 		"jszip": "^3.10.1",
 		"lucide-svelte": "^1.0.1",
 		"node-forge": "^1.4.0",
@@ -62,13 +62,13 @@
 		"payto-rl": "^1.1.3",
 		"qrcode": "^1.5.4",
 		"svelte": "^5.55.5",
-		"svelte-check": "^4.4.6",
+		"svelte-check": "^4.4.7",
 		"svelte-preprocess": "^6.0.3",
 		"svelte-transition": "^0.0.17",
 		"tailwindcss": "^4.2.4",
 		"tailwindcss-logical": "^4.2.0",
 		"typesafe-i18n": "^5.27.1",
-		"zod": "^4.3.6"
+		"zod": "^4.4.2"
 	},
 	"engines": {
 		"node": ">=22"
