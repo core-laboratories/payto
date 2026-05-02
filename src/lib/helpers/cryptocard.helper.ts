@@ -11,23 +11,64 @@ const ROTATION_OFFSETS = [
 ];
 
 const ROTATION_SEQUENCE: [number, number][] = [
-	[1, 0], [0, 2], [2, 1], [1, 2], [2, 3],
-	[3, 3], [3, 0], [0, 1], [1, 3], [3, 1],
-	[1, 4], [4, 4], [4, 0], [0, 3], [3, 4],
-	[4, 3], [3, 2], [2, 2], [2, 0], [0, 4],
-	[4, 2], [2, 4], [4, 1], [1, 1]
+	[1, 0],
+	[0, 2],
+	[2, 1],
+	[1, 2],
+	[2, 3],
+	[3, 3],
+	[3, 0],
+	[0, 1],
+	[1, 3],
+	[3, 1],
+	[1, 4],
+	[4, 4],
+	[4, 0],
+	[0, 3],
+	[3, 4],
+	[4, 3],
+	[3, 2],
+	[2, 2],
+	[2, 0],
+	[0, 4],
+	[4, 2],
+	[2, 4],
+	[4, 1],
+	[1, 1]
 ];
 
 const ROUND_CONSTANTS = new Array<bigint>(24)
 	.fill(0n)
-	.map((_, i) => BigInt([
-		'0x0000000000000001', '0x0000000000008082', '0x800000000000808a', '0x8000000080008000',
-		'0x000000000000808b', '0x0000000080000001', '0x8000000080008081', '0x8000000000008009',
-		'0x000000000000008a', '0x0000000000000088', '0x0000000080008009', '0x000000008000000a',
-		'0x000000008000808b', '0x800000000000008b', '0x8000000000008089', '0x8000000000008003',
-		'0x8000000000008002', '0x8000000000000080', '0x000000000000800a', '0x800000008000000a',
-		'0x8000000080008081', '0x8000000000008080', '0x0000000080000001', '0x8000000080008008'
-	][i]));
+	.map((_, i) =>
+		BigInt(
+			[
+				'0x0000000000000001',
+				'0x0000000000008082',
+				'0x800000000000808a',
+				'0x8000000080008000',
+				'0x000000000000808b',
+				'0x0000000080000001',
+				'0x8000000080008081',
+				'0x8000000000008009',
+				'0x000000000000008a',
+				'0x0000000000000088',
+				'0x0000000080008009',
+				'0x000000008000000a',
+				'0x000000008000808b',
+				'0x800000000000008b',
+				'0x8000000000008089',
+				'0x8000000000008003',
+				'0x8000000000008002',
+				'0x8000000000000080',
+				'0x000000000000800a',
+				'0x800000008000000a',
+				'0x8000000080008081',
+				'0x8000000000008080',
+				'0x0000000080000001',
+				'0x8000000080008008'
+			][i]
+		)
+	);
 
 function rotateLeft64(value: bigint, shift: number): bigint {
 	return ((value << BigInt(shift)) | (value >> BigInt(64 - shift))) & BITMASK_64;
@@ -39,12 +80,7 @@ function keccakF(state: bigint[]) {
 
 	for (let round = 0; round < 24; round++) {
 		for (let x = 0; x < 5; x++) {
-			c[x] =
-				state[x] ^
-				state[x + 5] ^
-				state[x + 10] ^
-				state[x + 15] ^
-				state[x + 20];
+			c[x] = state[x] ^ state[x + 5] ^ state[x + 10] ^ state[x + 15] ^ state[x + 20];
 		}
 
 		for (let x = 0; x < 5; x++) {
@@ -75,10 +111,7 @@ function keccakF(state: bigint[]) {
 			const rowStart = y * 5;
 			const row = state.slice(rowStart, rowStart + 5);
 			for (let x = 0; x < 5; x++) {
-				state[rowStart + x] =
-					(row[x] ^
-						((~row[(x + 1) % 5]) & row[(x + 2) % 5])) &
-					BITMASK_64;
+				state[rowStart + x] = (row[x] ^ (~row[(x + 1) % 5] & row[(x + 2) % 5])) & BITMASK_64;
 			}
 		}
 
@@ -126,9 +159,7 @@ function keccakSqueeze(state: bigint[], outputLength: number): Uint8Array {
 	return output;
 }
 
-function sha3_256_hex(message: string): string {
-	const encoder = new TextEncoder();
-	const data = encoder.encode(message);
+function spongeHashHexFromBytes(data: Uint8Array, delimitedSuffix: number): string {
 	const state = new Array<bigint>(25).fill(0n);
 
 	let offset = 0;
@@ -141,13 +172,27 @@ function sha3_256_hex(message: string): string {
 
 	const block = new Uint8Array(RATE_IN_BYTES);
 	block.set(data.slice(offset));
-	block[data.length - offset] = 0x06;
+	block[data.length - offset] = delimitedSuffix;
 	block[RATE_IN_BYTES - 1] |= 0x80;
 	keccakAbsorb(state, block);
 	keccakF(state);
 
 	const hashBytes = keccakSqueeze(state, 32);
-	return Array.from(hashBytes, (byte) => HEX_CHARS[(byte >> 4) & 0x0f] + HEX_CHARS[byte & 0x0f]).join('').slice(0, 64);
+	return Array.from(hashBytes, (byte) => HEX_CHARS[(byte >> 4) & 0x0f] + HEX_CHARS[byte & 0x0f])
+		.join('')
+		.slice(0, 64);
+}
+
+function spongeHashHex(message: string, delimitedSuffix: number): string {
+	return spongeHashHexFromBytes(new TextEncoder().encode(message), delimitedSuffix);
+}
+
+function sha3_256_hex(message: string): string {
+	return spongeHashHex(message, 0x06);
+}
+
+function keccak_256_hex(message: string): string {
+	return spongeHashHex(message, 0x01);
 }
 
 export function normalizeName(
@@ -196,6 +241,44 @@ export function buildIdMaterialWithSha3(
 	};
 }
 
+export function buildLookupIdMaterial(
+	bin6: string,
+	last4: string,
+	name: string,
+	{
+		version = 'v1',
+		expiryYymm,
+		diacritics = 'strip'
+	}: { version?: string; expiryYymm: string; diacritics?: 'preserve' | 'strip' }
+) {
+	const BIN6 = assertDigitsN(bin6, 6, 'BIN6');
+	const LAST4 = assertDigitsN(last4, 4, 'LAST4');
+	const YYMM = assertDigitsN(expiryYymm, 4, 'YYMM');
+	const NAME_NORM = normalizeName(name, { diacritics });
+	return `PAN6+4:${version}|${BIN6}|${LAST4}|${NAME_NORM}|${YYMM}`;
+}
+
+export function computePepperedSearchHash(idMaterial: string, pepperHex: string): string {
+	const rawPepper = pepperHex.startsWith('0x') ? pepperHex.slice(2) : pepperHex;
+	if (!/^[0-9a-fA-F]+$/.test(rawPepper) || rawPepper.length % 2 !== 0) {
+		throw new Error('PEPPER_HEX must be even-length hex');
+	}
+
+	const pepperBytes = Uint8Array.from(
+		rawPepper.match(/.{2}/g)?.map((byte) => parseInt(byte, 16)) ?? []
+	);
+	const dataBytes = new TextEncoder().encode(idMaterial);
+	const combined = new Uint8Array(pepperBytes.length + dataBytes.length);
+	combined.set(pepperBytes, 0);
+	combined.set(dataBytes, pepperBytes.length);
+
+	return spongeHashHexFromBytes(combined, 0x06);
+}
+
+export function computeKeccak256Hex(message: string): string {
+	return keccak_256_hex(message);
+}
+
 export type PrefixRule = string | [number, number];
 
 export interface CardBrandDefinition {
@@ -207,15 +290,56 @@ export interface CardBrandDefinition {
 
 export const CARD_BRANDS: CardBrandDefinition[] = [
 	{ name: 'Visa', prefixes: ['4'], lengths: [13, 16, 19], publicDigits: 6 },
-	{ name: 'Mastercard', prefixes: [[51, 55], [2221, 2720]], lengths: [16], publicDigits: 6 },
+	{
+		name: 'Mastercard',
+		prefixes: [
+			[51, 55],
+			[2221, 2720]
+		],
+		lengths: [16],
+		publicDigits: 6
+	},
 	{ name: 'American Express', prefixes: ['34', '37'], lengths: [15], publicDigits: 6 },
-	{ name: 'Discover', prefixes: ['6011', [622126, 622925], [644, 649], '65'], lengths: [16, 19], publicDigits: 6 },
-	{ name: 'Diners Club International', prefixes: ['36', [38, 39], [300, 305]], lengths: [14, 16], publicDigits: 6 },
+	{
+		name: 'Discover',
+		prefixes: ['6011', [622126, 622925], [644, 649], '65'],
+		lengths: [16, 19],
+		publicDigits: 6
+	},
+	{
+		name: 'Diners Club International',
+		prefixes: ['36', [38, 39], [300, 305]],
+		lengths: [14, 16],
+		publicDigits: 6
+	},
 	{ name: 'JCB', prefixes: [[3528, 3589]], lengths: [16, 17, 18, 19], publicDigits: 6 },
 	{ name: 'UnionPay', prefixes: ['62'], lengths: [16, 17, 18, 19], publicDigits: 6 },
-	{ name: 'Maestro', prefixes: ['50', [56, 69]], lengths: [12, 13, 14, 15, 16, 17, 18, 19], publicDigits: 6 },
+	{
+		name: 'Maestro',
+		prefixes: ['50', [56, 69]],
+		lengths: [12, 13, 14, 15, 16, 17, 18, 19],
+		publicDigits: 6
+	},
 	{ name: 'RuPay', prefixes: ['60', [6521, 6522], '81'], lengths: [16], publicDigits: 6 },
-	{ name: 'Elo', prefixes: ['4011', '4312', '4389', '4514', '4576', '5041', [5067, 5090], '6277', '6363', [6504, 6509], '6516', [6550, 6551]], lengths: [16], publicDigits: 6 },
+	{
+		name: 'Elo',
+		prefixes: [
+			'4011',
+			'4312',
+			'4389',
+			'4514',
+			'4576',
+			'5041',
+			[5067, 5090],
+			'6277',
+			'6363',
+			[6504, 6509],
+			'6516',
+			[6550, 6551]
+		],
+		lengths: [16],
+		publicDigits: 6
+	},
 	{ name: 'Troy', prefixes: ['9792'], lengths: [16], publicDigits: 6 },
 	{ name: 'Mir', prefixes: [[2200, 2204]], lengths: [16], publicDigits: 6 }
 ];
@@ -242,7 +366,10 @@ function getPrefixMatchLength(rule: PrefixRule, digits: string): number {
 	return value >= rangeStart && value <= rangeEnd ? compareLength : 0;
 }
 
-export function detectCardBrand(digits: string, brands: CardBrandDefinition[] = CARD_BRANDS): CardBrandDefinition | null {
+export function detectCardBrand(
+	digits: string,
+	brands: CardBrandDefinition[] = CARD_BRANDS
+): CardBrandDefinition | null {
 	let bestMatch: CardBrandDefinition | null = null;
 	let bestLength = 0;
 
@@ -283,7 +410,11 @@ export function luhnCheck(cardNumber: string, digitsRegex: RegExp = defaultDigit
 	return sum % 10 === 0;
 }
 
-export function formatCardNumber(value: string, digitsRegex: RegExp = defaultDigitsRegex, brands: CardBrandDefinition[] = CARD_BRANDS): string {
+export function formatCardNumber(
+	value: string,
+	digitsRegex: RegExp = defaultDigitsRegex,
+	brands: CardBrandDefinition[] = CARD_BRANDS
+): string {
 	const digits = value.replace(digitsRegex, '');
 	const brand = detectCardBrand(digits, brands);
 	const maxLength = brand ? Math.max(...brand.lengths) : 19;
@@ -304,7 +435,11 @@ export function formatCardNumber(value: string, digitsRegex: RegExp = defaultDig
 	return limited.replace(/(\d{4})(?=\d)/g, '$1 ');
 }
 
-export function maskFormattedNumber(formattedNumber: string, publicLength: number, totalDigits: number): string {
+export function maskFormattedNumber(
+	formattedNumber: string,
+	publicLength: number,
+	totalDigits: number
+): string {
 	if (!formattedNumber || publicLength <= 0) return formattedNumber;
 	let digitIndex = 0;
 	let masked = '';
