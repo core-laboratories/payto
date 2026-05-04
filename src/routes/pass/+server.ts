@@ -55,6 +55,11 @@ const swapUrlLink = env.PUBLIC_SWAP_URL || `${linkBaseUrl}/swap`;
 
 // Enable stats
 const enableStats = PUBLIC_ENABLE_STATS === 'true';
+
+if (!passTypeIdentifier) {
+	throw new Error('PRIVATE_PASS_TYPE_IDENTIFIER is not configured.');
+}
+const requiredPassTypeIdentifier = passTypeIdentifier;
 const apiTokenTimeout = parseInt(env.PRIVATE_API_TOKEN_TIMEOUT || '1', 10);
 
 /* ------------------ optional Supabase stats ------------------ */
@@ -654,7 +659,7 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 					swap,
 					swapUrl
 				},
-				passTypeIdentifier,
+				passTypeIdentifier: requiredPassTypeIdentifier,
 				purposeText,
 				rtl: isRtl,
 				serialId,

@@ -3,11 +3,12 @@
 	import { fly } from 'svelte/transition';
 	import {
 		CARD_BRANDS,
+		CARDHOLDER_NAME_REGEX,
 		detectCardBrand,
 		formatCardNumber as formatCardNumberHelper,
 		luhnCheck as luhnCheckHelper,
-		maskFormattedNumber as maskFormattedNumberHelper,
-		normalizeName
+		isValidCardholderName,
+		maskFormattedNumber as maskFormattedNumberHelper
 	} from '$lib/helpers/cryptocard.helper';
 	import type { CardBrandDefinition } from '$lib/helpers/cryptocard.helper';
 
@@ -46,7 +47,7 @@
 		if (nickPartRaw && nickPartRaw.trim()) {
 			const upper = nickPartRaw.toUpperCase().replace(/[^A-Z ]/g, '');
 			const collapsed = upper.replace(/\s+/g, ' ').trim();
-			if (collapsed.length > 0) nickname = collapsed;
+			if (isValidCardholderName(collapsed)) nickname = collapsed;
 		}
 
 		return { number, nickname };
@@ -258,7 +259,7 @@
 				},
 				body: JSON.stringify({
 					cardNumber: digits,
-					name: normalizeName(cardholderInput, { diacritics: 'strip' })
+					name: cardholderInput
 				})
 			});
 
@@ -301,8 +302,7 @@
 		// Prefill nickname
 		if (nickname) {
 			cardholderInput = nickname;
-			const lettersOnlyLen = nickname.replace(/ /g, '').length;
-			cardholderValidationState = lettersOnlyLen >= 3 ? 'valid' : 'invalid';
+			cardholderValidationState = isValidCardholderName(nickname) ? 'valid' : 'invalid';
 			resetSensitiveDataTimer();
 		}
 
@@ -416,24 +416,17 @@
 									const raw = (e.target as HTMLInputElement).value;
 									const upper = raw.toUpperCase().replace(/[^A-Z ]+/g, '');
 									const collapsed = upper.replace(/\s+/g, ' ');
-									// Remove leading spaces but allow spaces in the middle and at the end while typing
 									const noLeadingSpaces = collapsed.replace(/^\s+/, '');
-									(e.target as HTMLInputElement).value = noLeadingSpaces;
+									const value = noLeadingSpaces.slice(0, 26);
+									(e.target as HTMLInputElement).value = value;
 
-									cardholderInput = noLeadingSpaces;
+									cardholderInput = value;
 									resetSensitiveDataTimer();
-
-									// Check for trailing space - mark as invalid if present
-									const hasTrailingSpace = noLeadingSpaces.endsWith(' ');
-									const letters = noLeadingSpaces.replace(/ /g, '').length;
-
-									if (!noLeadingSpaces.length) {
-										cardholderValidationState = 'empty';
-									} else if (hasTrailingSpace) {
-										cardholderValidationState = 'invalid';
-									} else {
-										cardholderValidationState = letters >= 3 ? 'valid' : 'invalid';
-									}
+									cardholderValidationState = !value.length
+										? 'empty'
+										: isValidCardholderName(value)
+											? 'valid'
+											: 'invalid';
 								}}
 								onblur={(e) => {
 									// On blur, trim trailing spaces
@@ -441,13 +434,13 @@
 									(e.target as HTMLInputElement).value = trimmed;
 									cardholderInput = trimmed;
 									resetSensitiveDataTimer();
-									const letters = trimmed.replace(/ /g, '').length;
 									cardholderValidationState = !trimmed.length
 										? 'empty'
-										: letters >= 3
+										: isValidCardholderName(trimmed)
 											? 'valid'
 											: 'invalid';
 								}}
+								pattern={CARDHOLDER_NAME_REGEX.source}
 								class="bg-white/10 backdrop-blur-sm border-2 rounded-lg px-3 py-2 text-xs sm:text-sm text-white placeholder-white/50 uppercase zephirum tracking-wide focus:outline-none transition-colors {cardholderValidationState ===
 								'valid'
 									? 'border-green-400 focus:border-green-400'

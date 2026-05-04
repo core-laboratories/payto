@@ -195,6 +195,8 @@ function keccak_256_hex(message: string): string {
 	return spongeHashHex(message, 0x01);
 }
 
+export const CARDHOLDER_NAME_REGEX = /^(?! )(?!.* {2})[A-Z ]{3,}[A-Z]$/;
+
 export function normalizeName(
 	name: string,
 	{ diacritics = 'preserve' }: { diacritics?: 'preserve' | 'strip' } = {}
@@ -214,6 +216,10 @@ export function normalizeName(
 	return normalized;
 }
 
+export function isValidCardholderName(name: string): boolean {
+	return CARDHOLDER_NAME_REGEX.test(name);
+}
+
 function assertDigitsN(value: string, length: number, fieldName: string): string {
 	if (typeof value !== 'string' || value.length !== length || !/^\d+$/.test(value)) {
 		throw new Error(`${fieldName} must be exactly ${length} digits`);
@@ -221,20 +227,19 @@ function assertDigitsN(value: string, length: number, fieldName: string): string
 	return value;
 }
 
-export function buildIdMaterialWithSha3(
+export function buildCardLookupMaterial(
 	bin6: string,
 	last4: string,
 	name: string,
 	{
 		version = 'v1',
-		domain = 'core.creditcard',
 		diacritics = 'strip'
-	}: { version?: string; domain?: string; diacritics?: 'preserve' | 'strip' } = {}
+	}: { version?: string; diacritics?: 'preserve' | 'strip' } = {}
 ) {
 	const BIN6 = assertDigitsN(bin6, 6, 'BIN6');
 	const LAST4 = assertDigitsN(last4, 4, 'LAST4');
 	const NAME_NORM = normalizeName(name, { diacritics });
-	const idMaterial = `${domain}:${version}|${BIN6}|${LAST4}|${NAME_NORM}`;
+	const idMaterial = `PAN6+4:${version}|${BIN6}|${LAST4}|${NAME_NORM}`;
 	return {
 		idMaterial,
 		sha3Hex: sha3_256_hex(idMaterial)
@@ -247,15 +252,10 @@ export function buildLookupIdMaterial(
 	name: string,
 	{
 		version = 'v1',
-		expiryYymm,
 		diacritics = 'strip'
-	}: { version?: string; expiryYymm: string; diacritics?: 'preserve' | 'strip' }
+	}: { version?: string; diacritics?: 'preserve' | 'strip' } = {}
 ) {
-	const BIN6 = assertDigitsN(bin6, 6, 'BIN6');
-	const LAST4 = assertDigitsN(last4, 4, 'LAST4');
-	const YYMM = assertDigitsN(expiryYymm, 4, 'YYMM');
-	const NAME_NORM = normalizeName(name, { diacritics });
-	return `PAN6+4:${version}|${BIN6}|${LAST4}|${NAME_NORM}|${YYMM}`;
+	return buildCardLookupMaterial(bin6, last4, name, { version, diacritics }).idMaterial;
 }
 
 export function computePepperedSearchHash(idMaterial: string, pepperHex: string): string {
@@ -275,8 +275,8 @@ export function computePepperedSearchHash(idMaterial: string, pepperHex: string)
 	return spongeHashHexFromBytes(combined, 0x06);
 }
 
-export function computeKeccak256Hex(message: string): string {
-	return keccak_256_hex(message);
+export function computeSha3_256Hex(message: string): string {
+	return sha3_256_hex(message);
 }
 
 export type PrefixRule = string | [number, number];
