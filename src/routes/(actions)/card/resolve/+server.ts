@@ -3,15 +3,16 @@ import type { RequestHandler } from './$types';
 import ICAN from '@blockchainhub/ican';
 import { env } from '$env/dynamic/private';
 import {
-	buildIdMaterialWithSha3,
-	computeKeccak256Hex,
+	buildLookupIdMaterial,
+	computeSha3_256Hex,
 	computePepperedSearchHash,
+	isValidCardholderName,
 	normalizeName
 } from '$lib/helpers/cryptocard.helper';
 
 const DEFAULT_RPC_URL = 'https://xcbapi.coreblockchain.net';
 const DEFAULT_NETWORK_ID = 1;
-const GET_CORE_ID_SELECTOR = computeKeccak256Hex('getCoreId(bytes32)').slice(0, 8);
+const GET_CORE_ID_SELECTOR = computeSha3_256Hex('getCoreId(bytes32)').slice(0, 8);
 
 type RpcSuccess = {
 	id: number | string;
@@ -143,7 +144,8 @@ export const POST: RequestHandler = async ({ request }) => {
 	try {
 		const body = await request.json();
 		const cardNumber = String(body?.cardNumber ?? '').replace(/\D/g, '');
-		const name = normalizeName(String(body?.name ?? ''), { diacritics: 'strip' });
+		const rawName = String(body?.name ?? '');
+		const name = normalizeName(rawName, { diacritics: 'strip' });
 
 		if (cardNumber.length < 10) {
 			return json(
@@ -152,14 +154,14 @@ export const POST: RequestHandler = async ({ request }) => {
 			);
 		}
 
-		if (!name || name.replace(/ /g, '').length < 3) {
+		if (rawName !== name || !isValidCardholderName(name)) {
 			return json({ error: 'Cardholder name is required.' }, { status: 400 });
 		}
 
 		const { pepperHex, contractAddress, rpcUrl, networkId } = getRequiredConfig();
 		const bin6 = cardNumber.slice(0, 6);
 		const last4 = cardNumber.slice(-4);
-		const { idMaterial } = buildIdMaterialWithSha3(bin6, last4, name);
+		const idMaterial = buildLookupIdMaterial(bin6, last4, name);
 		const searchHash = `0x${computePepperedSearchHash(idMaterial, pepperHex)}`;
 		const coreId = await lookupCoreIdBySearchHash(rpcUrl, contractAddress, searchHash);
 
