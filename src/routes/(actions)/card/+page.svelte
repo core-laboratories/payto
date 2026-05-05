@@ -140,6 +140,7 @@
 		const input = event.target as HTMLInputElement;
 		const value = input.value;
 		cardNumber = formatCardNumber(value);
+		input.value = cardNumber;
 		resetSensitiveDataTimer();
 
 		const digits = cardNumber.replace(digitsRegex, '');
@@ -171,6 +172,7 @@
 			cardValidationState = 'invalid';
 			publicCardPart = '';
 			cardNumber = formatCardNumber(digits.slice(0, MAX_CARD_DIGITS));
+			input.value = cardNumber;
 			showMaskedCardNumber = false;
 			return;
 		}
@@ -198,6 +200,7 @@
 			cardValidationState = 'invalid';
 			publicCardPart = '';
 			cardNumber = formatCardNumber(digits.slice(0, maxLength));
+			input.value = cardNumber;
 			showMaskedCardNumber = false;
 			return;
 		}
@@ -216,6 +219,7 @@
 				// If middle section is all zeros, it's a censored number
 				if (middleSection.length > 0 && /^[0]+$/.test(middleSection)) {
 					markCensoredWarning();
+					previousCardValidationState = cardValidationState;
 					return;
 				}
 			}
@@ -236,6 +240,7 @@
 			}
 
 			showMaskedCardNumber = true;
+			input.value = maskFormattedNumber(cardNumber, publicCardPart.length, digits.length);
 		} else {
 			cardValidationState = 'invalid';
 			publicCardPart = '';
