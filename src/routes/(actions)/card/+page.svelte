@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { fly } from 'svelte/transition';
+	import { env } from '$env/dynamic/public';
 	import {
 		CARD_BRANDS,
 		CARDHOLDER_NAME_REGEX,
@@ -17,6 +18,7 @@
 	const MAX_CARD_DIGITS = 19;
 	const FORM_DATA_TTL_MS = 5 * 60 * 1000;
 	const digitsRegex = /\D/g;
+	const coreApiBaseUrl = (env.PUBLIC_COREAPI_URL || 'https://core.exposed').replace(/\/+$/, '');
 
 	interface FragmentParsed {
 		number: string | null;
@@ -252,13 +254,14 @@
 		isResolving = true;
 
 		try {
-			const response = await fetch('/card/resolve', {
+			const response = await fetch(`${coreApiBaseUrl}/obp/v6.0.0/cards/tokenizer/resolve/public`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify({
-					cardNumber: digits,
+					first: digits.slice(0, 6),
+					last: digits.slice(-4),
 					name: cardholderInput
 				})
 			});
