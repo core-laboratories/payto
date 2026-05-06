@@ -52,6 +52,7 @@
 		"@types/node-forge": "^1.3.14",
 		"@types/qrcode": "^1.5.6",
 		"blockchain-wallet-validator": "^1.2.1",
+		"corebc": "^0.4.1",
 		"device-sherlock": "^0.2.1",
 		"exchange-rounding": "^1.1.8",
 		"jose": "^6.2.3",
