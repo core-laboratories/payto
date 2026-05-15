@@ -9,6 +9,7 @@
 	} from '$lib/components';
 
 	import { TRANSPORT } from '$lib/data/transports.data';
+	import { stripWhitespace } from '$lib/helpers/strip-whitespace.helper';
 	import { constructor } from '$lib/store/constructor.store';
 	import { fade, fly } from 'svelte/transition';
 	import { coordinatesSchema, plusCodeSchema } from '$lib/validators/location.validator';
@@ -170,6 +171,14 @@
 	}
 
 	function handleOtherNetworkInput(event: Event) {
+		const input = event.currentTarget as HTMLInputElement;
+		const sanitizedValue = stripWhitespace(input.value);
+
+		if (sanitizedValue !== input.value) {
+			input.value = sanitizedValue;
+			$constructor.networks.void.other = sanitizedValue;
+		}
+
 		const otherNetworkValue = $constructor.networks.void.other;
 
 		if ($constructor.networks.void.transport === 'other') {
@@ -179,6 +188,16 @@
 				$constructor.networks.void.transport = isOtherMatchToNetworks.value;
 				$constructor.networks.void.other = undefined;
 			}
+		}
+	}
+
+	function handleOtherPointInput(event: Event) {
+		const input = event.currentTarget as HTMLInputElement;
+		const sanitizedValue = stripWhitespace(input.value);
+
+		if (sanitizedValue !== input.value) {
+			input.value = sanitizedValue;
+			$constructor.networks.void.params.loc.other = sanitizedValue;
 		}
 	}
 </script>
@@ -242,6 +261,7 @@
 					<FieldGroupText
 						id="latitude"
 						placeholder="Latitude"
+						stripWhitespace
 						bind:value={latValue}
 						oninput={handleLatInput}
 						classValue={`tracking-widest placeholder:tracking-normal [&:not(:placeholder-shown)]:font-code ${
@@ -257,6 +277,7 @@
 					<FieldGroupText
 						id="longitude"
 						placeholder="Longitude"
+						stripWhitespace
 						bind:value={lonValue}
 						oninput={handleLonInput}
 						classValue={`tracking-widest placeholder:tracking-normal [&:not(:placeholder-shown)]:font-code ${
@@ -294,6 +315,7 @@
 				<FieldGroupText
 					id="plus-code"
 					placeholder="Plus Code, e.g. 8FWV26PJ+87"
+					stripWhitespace
 					bind:value={plusCodeValue}
 					oninput={handlePlusCodeInput}
 					classValue={`tracking-widest placeholder:tracking-normal [&:not(:placeholder-shown)]:font-code ${
@@ -331,6 +353,7 @@
 				<FieldGroupText
 					id="bic"
 					placeholder="e.g. PINGCHB2"
+					stripWhitespace
 					bind:value={bicValue}
 					on:input={handleBicInput}
 					on:change={handleBicInput}
@@ -352,6 +375,7 @@
 				<FieldGroupText
 					id="intra-account-number"
 					placeholder="cb00…"
+					stripWhitespace
 					bind:value={$constructor.networks.void.params.id.value}
 				/>
 			</FieldGroup>
@@ -367,6 +391,7 @@
 				autocomplete="off"
 				aria-labelledby="exchange-point-label"
 				bind:value={$constructor.networks.void.params.loc.other}
+				oninput={handleOtherPointInput}
 			/>
 		{/if}
 	</div>
@@ -391,6 +416,7 @@
 		<FieldGroupLabel>Amount</FieldGroupLabel>
 		<FieldGroupNumber
 			placeholder="e.g. 3.14"
+			stripWhitespace
 			bind:value={$constructor.networks.void.params.amount.value}
 		/>
 	</FieldGroup>
@@ -399,6 +425,7 @@
 		<FieldGroupLabel>Currency code</FieldGroupLabel>
 		<FieldGroupText
 			placeholder="e.g. XCB; USD"
+			stripWhitespace
 			bind:value={$constructor.networks.void.params.currency.value}
 			classValue="uppercase placeholder:normal-case"
 		/>

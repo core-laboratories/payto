@@ -125,6 +125,7 @@
 		</span> *</FieldGroupLabel>
 		<FieldGroupText
 			placeholder="e.g. PINGCHB2"
+			stripWhitespace
 			bind:value={bicValue}
 			on:input={handleBicInput}
 			on:change={handleBicInput}
@@ -145,6 +146,7 @@
 		<FieldGroupLabel>Account ID / Core ID *</FieldGroupLabel>
 		<FieldGroupText
 			placeholder="e.g. cb00…"
+			stripWhitespace
 			bind:value={idValue}
 			oninput={handleIdInput}
 			onchange={handleIdInput}
@@ -173,6 +175,7 @@
 		<FieldGroupLabel>Amount</FieldGroupLabel>
 		<FieldGroupNumber
 			placeholder="e.g. 3.14"
+			stripWhitespace
 			bind:value={$constructor.networks.intra.params.amount.value}
 		/>
 	</FieldGroup>
@@ -181,6 +184,7 @@
 		<FieldGroupLabel>Fiat currency</FieldGroupLabel>
 		<FieldGroupText
 			placeholder="e.g. CHF; EUR; USD; …"
+			stripWhitespace
 			classValue="uppercase placeholder:normal-case"
 			bind:value={$constructor.networks.intra.params.currency.value}
 		/>
