@@ -65,6 +65,7 @@
 		<FieldGroupLabel>Account Alias *</FieldGroupLabel>
 		<FieldGroupText
 			placeholder="e.g. username@onion.email"
+			stripWhitespace
 			bind:value={aliasValue}
 			oninput={handleAliasInput}
 			onchange={handleAliasInput}
@@ -101,6 +102,7 @@
 		<FieldGroupLabel>Amount</FieldGroupLabel>
 		<FieldGroupNumber
 			placeholder="e.g. 3.14"
+			stripWhitespace
 			bind:value={$constructor.networks.upi.params.amount.value}
 		/>
 	</FieldGroup>
@@ -109,6 +111,7 @@
 		<FieldGroupLabel>Fiat currency</FieldGroupLabel>
 		<FieldGroupText
 			placeholder="e.g. CHF; EUR; USD"
+			stripWhitespace
 			classValue="uppercase placeholder:normal-case"
 			bind:value={$constructor.networks.upi.params.currency.value}
 		/>

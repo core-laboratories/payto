@@ -118,6 +118,7 @@
 		<FieldGroupLabel>IBAN *</FieldGroupLabel>
 		<FieldGroupText
 			placeholder="e.g. BE68539007547034"
+			stripWhitespace
 			bind:value={ibanValue}
 			oninput={handleIbanInput}
 			classValue={`tracking-widest placeholder:tracking-normal [&:not(:placeholder-shown)]:font-code ${
@@ -137,6 +138,7 @@
 		<FieldGroupLabel>BIC</FieldGroupLabel>
 		<FieldGroupText
 			placeholder="e.g. DABADKKK"
+			stripWhitespace
 			bind:value={bicValue}
 			oninput={handleBicInput}
 			classValue={`tracking-widest placeholder:tracking-normal uppercase [&:not(:placeholder-shown)]:font-code ${
@@ -172,6 +174,7 @@
 		<FieldGroupLabel>Amount</FieldGroupLabel>
 		<FieldGroupNumber
 			placeholder="e.g. 3.14"
+			stripWhitespace
 			bind:value={$constructor.networks.iban.params.amount.value}
 		/>
 	</FieldGroup>
@@ -180,6 +183,7 @@
 		<FieldGroupLabel>Fiat currency</FieldGroupLabel>
 		<FieldGroupText
 			placeholder="e.g. CHF; EUR; USD"
+			stripWhitespace
 			classValue="uppercase placeholder:normal-case"
 			bind:value={$constructor.networks.iban.params.currency.value}
 		/>

@@ -65,6 +65,7 @@
 		</span> *</FieldGroupLabel>
 		<FieldGroupText
 			placeholder="e.g. PINGCHB2"
+			stripWhitespace
 			bind:value={bicValue}
 			on:input={handleBicInput}
 			on:change={handleBicInput}
@@ -85,6 +86,7 @@
 		<FieldGroupLabel>Amount *</FieldGroupLabel>
 		<FieldGroupNumber
 			placeholder="e.g. 3.14"
+			stripWhitespace
 			bind:value={$constructor.networks.bic.params.amount.value}
 		/>
 	</FieldGroup>
@@ -93,6 +95,7 @@
 		<FieldGroupLabel>Fiat currency *</FieldGroupLabel>
 		<FieldGroupText
 			placeholder="e.g. CHF; EUR; USD"
+			stripWhitespace
 			classValue="uppercase placeholder:normal-case"
 			bind:value={$constructor.networks.bic.params.currency.value}
 		/>

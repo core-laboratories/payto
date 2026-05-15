@@ -104,6 +104,7 @@
 		<FieldGroupLabel>Account Number *</FieldGroupLabel>
 		<FieldGroupText
 			placeholder="e.g. 000123456789"
+			stripWhitespace
 			bind:value={accountValue}
 			oninput={handleAccountInput}
 			onchange={handleAccountInput}
@@ -124,6 +125,7 @@
 		<FieldGroupLabel>Routing Number *</FieldGroupLabel>
 		<FieldGroupText
 			placeholder="e.g. 110000000"
+			stripWhitespace
 			bind:value={routingValue}
 			oninput={handleRoutingInput}
 			onchange={handleRoutingInput}
@@ -152,6 +154,7 @@
 		<FieldGroupLabel>Amount</FieldGroupLabel>
 		<FieldGroupNumber
 			placeholder="e.g. 3.14"
+			stripWhitespace
 			bind:value={$constructor.networks.ach.params.amount.value}
 		/>
 		<FieldGroupAppendix>Value in main currency and fractional part (cents).</FieldGroupAppendix>
@@ -161,6 +164,7 @@
 		<FieldGroupLabel>Fiat currency</FieldGroupLabel>
 		<FieldGroupText
 			placeholder="e.g. USD"
+			stripWhitespace
 			classValue="uppercase placeholder:normal-case"
 			bind:value={$constructor.networks.ach.params.currency.value}
 		/>

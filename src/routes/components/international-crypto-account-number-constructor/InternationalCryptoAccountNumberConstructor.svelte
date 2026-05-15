@@ -15,6 +15,7 @@
 	const isDebug = (import.meta.env.DEV || publicEnv.PUBLIC_ENV === 'preview')
 
 	import { TRANSPORT } from '$lib/data/transports.data';
+	import { stripWhitespace } from '$lib/helpers/strip-whitespace.helper';
 	import { lookupWellKnownToken, WELL_KNOWN_TESTNET_NETWORKS } from '$lib/helpers/well-known-lookup.helper';
 	import { constructor } from '$lib/store/constructor.store';
 	import { fade, fly } from 'svelte/transition';
@@ -247,6 +248,18 @@
 		validateSplitAddress(value);
 	}
 
+	function handleOtherNetworkInput(event: Event) {
+		const input = event.currentTarget as HTMLInputElement;
+		const sanitizedValue = stripWhitespace(input.value);
+
+		if (sanitizedValue !== input.value) {
+			input.value = sanitizedValue;
+			$constructor.networks.ican.other = sanitizedValue;
+		}
+
+		validateCurrentAddress();
+	}
+
 	function resetSplitAddress() {
 		splitAddressValidated = false;
 		splitAddressError = false;
@@ -398,7 +411,7 @@
 						id="transport-network"
 						placeholder="Other network"
 						bind:value={$constructor.networks.ican.other}
-						oninput={validateCurrentAddress}
+						oninput={handleOtherNetworkInput}
 					/>
 				</div>
 			{/if}
@@ -413,6 +426,7 @@
 		<div class="relative">
 			<FieldGroupText
 				placeholder={getPlaceholder($constructor.networks.ican.network)}
+				stripWhitespace
 				bind:value={addressValue}
 				oninput={handleAddressInput}
 				classValue={`tracking-widest placeholder:tracking-normal [&:not(:placeholder-shown)]:font-code ${
@@ -438,6 +452,7 @@
 			<div class="relative bg-gray-900 rounded-md">
 				<FieldGroupText
 					placeholder="e.g. CTN; 0x1ab…"
+					stripWhitespace
 					bind:value={$constructor.networks.ican.params.currency.value}
 					classValue={`tracking-widest placeholder:tracking-normal [&:not(:placeholder-shown)]:font-code ${tokenUpperCaseClass} ${$constructor.networks.ican.params?.currency?.value ? 'pr-10' : ''}`}
 				/>
@@ -471,7 +486,7 @@
 
 	<FieldGroup>
 		<FieldGroupLabel>{($constructor.networks.ican.isFiat ? 'Fiat Amount' : 'Amount')}</FieldGroupLabel>
-		<FieldGroupNumber placeholder="e.g. 3.14" bind:value={$constructor.networks.ican.params.amount.value} />
+		<FieldGroupNumber placeholder="e.g. 3.14" stripWhitespace bind:value={$constructor.networks.ican.params.amount.value} />
 	</FieldGroup>
 
 	{#if ['eth', 'other'].includes($constructor.networks.ican.network)}
@@ -542,6 +557,7 @@
 					<FieldGroupLabel>Asset to receive</FieldGroupLabel>
 					<FieldGroupText
 						placeholder="e.g. XAU (Gold); USD (US Dollar)"
+						stripWhitespace
 						classValue="uppercase placeholder:normal-case"
 						bind:value={$constructor.networks.ican.params.swap.value}
 					/>
@@ -565,6 +581,7 @@
 					<FieldGroupLabel>Fiat Currency</FieldGroupLabel>
 					<FieldGroupText
 						placeholder="e.g. USD"
+						stripWhitespace
 						classValue="uppercase placeholder:normal-case"
 						bind:value={$constructor.networks.ican.params.fiat.value}
 					/>
@@ -600,6 +617,7 @@
 					{#if $constructor.networks.ican.params.dl.isMinutes}
 						<FieldGroupNumber
 							placeholder="e.g. 30 (minutes) or Unix time when above 400"
+							stripWhitespace
 							bind:value={$constructor.networks.ican.params.dl.value}
 							min={1}
 						/>
@@ -633,6 +651,7 @@
 					<div class="relative">
 						<FieldGroupText
 							placeholder={getPlaceholder($constructor.networks.ican.network)}
+							stripWhitespace
 							bind:value={splitAddressValue}
 							oninput={handleSplitAddressInput}
 							classValue={`tracking-widest placeholder:tracking-normal [&:not(:placeholder-shown)]:font-code ${
@@ -666,6 +685,7 @@
 
 					<FieldGroupNumber
 						placeholder={$constructor.networks.ican.params.split.isPercent ? 'e.g. 10%' : 'e.g. 3.14'}
+						stripWhitespace
 						bind:value={$constructor.networks.ican.params.split.value}
 						type="number"
 						min={0}

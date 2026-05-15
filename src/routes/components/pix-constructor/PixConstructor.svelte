@@ -76,6 +76,7 @@
 		<FieldGroupLabel>Account Alias *</FieldGroupLabel>
 		<FieldGroupText
 			placeholder="e.g. username@onion.email"
+			stripWhitespace
 			bind:value={aliasValue}
 			oninput={handleAliasInput}
 			onchange={handleAliasInput}
@@ -104,6 +105,7 @@
 		<FieldGroupLabel>Amount *</FieldGroupLabel>
 		<FieldGroupNumber
 			placeholder="e.g. 3.14"
+			stripWhitespace
 			bind:value={$constructor.networks.pix.params.amount.value}
 		/>
 	</FieldGroup>
@@ -112,6 +114,7 @@
 		<FieldGroupLabel>Fiat currency (BRL default)</FieldGroupLabel>
 		<FieldGroupText
 			placeholder="e.g. CHF; EUR; USD; …"
+			stripWhitespace
 			classValue="uppercase placeholder:normal-case"
 			bind:value={$constructor.networks.pix.params.currency.value}
 		/>
@@ -131,6 +134,7 @@
 			<FieldGroupLabel>Transaction ID</FieldGroupLabel>
 			<FieldGroupText
 				placeholder="e.g. ID001"
+				stripWhitespace
 				bind:value={$constructor.networks.pix.params.id.value}
 			/>
 		</FieldGroup>
