@@ -70,6 +70,7 @@
 		network: string | Readable<string> | undefined;
 		item: string | Readable<string> | undefined;
 		bic: string | Readable<string> | undefined;
+		accountId: string | Readable<string> | undefined;
 		location: string | Readable<string> | undefined;
 		recurring: string | Readable<string> | undefined;
 		deadline: number | Readable<number> | undefined;
@@ -93,6 +94,7 @@
 		network: undefined,
 		item: undefined,
 		bic: undefined,
+		accountId: undefined,
 		location: undefined,
 		recurring: undefined,
 		deadline: undefined,
@@ -331,6 +333,7 @@
 					network: payto.hostname === 'void' ? payto.void! : payto.network,
 					item: payto.item || undefined,
 					bic: payto.bic || undefined,
+					accountId: payto.accountId || (payto.accountNumber != null ? String(payto.accountNumber) : undefined),
 					location: payto.location || undefined,
 					recurring: payto.recurring || undefined,
 					rtl: payto.rtl || false,
@@ -407,6 +410,7 @@
 						: ($store.networks[hostname].network === 'other' ? $store.networks[hostname].other : $store.networks[hostname].network),
 					item: $store.design.item,
 					bic: $store.networks[hostname]?.bic,
+					accountId: $store.networks[hostname]?.id,
 					location: $store.networks[hostname]?.params?.loc?.value,
 					recurring: $store.networks[hostname]?.params?.rc?.value ?? '',
 					rtl: $store.design.rtl || false,
@@ -893,10 +897,10 @@
 		const address = typeof $paytoData.address === 'string' ? $paytoData.address : ($paytoData.address ? String(get($paytoData.address)) : undefined);
 		const hostname = typeof $paytoData.hostname === 'string' ? $paytoData.hostname : ($paytoData.hostname ? String(get($paytoData.hostname)) : undefined);
 		const network = typeof $paytoData.network === 'string' ? $paytoData.network : ($paytoData.network ? String(get($paytoData.network)) : undefined);
-		const bic = typeof $paytoData.bic === 'string' ? $paytoData.bic : ($paytoData.bic ? String(get($paytoData.bic)) : undefined);
+		const accountId = typeof $paytoData.accountId === 'string' ? $paytoData.accountId : ($paytoData.accountId ? String(get($paytoData.accountId)) : undefined);
 
 		if (address && hostname) {
-			const validation = validateAddressByType(address, hostname, network, bic);
+			const validation = validateAddressByType(address, hostname, network, accountId);
 			if (!validation.isValid && validation.errorMessage) {
 				addressValidationError.set(validation.errorMessage);
 			} else {
@@ -1174,4 +1178,3 @@
 		{/if}
 	</div>
 </div>
-

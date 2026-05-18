@@ -56,6 +56,19 @@ export function validateAddressByType(
 		if (!result.success) {
 			return { isValid: false, errorMessage: `Address is not valid for type ${uppercaseHostname}` };
 		}
+
+		if (typeof additionalData === 'string' && /^c[be]\d{2}[0-9a-f]{40}$/i.test(additionalData.trim())) {
+			const coreId = additionalData.trim();
+			const coreResult = addressSchema.safeParse({
+				network: coreId.toLowerCase().startsWith('ce') ? 'xce' : 'xcb',
+				destination: coreId
+			});
+
+			if (!coreResult.success) {
+				return { isValid: false, errorMessage: `Address is not valid for type ${uppercaseHostname}` };
+			}
+		}
+
 		return { isValid: true, errorMessage: null };
 	}
 
@@ -271,4 +284,3 @@ export function validateAddressByType(
 	// For unknown types, assume valid (we don't know how to validate them)
 	return { isValid: true, errorMessage: null };
 }
-

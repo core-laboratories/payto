@@ -9,10 +9,14 @@
 	import { constructor } from '$lib/store/constructor.store';
 	import { fly } from 'svelte/transition';
 	import { bicSchema } from '$lib/validators/bic.validator';
+	import { addressSchema } from '$lib/validators/address.validator';
 
 	let bicError = $state(false);
 	let bicMsg = $state('');
 	let bicValue = $state<string | undefined>(undefined);
+	let idError = $state(false);
+	let idMsg = $state('');
+	let idValue = $state<string | undefined>(undefined);
 	let corBicError = $state(false);
 	let corBicMsg = $state('');
 	let corBicValue = $state<string | undefined>(undefined);
@@ -22,6 +26,9 @@
 			bicValue = undefined;
 			bicError = false;
 			bicMsg = '';
+			idValue = undefined;
+			idError = false;
+			idMsg = '';
 			corBicValue = undefined;
 			corBicError = false;
 			corBicMsg = '';
@@ -43,6 +50,7 @@
 				bicError = true;
 				bicMsg = result.error.issues[0]?.message || 'Invalid BIC format';
 				$constructor.networks.bic.bic = undefined;
+				$constructor.networks.bic.id = undefined;
 			} else {
 				bicError = false;
 				bicMsg = '';
@@ -52,6 +60,7 @@
 			bicError = true;
 			bicMsg = error.message || 'Invalid BIC format';
 			$constructor.networks.bic.bic = value;
+			$constructor.networks.bic.id = undefined;
 		}
 	}
 
@@ -59,6 +68,46 @@
 		const value = (event.target as HTMLInputElement).value;
 		bicValue = value;
 		validateBic(value);
+	}
+
+	function validateId(value: string) {
+		if (!value) {
+			idError = false;
+			idMsg = '';
+			$constructor.networks.bic.id = undefined;
+			return;
+		}
+
+		if (/^c[be]\d{2}[0-9a-f]{40}$/i.test(value)) {
+			try {
+				const result = addressSchema.safeParse({
+					network: value.toLowerCase().startsWith('ce') ? 'xce' : 'xcb',
+					destination: value
+				});
+
+				if (!result.success) {
+					idError = true;
+					idMsg = result.error.issues[0]?.message || 'Invalid Account ID / Core ID format';
+					$constructor.networks.bic.id = undefined;
+					return;
+				}
+			} catch (error: any) {
+				idError = true;
+				idMsg = error.message || 'Invalid Account ID / Core ID format';
+				$constructor.networks.bic.id = undefined;
+				return;
+			}
+		}
+
+		idError = false;
+		idMsg = '';
+		$constructor.networks.bic.id = value.toLowerCase();
+	}
+
+	function handleIdInput(event: Event) {
+		const value = (event.target as HTMLInputElement).value;
+		idValue = value;
+		validateId(value);
 	}
 
 	function validateCorBic(value: string) {
@@ -142,6 +191,27 @@
 			/>
 		</FieldGroup>
 	</div>
+
+	<FieldGroup>
+		<FieldGroupLabel>Account ID / Core ID</FieldGroupLabel>
+		<FieldGroupText
+			placeholder="e.g. cb00..."
+			stripWhitespace
+			bind:value={idValue}
+			on:input={handleIdInput}
+			on:change={handleIdInput}
+			classValue={`${
+				idError
+					? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
+					: idValue
+						? 'border-2 border-emerald-500 focus:border-emerald-500 focus-visible:border-emerald-500'
+						: ''
+			}`}
+		/>
+		{#if idError && idMsg}
+			<span class="text-sm text-rose-500">{idMsg}</span>
+		{/if}
+	</FieldGroup>
 
 	<FieldGroup>
 		<FieldGroupLabel>Beneficiary Full Name</FieldGroupLabel>
