@@ -35,7 +35,8 @@ path = recipient locator
 query = optional key/value parameters
 
 transactional fields:
-  amount, fiat, dl, rc, split, swap, receiver-name, sender-name, message, id, loc, bic
+  amount, fiat, dl, rc, split, swap, receiver-name, sender-name, message, reference, id, loc, bic,
+  bank-name, bank-address, corr-bank-bic, corr-bank-name, corr-bank-address
 
 presentation / UX fields:
   org, item, color-f, color-b, barcode, rtl, lang, mode, donate
@@ -286,6 +287,7 @@ Examples:
 ```txt
 payto://bic/ABCDUS33?amount=eur:49.99
 payto://bic/ORIC-ACME-001?amount=eur:15.00
+payto://bic/PINGCHB2?receiver-name=Alice%20Example&reference=Shared-001&bank-name=Ping%20Bank&bank-address=Zurich&corr-bank-bic=CHASUS33&corr-bank-name=JPMorgan%20Chase%20Bank&corr-bank-address=New%20York
 ```
 
 ### INTRA
@@ -335,7 +337,7 @@ This section is intentionally compact for implementers.
 | `ach` | ACH account identifier | `amount`, `receiver-name` |
 | `upi` | UPI VPA | `amount`, `receiver-name`, `message` |
 | `pix` | PIX key | `amount`, `id`, `message` |
-| `bic` | BIC or ORIC routing code | `amount` |
+| `bic` | BIC or ORIC routing code | `amount`, `receiver-name`, `reference`, `bank-name`, `bank-address`, `corr-bank-bic`, `corr-bank-name`, `corr-bank-address` |
 | `intra` | internal account identifier | `bic`, `amount`, `receiver-name`, `message` |
 | `void` | location or custom handoff target | `loc`, `amount`, `message` |
 
@@ -356,9 +358,15 @@ These parameters affect the payment itself.
 | `receiver-name` | string | recipient display label | `Acme GmbH` |
 | `sender-name` | string | sender display label | `John Doe` |
 | `message` | string | payment memo / reference | `Invoice 123` |
+| `reference` | string | shared or bank reference label | `Shared-001` |
 | `id` | string | external transaction identifier | `INV-2025-0001` |
 | `loc` | string | VOID location value | `48.8582,2.2945` |
 | `bic` | string | routing code for `intra` | `ORIC-ACME-001` |
+| `bank-name` | string | receiving bank display name for `bic` | `Ping Bank` |
+| `bank-address` | string | receiving bank address for `bic` | `Zurich` |
+| `corr-bank-bic` | string | correspondent bank BIC / ORIC / SWIFT for `bic` | `CHASUS33` |
+| `corr-bank-name` | string | correspondent bank display name for `bic` | `JPMorgan Chase Bank` |
+| `corr-bank-address` | string | correspondent bank address for `bic` | `New York` |
 | `org` | string | pass organization label | `Acme` |
 | `item` | string | pass item label | `Coffee` |
 | `color-f` | string | pass foreground color hex without `#` | `9AB1D6` |
@@ -511,6 +519,16 @@ Example:
 payto://iban/DE89...3704?message=Invoice%20123
 ```
 
+### `reference`
+
+Shared or bank reference, primarily used with `bic`.
+
+Example:
+
+```txt
+payto://bic/PINGCHB2?reference=Shared-001
+```
+
 ### `id`
 
 Optional transaction identifier. Commonly used with PIX.
@@ -531,6 +549,26 @@ Examples:
 payto://void/geo?loc=48.8582,2.2945
 payto://void/plus?loc=8FW4V75V+8Q
 payto://void/other?loc=Front%20Desk
+```
+
+### `bank-name`, `bank-address`
+
+Optional receiving bank metadata for `bic`.
+
+Example:
+
+```txt
+payto://bic/PINGCHB2?bank-name=Ping%20Bank&bank-address=Zurich
+```
+
+### `corr-bank-bic`, `corr-bank-name`, `corr-bank-address`
+
+Optional correspondent bank metadata for `bic`.
+
+Example:
+
+```txt
+payto://bic/PINGCHB2?corr-bank-bic=CHASUS33&corr-bank-name=JPMorgan%20Chase%20Bank&corr-bank-address=New%20York
 ```
 
 ## PayPass / Portal Presentation Parameters
