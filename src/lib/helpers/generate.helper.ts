@@ -428,7 +428,7 @@ export const generate = (type: ITransitionType, props: any, payload: IPayload[])
 		{ label: 'FinTag (Meta Tag)', note: 'Basic payment instructions only.', value: generateMetaTag(type, props) },
 		{
 			label: 'FinTag (Well-Known)',
-			note: '/.well-known/fintag.json as a JSON array of objects, e.g. [{ "ican:xcb": "…" }]',
+			note: 'Save the content as /.well-known/fintag.json',
 			value: generateMetaTag(type, props, true)
 		}
 	];

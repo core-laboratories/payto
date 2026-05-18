@@ -87,6 +87,7 @@ const INITIAL_STATE: IComplexState = {
 		bic: {
 			network: TRANSPORT.bic[0].value,
 			bic: undefined,
+			id: undefined,
 			isRc: false,
 			params: {
 				currency: { value: undefined },
@@ -279,6 +280,10 @@ const BUILDER = {
 				{
 					placeholder: '',
 					value: fullProps.bic ? encodeURIComponent(fullProps.bic) : undefined
+				},
+				{
+					placeholder: '',
+					value: fullProps.bic && fullProps.id ? encodeURIComponent(fullProps.id) : undefined
 				}
 			];
 			return generate('bic', fullProps, payload);

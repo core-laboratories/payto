@@ -405,6 +405,18 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 				onPass: false
 			});
 		}
+		const accountId = payload.props.id;
+		if (accountId) {
+			const accountIdLangI18nKey = 'paypass.accountId';
+			const accountIdHeaderLoc = getPaypassLocalizedString(accountIdLangI18nKey);
+			textMods.push({
+				id: 'account-id-bic',
+				header: accountIdHeaderLoc?.defaultValue || 'Account ID',
+				headerI18nKey: accountIdLangI18nKey,
+				body: accountId,
+				onPass: false
+			});
+		}
 		const receiverName = payload.props.params?.receiverName?.value;
 		if (receiverName) {
 			const receiverNameLangI18nKey = 'paypass.beneficiary';

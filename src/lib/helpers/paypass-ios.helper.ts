@@ -634,6 +634,13 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 				value: bic
 			});
 		}
+		if (props.id) {
+			genericCard.backFields.push({
+				key: 'accountId-bic',
+				label: accountIdLabelKey,
+				value: props.id
+			});
+		}
 		if (params.receiverName?.value) {
 			genericCard.backFields.push({
 				key: 'beneficiary-bic',
