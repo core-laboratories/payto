@@ -405,6 +405,72 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 				onPass: false
 			});
 		}
+		const receiverName = payload.props.params?.receiverName?.value;
+		if (receiverName) {
+			const receiverNameLangI18nKey = 'paypass.beneficiary';
+			const receiverNameHeaderLoc = getPaypassLocalizedString(receiverNameLangI18nKey);
+			textMods.push({
+				id: 'beneficiary-bic',
+				header: receiverNameHeaderLoc?.defaultValue || 'Beneficiary',
+				headerI18nKey: receiverNameLangI18nKey,
+				body: receiverName,
+				onPass: false
+			});
+		}
+		const reference = payload.props.params?.reference?.value;
+		if (reference) {
+			textMods.push({
+				id: 'reference-bic',
+				header: 'Reference',
+				body: reference,
+				onPass: false
+			});
+		}
+		const bankName = payload.props.params?.bankName?.value;
+		if (bankName) {
+			textMods.push({
+				id: 'bank-name',
+				header: 'Bank Name',
+				body: bankName,
+				onPass: false
+			});
+		}
+		const bankAddress = payload.props.params?.bankAddress?.value;
+		if (bankAddress) {
+			textMods.push({
+				id: 'bank-address',
+				header: 'Bank Address',
+				body: bankAddress,
+				onPass: false
+			});
+		}
+		const corrBankName = payload.props.params?.corrBankName?.value;
+		if (corrBankName) {
+			textMods.push({
+				id: 'correspondent-bank-name',
+				header: 'Correspondent Bank Name',
+				body: corrBankName,
+				onPass: false
+			});
+		}
+		const corrBankBic = payload.props.params?.corrBankBic?.value;
+		if (corrBankBic) {
+			textMods.push({
+				id: 'correspondent-bank-bic',
+				header: 'Correspondent Bank BIC / SWIFT / ORIC',
+				body: corrBankBic,
+				onPass: false
+			});
+		}
+		const corrBankAddress = payload.props.params?.corrBankAddress?.value;
+		if (corrBankAddress) {
+			textMods.push({
+				id: 'correspondent-bank-address',
+				header: 'Correspondent Bank Address',
+				body: corrBankAddress,
+				onPass: false
+			});
+		}
 	} else if (payload.props.network === 'intra') {
 		const bic = payload.props.bic?.toUpperCase();
 		if (bic) {

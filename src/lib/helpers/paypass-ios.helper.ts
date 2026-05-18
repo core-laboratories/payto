@@ -634,6 +634,55 @@ export async function buildAppleWalletPayPass(config: AppleWalletPayPassConfig):
 				value: bic
 			});
 		}
+		if (params.receiverName?.value) {
+			genericCard.backFields.push({
+				key: 'beneficiary-bic',
+				label: beneficiaryLabelKey,
+				value: params.receiverName.value
+			});
+		}
+		if (params.reference?.value) {
+			genericCard.backFields.push({
+				key: 'reference-bic',
+				label: 'Reference',
+				value: params.reference.value
+			});
+		}
+		if (params.bankName?.value) {
+			genericCard.backFields.push({
+				key: 'bank-name',
+				label: 'Bank Name',
+				value: params.bankName.value
+			});
+		}
+		if (params.bankAddress?.value) {
+			genericCard.backFields.push({
+				key: 'bank-address',
+				label: 'Bank Address',
+				value: params.bankAddress.value
+			});
+		}
+		if (params.corrBankName?.value) {
+			genericCard.backFields.push({
+				key: 'correspondent-bank-name',
+				label: 'Correspondent Bank Name',
+				value: params.corrBankName.value
+			});
+		}
+		if (params.corrBankBic?.value) {
+			genericCard.backFields.push({
+				key: 'correspondent-bank-bic',
+				label: 'Correspondent Bank BIC / SWIFT / ORIC',
+				value: params.corrBankBic.value
+			});
+		}
+		if (params.corrBankAddress?.value) {
+			genericCard.backFields.push({
+				key: 'correspondent-bank-address',
+				label: 'Correspondent Bank Address',
+				value: params.corrBankAddress.value
+			});
+		}
 	}
 
 	// INTRA

@@ -91,6 +91,13 @@ const INITIAL_STATE: IComplexState = {
 			params: {
 				currency: { value: undefined },
 				amount: { value: undefined },
+				receiverName: { value: undefined },
+				reference: { value: undefined },
+				bankName: { value: undefined },
+				bankAddress: { value: undefined },
+				corrBankName: { value: undefined },
+				corrBankBic: { value: undefined },
+				corrBankAddress: { value: undefined },
 				rc: { value: undefined },
 			}
 		},
