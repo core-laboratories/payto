@@ -1,3 +1,5 @@
+import { buildPayQrUri } from '$lib/validators/payqr.validator';
+import { parsePayQr, serializePayQr, payQrSchemes } from '$payqr';
 import { META_CONTENT } from '$lib/data/meta-content.data';
 import { checkValidity } from '$lib/helpers/check-validity.helper';
 import { calculateColorDistance } from '$lib/helpers/euclidean-distance.helper';
@@ -14,6 +16,11 @@ import { env as publicEnv } from '$env/dynamic/public';
  * @param props - The props object that was used to initialized store.
  */
 export const generateLink = (payload: IPayload[] = [], props: Record<string, any>, donate: boolean = false) => {
+	const payQrUri = props.network === 'qr' && props.payQrForm ? buildPayQrUri(props.payQrForm) : '';
+	if (props.network === 'qr' && !payQrUri) {
+		const country = props.payQrForm?.country;
+		return country && Object.hasOwn(payQrSchemes, country) ? `payto://qr/${country}` : 'payto://qr';
+	}
 	let link = payload
 		.filter((payload) => (payload.value !== undefined || payload.query === true))
 		.reduce((acc, payload) => acc.concat('/', payload.value || (payload.placeholder ? payload.placeholder : '')), 'payto:/');
@@ -24,6 +31,11 @@ export const generateLink = (payload: IPayload[] = [], props: Record<string, any
 		.map(([key, param]) => [kebabize(key), param.value]);
 
 	const searchParams = new URLSearchParams(validParams as string[][]);
+	if (payQrUri) {
+		const target = parsePayQr(payQrUri);
+		link = payQrUri.split('?')[0];
+		for (const [key, value] of Object.entries(target.parameters)) searchParams.set(key, value);
+	}
 
 	if (props.params) {
 		// Amount transformer
@@ -106,11 +118,12 @@ export const generateLink = (payload: IPayload[] = [], props: Record<string, any
 		searchParams.set('donate', '1');
 	}
 
+	if (props.network === 'qr' || props.network === 'iban') searchParams.delete('format');
 	if (searchParams.toString()) {
 		link += '?' + uriNormalize(searchParams.toString());
 	}
 
-	return link;
+	return payQrUri ? serializePayQr(parsePayQr(link)) : link;
 };
 
 /**
@@ -358,6 +371,9 @@ const generateTailwindDonationButton = (link: string, props: Record<string, any>
  */
 const generateMetaTag = (type: ITransitionType, props: Record<string, any>, wellKnown: boolean = false) => {
 	let property = `${type}`;
+	if (type === 'qr' && Object.hasOwn(payQrSchemes, props.payQrForm?.country)) {
+		property += `:${props.payQrForm.country}`;
+	}
 	if (type === 'ican' && props.network) {
 		if (props.network !== 'other') {
 			if (props.chain > 0) {
@@ -466,7 +482,9 @@ export const getWebLink = ({
 
 	const finalPayload =
 		payload ??
-		(networkData.network === 'void'
+		(networkData.network === 'iban'
+			? [{ value: 'iban' }, ...(networkData.bic ? [{ value: encodeURIComponent(networkData.bic) }] : []), { value: encodeURIComponent(networkData.iban || networkData.destination || '') }]
+			: networkData.network === 'void'
 			? [
 					{ value: 'void' },
 					...(secondSegment ? [{ value: secondSegment }] : []),
@@ -490,7 +508,12 @@ export const getWebLink = ({
 		}
 	};
 
-	const link = generateLink(finalPayload, props, doante);
+	let link = generateLink(finalPayload, props, doante);
+	const nativeFormat = network === 'iban' ? 'epc' : network === 'qr'
+		? payQrSchemes[networkData.payQrForm?.country as keyof typeof payQrSchemes]?.scheme : undefined;
+	if (design && nativeFormat && ['native', nativeFormat].includes(networkData.design?.qrFormat)) {
+		link += (link.includes('?') ? '&' : '?') + 'format=' + nativeFormat;
+	}
 	return link ? (transform ? `${domain}/${link.slice(5)}` : link) : '#';
 };
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import PayQrConstructor from "../../../routes/components/payqr-constructor/PayQrConstructor.svelte";
 	import { writable, derived } from 'svelte/store';
 	import { ListBox } from '$lib/components';
 	import { fade } from 'svelte/transition';
@@ -26,6 +27,7 @@
 		ican: { label: getObjectByType(TYPES, 'ican')?.label, ticker: getObjectByType(TYPES, 'ican')?.description, component: InternationalCryptoAccountNumberConstructor },
 		iban: { label: getObjectByType(TYPES, 'iban')?.label, ticker: getObjectByType(TYPES, 'iban')?.description, component: InternationalBankAccountNumberConstructor },
 		ach: { label: getObjectByType(TYPES, 'ach')?.label, ticker: getObjectByType(TYPES, 'ach')?.description, component: AutomatedClearingHouseConstructor },
+		qr: { label: 'Pay QR', ticker: 'QR payments', component: PayQrConstructor },
 		upi: { label: getObjectByType(TYPES, 'upi')?.label, ticker: getObjectByType(TYPES, 'upi')?.description, component: UnifiedPaymentsInterfaceConstructor },
 		pix: { label: getObjectByType(TYPES, 'pix')?.label, ticker: getObjectByType(TYPES, 'pix')?.description, component: PixConstructor },
 		bic: { label: getObjectByType(TYPES, 'bic')?.label, ticker: getObjectByType(TYPES, 'bic')?.description, component: BusinessIdentifierCodeConstructor },

@@ -1,0 +1,146 @@
+[
+	{
+		"name": "PayNet v1.5 example 1",
+		"uri": "payto://qr/my/123456789?acquirer-id=501664&amount=MYR%3A10.00&mcc=9999&merchant-city=BANGI&receiver-name=QRCSDNBHD",
+		"payload": "00020201021126410014A000000615000101065016640209123456789520499995303458540510.005802MY5909QRCSDNBHD6005BANGI6304343F",
+		"source": "https://docs.developer.paynet.my/docs/duitNow-QR/integration/QR-generation-specification/merchant-presented-mode/example"
+	},
+	{
+		"name": "NAPAS v1.0 section 6.1.3",
+		"uri": "payto://qr/vn/0011012345678?acquirer-id=970403&amount=VND%3A180000&bill-number=NPS6869&message=thanh%20toan%20don%20hang&qr-type=dynamic",
+		"payload": "00020101021238570010A00000072701270006970403011300110123456780208QRIBFTTA530370454061800005802VN62340107NPS68690819thanh toan don hang63042E2E",
+		"source": "https://raw.githubusercontent.com/openhoangnc/vietqr/main/QR_Format_T%26C_v1.0_VN_092021.pdf"
+	},
+	{
+		"name": "NBC SDK 1.0.20 individual static",
+		"uri": "payto://qr/kh/name%40bank?bill-number=INV123&merchant-city=Phnom%20Penh&qr-currency=USD&receiver-name=Test%20Shop",
+		"payload": "00020101021129130009name@bank5204599953038405802KH5909Test Shop6010Phnom Penh62100106INV1236304D798",
+		"source": "https://gitlab.nbc.gov.kh/khqr/sdk-javascript"
+	},
+	{
+		"name": "NBC SDK 1.0.20 individual dynamic",
+		"uri": "payto://qr/kh/name%40bank?amount=USD%3A12.5&bill-number=INV123&creation-timestamp=1700000000000&expiration-timestamp=1700001800000&merchant-city=Phnom%20Penh&qr-currency=USD&receiver-name=Test%20Shop",
+		"payload": "00020101021229130009name@bank520459995303840540512.505802KH5909Test Shop6010Phnom Penh62100106INV1239934001317000000000000113170000180000063045810",
+		"source": "https://gitlab.nbc.gov.kh/khqr/sdk-javascript"
+	},
+	{
+		"name": "NBC SDK 1.0.20 merchant static",
+		"uri": "payto://qr/kh/name%40bank?acquiring-bank=Test%20Bank&bill-number=INV123&merchant-city=Phnom%20Penh&merchant-id=123456&qr-currency=USD&receiver-name=Test%20Shop&recipient-type=merchant",
+		"payload": "00020101021130360009name@bank01061234560209Test Bank5204599953038405802KH5909Test Shop6010Phnom Penh62100106INV1236304280A",
+		"source": "https://gitlab.nbc.gov.kh/khqr/sdk-javascript"
+	},
+	{
+		"name": "NBC SDK 1.0.20 merchant dynamic",
+		"uri": "payto://qr/kh/name%40bank?acquiring-bank=Test%20Bank&amount=USD%3A12.5&bill-number=INV123&creation-timestamp=1700000000000&expiration-timestamp=1700001800000&merchant-city=Phnom%20Penh&merchant-id=123456&qr-currency=USD&receiver-name=Test%20Shop&recipient-type=merchant",
+		"payload": "00020101021230360009name@bank01061234560209Test Bank520459995303840540512.505802KH5909Test Shop6010Phnom Penh62100106INV1239934001317000000000000113170000180000063044BC2",
+		"source": "https://gitlab.nbc.gov.kh/khqr/sdk-javascript"
+	},
+	{
+		"name": "my TEST01 static regression",
+		"uri": "payto://qr/my/TEST01?acquirer-id=588734&mcc=5411&merchant-city=BANGI&merchant-mobile=%2B60123456789&postal-code=43000&receiver-name=Test&reference=INV123&store-label=Store&terminal-label=POS1",
+		"payload": "00020201021126540014A000000615000101065887340206TEST010412+601234567895204541153034585802MY5904Test6005BANGI61054300062270305Store0506INV1230704POS163043C95",
+		"source": "Synthetic conformance fixture based on cited scheme field tables; not a registered destination"
+	},
+	{
+		"name": "la 0005555555 static regression",
+		"uri": "payto://qr/la/0005555555?acquirer-id=621354&application-id=A000000677012111&receiver-name=Test&reference=INV123",
+		"payload": "00020101021138510016A000000677012111010662135402030010310000555555553034185802LA5904Test62100506INV12363041853",
+		"source": "Synthetic conformance fixture based on cited scheme field tables; not a registered destination"
+	},
+	{
+		"name": "mm 123456789012345 static regression",
+		"uri": "payto://qr/mm/123456789012345?local-name=%E1%80%86%E1%80%AD%E1%80%AF%E1%80%84%E1%80%BA&mcc=5411&merchant-city=Yangon&receiver-name=Test&reference=INV123&scheme-id=MM.COM.MMQR",
+		"payload": "00020101021126440011MM.COM.MMQR011512345678901234502060000005204541153031045802MM5904Test6006Yangon62100506INV12364150002my0105ဆိုင်63046530",
+		"source": "Synthetic conformance fixture based on cited scheme field tables; not a registered destination"
+	},
+	{
+		"name": "sg 123456789A static regression",
+		"uri": "payto://qr/sg/123456789A?expiry-date=20301231&identifier-type=uen&receiver-name=Test&reference=INV123",
+		"payload": "00020101021126590009SG.PAYNOW010120210123456789A030110406INV1230508203012315204000053037025802SG5904Test6009Singapore6304B575",
+		"source": "Synthetic conformance fixture based on cited scheme field tables; not a registered destination"
+	},
+	{
+		"name": "sg +6581234567 static regression",
+		"uri": "payto://qr/sg/%2B6581234567?receiver-name=Test",
+		"payload": "00020101021126380009SG.PAYNOW010100211+6581234567030115204000053037025802SG5904Test6009Singapore63048FDF",
+		"source": "Synthetic conformance fixture based on cited scheme field tables; not a registered destination"
+	},
+	{
+		"name": "th 0812345678 static regression",
+		"uri": "payto://qr/th/0066812345678?receiver-name=Test",
+		"payload": "00020101021129370016A0000006770101110113006681234567853037645802TH5904Test6304EB0F",
+		"source": "Synthetic conformance fixture based on cited scheme field tables; not a registered destination"
+	},
+	{
+		"name": "th 1234567890123 static regression",
+		"uri": "payto://qr/th/1234567890123?identifier-type=national-id&receiver-name=Test",
+		"payload": "00020101021129370016A0000006770101110213123456789012353037645802TH5904Test63040177",
+		"source": "Synthetic conformance fixture based on cited scheme field tables; not a registered destination"
+	},
+	{
+		"name": "th 123456789012345 static regression",
+		"uri": "payto://qr/th/123456789012345?identifier-type=ewallet&receiver-name=Test",
+		"payload": "00020101021129390016A000000677010111031512345678901234553037645802TH5904Test63048A8A",
+		"source": "Synthetic conformance fixture based on cited scheme field tables; not a registered destination"
+	},
+	{
+		"name": "vn 0011009950446 static regression",
+		"uri": "payto://qr/vn/0011009950446?acquirer-id=970468",
+		"payload": "00020101021138570010A00000072701270006970468011300110099504460208QRIBFTTA53037045802VN6304D31D",
+		"source": "Synthetic conformance fixture based on cited scheme field tables; not a registered destination"
+	},
+	{
+		"name": "my TEST01 dynamic regression",
+		"uri": "payto://qr/my/TEST01?acquirer-id=588734&amount=MYR%3A100&mcc=5411&merchant-city=BANGI&merchant-mobile=%2B60123456789&postal-code=43000&qr-type=dynamic&receiver-name=Test&reference=INV123&store-label=Store&terminal-label=POS1",
+		"payload": "00020201021226540014A000000615000101065887340206TEST010412+6012345678952045411530345854031005802MY5904Test6005BANGI61054300062270305Store0506INV1230704POS1630428C6",
+		"source": "Synthetic conformance fixture based on cited scheme field tables; not a registered destination"
+	},
+	{
+		"name": "la 0005555555 dynamic regression",
+		"uri": "payto://qr/la/0005555555?acquirer-id=621354&amount=LAK%3A100&application-id=A000000677012111&qr-type=dynamic&receiver-name=Test&reference=INV123",
+		"payload": "00020101021238510016A0000006770121110106621354020300103100005555555530341854031005802LA5904Test62100506INV12363043912",
+		"source": "Synthetic conformance fixture based on cited scheme field tables; not a registered destination"
+	},
+	{
+		"name": "mm 123456789012345 dynamic regression",
+		"uri": "payto://qr/mm/123456789012345?amount=MMK%3A100&local-name=%E1%80%86%E1%80%AD%E1%80%AF%E1%80%84%E1%80%BA&mcc=5411&merchant-city=Yangon&qr-type=dynamic&receiver-name=Test&reference=INV123&scheme-id=MM.COM.MMQR",
+		"payload": "00020101021226440011MM.COM.MMQR0115123456789012345020600000052045411530310454031005802MM5904Test6006Yangon62100506INV12364150002my0105ဆိုင်63049F11",
+		"source": "Synthetic conformance fixture based on cited scheme field tables; not a registered destination"
+	},
+	{
+		"name": "sg 123456789A dynamic regression",
+		"uri": "payto://qr/sg/123456789A?amount=SGD%3A100&expiry-date=20301231&identifier-type=uen&qr-type=dynamic&receiver-name=Test&reference=INV123",
+		"payload": "00020101021226590009SG.PAYNOW010120210123456789A030110406INV12305082030123152040000530370254031005802SG5904Test6009Singapore63041CA4",
+		"source": "Synthetic conformance fixture based on cited scheme field tables; not a registered destination"
+	},
+	{
+		"name": "sg +6581234567 dynamic regression",
+		"uri": "payto://qr/sg/%2B6581234567?amount=SGD%3A100&qr-type=dynamic&receiver-name=Test",
+		"payload": "00020101021226380009SG.PAYNOW010100211+65812345670301152040000530370254031005802SG5904Test6009Singapore6304E199",
+		"source": "Synthetic conformance fixture based on cited scheme field tables; not a registered destination"
+	},
+	{
+		"name": "th 0812345678 dynamic regression",
+		"uri": "payto://qr/th/0066812345678?amount=THB%3A100&qr-type=dynamic&receiver-name=Test",
+		"payload": "00020101021229370016A00000067701011101130066812345678530376454031005802TH5904Test63047FA8",
+		"source": "Synthetic conformance fixture based on cited scheme field tables; not a registered destination"
+	},
+	{
+		"name": "th 1234567890123 dynamic regression",
+		"uri": "payto://qr/th/1234567890123?amount=THB%3A100&identifier-type=national-id&qr-type=dynamic&receiver-name=Test",
+		"payload": "00020101021229370016A00000067701011102131234567890123530376454031005802TH5904Test6304DCDB",
+		"source": "Synthetic conformance fixture based on cited scheme field tables; not a registered destination"
+	},
+	{
+		"name": "th 123456789012345 dynamic regression",
+		"uri": "payto://qr/th/123456789012345?amount=THB%3A100&identifier-type=ewallet&qr-type=dynamic&receiver-name=Test",
+		"payload": "00020101021229390016A0000006770101110315123456789012345530376454031005802TH5904Test6304D362",
+		"source": "Synthetic conformance fixture based on cited scheme field tables; not a registered destination"
+	},
+	{
+		"name": "vn 0011009950446 dynamic regression",
+		"uri": "payto://qr/vn/0011009950446?acquirer-id=970468&amount=VND%3A100&qr-type=dynamic",
+		"payload": "00020101021238570010A00000072701270006970468011300110099504460208QRIBFTTA530370454031005802VN63042798",
+		"source": "Synthetic conformance fixture based on cited scheme field tables; not a registered destination"
+	}
+]

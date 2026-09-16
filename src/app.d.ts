@@ -13,7 +13,7 @@ declare namespace svelteHTML {
 	}
 }
 
-type ITransitionType = 'ican' | 'iban' | 'ach' | 'upi' | 'pix' | 'bic' | 'intra' | 'void';
+type ITransitionType = 'ican' | 'iban' | 'ach' | 'qr' | 'upi' | 'pix' | 'bic' | 'intra' | 'void';
 
 interface ITypesObject {
 	[K in ITransitionType]: ITypeDetails;
@@ -64,6 +64,7 @@ interface IState {
 }
 
 interface ITransactionState {
+	payQrForm?: import('$lib/validators/payqr.validator').PayQrForm;
 	network: string;
 	transport?: string;
 	other?: string;
@@ -103,6 +104,7 @@ interface IDesignState {
 	colorF?: string;
 	colorB?: string;
 	barcode?: string;
+	qrFormat?: 'native' | 'payto' | 'epc' | import('$payqr').PayQrScheme;
 	rtl?: boolean;
 	mode?: string;
 	lang?: string;

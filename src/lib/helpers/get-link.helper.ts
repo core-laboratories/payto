@@ -1,3 +1,4 @@
+import { buildPayQrUri, type PayQrForm } from '$lib/validators/payqr.validator';
 import { getWebLink } from './generate.helper';
 
 /**
@@ -28,11 +29,13 @@ function getAssetParam(currencyValue: string | undefined): string | undefined {
  * - When token/currency is set, appends ?asset=ctn: or ?asset={smart_contract}:
  */
 export function getPayButtonUri(props: {
+	payQrForm?: PayQrForm;
 	network?: string;
 	other?: string;
 	transport?: string;
 	params?: { currency?: { value?: string } };
 }): string {
+	if (props?.network === 'qr') return props.payQrForm ? buildPayQrUri(props.payQrForm) : '';
 	let base = 'payto://';
 	if (!props?.network) return base;
 	if (props.network === 'other') {

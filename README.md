@@ -7,6 +7,7 @@ The 'payto' URI scheme builder supports payments as outlined in [RFC 8905](https
 ## Technical Specifications and Organizational Notes
 
 - [Extended PayTo URI](docs/scheme.md)
+- [LLM technical reference](https://payto.money/llms.txt) — public URL: `https://payto.money/llms.txt`; repository source: [static/llms.txt](static/llms.txt)
 - [RFC 8905](https://datatracker.ietf.org/doc/rfc8905/)
 
 ## Project Initialization
@@ -589,3 +590,44 @@ If you find this project useful, please consider supporting it:
 - [Litecoin](https://www.blockchain.com/explorer/addresses/ltc/ltc1ql8dvx0wv0nh2vncpt9j3zqefaehsd25cwp7pfx)
 
 List of sponsors: [![GitHub Sponsors](https://img.shields.io/github/sponsors/core-laboratories)](https://github.com/sponsors/core-laboratories)
+
+## PayQR national/interoperable QR payments
+
+Use `payto://qr/{country}/{identifier}` with lowercase ISO country codes. PayQR is global; **Pay QR** is the website's label. Current mappings are BN tarusQR, KH KHQR, ID QRIS, LA LaoQR, MY DuitNow QR, MM MMQR, PH QR Ph, SG PayNow/SGQR, TH PromptPay/Thai QR and VN VietQR.
+
+See [PayQR API, country validation, encoder capabilities and authoritative references](docs/PAYQR.md). A PayTo URI, national payment payload, QR image and payment-network connection are separate things. Generating a syntactically valid QR does not imply participation in or authorization to acquire transactions from a payment network. Unsupported national profiles fail closed.
+
+
+## PayPass formats and wallet support
+
+PayTo is the default for previews, Apple Wallet and Google Wallet. IBAN offers
+**PayTo / EPC SEPA**; Pay QR shows **PayTo / the selected country format name**.
+Unsupported national profiles use PayTo and hide the switch. QR Code, PDF417,
+Aztec and Code 128 are supported where the data can be encoded; EPC069-12 itself
+standardizes QR, so bank-app support for alternate barcode types is not assured.
+
+JSON and form POSTs to `/pass` select `design.qrFormat`: `payto`, `epc`, or the
+matching supported scheme (`khqr`, `laoqr`, `duitnow`, `mmqr`, `paynow`,
+`promptpay`, `vietqr`). Omitting the format or entire design object selects PayTo.
+Use `os: "ios"` for Apple Wallet and `os: "android"` for Google Wallet. In form
+submissions, `props` and `design` are JSON-encoded fields. Existing authorization
+requirements apply. See [Pay QR examples](docs/PAYQR.md#pass-form-and-api-format-selection)
+and [EPC examples and requirements](docs/IBAN-EPC.md#formapi).
+
+Payment/integration links never include `format`. Copied/opened PayPass links
+include it only for a nondefault selection, such as `format=epc` or `format=khqr`.
+Invalid selected-format data hides the barcode and disables wallet downloads.
+
+The libraries expose optional `formats` metadata (for example, `['payto', 'epc']`),
+omitting it for PayTo-only methods. They handle PayTo URI data, not native payload
+conversion. All current Pay QR fields round-trip through parameter maps, but
+field accessors and validation parity are incomplete; see [coverage and known
+gaps](docs/PAYQR.md#field-coverage-and-validation-boundaries).
+
+
+## Wallet generation tests
+
+Run `npm run test:wallet` for Apple/Google generation coverage, including real
+signed artifacts with temporary test keys, native/PayTo payloads, API/form
+requests and invalid-input handling. OpenSSL is required. See
+[wallet test coverage and live-testing limits](docs/WALLET-TESTING.md).

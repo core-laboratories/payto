@@ -8,6 +8,8 @@ This document explains the `payto://` links produced by PayTo Money:
 - which options affect PayPass / portal presentation
 - practical examples you can copy
 
+The website domain is **payto.money**. The machine-readable technical reference is published at [https://payto.money/llms.txt](https://payto.money/llms.txt), with repository source [static/llms.txt](../static/llms.txt). It covers supported formats, field requirements, wallet APIs and library limitations.
+
 It is meant to be readable first, technical second. The broader PayTo URI concept originates in [RFC8905].
 
 ## AI / Parser Guidance
@@ -19,12 +21,13 @@ If you are an AI agent, parser, wallet integrator, or automation tool, use these
    - authority: network / transport identifier
    - path segments: recipient locator fields
    - query parameters: optional payment and presentation metadata
-2. Treat unknown query parameters as non-fatal and ignore them.
+2. Preserve unknown query parameters when round-tripping portable links, subject to each codec's validation constraints. Native encoders reject instructions they cannot represent; do not silently drop payment semantics.
 3. Do not infer trust from presentation fields such as `org`, `item`, colors, or barcode preferences.
 4. Treat `amount`, `dl`, `rc`, `split`, and `swap` as behavior-affecting fields.
 5. Treat `org`, `item`, `color-f`, `color-b`, `barcode`, `rtl`, `lang`, `mode`, and `donate` as presentation or UX hints unless your client explicitly gives them transactional meaning.
 6. Prefer exact string preservation for identifiers, addresses, and query values, except where this document explicitly defines normalization.
-7. If multiple fields conflict with local client capabilities, preserve the raw URI and degrade gracefully rather than rewriting semantics.
+7. If fields conflict with a selected native format, preserve the raw URI and report validation failure; do not silently change payment semantics or fall back to another barcode payload.
+8. `format` selects PayPass presentation, not a payment authority. Generated payment/integration links omit it; nondefault shared PayPass links use named values such as `epc` or `khqr`.
 
 Machine-oriented summary:
 
@@ -206,6 +209,7 @@ Shape:
 
 ```txt
 payto://iban/{iban}
+payto://iban/{bic}/{iban}
 ```
 
 Example:
@@ -221,6 +225,56 @@ Parser hint:
   "network": "iban",
   "destination": "DE89370400440532013000"
 }
+```
+
+PayTo leaves BIC and beneficiary name optional. The separate **EPC SEPA** barcode
+format (`epc`) requires a valid SEPA IBAN and beneficiary name; BIC is required
+for non-EEA beneficiaries and validated whenever supplied. EPC supports EUR only.
+`reference`, `purpose` and `information` are preserved in PayTo links in both
+formats. Native EPC validates RF references, purpose syntax and field lengths;
+RF reference and unstructured `message` are mutually exclusive. See
+[IBAN/EPC requirements and API example](IBAN-EPC.md).
+
+### Pay QR
+
+Shape: `payto://qr/{country}/{identifier}`. The authority is `qr`, not `payqr`.
+Country is a lowercase ISO alpha-2 code and selects the scheme; do not add a
+scheme path segment. Preserve identifier case and leading zeros, percent-encode
+path/query data, and use `identifier-type` for a nondefault identifier type.
+
+| Country | Scheme / native format | Native generation |
+| --- | --- | --- |
+| kh | khqr | Supported |
+| la | laoqr | Supported |
+| my | duitnow | Supported |
+| mm | mmqr | Supported |
+| sg | paynow | Supported |
+| th | promptpay | Supported |
+| vn | vietqr | Supported |
+| ph | qrph | Unavailable; PayTo only |
+| id | qris | Unavailable; PayTo only |
+| bn | tarusqr | Unavailable; existing links readable, omitted from constructor |
+
+Example: `payto://qr/vn/00123?acquirer-id=970468`.
+A draft such as `payto://qr/kh` is not a complete payment target: strict library
+parsing and barcode generation require an identifier.
+
+QR monetary data uses `amount=CURRENCY:positive-decimal` with country-specific
+currency/precision rules. Static KHQR can select `qr-currency=KHR|USD` without an
+amount. Country-specific fields include routing credentials, receiver name,
+merchant data, static/dynamic settings and timestamps. Native formats require
+more than a portable identifier; see the full [field mappings and requirements](PAYQR.md).
+Duplicate query keys, malformed escaping, controls and unsupported path shapes
+are rejected. Library validation is not complete native-generation validation.
+
+FinTag uses country-qualified keys, for example:
+
+```html
+<meta property="qr:kh" content="name@bank" />
+```
+
+```json
+[{"qr:kh":"name@bank"}]
 ```
 
 ### ACH
@@ -333,7 +387,8 @@ This section is intentionally compact for implementers.
 | Authority | Path meaning | Important related params |
 | --- | --- | --- |
 | `xcb`, `btc`, `eth`, `ltc`, `xmr`, `other` | crypto destination address or name | `amount`, `fiat`, `dl`, `rc`, `split`, `swap` |
-| `iban` | IBAN | `amount`, `receiver-name`, `sender-name`, `message` |
+| `iban` | IBAN, optionally preceded by BIC | `amount`, `receiver-name`, `sender-name`, `message` |
+| `qr` | country / identifier | `identifier-type`, `amount`, national-profile fields; see [Pay QR](#pay-qr) |
 | `ach` | ACH account identifier | `amount`, `receiver-name` |
 | `upi` | UPI VPA | `amount`, `receiver-name`, `message` |
 | `pix` | PIX key | `amount`, `id`, `message` |
@@ -359,7 +414,9 @@ These parameters affect the payment itself.
 | `sender-name` | string | sender display label | `John Doe` |
 | `message` | string | payment memo / reference | `Invoice 123` |
 | `receipt` | string | destination for a payment receipt, such as an email address or SMS-capable phone number | `payments@example.com`, `+421900123456` |
-| `reference` | string | shared or bank reference label | `Shared-001` |
+| `reference` | string | portable bank reference; ISO 11649 RF when generating EPC | `RF18539007547034` |
+| `purpose` | string | IBAN payment-purpose extension; EPC requires four uppercase letters | `GDDS` |
+| `information` | string | IBAN beneficiary information; EPC maximum 70 characters | `Invoice details` |
 | `id` | string | external transaction identifier | `INV-2025-0001` |
 | `loc` | string | VOID location value | `48.8582,2.2945` |
 | `bic` | string | routing code for `intra` | `ORIC-ACME-001` |
@@ -586,6 +643,39 @@ payto://bic/PINGCHB2?corr-bank-bic=CHASUS33&corr-bank-name=JPMorgan%20Chase%20Ba
 ## PayPass / Portal Presentation Parameters
 
 These parameters affect the online PayPass preview, generated wallet passes, or both.
+
+### Payload format and defaults
+
+PayTo is the default. IBAN offers **PayTo / EPC SEPA**; Pay QR offers PayTo and the
+selected country's supported format name (KHQR, VietQR, etc.). Unsupported
+national formats hide the switch. Generated payment links never contain `format`
+or `qr-payload`. Copy/Open Weblink in PayPass adds `format=epc`, `format=khqr`,
+etc., only when a nondefault format is selected. Missing format and explicit
+`format=payto` both select PayTo; generated default links omit the parameter.
+Legacy `native` inputs remain accepted, but new links use the scheme name.
+
+Both Apple Wallet and Google Wallet use the selected payload. JSON and form
+POSTs to `https://payto.money/pass` accept `design.qrFormat`; omit that property
+or the whole design object for PayTo. Use `os: "ios"` or `os: "android"`.
+Form fields `props` and `design` contain JSON strings. Existing authorization
+rules apply. See [Pay QR API](PAYQR.md#pass-form-and-api-format-selection) and
+[EPC API](IBAN-EPC.md#formapi).
+
+`design.barcode` chooses `qr`, `pdf417`, `aztec` or `code128`; default `qr`.
+Invalid selected-format data hides the preview barcode and blocks downloads.
+Alternative symbologies carry the same payload but do not imply bank scanning
+compatibility; EPC069-12 itself specifies QR.
+
+### Library capability metadata
+
+`Payto.formats` returns `['payto', 'epc']` for IBAN or
+`['payto', '<scheme>']` for supported native Pay QR countries. PayTo-only methods
+omit `formats` from object JSON (getter: TypeScript `undefined`, Dart `null`).
+This is derived metadata, not a URI parameter or proof of native-generation
+readiness. Libraries encode/decode PayTo links only; native payload conversion
+and rendering stay in the website. Not every Pay QR parameter has a dedicated
+property, and validation parity remains incomplete; use the parameter map and
+consult [coverage limitations](PAYQR.md#field-coverage-and-validation-boundaries).
 
 ### Portal-exposed today
 

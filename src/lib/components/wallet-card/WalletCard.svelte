@@ -14,9 +14,13 @@
 	import { getCurrency } from '$lib/helpers/get-currency.helper';
 	import { calculateColorDistance } from '$lib/helpers/euclidean-distance.helper';
 	import { getWebLink } from '$lib/helpers/generate.helper';
-	import { Qr } from '$lib/components';
 	import ExchNumberFormat from 'exchange-rounding';
 	import Payto from 'payto-rl';
+	import { parsePayQr } from '$payqr';
+	import { Qr } from '$lib/components';
+	import { paymentBarcodeSvg } from '$lib/payqr/barcode';
+	import { ibanPassPayload } from '$lib/epc/payload';
+	import { payQrPassPayload } from '$lib/payqr/pass-payload';
 	import { deviceSherlock } from 'device-sherlock';
 	import { writable } from 'svelte/store';
 	import { getCategoryByValue } from '$lib/helpers/get-category-by-value.helper';
@@ -298,8 +302,11 @@
 			const normalizedUrl = url.replace('payto:///', 'payto://');
 
 			const payto = new Payto(normalizedUrl).toJSONObject();
+			if (payto.hostname === 'qr') payto.address = parsePayQr(normalizedUrl).identifier;
+			if (payto.hostname === 'iban' && payto.iban) payto.address = payto.iban;
 			const { colorForeground, colorBackground } = defineColors(payto.colorForeground, payto.colorBackground);
 			const paytoParams = new URLSearchParams(payto.search);
+			if (payto.hostname === 'iban' && ['native', 'epc'].includes(paytoParams.get('format') || '')) payto.currency = ['EUR', null];
 
 			// Set locale from language parameter BEFORE using translations
 			setLocaleFromPaytoData(payto.lang || undefined);
@@ -400,7 +407,7 @@
 					paymentType: $store.paymentType,
 					colorBackground,
 					colorForeground,
-					currency: getCurrency($store.networks[hostname], hostname),
+					currency: hostname === 'iban' && $store.design.qrFormat === 'native' ? 'EUR' : getCurrency($store.networks[hostname], hostname),
 					value: $store.networks[hostname]?.params?.amount?.value,
 					address: getAddress($store.networks[hostname], hostname),
 					organization: authority ? authority.toUpperCase() : $store.design.org,
@@ -499,6 +506,11 @@
 
 	let dynamicBareUrl = derived([constructorStore, writable(hostname)], ([$constructor, $hostname]) => {
 		if (!$hostname) return null;
+		if ($hostname === 'iban' || $hostname === 'qr') return getWebLink({
+			network: $hostname,
+			networkData: { ...$constructor.networks[$hostname], design: $constructor.design },
+			design: true
+		});
 		const network = $constructor.paymentType as ITransitionType;
 
 		const links = get(constructor.build(network));
@@ -518,6 +530,7 @@
 			const safeUrl = $url ?? '';
 			const safeDynamicBareUrl = $dynamicBareUrl ?? '';
 
+			if (hostname === 'qr' || hostname === 'iban') return safeDynamicBareUrl;
 			return safeDynamicBareUrl.length > safeUrl.length ? safeDynamicBareUrl : safeUrl;
 		}
 	);
@@ -526,6 +539,12 @@
 
 	const qrcodeValue = derived(currentBareUrlString, $url => {
 		if (!$url) return '';
+		if ($url.startsWith('payto://iban/')) {
+			try { return ibanPassPayload($url, undefined, new URL($url).searchParams.get('barcode') || 'qr').value; } catch { return ''; }
+		}
+		if ($url.startsWith('payto://qr/')) {
+			try { return payQrPassPayload($url).value; } catch { return ''; }
+		}
 
 		const hasQueryParams = $url.includes('?');
 
@@ -547,6 +566,17 @@
 		const formattedParams = searchParams.toString();
 
 		return formattedParams ? `${baseUrl}?${formattedParams}` : baseUrl;
+	});
+
+	const barcodeType = derived(currentBareUrlString, $uri => {
+		try { return new URL($uri).searchParams.get('barcode') || 'qr'; } catch { return 'qr'; }
+	});
+
+	const barcodeImage = derived([qrcodeValue, currentBareUrlString], ([$value, $uri]) => {
+		try {
+			const type = new URL($uri).searchParams.get('barcode') || 'qr';
+			return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(paymentBarcodeSvg($value, type));
+		} catch { return ''; }
 	});
 
 	const barcodeValue = derived(
@@ -1043,28 +1073,39 @@
 		<div class="w-full h-full animate-pulse bg-gradient-to-b from-white/20 to-transparent sm:rounded-t-2xl"></div>
 	</div>
 
+	{#if $barcodeImage}
 	<!-- Top: NFC icon and message -->
 	<div class={`flex flex-col items-center pt-8 mb-4 select-none z-10 ${$addressValidationError || isExpiredPayment || noData ? 'hidden' : ''}`}>
 		<div class={`${isUpsideDown ? 'rotated' : ''}`}>
 			{#if $nfcSupported && mode === 'nfc'}
 				<Nfc class="w-16 h-16 mb-2 print:hidden" />
 			{:else}
-				<div class="p-4 pb-1 rounded-lg flex justify-center items-center bg-white mb-2 print:hidden">
+				<div data-testid="payment-barcode" class="p-4 pb-1 rounded-lg flex justify-center items-center bg-white mb-2 print:hidden">
 					<div class="text-center">
-						<Qr param={$qrcodeValue} />
+						{#if $barcodeType === 'qr'}
+							<Qr param={$qrcodeValue} />
+						{:else}
+							<img src={$barcodeImage} alt="Payment barcode" class="rounded-xs max-w-[324px] w-auto h-auto" />
+						{/if}
 						<div class="text-sm text-black mt-1" dir={$paytoData.rtl ? 'rtl' : 'ltr'}>{getInfoDisplay($paytoData)}</div>
 					</div>
 				</div>
 			{/if}
 			<div class="p-4 pb-1 rounded-lg flex justify-center items-center bg-white mb-2 hidden print:block">
 				<div class="text-center">
-					<Qr param={$qrcodeValue} />
+					{#if $barcodeType === 'qr'}
+							<Qr param={$qrcodeValue} />
+						{:else}
+							<img src={$barcodeImage} alt="Payment barcode" class="rounded-xs max-w-[324px] w-auto h-auto" />
+						{/if}
 					<div class="text-sm text-black mt-1" dir={$paytoData.rtl ? 'rtl' : 'ltr'}>{getInfoDisplay($paytoData)}</div>
 				</div>
 			</div>
 		</div>
 		<div class={`text-lg font-medium drop-shadow print:drop-shadow-none ${isUpsideDown ? 'rotated' : ''}`} dir={$paytoData.rtl ? 'rtl' : 'ltr'}>{$nfcSupported && mode === 'nfc' ? $LL.walletCard.tap() : $LL.walletCard.scan()} {$LL.walletCard.hereTo()} {$paytoData.purposeLabel}{printType($paytoData, true)}</div>
 	</div>
+
+	{/if}
 
 	<!-- Main Card (rotated if needed) -->
 	<div class="flex-1 flex items-center justify-center">

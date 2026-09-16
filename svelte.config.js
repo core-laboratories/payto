@@ -7,7 +7,8 @@ const config = {
 	kit: {
 		adapter: adapter(),
 		alias: {
-			'$i18n': './src/i18n'
+			'$i18n': './src/i18n',
+			'$payqr': '../payto-rl/src/payqr/index.ts'
 		},
 		csrf: {
 			trustedOrigins: ['*']

@@ -230,6 +230,7 @@
 								<h1 class="text-white text-xl font-bold">Online Pass preview</h1>
 								<p class="text-gray-400 text-sm">Online and digital passes look and work differently.</p>
 							</div>
+
 							<WalletCard
 								bind:hostname={$type}
 							/>

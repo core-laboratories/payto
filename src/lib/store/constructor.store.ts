@@ -1,3 +1,4 @@
+import { initialPayQrForm } from '$lib/validators/payqr.validator';
 import { TRANSPORT } from '$lib/data/transports.data';
 import { createStore } from '$lib/helpers/create-store.helper';
 import { generate } from '$lib/helpers/generate.helper';
@@ -5,6 +6,7 @@ import { checkValidity } from '$lib/helpers/check-validity.helper';
 
 const INITIAL_STATE: IComplexState = {
 	networks: {
+		qr: { network: 'qr', params: {}, payQrForm: initialPayQrForm('kh') },
 		ican: {
 			network: TRANSPORT.ican[0].value,
 			other: undefined,
@@ -37,6 +39,9 @@ const INITIAL_STATE: IComplexState = {
 				amount: { value: undefined },
 				receiverName: { value: undefined },
 				message: { value: undefined },
+				reference: { value: undefined },
+				purpose: { value: undefined },
+				information: { value: undefined },
 				dl: { value: undefined },
 				rc: { value: undefined },
 			}
@@ -140,6 +145,7 @@ const INITIAL_STATE: IComplexState = {
 		colorF: '#9AB1D6',
 		colorB: '#2A3950',
 		barcode: 'qr',
+		qrFormat: 'payto' as const,
 		rtl: false,
 		mode: undefined,
 		lang: '',
@@ -150,6 +156,9 @@ const INITIAL_STATE: IComplexState = {
 
 const BUILDER = {
 	networks: {
+		qr: (props: ITransactionState, design: IDesignState) => {
+			return generate('qr', { ...props, params: { currency: {}, ...props.params, design } }, []);
+		},
 		ican: (props: typeof INITIAL_STATE.networks.ican, design: typeof INITIAL_STATE.design) => {
 			const fullProps = {
 				...props,

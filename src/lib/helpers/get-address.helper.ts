@@ -34,6 +34,8 @@ export const getAddress = (address: ITransactionState | string | null | undefine
 
 	// Handle ITransactionState case (from constructor)
 	switch (type) {
+		case 'qr':
+			return address.payQrForm?.identifier || undefined;
 		case 'ican':
 			return normalizeAddress(address.destination);
 		case 'iban':

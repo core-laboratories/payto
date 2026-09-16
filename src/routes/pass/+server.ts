@@ -1,3 +1,6 @@
+import { paymentBarcodeSvg } from '$lib/payqr/barcode';
+import { ibanPassPayload } from '$lib/epc/payload';
+import { payQrPassPayload } from '$lib/payqr/pass-payload';
 import { error, json } from '@sveltejs/kit';
 import type { RequestEvent } from '@sveltejs/kit';
 import { getValidBackgroundColor, getValidForegroundColor, getAutoTextColor } from '$lib/helpers/color-validation.helper';
@@ -364,6 +367,7 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 
 	try {
 		const props = data.props;
+		if (data.hostname === 'qr' && props?.payQrForm) props.destination = props.payQrForm.identifier;
 		const design = data.design || {};
 		const hostname = data.hostname;
 		const membership = data.membership;
@@ -384,6 +388,18 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 		/* ---------------- Shared fields ---------------- */
 		const linkHostname = getLinkHostname(hostname, props);
 		const bareLink = getLink(linkHostname, props);
+		let barcodePayload = bareLink;
+		if (hostname === 'qr' || hostname === 'iban') {
+			const format = design.qrFormat ?? 'payto';
+			try {
+				barcodePayload = hostname === 'iban'
+					? ibanPassPayload(bareLink, format, design.barcode || 'qr').value
+					: payQrPassPayload(bareLink, format).value;
+				paymentBarcodeSvg(barcodePayload, design.barcode || 'qr');
+			} catch (cause) {
+				throw error(400, (cause as Error).message);
+			}
+		}
 
 		const originator = kvData?.id || 'payto';
 		const originatorName = kvData?.name;
@@ -403,7 +419,7 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 		const chainId = props.params?.chainId?.value;
 		const explorerUrl = getExplorerUrl(network, { address: destination, chain: chainId }, true, linkBaseUrl);
 		const customCurrencyData = kvData?.customCurrency || {};
-		const currency = getCurrency(props, network as ITransitionType, true);
+		const currency = hostname === 'iban' && barcodePayload.startsWith('BCD\n') ? 'EUR' : getCurrency(props, network as ITransitionType, true);
 		const expirationDate = getExpirationDate(props.params?.dl?.value);
 
 		// Use strict parsing for booleans to avoid "0"/"false" truthiness bugs
@@ -525,7 +541,7 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 			const { saveUrl, classId: finalClassId, gwObject, gwClass } = await buildGoogleWalletPayPassSaveLink({
 				amountObject: finalAmount,
 				amountType: { recurring: isRecurring, donate: isDonate },
-				barcode: getBarcodeConfig(design.barcode || 'qr', bareLink, codeText).google,
+				barcode: getBarcodeConfig(design.barcode || 'qr', barcodePayload, codeText, (hostname === 'qr' || hostname === 'iban') ? 'utf-8' : 'iso-8859-1').google,
 				classId,
 				companyName,
 				donate: isDonate,
@@ -628,7 +644,7 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 			const pkpassBlob = await buildAppleWalletPayPass({
 				amountObject: finalAmount,
 				amountType: { recurring: isRecurring, donate: isDonate },
-				barcode: getBarcodeConfig(design.barcode || 'qr', bareLink, codeText).apple,
+				barcode: getBarcodeConfig(design.barcode || 'qr', barcodePayload, codeText, (hostname === 'qr' || hostname === 'iban') ? 'utf-8' : 'iso-8859-1').apple,
 				beacons: appleBeacons,
 				companyName,
 				donate: isDonate,

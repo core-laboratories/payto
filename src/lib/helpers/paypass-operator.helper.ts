@@ -279,7 +279,12 @@ export function getCodeText(donate: boolean, type: string): string {
  * @param alternateText - Alternate text for barcode
  * @returns Barcode configuration for Apple and Google Wallet
  */
-export function getBarcodeConfig(barcodeType: string, message: string, alternateText: string = 'Scan to pay') {
+export function getBarcodeConfig(
+	barcodeType: string,
+	message: string,
+	alternateText: string = 'Scan to pay',
+	messageEncoding: string = 'iso-8859-1'
+) {
 	const appleFormatMap: Record<string, string> = {
 		'qr': 'PKBarcodeFormatQR',
 		'pdf417': 'PKBarcodeFormatPDF417',
@@ -303,7 +308,7 @@ export function getBarcodeConfig(barcodeType: string, message: string, alternate
 		apple: {
 			format: appleFormat,
 			message,
-			messageEncoding: 'iso-8859-1'
+			messageEncoding
 		},
 		google: {
 			type: googleTypeMap[normalizedType] || 'qrCode',
