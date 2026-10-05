@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { paymentBarcodeSvg } from './barcode';
 import { payQrPassPayload } from './pass-payload';
-import { getBarcodeConfig } from '$lib/helpers/paypass-operator.helper';
-import { generate, getWebLink } from '$lib/helpers/generate.helper';
-import { initialPayQrForm } from '$lib/validators/payqr.validator';
+import { getBarcodeConfig } from '#lib/helpers/paypass-operator.helper.js';
+import { generate, getWebLink } from '#lib/helpers/generate.helper.js';
+import { initialPayQrForm } from '#lib/validators/payqr.validator.js';
 
 describe('Payment barcode format selection', () => {
 	it('scheme names select only their matching native encoder', () => {

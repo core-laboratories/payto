@@ -7,16 +7,42 @@ import { execFileSync } from 'node:child_process';
 import forge from 'node-forge';
 import JSZip from 'jszip';
 import type { RequestEvent } from '@sveltejs/kit';
-import { initialPayQrForm, payQrParameterFields } from '$lib/validators/payqr.validator';
+import { initialPayQrForm, payQrParameterFields } from '#lib/validators/payqr.validator.js';
 import { parsePayQr } from '$payqr';
-import { getLink } from '$lib/helpers/get-link.helper';
-import vectors from '$lib/payqr/fixtures/payqr-payloads.json';
+import { getLink } from '#lib/helpers/get-link.helper.js';
+import vectors from '#lib/payqr/fixtures/payqr-payloads.json';
 
 // Only configuration and image I/O are substituted. Wallet builders/signers are real.
 const config = vi.hoisted(() => ({ env: {} as Record<string, string> }));
-vi.mock('$env/dynamic/private', () => config);
-vi.mock('$env/dynamic/public', () => ({ env: {} }));
-vi.mock('$env/static/public', () => ({ PUBLIC_ENABLE_STATS: 'false' }));
+vi.mock('$app/env/private', () => ({
+	get PRIVATE_API_TOKEN_TIMEOUT() { return config.env.PRIVATE_API_TOKEN_TIMEOUT ?? ''; },
+	get PRIVATE_GW_ISSUER_ID() { return config.env.PRIVATE_GW_ISSUER_ID ?? ''; },
+	get PRIVATE_GW_SA_EMAIL() { return config.env.PRIVATE_GW_SA_EMAIL ?? ''; },
+	get PRIVATE_GW_SA_PRIVATE_KEY() { return config.env.PRIVATE_GW_SA_PRIVATE_KEY ?? ''; },
+	get PRIVATE_PASS_P12_BASE64() { return config.env.PRIVATE_PASS_P12_BASE64 ?? ''; },
+	get PRIVATE_PASS_P12_PASSWORD() { return config.env.PRIVATE_PASS_P12_PASSWORD ?? ''; },
+	get PRIVATE_PASS_TEAM_IDENTIFIER() { return config.env.PRIVATE_PASS_TEAM_IDENTIFIER ?? ''; },
+	get PRIVATE_PASS_TYPE_IDENTIFIER() { return config.env.PRIVATE_PASS_TYPE_IDENTIFIER ?? ''; },
+	get PRIVATE_SUPABASE_KEY() { return config.env.PRIVATE_SUPABASE_KEY ?? ''; },
+	get PRIVATE_SUPABASE_URL() { return config.env.PRIVATE_SUPABASE_URL ?? ''; },
+	get PRIVATE_WWDR_PEM() { return config.env.PRIVATE_WWDR_PEM ?? ''; },
+}));
+vi.mock('$app/env/public', () => ({
+	PUBLIC_ENV: '',
+	PUBLIC_DEV_SERVER_URL: '',
+	PUBLIC_ENABLE_STATS: 'false',
+	PUBLIC_SWAP_URL: '',
+	PUBLIC_PRO_PRICE: '',
+	PUBLIC_COMMUNITY_URL: '',
+	PUBLIC_PRO_ORG_PRICE: '',
+	PUBLIC_COREAPI_URL: '',
+	PUBLIC_WEB_ACTIVATION_URL: '',
+	PUBLIC_PRO_CTN_ADDRESS: '',
+	PUBLIC_TG_BOT_NAME: '',
+	PUBLIC_GW_CALLBACK_URL: '',
+	PUBLIC_GW_UPDATE_REQUEST_URL: '',
+	PUBLIC_GW_MULTIPLE_STATUS: '',
+}));
 let POST: typeof import('../../routes/pass/+server').POST;
 let publicKey: string;
 let scratch: string;
@@ -446,9 +472,9 @@ describe('Invalid requests never return a signed wallet artifact', () => {
 		}
 	});
 	it('missing Apple and Google signing configuration fails explicitly', async () => {
-		const { buildAppleWalletPayPass } = await import('$lib/helpers/paypass-ios.helper');
+		const { buildAppleWalletPayPass } = await import('#lib/helpers/paypass-ios.helper.js');
 		const { buildGoogleWalletPayPassSaveLink } =
-			await import('$lib/helpers/paypass-android.helper');
+			await import('#lib/helpers/paypass-android.helper.js');
 		await expect(buildAppleWalletPayPass({} as any)).rejects.toThrow('signing configuration');
 		await expect(buildGoogleWalletPayPassSaveLink({} as any)).rejects.toThrow(
 			'signing configuration'

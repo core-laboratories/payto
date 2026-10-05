@@ -1,3 +1,4 @@
+import adapter from '@sveltejs/adapter-cloudflare';
 import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from "@tailwindcss/vite";
 
@@ -7,7 +8,14 @@ const config = {
 	test: { include: ['src/**/*.test.ts'] },
 	plugins: [
 		tailwindcss(),
-		sveltekit()
+		sveltekit({
+			adapter: adapter(),
+			alias: {
+				'$i18n': './src/i18n',
+				'$payqr': '../payto-rl/src/payqr/index.ts'
+			},
+			csrf: { trustedOrigins: ['*'] }
+		})
 	]
 };
 

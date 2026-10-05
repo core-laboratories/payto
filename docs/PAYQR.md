@@ -171,19 +171,19 @@ Example JSON body (for form submissions, JSON-stringify `props` and `design` int
 
 ```json
 {
-	"hostname": "qr",
-	"os": "ios",
-	"props": {
-		"network": "qr",
-		"payQrForm": {
-			"country": "vn",
-			"scheme": "vietqr",
-			"identifier": "00123",
-			"identifierType": "account",
-			"acquirerId": "970468"
-		}
-	},
-	"design": { "qrFormat": "vietqr", "barcode": "qr" }
+  "hostname": "qr",
+  "os": "ios",
+  "props": {
+    "network": "qr",
+    "payQrForm": {
+      "country": "vn",
+      "scheme": "vietqr",
+      "identifier": "00123",
+      "identifierType": "account",
+      "acquirerId": "970468"
+    }
+  },
+  "design": { "qrFormat": "vietqr", "barcode": "qr" }
 }
 ```
 
@@ -279,17 +279,17 @@ All current Pay QR constructor fields can round-trip through the libraries' URI
 parameter maps. This does **not** mean every field has a dedicated `Payto`
 getter/setter, a top-level JSON property, or complete country-specific validation.
 
-| Data | URI representation |
-| --- | --- |
-| Country, identifier | `payto://qr/{country}/{identifier}` path |
-| Scheme | Derived from country; not a separate URI parameter |
-| Identifier type | `identifier-type` (default type omitted) |
-| Amount and currency | `amount=CURRENCY:value`; KH static currency uses `qr-currency` |
-| Common details | `receiver-name`, `reference`, `message`, `org` |
+| Data                          | URI representation                                                                                                     |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Country, identifier           | `payto://qr/{country}/{identifier}` path                                                                               |
+| Scheme                        | Derived from country; not a separate URI parameter                                                                     |
+| Identifier type               | `identifier-type` (default type omitted)                                                                               |
+| Amount and currency           | `amount=CURRENCY:value`; KH static currency uses `qr-currency`                                                         |
+| Common details                | `receiver-name`, `reference`, `message`, `org`                                                                         |
 | Routing and merchant identity | `acquirer-id`, `application-id`, `scheme-id`, `recipient-type`, `merchant-id`, `acquiring-bank`, `account-information` |
-| Merchant details | `merchant-city`, `mcc`, `local-name`, `merchant-mobile`, `postal-code` |
-| Additional details | `bill-number`, `store-label`, `terminal-label` |
-| Request settings | `payment-mode`, `qr-type`, `amount-editable`, `expiry-date`, `creation-timestamp`, `expiration-timestamp` |
+| Merchant details              | `merchant-city`, `mcc`, `local-name`, `merchant-mobile`, `postal-code`                                                 |
+| Additional details            | `bill-number`, `store-label`, `terminal-label`                                                                         |
+| Request settings              | `payment-mode`, `qr-type`, `amount-editable`, `expiry-date`, `creation-timestamp`, `expiration-timestamp`              |
 
 Use `Payto.payQr.parameters` or the parsed target's `parameters` for fields without
 dedicated accessors. TypeScript updates can use `serializePayQr` with a copied
@@ -313,17 +313,17 @@ national barcode can be generated or that an account is registered.
 `Payto.formats` describes presentation capabilities, not implemented library
 encoders and not validation of the current payment data.
 
-| Payment method | `formats` in object JSON |
-| --- | --- |
-| IBAN | `['payto', 'epc']` |
-| Cambodia | `['payto', 'khqr']` |
-| Laos | `['payto', 'laoqr']` |
-| Malaysia | `['payto', 'duitnow']` |
-| Myanmar | `['payto', 'mmqr']` |
-| Singapore | `['payto', 'paynow']` |
-| Thailand | `['payto', 'promptpay']` |
-| Vietnam | `['payto', 'vietqr']` |
-| Brunei, Philippines, Indonesia, other PayTo-only methods | Omitted |
+| Payment method                                           | `formats` in object JSON |
+| -------------------------------------------------------- | ------------------------ |
+| IBAN                                                     | `['payto', 'epc']`       |
+| Cambodia                                                 | `['payto', 'khqr']`      |
+| Laos                                                     | `['payto', 'laoqr']`     |
+| Malaysia                                                 | `['payto', 'duitnow']`   |
+| Myanmar                                                  | `['payto', 'mmqr']`      |
+| Singapore                                                | `['payto', 'paynow']`    |
+| Thailand                                                 | `['payto', 'promptpay']` |
+| Vietnam                                                  | `['payto', 'vietqr']`    |
+| Brunei, Philippines, Indonesia, other PayTo-only methods | Omitted                  |
 
 PayTo is first and is the application default. A PayTo-only getter returns
 `undefined` in TypeScript or `null` in Dart, never `['payto']`. The metadata appears
@@ -343,7 +343,6 @@ matching supported country scheme name. It defaults to PayTo when the format or
 entire design object is omitted, for both JSON and form requests and both wallets.
 This is an application API, not a library encoder. Payment links omit `format`;
 shared PayPass presentation links use it only for a nondefault format.
-
 
 ## Wallet generation verification
 

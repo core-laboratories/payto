@@ -1,15 +1,15 @@
 import { readFileSync } from 'node:fs';
 import { describe, it, expect, vi } from 'vitest';
 import { payQrPassPayload } from './pass-payload';
-import { getPayButtonUri } from '$lib/helpers/get-link.helper';
-import { getBarcodeConfig } from '$lib/helpers/paypass-operator.helper';
-import { generate, getWebLink } from '$lib/helpers/generate.helper';
+import { getPayButtonUri } from '#lib/helpers/get-link.helper.js';
+import { getBarcodeConfig } from '#lib/helpers/paypass-operator.helper.js';
+import { generate, getWebLink } from '#lib/helpers/generate.helper.js';
 import {
 	initialPayQrForm,
 	buildPayQrUri,
 	payQrFieldFeedback,
 	payQrFormSchema
-} from '$lib/validators/payqr.validator';
+} from '#lib/validators/payqr.validator.js';
 
 const merchant =
 	'payto://qr/my/MERCHANT01?acquirer-id=588734&receiver-name=Test%20Shop&merchant-city=KUALA%20LUMPUR&mcc=5411';

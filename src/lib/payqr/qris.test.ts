@@ -4,7 +4,7 @@ import {
 	buildPayQrUri,
 	indonesiaPayQrSchema,
 	payQrFieldFeedback
-} from '$lib/validators/payqr.validator';
+} from '#lib/validators/payqr.validator.js';
 import { payQrPassPayload } from './pass-payload';
 describe('QRIS domestic portable profile', () => {
 	it('accepts static destination and maximum dynamic amount without native fallback', () => {

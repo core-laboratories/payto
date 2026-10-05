@@ -1,4 +1,4 @@
-import { buildPayQrUri, type PayQrForm } from '$lib/validators/payqr.validator';
+import { buildPayQrUri, type PayQrForm } from '#lib/validators/payqr.validator.js';
 import { getWebLink } from './generate.helper';
 
 /**

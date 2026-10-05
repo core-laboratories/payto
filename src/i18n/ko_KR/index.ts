@@ -1,6 +1,6 @@
 import type { Translation } from '../i18n-types'
-import type { DeepPartial } from '$lib/helpers/i18n'
-import { deepMergeDict } from '$lib/helpers/i18n'
+import type { DeepPartial } from '#lib/helpers/i18n.js'
+import { deepMergeDict } from '#lib/helpers/i18n.js'
 import en from '../en/index'
 
 const ko_KRPartial: DeepPartial<Translation> = {

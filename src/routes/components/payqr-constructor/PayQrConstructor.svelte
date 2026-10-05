@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { ChevronDown } from 'lucide-svelte';
-	import { FieldGroup, FieldGroupLabel, FieldGroupText, FieldGroupAppendix } from '$lib/components';
-	import { constructor } from '$lib/store/constructor.store';
-	import { aseanQrCountries } from '$lib/payqr/countries';
-	import { initialPayQrForm, payQrFieldFeedback } from '$lib/validators/payqr.validator';
-	import type { PayQrForm } from '$lib/validators/payqr.validator';
-	import { payQrAdapters } from '$lib/payqr/national/adapters';
+	import { FieldGroup, FieldGroupLabel, FieldGroupText, FieldGroupAppendix } from '#lib/components/index.js';
+	import { constructor } from '#lib/store/constructor.store.js';
+	import { aseanQrCountries } from '#lib/payqr/countries.js';
+	import { initialPayQrForm, payQrFieldFeedback } from '#lib/validators/payqr.validator.js';
+	import type { PayQrForm } from '#lib/validators/payqr.validator.js';
+	import { payQrAdapters } from '#lib/payqr/national/adapters.js';
 	import { payQrSchemes } from '$payqr';
 	import type { PayQrCountry } from '$payqr';
 

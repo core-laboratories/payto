@@ -6,11 +6,11 @@
 		FieldGroupNumber,
 		FieldGroupText,
 		FieldGroupRadioWithNumber,
-	} from '$lib/components';
+	} from '#lib/components/index.js';
 
-	import { constructor } from '$lib/store/constructor.store';
+	import { constructor } from '#lib/store/constructor.store.js';
 	import { fly } from 'svelte/transition';
-	import { upiSchema } from '$lib/validators/upi.validator';
+	import { upiSchema } from '#lib/validators/upi.validator.js';
 
 	let aliasError = $state(false);
 	let aliasMsg = $state('');

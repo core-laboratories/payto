@@ -9,36 +9,36 @@
 
 <script lang="ts">
 	import { derived, get, type Readable } from 'svelte/store';
-	import { constructor } from '$lib/store/constructor.store';
-	import { getAddress } from '$lib/helpers/get-address.helper';
-	import { getCurrency } from '$lib/helpers/get-currency.helper';
-	import { calculateColorDistance } from '$lib/helpers/euclidean-distance.helper';
-	import { getWebLink } from '$lib/helpers/generate.helper';
+	import { constructor } from '#lib/store/constructor.store.js';
+	import { getAddress } from '#lib/helpers/get-address.helper.js';
+	import { getCurrency } from '#lib/helpers/get-currency.helper.js';
+	import { calculateColorDistance } from '#lib/helpers/euclidean-distance.helper.js';
+	import { getWebLink } from '#lib/helpers/generate.helper.js';
 	import ExchNumberFormat from 'exchange-rounding';
 	import Payto from 'payto-rl';
 	import { parsePayQr } from '$payqr';
-	import { Qr } from '$lib/components';
-	import { paymentBarcodeSvg } from '$lib/payqr/barcode';
-	import { ibanPassPayload } from '$lib/epc/payload';
-	import { payQrPassPayload } from '$lib/payqr/pass-payload';
+	import { Qr } from '#lib/components/index.js';
+	import { paymentBarcodeSvg } from '#lib/payqr/barcode.js';
+	import { ibanPassPayload } from '#lib/epc/payload.js';
+	import { payQrPassPayload } from '#lib/payqr/pass-payload.js';
 	import { deviceSherlock } from 'device-sherlock';
 	import { writable } from 'svelte/store';
-	import { getCategoryByValue } from '$lib/helpers/get-category-by-value.helper';
+	import { getCategoryByValue } from '#lib/helpers/get-category-by-value.helper.js';
 	import { onDestroy, onMount } from 'svelte';
 	import { blo } from "@blockchainhub/blo";
 	import { X, QrCode, Nfc, Navigation2, BadgeCheck, TriangleAlert } from 'lucide-svelte';
 	import { LL, setLocaleFromPaytoData, init } from '$i18n';
-	import { formatLocalizedNumber, formatRecurringSymbol, getNumberingSystem, isRtlLanguage } from '$lib/helpers/i18n';
-	import { verifyOrganization } from '$lib/helpers/oric.helper';
-	import { verifyWebsite } from '$lib/helpers/fintag.helper';
-	import { standardizeOrg } from '$lib/helpers/standardize.helper';
-	import { validateAddressByType } from '$lib/helpers/validate-address-by-type.helper';
-	import { getTitleTextBarcode } from '$lib/helpers/get-title-name.helper';
+	import { formatLocalizedNumber, formatRecurringSymbol, getNumberingSystem, isRtlLanguage } from '#lib/helpers/i18n.js';
+	import { verifyOrganization } from '#lib/helpers/oric.helper.js';
+	import { verifyWebsite } from '#lib/helpers/fintag.helper.js';
+	import { standardizeOrg } from '#lib/helpers/standardize.helper.js';
+	import { validateAddressByType } from '#lib/helpers/validate-address-by-type.helper.js';
+	import { getTitleTextBarcode } from '#lib/helpers/get-title-name.helper.js';
 	import {
 		DEADLINE_RELATIVE_MINUTES_MAX,
 		deadlineNumericToExpiryMs
-	} from '$lib/helpers/paypass-operator.helper';
-	import { normalizeAddressForIdenticon } from '$lib/helpers/normalize-identicon-seed.helper';
+	} from '#lib/helpers/paypass-operator.helper.js';
+	import { normalizeAddressForIdenticon } from '#lib/helpers/normalize-identicon-seed.helper.js';
 
 	// @ts-expect-error: Module is untyped
 	import pkg from 'open-location-code/js/src/openlocationcode';

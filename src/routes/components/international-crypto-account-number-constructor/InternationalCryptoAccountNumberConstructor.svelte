@@ -8,18 +8,18 @@
 		FieldGroupText,
 		FieldGroupRadioWithNumber,
 		ListBox
-	} from '$lib/components';
+	} from '#lib/components/index.js';
 	import { BookmarkCheck, BookmarkX, ChevronDown, ChevronUp, ArrowLeft } from 'lucide-svelte';
-	import { env as publicEnv } from '$env/dynamic/public';
+	import { PUBLIC_ENV } from '$app/env/public';
 
-	const isDebug = (import.meta.env.DEV || publicEnv.PUBLIC_ENV === 'preview')
+	const isDebug = import.meta.env.DEV || PUBLIC_ENV === 'preview';
 
-	import { TRANSPORT } from '$lib/data/transports.data';
-	import { stripWhitespace } from '$lib/helpers/strip-whitespace.helper';
-	import { lookupWellKnownToken, WELL_KNOWN_TESTNET_NETWORKS } from '$lib/helpers/well-known-lookup.helper';
-	import { constructor } from '$lib/store/constructor.store';
+	import { TRANSPORT } from '#lib/data/transports.data.js';
+	import { stripWhitespace } from '#lib/helpers/strip-whitespace.helper.js';
+	import { lookupWellKnownToken, WELL_KNOWN_TESTNET_NETWORKS } from '#lib/helpers/well-known-lookup.helper.js';
+	import { constructor } from '#lib/store/constructor.store.js';
 	import { fade, fly } from 'svelte/transition';
-	import { addressSchema } from '$lib/validators/address.validator';
+	import { addressSchema } from '#lib/validators/address.validator.js';
 
 	let addressValue = $state<string | undefined>(undefined);
 	let addressValidated = $state<boolean>(false);
@@ -39,11 +39,9 @@
 
 	let timeDateValue = $state('');
 	// Uppercase (Tailwind) only while length ≤10 so it updates on every keystroke; longer = case as inserted
-	let tokenUpperCaseClass = $derived(
-		($constructor.networks.ican.params?.currency?.value ?? '').length <= 10 ? 'uppercase' : ''
-	);
-	let tokens = $derived(TRANSPORT.ican.find(item => item.value === $constructor.networks.ican.network)?.tokens);
+	let tokenUpperCaseClass = $derived(($constructor.networks.ican.params?.currency?.value ?? '').length <= 10 ? 'uppercase' : '');
 
+	let tokens = $derived(TRANSPORT.ican.find((item) => item.value === $constructor.networks.ican.network)?.tokens);
 	let previousClearedState = false;
 
 	let showAdvancedOptions = $state(false);
@@ -485,8 +483,13 @@
 	{/if}
 
 	<FieldGroup>
-		<FieldGroupLabel>{($constructor.networks.ican.isFiat ? 'Fiat Amount' : 'Amount')}</FieldGroupLabel>
-		<FieldGroupNumber placeholder="e.g. 3.14" stripWhitespace bind:value={$constructor.networks.ican.params.amount.value} />
+		<FieldGroupLabel>{$constructor.networks.ican.isFiat ? 'Fiat Amount' : 'Amount'}</FieldGroupLabel>
+
+		<FieldGroupNumber
+			placeholder="e.g. 3.14"
+			stripWhitespace
+			bind:value={$constructor.networks.ican.params.amount.value}
+		/>
 	</FieldGroup>
 
 	{#if ['eth', 'other'].includes($constructor.networks.ican.network)}

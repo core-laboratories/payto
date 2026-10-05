@@ -2,10 +2,10 @@ import ExchNumberFormat from 'exchange-rounding';
 import forge from 'node-forge';
 // @ts-ignore
 import OpenLocationCode from 'open-location-code/js/src/openlocationcode';
-import { standardizeOrg } from '$lib/helpers/standardize.helper';
-import { verifyOrganization } from '$lib/helpers/oric.helper';
-import { verifyWebsite } from '$lib/helpers/fintag.helper';
-import { normalizeAddressForIdenticon } from '$lib/helpers/normalize-identicon-seed.helper';
+import { standardizeOrg } from '#lib/helpers/standardize.helper.js';
+import { verifyOrganization } from '#lib/helpers/oric.helper.js';
+import { verifyWebsite } from '#lib/helpers/fintag.helper.js';
+import { normalizeAddressForIdenticon } from '#lib/helpers/normalize-identicon-seed.helper.js';
 export { getTitleText, getTitleTextBarcode } from './get-title-name.helper';
 
 

@@ -7,7 +7,7 @@ import {
 	payQrFormSchema,
 	buildPayQrUri,
 	malaysiaPayQrSchema
-} from '$lib/validators/payqr.validator';
+} from '#lib/validators/payqr.validator.js';
 const identifiers: Record<string, string> = {
 	bn: 'ABC123',
 	kh: 'name@bank',

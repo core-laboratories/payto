@@ -1,11 +1,11 @@
 <script lang="ts">
 	import PayQrConstructor from "../../../routes/components/payqr-constructor/PayQrConstructor.svelte";
 	import { writable, derived } from 'svelte/store';
-	import { ListBox } from '$lib/components';
+	import { ListBox } from '#lib/components/index.js';
 	import { fade } from 'svelte/transition';
-	import { getObjectByType } from '$lib/helpers/get-object-by-type.helper';
-	import { constructor } from '$lib/store/constructor.store';
-	import { TYPES } from '$lib/data/types.data';
+	import { getObjectByType } from '#lib/helpers/get-object-by-type.helper.js';
+	import { constructor } from '#lib/store/constructor.store.js';
+	import { TYPES } from '#lib/data/types.data.js';
 	import { onMount } from 'svelte';
 
 	import {

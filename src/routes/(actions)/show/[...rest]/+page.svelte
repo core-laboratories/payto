@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { writable } from 'svelte/store';
-	import { WalletCard } from '$lib/components';
+	import { WalletCard } from '#lib/components/index.js';
 	import { parsePayQr, serializePayQr } from '$payqr';
 
 	const queryUrl = page.url.searchParams.get('url');

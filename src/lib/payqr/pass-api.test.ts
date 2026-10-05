@@ -1,24 +1,44 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { RequestEvent } from '@sveltejs/kit';
-vi.mock('$env/dynamic/private', () => ({
-	env: {
+vi.mock('$app/env/private', () => ({
+	PRIVATE_API_TOKEN_TIMEOUT: '',
+	PRIVATE_GW_SA_EMAIL: '',
+	PRIVATE_PASS_P12_BASE64: '',
+	PRIVATE_PASS_P12_PASSWORD: '',
+	PRIVATE_PASS_TEAM_IDENTIFIER: '',
+	PRIVATE_SUPABASE_KEY: '',
+	PRIVATE_SUPABASE_URL: '',
 		PRIVATE_PASS_TYPE_IDENTIFIER: 'pass.test',
 		PRIVATE_GW_ISSUER_ID: '123',
 		PRIVATE_WWDR_PEM: 'dGVzdA==',
 		PRIVATE_GW_SA_PRIVATE_KEY: 'dGVzdA=='
-	}
 }));
-vi.mock('$env/static/public', () => ({ PUBLIC_ENABLE_STATS: 'false' }));
-vi.mock('$lib/helpers/paypass-ios.helper', () => ({
+vi.mock('$app/env/public', () => ({
+	PUBLIC_ENV: '',
+	PUBLIC_DEV_SERVER_URL: '',
+	PUBLIC_ENABLE_STATS: 'false',
+	PUBLIC_SWAP_URL: '',
+	PUBLIC_PRO_PRICE: '',
+	PUBLIC_COMMUNITY_URL: '',
+	PUBLIC_PRO_ORG_PRICE: '',
+	PUBLIC_COREAPI_URL: '',
+	PUBLIC_WEB_ACTIVATION_URL: '',
+	PUBLIC_PRO_CTN_ADDRESS: '',
+	PUBLIC_TG_BOT_NAME: '',
+	PUBLIC_GW_CALLBACK_URL: '',
+	PUBLIC_GW_UPDATE_REQUEST_URL: '',
+	PUBLIC_GW_MULTIPLE_STATUS: '',
+}));
+vi.mock('#lib/helpers/paypass-ios.helper.js', () => ({
 	buildAppleWalletPayPass: vi.fn(async () => new Blob(['test']))
 }));
-vi.mock('$lib/helpers/paypass-android.helper', () => ({
+vi.mock('#lib/helpers/paypass-android.helper.js', () => ({
 	buildGoogleWalletPayPassSaveLink: vi.fn(async () => ({ saveUrl: 'https://example.test/pass' }))
 }));
 import { POST } from '../../routes/pass/+server';
-import { buildAppleWalletPayPass } from '$lib/helpers/paypass-ios.helper';
-import { buildGoogleWalletPayPassSaveLink } from '$lib/helpers/paypass-android.helper';
-import { initialPayQrForm } from '$lib/validators/payqr.validator';
+import { buildAppleWalletPayPass } from '#lib/helpers/paypass-ios.helper.js';
+import { buildGoogleWalletPayPassSaveLink } from '#lib/helpers/paypass-android.helper.js';
+import { initialPayQrForm } from '#lib/validators/payqr.validator.js';
 
 async function submit(
 	encoding: string,

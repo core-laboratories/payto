@@ -3,7 +3,7 @@ import {
 	payQrGenerationSchema,
 	initialPayQrForm,
 	payQrParameterFields
-} from '$lib/validators/payqr.validator';
+} from '#lib/validators/payqr.validator.js';
 import { parsePayQr, serializePayQr } from '$payqr';
 
 /** Shared by the online preview and both downloadable wallet pass formats. */

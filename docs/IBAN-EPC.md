@@ -18,18 +18,18 @@ Both JSON and form submissions to `/pass` use the existing design object:
 
 ```json
 {
-	"hostname": "iban",
-	"os": "ios",
-	"props": {
-		"network": "iban",
-		"iban": "FR1420041010050500013M02606",
-		"params": {
-			"receiverName": { "value": "Example beneficiary" },
-			"currency": { "value": "EUR" },
-			"amount": { "value": "12.30" }
-		}
-	},
-	"design": { "qrFormat": "epc", "barcode": "qr" }
+  "hostname": "iban",
+  "os": "ios",
+  "props": {
+    "network": "iban",
+    "iban": "FR1420041010050500013M02606",
+    "params": {
+      "receiverName": { "value": "Example beneficiary" },
+      "currency": { "value": "EUR" },
+      "amount": { "value": "12.30" }
+    }
+  },
+  "design": { "qrFormat": "epc", "barcode": "qr" }
 }
 ```
 

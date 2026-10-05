@@ -6,12 +6,12 @@
 		FieldGroupNumber,
 		FieldGroupRadioWithNumber,
 		FieldGroupText
-	} from '$lib/components';
-	import { constructor } from '$lib/store/constructor.store';
+	} from '#lib/components/index.js';
+	import { constructor } from '#lib/store/constructor.store.js';
 	import { fly } from 'svelte/transition';
-	import { ibanSchema } from '$lib/validators/iban.validator';
-	import { epcRequiresBic, validEpcReference, epcBeneficiaryNameError } from '$lib/epc/payload';
-	import { bicSchema } from '$lib/validators/bic.validator';
+	import { ibanSchema } from '#lib/validators/iban.validator.js';
+	import { epcRequiresBic, validEpcReference, epcBeneficiaryNameError } from '#lib/epc/payload.js';
+	import { bicSchema } from '#lib/validators/bic.validator.js';
 
 	let ibanValue = $state<string | undefined>(undefined);
 	let ibanError = $state(false);

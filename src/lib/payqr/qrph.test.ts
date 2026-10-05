@@ -4,7 +4,7 @@ import {
 	buildPayQrUri,
 	philippinesPayQrSchema,
 	payQrFieldFeedback
-} from '$lib/validators/payqr.validator';
+} from '#lib/validators/payqr.validator.js';
 import { payQrPassPayload } from './pass-payload';
 describe('QR Ph portable payment data', () => {
 	it.each(['p2p', 'p2m'] as const)(

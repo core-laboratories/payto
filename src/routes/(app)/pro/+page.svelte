@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { env } from '$env/dynamic/public';
+	import { PUBLIC_PRO_PRICE, PUBLIC_COMMUNITY_URL, PUBLIC_PRO_ORG_PRICE } from '$app/env/public';
 	import { CircleCheck, Plus } from 'lucide-svelte';
-	import { formatter } from '$lib/helpers/paypass-operator.helper';
+	import { formatter } from '#lib/helpers/paypass-operator.helper.js';
 </script>
 
 <svelte:head>
@@ -22,7 +22,11 @@
 					</h3>
 					<h4>
 						<span class="text-2xl">CTN</span>
-						<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500">{formatter('CTN', 'currency').format(Number(env.PUBLIC_PRO_PRICE))}</span>
+
+						<span
+							class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500"
+						>{formatter('CTN', 'currency').format(Number(PUBLIC_PRO_PRICE))}</span>
+
 						<span class="text-sm">/30 days</span>
 					</h4>
 					<a href="/?pass=1#pass" class="inline-flex items-center justify-center gap-2 px-8 py-3 font-semibold text-white transition duration-300 rounded-lg bg-emerald-700 hover:bg-emerald-600 focus:bg-emerald-700 focus-visible:outline-none !no-underline">
@@ -34,10 +38,36 @@
 						<li class="flex items-start gap-2">
 							<Plus class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
 							<div>
-								PayPass live notifications for incoming payments via <span class="relative overflow-hidden cursor-help group hover:overflow-visible focus-visible:outline-none border-b border-dotted border-gray-400" aria-describedby="tooltip-messenger">messengers<span role="tooltip" id="tooltip-messenger" class="invisible absolute bottom-full left-1/2 z-10 mb-2 w-48 -translate-x-1/2 rounded bg-slate-700 p-2 text-xs text-white opacity-0 transition-all before:invisible before:absolute before:left-1/2 before:top-full before:z-10 before:mb-2 before:-ml-1 before:border-x-4 before:border-t-4 before:border-x-transparent before:border-t-slate-700 before:opacity-0 before:transition-all before:content-[''] group-hover:visible group-hover:block group-hover:opacity-100 group-hover:before:visible group-hover:before:opacity-100">Currently supported: Email, Telegram</span></span> for{' '}
-								<span class="relative overflow-hidden cursor-help group hover:overflow-visible focus-visible:outline-none border-b border-dotted border-gray-400" aria-describedby="tooltip-assets">
-									assets<span role="tooltip" id="tooltip-assets" class="invisible absolute bottom-full left-1/2 z-10 mb-2 w-48 -translate-x-1/2 rounded bg-slate-700 p-2 text-xs text-white opacity-0 transition-all before:invisible before:absolute before:left-1/2 before:top-full before:z-10 before:mb-2 before:-ml-1 before:border-x-4 before:border-t-4 before:border-x-transparent before:border-t-slate-700 before:opacity-0 before:transition-all before:content-[''] group-hover:visible group-hover:block group-hover:opacity-100 group-hover:before:visible group-hover:before:opacity-100">Currently supported: XCB</span>
+								PayPass live notifications for incoming payments via
+
+								<span
+									class="relative overflow-hidden cursor-help group hover:overflow-visible focus-visible:outline-none border-b border-dotted border-gray-400"
+									aria-describedby="tooltip-messenger"
+								>
+									messengers
+
+									<span
+										role="tooltip"
+										id="tooltip-messenger"
+										class="invisible absolute bottom-full left-1/2 z-10 mb-2 w-48 -translate-x-1/2 rounded bg-slate-700 p-2 text-xs text-white opacity-0 transition-all before:invisible before:absolute before:left-1/2 before:top-full before:z-10 before:mb-2 before:-ml-1 before:border-x-4 before:border-t-4 before:border-x-transparent before:border-t-slate-700 before:opacity-0 before:transition-all before:content-[''] group-hover:visible group-hover:block group-hover:opacity-100 group-hover:before:visible group-hover:before:opacity-100"
+									>Currently supported: Email, Telegram</span>
 								</span>
+
+								for{' '}
+
+								<span
+									class="relative overflow-hidden cursor-help group hover:overflow-visible focus-visible:outline-none border-b border-dotted border-gray-400"
+									aria-describedby="tooltip-assets"
+								>
+									assets
+
+									<span
+										role="tooltip"
+										id="tooltip-assets"
+										class="invisible absolute bottom-full left-1/2 z-10 mb-2 w-48 -translate-x-1/2 rounded bg-slate-700 p-2 text-xs text-white opacity-0 transition-all before:invisible before:absolute before:left-1/2 before:top-full before:z-10 before:mb-2 before:-ml-1 before:border-x-4 before:border-t-4 before:border-x-transparent before:border-t-slate-700 before:opacity-0 before:transition-all before:content-[''] group-hover:visible group-hover:block group-hover:opacity-100 group-hover:before:visible group-hover:before:opacity-100"
+									>Currently supported: XCB</span>
+								</span>
+
 								{' '}and{' '}
 								<a href="https://github.com/bchainhub/well-known" target="_blank" rel="noopener" class="hover:text-green-400 transition-colors">
 									Well-Known Tokens
@@ -48,11 +78,21 @@
 							<CircleCheck class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
 							<div>Blockies identicon avatar</div>
 						</li>
-						{#if env.PUBLIC_COMMUNITY_URL}
-						<li class="flex items-start gap-2">
-							<CircleCheck class="w-6 h-6 p-1 shrink-0 text-emerald-500" aria-hidden="true" />
-							<div><a href={env.PUBLIC_COMMUNITY_URL} target="_blank" rel="noopener">Community support</a></div>
-						</li>
+						{#if PUBLIC_COMMUNITY_URL}
+							<li class="flex items-start gap-2">
+								<CircleCheck
+									class="w-6 h-6 p-1 shrink-0 text-emerald-500"
+									aria-hidden="true"
+								/>
+
+								<div>
+									<a
+										href={PUBLIC_COMMUNITY_URL}
+										target="_blank"
+										rel="noopener"
+									>Community support</a>
+								</div>
+							</li>
 						{/if}
 					</ul>
 				</div>
@@ -112,7 +152,11 @@
 				</h3>
 				<h4>
 					<span class="text-2xl">EUR</span>
-					<span class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500">{formatter('EUR', 'currency').format(Number(env.PUBLIC_PRO_ORG_PRICE))}</span>
+
+					<span
+						class="text-4xl font-bold tracking-tighter transition-all duration-300 text-green-500"
+					>{formatter('EUR', 'currency').format(Number(PUBLIC_PRO_ORG_PRICE))}</span>
+
 					<span class="text-sm">/year</span>
 				</h4>
 				<a href="mailto:sales@payto.money?subject=Pro%20Organization" class="inline-flex items-center justify-center gap-2 px-8 py-3 font-semibold text-white transition duration-300 rounded-lg bg-emerald-700 hover:bg-emerald-600 focus:bg-emerald-700 focus-visible:outline-none !no-underline">

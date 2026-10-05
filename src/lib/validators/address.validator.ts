@@ -1,13 +1,13 @@
 import { z } from 'zod';
 import { validateWalletAddress } from 'blockchain-wallet-validator';
-import { constructor } from '$lib/store/constructor.store';
-import { env as publicEnv } from '$env/dynamic/public';
+import { constructor } from '#lib/store/constructor.store.js';
+import { PUBLIC_ENV } from '$app/env/public';
 
 const PUBLIC_ENABLE_TESTNET = import.meta.env.PUBLIC_ENABLE_TESTNET || 'true'; // Default to true if not set
 const isTestnetAllowed = PUBLIC_ENABLE_TESTNET === 'true';
 const PUBLIC_ENABLE_ENTERPRISE = import.meta.env.PUBLIC_ENABLE_ENTERPRISE || 'true'; // Default to true if not set
 const isEnterpriseAllowed = PUBLIC_ENABLE_ENTERPRISE === 'true';
-const isDebug = (import.meta.env.DEV || publicEnv.PUBLIC_ENV === 'preview')
+const isDebug = import.meta.env.DEV || PUBLIC_ENV === 'preview';
 
 const moneroRegex = /^4[0-9AB][1-9A-HJ-NP-Za-km-z]{93}$/;
 const moneroTestnetRegex = /^[9A][12s-z][1-9A-HJ-NP-Za-km-z]{93}$/;
@@ -55,7 +55,7 @@ export const addressSchema = z.object({
 					params: { errorType: 'invalid_address' }
 				});
 				if (!skipStoreUpdate) {
-					constructor.update(state => {
+					constructor.update((state) => {
 						state.networks.ican.network = 'xcb';
 						return state;
 					});
@@ -72,7 +72,7 @@ export const addressSchema = z.object({
 					}
 				});
 				if (!skipStoreUpdate) {
-					constructor.update(state => {
+					constructor.update((state) => {
 						state.networks.ican.network = icanResult.network || 'xab';
 						return state;
 					});
@@ -89,7 +89,7 @@ export const addressSchema = z.object({
 					}
 				});
 				if (!skipStoreUpdate) {
-					constructor.update(state => {
+					constructor.update((state) => {
 						state.networks.ican.network = 'xce';
 						return state;
 					});
@@ -105,8 +105,8 @@ export const addressSchema = z.object({
 			}
 			break;
 
-		// ETH - Ethereum
-		case 'eth':
+		case // ETH - Ethereum
+		'eth':
 			const ethResult = validateWalletAddress(ctx.value.destination, {
 				network: ['evm'],
 				nsDomains: ['eth'],
@@ -134,8 +134,8 @@ export const addressSchema = z.object({
 			}
 			break;
 
-		// BTC - Bitcoin
-		case 'btc':
+		case // BTC - Bitcoin
+		'btc':
 			const btcResult = validateWalletAddress(ctx.value.destination, { network: ['btc'], testnet: isTestnetAllowed });
 			if (!btcResult.isValid) {
 				ctx.issues.push({
@@ -159,8 +159,8 @@ export const addressSchema = z.object({
 			}
 			break;
 
-		// LTC - Litecoin
-		case 'ltc':
+		case // LTC - Litecoin
+		'ltc':
 			const ltcResult = validateWalletAddress(ctx.value.destination, { network: ['ltc'], testnet: isTestnetAllowed });
 			if (!ltcResult.isValid) {
 				ctx.issues.push({
@@ -184,8 +184,8 @@ export const addressSchema = z.object({
 			}
 			break;
 
-		// SOL - Solana
-		case 'sol':
+		case // SOL - Solana
+		'sol':
 			const solResult = validateWalletAddress(ctx.value.destination, { network: ['sol'], testnet: isTestnetAllowed });
 			if (!solResult.isValid) {
 				ctx.issues.push({
@@ -209,8 +209,8 @@ export const addressSchema = z.object({
 			}
 			break;
 
-		// XLM - Stellar
-		case 'xlm':
+		case // XLM - Stellar
+		'xlm':
 			const xlmResult = validateWalletAddress(ctx.value.destination, { network: ['xlm'], testnet: isTestnetAllowed });
 			if (!xlmResult.isValid) {
 				ctx.issues.push({
@@ -223,8 +223,8 @@ export const addressSchema = z.object({
 			}
 			break;
 
-		// XRP - Ripple
-		case 'xrp':
+		case // XRP - Ripple
+		'xrp':
 			const xrpResult = validateWalletAddress(ctx.value.destination, { network: ['xrp'], testnet: isTestnetAllowed });
 			if (!xrpResult.isValid) {
 				ctx.issues.push({
@@ -237,8 +237,8 @@ export const addressSchema = z.object({
 			}
 			break;
 
-		// DOT - Polkadot
-		case 'dot':
+		case // DOT - Polkadot
+		'dot':
 			const dotResult = validateWalletAddress(ctx.value.destination, { network: ['dot'], testnet: isTestnetAllowed });
 			if (!dotResult.isValid) {
 				ctx.issues.push({
@@ -262,8 +262,8 @@ export const addressSchema = z.object({
 			}
 			break;
 
-		// BCH - Bitcoin Cash
-		case 'bch':
+		case // BCH - Bitcoin Cash
+		'bch':
 			const bchResult = validateWalletAddress(ctx.value.destination, { network: ['bch'], testnet: isTestnetAllowed });
 			if (!bchResult.isValid) {
 				ctx.issues.push({
@@ -276,8 +276,8 @@ export const addressSchema = z.object({
 			}
 			break;
 
-		// XMR - Monero
-		case 'xmr':
+		case // XMR - Monero
+		'xmr':
 			const xmrResult = moneroRegex.test(ctx.value.destination);
 			const xmrTestnetResult = moneroTestnetRegex.test(ctx.value.destination);
 			if (!xmrResult && !xmrTestnetResult) {

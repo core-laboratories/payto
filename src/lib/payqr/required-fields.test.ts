@@ -4,7 +4,7 @@ import {
 	buildPayQrUri,
 	payQrGenerationSchema,
 	type PayQrForm
-} from '$lib/validators/payqr.validator';
+} from '#lib/validators/payqr.validator.js';
 import type { PayQrCountry } from '$payqr';
 import { payQrPassPayload } from './pass-payload';
 

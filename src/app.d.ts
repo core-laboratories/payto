@@ -64,7 +64,7 @@ interface IState {
 }
 
 interface ITransactionState {
-	payQrForm?: import('$lib/validators/payqr.validator').PayQrForm;
+	payQrForm?: import('#lib/validators/payqr.validator.js').PayQrForm;
 	network: string;
 	transport?: string;
 	other?: string;

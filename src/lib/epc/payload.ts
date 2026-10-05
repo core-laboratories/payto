@@ -1,5 +1,5 @@
-import { ibanSchema } from '$lib/validators/iban.validator';
-import { bicSchema } from '$lib/validators/bic.validator';
+import { ibanSchema } from '#lib/validators/iban.validator.js';
+import { bicSchema } from '#lib/validators/bic.validator.js';
 
 // EPC069-12 v3.1 §2.1–2.2; EPC409-09 v8.0 geographical scope (2025-12).
 const eea = new Set(

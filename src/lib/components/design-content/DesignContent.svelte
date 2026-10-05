@@ -6,24 +6,24 @@
 		FieldGroupText,
 		FieldGroupAppendix,
 		ListBox
-	} from '$lib/components';
+	} from '#lib/components/index.js';
 	import { ChevronDown, ChevronUp, Copy, ExternalLink, Eraser } from 'lucide-svelte';
 
 	import { derived, get, writable } from 'svelte/store';
-	import { constructor } from '$lib/store/constructor.store';
-	import { calculateColorDistance } from '$lib/helpers/euclidean-distance.helper';
-	import { generateWebLink, getWebLink } from '$lib/helpers/generate.helper';
-	import { getAddress } from '$lib/helpers/get-address.helper';
-	import { standardizeOrg } from '$lib/helpers/standardize.helper';
-	import { toast } from '$lib/components/toast';
+	import { constructor } from '#lib/store/constructor.store.js';
+	import { calculateColorDistance } from '#lib/helpers/euclidean-distance.helper.js';
+	import { generateWebLink, getWebLink } from '#lib/helpers/generate.helper.js';
+	import { getAddress } from '#lib/helpers/get-address.helper.js';
+	import { standardizeOrg } from '#lib/helpers/standardize.helper.js';
+	import { toast } from '#lib/components/toast/index.js';
 	import { setLocaleFromPaytoData } from '$i18n';
-	import { buildPayQrUri } from '$lib/validators/payqr.validator';
-	import { paymentBarcodeSvg } from '$lib/payqr/barcode';
-	import { payQrAdapters } from '$lib/payqr/national/adapters';
+	import { buildPayQrUri } from '#lib/validators/payqr.validator.js';
+	import { paymentBarcodeSvg } from '#lib/payqr/barcode.js';
+	import { payQrAdapters } from '#lib/payqr/national/adapters.js';
 	import { payQrSchemes, type PayQrCountry } from '$payqr';
-	import { ibanPassPayload } from '$lib/epc/payload';
-	import { getLink as getPaymentLink } from '$lib/helpers/get-link.helper';
-	import { payQrPassPayload } from '$lib/payqr/pass-payload';
+	import { ibanPassPayload } from '#lib/epc/payload.js';
+	import { getLink as getPaymentLink } from '#lib/helpers/get-link.helper.js';
+	import { payQrPassPayload } from '#lib/payqr/pass-payload.js';
 	import { onMount } from 'svelte';
 
 	export let hostname: ITransitionType | undefined = undefined;

@@ -1,4 +1,4 @@
-import { buildPayQrUri } from '$lib/validators/payqr.validator';
+import { buildPayQrUri } from '#lib/validators/payqr.validator.js';
 
 export const META_CONTENT = {
 	qr: (props: Pick<ITransactionState, 'payQrForm'>) => {

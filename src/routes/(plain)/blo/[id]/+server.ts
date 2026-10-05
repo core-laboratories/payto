@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
 import { blo } from '@blockchainhub/blo';
 import { validateWalletAddress } from 'blockchain-wallet-validator';
-import { normalizeBloPathId } from '$lib/helpers/normalize-identicon-seed.helper';
+import { normalizeBloPathId } from '#lib/helpers/normalize-identicon-seed.helper.js';
 
 export async function GET({ params }: { params: { id: string } }) {
 	const address = params.id;

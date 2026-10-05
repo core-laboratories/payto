@@ -1,13 +1,9 @@
-import type { Handle } from '@sveltejs/kit';
-import { error, json, text } from '@sveltejs/kit';
+import type { Handle } from '@sveltejs/kit/hooks';
 
 function isFormContentType(request: Request) {
 	const type = request.headers.get('content-type')?.split(';', 1)[0].trim().toLowerCase() ?? '';
-	return (
-		type === 'application/x-www-form-urlencoded' ||
-		type === 'multipart/form-data' ||
-		type === 'text/plain'
-	);
+
+	return type === 'application/x-www-form-urlencoded' || type === 'multipart/form-data' || type === 'text/plain';
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
@@ -27,10 +23,10 @@ export const handle: Handle = async ({ event, resolve }) => {
 		const message = `Cross-site ${request.method} form submissions are forbidden`;
 
 		if (request.headers.get('accept') === 'application/json') {
-			return json({ message }, { status: 403 });
+			return Response.json({ message }, { status: 403 });
 		}
 
-		return text(message, { status: 403 });
+		return new Response(message, { status: 403, headers: { 'content-type': 'text/plain; charset=utf-8' } });
 	}
 
 	return resolve(event);

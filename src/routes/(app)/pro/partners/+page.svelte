@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { PARTNERS } from '$lib/data/partners.data';
+	import { PARTNERS } from '#lib/data/partners.data.js';
 	const partners: any[] = PARTNERS;
 </script>
 

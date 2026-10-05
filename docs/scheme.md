@@ -242,18 +242,18 @@ Country is a lowercase ISO alpha-2 code and selects the scheme; do not add a
 scheme path segment. Preserve identifier case and leading zeros, percent-encode
 path/query data, and use `identifier-type` for a nondefault identifier type.
 
-| Country | Scheme / native format | Native generation |
-| --- | --- | --- |
-| kh | khqr | Supported |
-| la | laoqr | Supported |
-| my | duitnow | Supported |
-| mm | mmqr | Supported |
-| sg | paynow | Supported |
-| th | promptpay | Supported |
-| vn | vietqr | Supported |
-| ph | qrph | Unavailable; PayTo only |
-| id | qris | Unavailable; PayTo only |
-| bn | tarusqr | Unavailable; existing links readable, omitted from constructor |
+| Country | Scheme / native format | Native generation                                              |
+| ------- | ---------------------- | -------------------------------------------------------------- |
+| kh      | khqr                   | Supported                                                      |
+| la      | laoqr                  | Supported                                                      |
+| my      | duitnow                | Supported                                                      |
+| mm      | mmqr                   | Supported                                                      |
+| sg      | paynow                 | Supported                                                      |
+| th      | promptpay              | Supported                                                      |
+| vn      | vietqr                 | Supported                                                      |
+| ph      | qrph                   | Unavailable; PayTo only                                        |
+| id      | qris                   | Unavailable; PayTo only                                        |
+| bn      | tarusqr                | Unavailable; existing links readable, omitted from constructor |
 
 Example: `payto://qr/vn/00123?acquirer-id=970468`.
 A draft such as `payto://qr/kh` is not a complete payment target: strict library
@@ -274,7 +274,7 @@ FinTag uses country-qualified keys, for example:
 ```
 
 ```json
-[{"qr:kh":"name@bank"}]
+[{ "qr:kh": "name@bank" }]
 ```
 
 ### ACH
@@ -384,17 +384,17 @@ payto://void/other?loc=Front%20Desk
 
 This section is intentionally compact for implementers.
 
-| Authority | Path meaning | Important related params |
-| --- | --- | --- |
-| `xcb`, `btc`, `eth`, `ltc`, `xmr`, `other` | crypto destination address or name | `amount`, `fiat`, `dl`, `rc`, `split`, `swap` |
-| `iban` | IBAN, optionally preceded by BIC | `amount`, `receiver-name`, `sender-name`, `message` |
-| `qr` | country / identifier | `identifier-type`, `amount`, national-profile fields; see [Pay QR](#pay-qr) |
-| `ach` | ACH account identifier | `amount`, `receiver-name` |
-| `upi` | UPI VPA | `amount`, `receiver-name`, `message` |
-| `pix` | PIX key | `amount`, `id`, `message` |
-| `bic` | BIC or ORIC routing code | `amount`, `receiver-name`, `reference`, `bank-name`, `bank-address`, `corr-bank-bic`, `corr-bank-name`, `corr-bank-address` |
-| `intra` | internal account identifier | `bic`, `amount`, `receiver-name`, `message` |
-| `void` | location or custom handoff target | `loc`, `amount`, `message` |
+| Authority                                  | Path meaning                       | Important related params                                                                                                    |
+| ------------------------------------------ | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `xcb`, `btc`, `eth`, `ltc`, `xmr`, `other` | crypto destination address or name | `amount`, `fiat`, `dl`, `rc`, `split`, `swap`                                                                               |
+| `iban`                                     | IBAN, optionally preceded by BIC   | `amount`, `receiver-name`, `sender-name`, `message`                                                                         |
+| `qr`                                       | country / identifier               | `identifier-type`, `amount`, national-profile fields; see [Pay QR](#pay-qr)                                                 |
+| `ach`                                      | ACH account identifier             | `amount`, `receiver-name`                                                                                                   |
+| `upi`                                      | UPI VPA                            | `amount`, `receiver-name`, `message`                                                                                        |
+| `pix`                                      | PIX key                            | `amount`, `id`, `message`                                                                                                   |
+| `bic`                                      | BIC or ORIC routing code           | `amount`, `receiver-name`, `reference`, `bank-name`, `bank-address`, `corr-bank-bic`, `corr-bank-name`, `corr-bank-address` |
+| `intra`                                    | internal account identifier        | `bic`, `amount`, `receiver-name`, `message`                                                                                 |
+| `void`                                     | location or custom handoff target  | `loc`, `amount`, `message`                                                                                                  |
 
 ## Core Payment Parameters
 
@@ -402,38 +402,38 @@ These parameters affect the payment itself.
 
 ## Machine Reference: Parameters
 
-| Parameter | Type | Meaning | Example |
-| --- | --- | --- | --- |
-| `amount` | string | requested amount, optionally with currency/asset prefix | `eur:19.90`, `ctn:25`, `25` |
-| `fiat` | string | ICAN display / quote fiat | `eur` |
-| `dl` | string/number | expiry timestamp or relative minutes | `15`, `1735689599`, `2025-12-31T23:59:59Z` |
-| `rc` | string | recurrence cadence | `m`, `2w`, `30d` |
-| `split` | string | ICAN split instruction | `p:10@Xy...y` |
-| `swap` | string | ICAN asset conversion target | `usdc` |
-| `receiver-name` | string | recipient display label | `Acme GmbH` |
-| `sender-name` | string | sender display label | `John Doe` |
-| `message` | string | payment memo / reference | `Invoice 123` |
-| `receipt` | string | destination for a payment receipt, such as an email address or SMS-capable phone number | `payments@example.com`, `+421900123456` |
-| `reference` | string | portable bank reference; ISO 11649 RF when generating EPC | `RF18539007547034` |
-| `purpose` | string | IBAN payment-purpose extension; EPC requires four uppercase letters | `GDDS` |
-| `information` | string | IBAN beneficiary information; EPC maximum 70 characters | `Invoice details` |
-| `id` | string | external transaction identifier | `INV-2025-0001` |
-| `loc` | string | VOID location value | `48.8582,2.2945` |
-| `bic` | string | routing code for `intra` | `ORIC-ACME-001` |
-| `bank-name` | string | receiving bank display name for `bic` | `Ping Bank` |
-| `bank-address` | string | receiving bank address for `bic` | `Zurich` |
-| `corr-bank-bic` | string | correspondent bank BIC / ORIC / SWIFT for `bic` | `CHASUS33` |
-| `corr-bank-name` | string | correspondent bank display name for `bic` | `JPMorgan Chase Bank` |
-| `corr-bank-address` | string | correspondent bank address for `bic` | `New York` |
-| `org` | string | pass organization label | `Acme` |
-| `item` | string | pass item label | `Coffee` |
-| `color-f` | string | pass foreground color hex without `#` | `9AB1D6` |
-| `color-b` | string | pass background color hex without `#` | `2A3950` |
-| `barcode` | string | preferred barcode type | `qr`, `pdf417`, `aztec`, `code128` |
-| `rtl` | string | right-to-left flag | `1` |
-| `lang` | string | locale code | `en`, `de`, `cs-CZ` |
-| `mode` | string | client presentation hint | `qr`, `nfc` |
-| `donate` | string | donation mode flag | `1` |
+| Parameter           | Type          | Meaning                                                                                 | Example                                    |
+| ------------------- | ------------- | --------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `amount`            | string        | requested amount, optionally with currency/asset prefix                                 | `eur:19.90`, `ctn:25`, `25`                |
+| `fiat`              | string        | ICAN display / quote fiat                                                               | `eur`                                      |
+| `dl`                | string/number | expiry timestamp or relative minutes                                                    | `15`, `1735689599`, `2025-12-31T23:59:59Z` |
+| `rc`                | string        | recurrence cadence                                                                      | `m`, `2w`, `30d`                           |
+| `split`             | string        | ICAN split instruction                                                                  | `p:10@Xy...y`                              |
+| `swap`              | string        | ICAN asset conversion target                                                            | `usdc`                                     |
+| `receiver-name`     | string        | recipient display label                                                                 | `Acme GmbH`                                |
+| `sender-name`       | string        | sender display label                                                                    | `John Doe`                                 |
+| `message`           | string        | payment memo / reference                                                                | `Invoice 123`                              |
+| `receipt`           | string        | destination for a payment receipt, such as an email address or SMS-capable phone number | `payments@example.com`, `+421900123456`    |
+| `reference`         | string        | portable bank reference; ISO 11649 RF when generating EPC                               | `RF18539007547034`                         |
+| `purpose`           | string        | IBAN payment-purpose extension; EPC requires four uppercase letters                     | `GDDS`                                     |
+| `information`       | string        | IBAN beneficiary information; EPC maximum 70 characters                                 | `Invoice details`                          |
+| `id`                | string        | external transaction identifier                                                         | `INV-2025-0001`                            |
+| `loc`               | string        | VOID location value                                                                     | `48.8582,2.2945`                           |
+| `bic`               | string        | routing code for `intra`                                                                | `ORIC-ACME-001`                            |
+| `bank-name`         | string        | receiving bank display name for `bic`                                                   | `Ping Bank`                                |
+| `bank-address`      | string        | receiving bank address for `bic`                                                        | `Zurich`                                   |
+| `corr-bank-bic`     | string        | correspondent bank BIC / ORIC / SWIFT for `bic`                                         | `CHASUS33`                                 |
+| `corr-bank-name`    | string        | correspondent bank display name for `bic`                                               | `JPMorgan Chase Bank`                      |
+| `corr-bank-address` | string        | correspondent bank address for `bic`                                                    | `New York`                                 |
+| `org`               | string        | pass organization label                                                                 | `Acme`                                     |
+| `item`              | string        | pass item label                                                                         | `Coffee`                                   |
+| `color-f`           | string        | pass foreground color hex without `#`                                                   | `9AB1D6`                                   |
+| `color-b`           | string        | pass background color hex without `#`                                                   | `2A3950`                                   |
+| `barcode`           | string        | preferred barcode type                                                                  | `qr`, `pdf417`, `aztec`, `code128`         |
+| `rtl`               | string        | right-to-left flag                                                                      | `1`                                        |
+| `lang`              | string        | locale code                                                                             | `en`, `de`, `cs-CZ`                        |
+| `mode`              | string        | client presentation hint                                                                | `qr`, `nfc`                                |
+| `donate`            | string        | donation mode flag                                                                      | `1`                                        |
 
 ### `amount`
 
@@ -884,7 +884,7 @@ In particular:
 
 For irreversible assets, users should verify the final address and parameters carefully before signing a transfer.
 
-[RFC3986]: https://www.rfc-editor.org/rfc/rfc3986 "URI: Generic Syntax"
+[RFC3986]: https://www.rfc-editor.org/rfc/rfc3986 'URI: Generic Syntax'
 [RFC8905]: https://www.rfc-editor.org/rfc/rfc8905 "The 'payto' URI Scheme for Payments"
-[ORIC]: https://payto.onl/solutions/oric "Organizational Routing Identifier Code"
-[ICAN]: https://payto.onl/solutions/ican "International Crypto Asset Network"
+[ORIC]: https://payto.onl/solutions/oric 'Organizational Routing Identifier Code'
+[ICAN]: https://payto.onl/solutions/ican 'International Crypto Asset Network'
