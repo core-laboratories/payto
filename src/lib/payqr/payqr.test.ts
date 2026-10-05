@@ -1,7 +1,7 @@
 import { generateNationalQr } from './national';
 import { describe, it, expect } from 'vitest';
 import { aseanQrCountries } from './countries';
-import { payQrSchemes, parsePayQr } from '$payqr';
+import { payQrSchemes, parsePayQr } from 'payto-rl';
 import {
 	initialPayQrForm,
 	payQrFormSchema,

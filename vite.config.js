@@ -11,8 +11,7 @@ const config = {
 		sveltekit({
 			adapter: adapter(),
 			alias: {
-				'$i18n': './src/i18n',
-				'$payqr': '../payto-rl/src/payqr/index.ts'
+				'$i18n': './src/i18n'
 			},
 			csrf: { trustedOrigins: ['*'] }
 		})

@@ -1,7 +1,7 @@
 import { test } from 'vitest';
 import assert from 'node:assert/strict';
 const assertFalse = (value: unknown) => assert.ok(!value);
-import { parsePayQr, serializePayQr, payQrSchemes } from '$payqr';
+import { parsePayQr, serializePayQr, payQrSchemes } from 'payto-rl';
 import { generateNationalQr, payQrAdapters, crc16, emvTlv, parseEmvTlv } from './index';
 test('CRC and strict TLV known vectors', () => {
 	assert.strictEqual(crc16('123456789'), '29B1');

@@ -20,7 +20,7 @@
 	import { buildPayQrUri } from '#lib/validators/payqr.validator.js';
 	import { paymentBarcodeSvg } from '#lib/payqr/barcode.js';
 	import { payQrAdapters } from '#lib/payqr/national/adapters.js';
-	import { payQrSchemes, type PayQrCountry } from '$payqr';
+	import { payQrSchemes, type PayQrCountry } from 'payto-rl';
 	import { ibanPassPayload } from '#lib/epc/payload.js';
 	import { getLink as getPaymentLink } from '#lib/helpers/get-link.helper.js';
 	import { payQrPassPayload } from '#lib/payqr/pass-payload.js';

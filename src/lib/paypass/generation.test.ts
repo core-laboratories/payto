@@ -8,7 +8,7 @@ import forge from 'node-forge';
 import JSZip from 'jszip';
 import type { RequestEvent } from '@sveltejs/kit';
 import { initialPayQrForm, payQrParameterFields } from '#lib/validators/payqr.validator.js';
-import { parsePayQr } from '$payqr';
+import { parsePayQr } from 'payto-rl';
 import { getLink } from '#lib/helpers/get-link.helper.js';
 import vectors from '#lib/payqr/fixtures/payqr-payloads.json';
 

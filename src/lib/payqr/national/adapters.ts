@@ -1,6 +1,6 @@
 import { parseNationalQr } from './parse.js';
-import { payQrSchemes, serializePayQr, parsePayQr } from '$payqr';
-import type { PayQrCountry, PayQrTarget } from '$payqr';
+import { payQrSchemes, serializePayQr, parsePayQr } from 'payto-rl';
+import type { PayQrCountry, PayQrTarget } from 'payto-rl';
 import { emvTlv as tlv, emvStringTlv, finishEmv } from './emv.js';
 
 interface Encoder {

@@ -5,7 +5,7 @@ import {
 	payQrGenerationSchema,
 	type PayQrForm
 } from '#lib/validators/payqr.validator.js';
-import type { PayQrCountry } from '$payqr';
+import type { PayQrCountry } from 'payto-rl';
 import { payQrPassPayload } from './pass-payload';
 
 const profiles: { country: PayQrCountry; fields: Partial<PayQrForm> }[] = [

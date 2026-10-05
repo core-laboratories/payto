@@ -7,8 +7,8 @@
 	import { initialPayQrForm, payQrFieldFeedback } from '#lib/validators/payqr.validator.js';
 	import type { PayQrForm } from '#lib/validators/payqr.validator.js';
 	import { payQrAdapters } from '#lib/payqr/national/adapters.js';
-	import { payQrSchemes } from '$payqr';
-	import type { PayQrCountry } from '$payqr';
+	import { payQrSchemes } from 'payto-rl';
+	import type { PayQrCountry } from 'payto-rl';
 
 	let country = $state<PayQrCountry>('kh');
 	let form = $state<PayQrForm>(initialPayQrForm('kh'));

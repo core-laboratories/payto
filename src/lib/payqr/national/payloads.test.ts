@@ -1,4 +1,4 @@
-import { parsePayQr } from '$payqr';
+import { parsePayQr } from 'payto-rl';
 import { test } from 'vitest';
 import assert from 'node:assert/strict';
 const assertFalse = (value: unknown) => assert.ok(!value);

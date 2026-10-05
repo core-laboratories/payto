@@ -1,5 +1,5 @@
 import { buildPayQrUri } from '#lib/validators/payqr.validator.js';
-import { parsePayQr, serializePayQr, payQrSchemes } from '$payqr';
+import { parsePayQr, serializePayQr, payQrSchemes } from 'payto-rl';
 import { META_CONTENT } from '#lib/data/meta-content.data.js';
 import { checkValidity } from '#lib/helpers/check-validity.helper.js';
 import { calculateColorDistance } from '#lib/helpers/euclidean-distance.helper.js';

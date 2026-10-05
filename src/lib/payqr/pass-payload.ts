@@ -4,7 +4,7 @@ import {
 	initialPayQrForm,
 	payQrParameterFields
 } from '#lib/validators/payqr.validator.js';
-import { parsePayQr, serializePayQr } from '$payqr';
+import { parsePayQr, serializePayQr } from 'payto-rl';
 
 /** Shared by the online preview and both downloadable wallet pass formats. */
 export function payQrPassPayload(uri: string, format?: string): { value: string; label: string } {

@@ -4,8 +4,8 @@ import {
 	serializePayQr,
 	validatePayQrIdentifier,
 	validatePayQrParameters
-} from '$payqr';
-import type { PayQrCountry } from '$payqr';
+} from 'payto-rl';
+import type { PayQrCountry } from 'payto-rl';
 
 const optionalText = z
 	.string()

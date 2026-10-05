@@ -1,6 +1,6 @@
 import { parseEmvTlv, validateCRC } from './emv.js';
-import { parsePayQr, serializePayQr } from '$payqr';
-import type { PayQrCountry, PayQrTarget } from '$payqr';
+import { parsePayQr, serializePayQr } from 'payto-rl';
+import type { PayQrCountry, PayQrTarget } from 'payto-rl';
 import { generateNationalQr } from './adapters.js';
 
 /** Strict inverse of our PromptPay and VietQR profiles. Unknown fields are never discarded. */

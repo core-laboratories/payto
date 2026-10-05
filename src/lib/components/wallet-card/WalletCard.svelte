@@ -16,7 +16,7 @@
 	import { getWebLink } from '#lib/helpers/generate.helper.js';
 	import ExchNumberFormat from 'exchange-rounding';
 	import Payto from 'payto-rl';
-	import { parsePayQr } from '$payqr';
+	import { parsePayQr } from 'payto-rl';
 	import { Qr } from '#lib/components/index.js';
 	import { paymentBarcodeSvg } from '#lib/payqr/barcode.js';
 	import { ibanPassPayload } from '#lib/epc/payload.js';

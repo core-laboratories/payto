@@ -104,7 +104,7 @@ interface IDesignState {
 	colorF?: string;
 	colorB?: string;
 	barcode?: string;
-	qrFormat?: 'native' | 'payto' | 'epc' | import('$payqr').PayQrScheme;
+	qrFormat?: 'native' | 'payto' | 'epc' | import('payto-rl').PayQrScheme;
 	rtl?: boolean;
 	mode?: string;
 	lang?: string;

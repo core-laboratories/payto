@@ -3,7 +3,7 @@
 	import { page } from '$app/state';
 	import { writable } from 'svelte/store';
 	import { WalletCard } from '#lib/components/index.js';
-	import { parsePayQr, serializePayQr } from '$payqr';
+	import { parsePayQr, serializePayQr } from 'payto-rl';
 
 	const queryUrl = page.url.searchParams.get('url');
 	const rest = page.params.rest;
