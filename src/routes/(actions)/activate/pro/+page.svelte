@@ -1,12 +1,28 @@
 <script lang="ts">
-	import { Page, Row } from '$lib/components';
-	import { FieldGroup, FieldGroupText } from '$lib/components';
+	import { Page, Row } from '#lib/components/index.js';
+	import { FieldGroup, FieldGroupText } from '#lib/components/index.js';
 	import { page } from '$app/state';
 	import { writable } from 'svelte/store';
 	import { onMount } from 'svelte';
-	import { env } from '$env/dynamic/public';
-	import { TriangleAlert, Copy, CircleAlert, CircleCheck, Info, ExternalLink, X } from 'lucide-svelte';
-	import { formatter } from '$lib/helpers/paypass-operator.helper';
+
+	import {
+		PUBLIC_WEB_ACTIVATION_URL,
+		PUBLIC_PRO_CTN_ADDRESS,
+		PUBLIC_PRO_PRICE,
+		PUBLIC_TG_BOT_NAME
+	} from '$app/env/public';
+
+	import {
+		TriangleAlert,
+		Copy,
+		CircleAlert,
+		CircleCheck,
+		Info,
+		ExternalLink,
+		X
+	} from 'lucide-svelte';
+
+	import { formatter } from '#lib/helpers/paypass-operator.helper.js';
 
 	const originId = page.url.searchParams.get('originid');
 	const origin = page.url.searchParams.get('origin');
@@ -16,9 +32,9 @@
 	const os = page.url.searchParams.get('os');
 	const lang = page.url.searchParams.get('lang');
 
-	const apiBaseUrl = env.PUBLIC_WEB_ACTIVATION_URL || 'https://subscription.payto.money/api/v1';
-	const ctnAddress = env.PUBLIC_PRO_CTN_ADDRESS || '';
-	const proPrice = env.PUBLIC_PRO_PRICE || '';
+	const apiBaseUrl = PUBLIC_WEB_ACTIVATION_URL || 'https://subscription.payto.money/api/v1';
+	const ctnAddress = PUBLIC_PRO_CTN_ADDRESS || '';
+	const proPrice = PUBLIC_PRO_PRICE || '';
 
 	let currentStep = $state(1);
 	let isSubmitting = $state(false);
@@ -52,12 +68,7 @@
 	}
 
 	// Check if button should be disabled
-	const isButtonDisabled = $derived(
-		isSubmitting ||
-		(!emailChecked && !telegramChecked) ||
-		(emailChecked && (!emailValue || !$emailValid)) ||
-		(telegramChecked && (!telegramValue || !$telegramValid))
-	);
+	const isButtonDisabled = $derived(isSubmitting || !emailChecked && !telegramChecked || emailChecked && (!emailValue || !$emailValid) || telegramChecked && (!telegramValue || !$telegramValid));
 
 	async function handleSubmit() {
 		if (!emailChecked && !telegramChecked) {
@@ -305,8 +316,10 @@
 					<p class="text-sm text-gray-400">More secure than in-pass notifications. Your passes are not copied to our servers; we only require your basic data.</p>
 				</div>
 
-				{#if !isLoadingSubscription && (isSubscribed !== null)}
-					<div class="w-full p-3 bg-amber-500/10 border border-amber-500/30 rounded-md">
+				{#if !isLoadingSubscription && isSubscribed !== null}
+					<div
+						class="w-full p-3 bg-amber-500/10 border border-amber-500/30 rounded-md"
+					>
 						<p class="text-amber-400 text-sm">
 							{#if isSubscribed && subscriptionExpiresAt}
 								You are an active subscriber until {formatSubscriptionDate(subscriptionExpiresAt)}
@@ -396,15 +409,18 @@
 									}}
 								/>
 							</div>
-							{#if env.PUBLIC_TG_BOT_NAME}
-								<div class="flex items-start gap-2 mt-2 p-3 bg-blue-500/10 border border-blue-500/30 rounded-md">
+
+							{#if PUBLIC_TG_BOT_NAME}
+								<div
+									class="flex items-start gap-2 mt-2 p-3 bg-blue-500/10 border border-blue-500/30 rounded-md"
+								>
 									<Info class="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
 									<div class="flex-1">
 										<p class="text-blue-400 text-sm mb-1">
 											<strong>Important:</strong> Please initialize the Telegram bot with <code class="bg-gray-700/50 px-1 py-0.5 rounded-md text-xs">/start</code> before you can receive notifications for each new address.
 										</p>
 										<a
-											href={`https://t.me/${env.PUBLIC_TG_BOT_NAME}`}
+											href={`https://t.me/${PUBLIC_TG_BOT_NAME}`}
 											target="_blank"
 											rel="noopener"
 											class="text-blue-400 hover:text-blue-300 text-sm font-medium underline inline-flex items-center gap-1"

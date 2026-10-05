@@ -1,10 +1,11 @@
 <script lang="ts">
+	import PayQrConstructor from "../../../routes/components/payqr-constructor/PayQrConstructor.svelte";
 	import { writable, derived } from 'svelte/store';
-	import { ListBox } from '$lib/components';
+	import { ListBox } from '#lib/components/index.js';
 	import { fade } from 'svelte/transition';
-	import { getObjectByType } from '$lib/helpers/get-object-by-type.helper';
-	import { constructor } from '$lib/store/constructor.store';
-	import { TYPES } from '$lib/data/types.data';
+	import { getObjectByType } from '#lib/helpers/get-object-by-type.helper.js';
+	import { constructor } from '#lib/store/constructor.store.js';
+	import { TYPES } from '#lib/data/types.data.js';
 	import { onMount } from 'svelte';
 
 	import {
@@ -26,6 +27,7 @@
 		ican: { label: getObjectByType(TYPES, 'ican')?.label, ticker: getObjectByType(TYPES, 'ican')?.description, component: InternationalCryptoAccountNumberConstructor },
 		iban: { label: getObjectByType(TYPES, 'iban')?.label, ticker: getObjectByType(TYPES, 'iban')?.description, component: InternationalBankAccountNumberConstructor },
 		ach: { label: getObjectByType(TYPES, 'ach')?.label, ticker: getObjectByType(TYPES, 'ach')?.description, component: AutomatedClearingHouseConstructor },
+		qr: { label: 'Pay QR', ticker: 'QR payments', component: PayQrConstructor },
 		upi: { label: getObjectByType(TYPES, 'upi')?.label, ticker: getObjectByType(TYPES, 'upi')?.description, component: UnifiedPaymentsInterfaceConstructor },
 		pix: { label: getObjectByType(TYPES, 'pix')?.label, ticker: getObjectByType(TYPES, 'pix')?.description, component: PixConstructor },
 		bic: { label: getObjectByType(TYPES, 'bic')?.label, ticker: getObjectByType(TYPES, 'bic')?.description, component: BusinessIdentifierCodeConstructor },

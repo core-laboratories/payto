@@ -6,17 +6,24 @@
 		FieldGroupText,
 		FieldGroupAppendix,
 		ListBox
-	} from '$lib/components';
+	} from '#lib/components/index.js';
 	import { ChevronDown, ChevronUp, Copy, ExternalLink, Eraser } from 'lucide-svelte';
 
 	import { derived, get, writable } from 'svelte/store';
-	import { constructor } from '$lib/store/constructor.store';
-	import { calculateColorDistance } from '$lib/helpers/euclidean-distance.helper';
-	import { generateWebLink, getWebLink } from '$lib/helpers/generate.helper';
-	import { getAddress } from '$lib/helpers/get-address.helper';
-	import { standardizeOrg } from '$lib/helpers/standardize.helper';
-	import { toast } from '$lib/components/toast';
+	import { constructor } from '#lib/store/constructor.store.js';
+	import { calculateColorDistance } from '#lib/helpers/euclidean-distance.helper.js';
+	import { generateWebLink, getWebLink } from '#lib/helpers/generate.helper.js';
+	import { getAddress } from '#lib/helpers/get-address.helper.js';
+	import { standardizeOrg } from '#lib/helpers/standardize.helper.js';
+	import { toast } from '#lib/components/toast/index.js';
 	import { setLocaleFromPaytoData } from '$i18n';
+	import { buildPayQrUri } from '#lib/validators/payqr.validator.js';
+	import { paymentBarcodeSvg } from '#lib/payqr/barcode.js';
+	import { payQrAdapters } from '#lib/payqr/national/adapters.js';
+	import { payQrSchemes, type PayQrCountry } from 'payto-rl';
+	import { ibanPassPayload } from '#lib/epc/payload.js';
+	import { getLink as getPaymentLink } from '#lib/helpers/get-link.helper.js';
+	import { payQrPassPayload } from '#lib/payqr/pass-payload.js';
 	import { onMount } from 'svelte';
 
 	export let hostname: ITransitionType | undefined = undefined;
@@ -36,55 +43,90 @@
 	];
 
 	const languageOptions = [
-		{ label: 'Application Language (or English)', value: ''},
-		{ label: 'Arabic', value: 'ar', rtl: true},
-		{ label: 'Chinese', value: 'zh-CN'},
-		{ label: 'Czech', value: 'cs-CZ'},
-		{ label: 'English', value: 'en'},
-		{ label: 'French', value: 'fr'},
-		{ label: 'German', value: 'de'},
-		{ label: 'Hindi', value: 'hi-IN'},
-		{ label: 'Hungarian', value: 'hu'},
-		{ label: 'Italian', value: 'it'},
-		{ label: 'Japanese', value: 'ja'},
-		{ label: 'Korean', value: 'ko-KR'},
-		{ label: 'Persian', value: 'fa-IR', rtl: true},
-		{ label: 'Polish', value: 'pl'},
-		{ label: 'Portuguese (Brazil)', value: 'pt-BR'},
-		{ label: 'Russian', value: 'ru'},
-		{ label: 'Slovak', value: 'sk'},
-		{ label: 'Spanish', value: 'es'},
+		{ label: 'Application Language (or English)', value: '' },
+		{ label: 'Arabic', value: 'ar', rtl: true },
+		{ label: 'Chinese', value: 'zh-CN' },
+		{ label: 'Czech', value: 'cs-CZ' },
+		{ label: 'English', value: 'en' },
+		{ label: 'French', value: 'fr' },
+		{ label: 'German', value: 'de' },
+		{ label: 'Hindi', value: 'hi-IN' },
+		{ label: 'Hungarian', value: 'hu' },
+		{ label: 'Italian', value: 'it' },
+		{ label: 'Japanese', value: 'ja' },
+		{ label: 'Korean', value: 'ko-KR' },
+		{ label: 'Persian', value: 'fa-IR', rtl: true },
+		{ label: 'Polish', value: 'pl' },
+		{ label: 'Portuguese (Brazil)', value: 'pt-BR' },
+		{ label: 'Russian', value: 'ru' },
+		{ label: 'Slovak', value: 'sk' },
+		{ label: 'Spanish', value: 'es' },
 		{ label: 'Tagalog', value: 'tl-PH' },
-		{ label: 'Thai', value: 'th'},
-		{ label: 'Turkish', value: 'tr'},
-		{ label: 'Vietnamese', value: 'vi-VN'}
+		{ label: 'Thai', value: 'th' },
+		{ label: 'Turkish', value: 'tr' },
+		{ label: 'Vietnamese', value: 'vi-VN' }
 	];
 
-	const constructorStore = derived(constructor, $c => $c);
+	const constructorStore = derived(constructor, ($c) => $c);
 
 	// Default to empty string for "Application Language (or English)" option
-	const currentLanguageValue = derived(constructorStore, ($constructor) => $constructor.design.lang || '');
+	const currentLanguageValue = derived(
+		constructorStore,
+		($constructor) => $constructor.design.lang || ''
+	);
 
 	const enableDistanceCheck = writable(false);
-	const distance = derived([constructorStore, enableDistanceCheck], ([$constructor, $enableDistanceCheck]) => {
+	const distance = derived(
+		[constructorStore, enableDistanceCheck],
+		([$constructor, $enableDistanceCheck]) => {
+			if (!$enableDistanceCheck) return;
 
-		if (!$enableDistanceCheck) return;
+			// Only calculate distance if both colors are provided
+			const hasBothColors = $constructor.design.colorF && $constructor.design.colorB;
+			if (!hasBothColors) return;
 
-		// Only calculate distance if both colors are provided
-		const hasBothColors = $constructor.design.colorF && $constructor.design.colorB;
-		if (!hasBothColors) return;
+			return Math.floor(
+				calculateColorDistance($constructor.design.colorF!, $constructor.design.colorB!)
+			);
+		}
+	);
 
-		return Math.floor(
-			calculateColorDistance($constructor.design.colorF!, $constructor.design.colorB!)
-		);
-	});
-
-	const barcodeValue = derived(constructorStore, $constructor => $constructor.design.barcode ?? 'qr');
-	const passMode = derived(constructorStore, $constructor => $constructor.design.mode ?? 'auto');
-	const address = derived(constructorStore, $constructor =>
+	const barcodeValue = derived(
+		constructorStore,
+		($constructor) => $constructor.design.barcode ?? 'qr'
+	);
+	const passMode = derived(constructorStore, ($constructor) => $constructor.design.mode ?? 'auto');
+	const address = derived(constructorStore, ($constructor) =>
 		hostname ? getAddress($constructor.networks[hostname], hostname) : undefined
 	);
 	const isGenerating = writable(false);
+	const payQrReady = derived(constructorStore, ($constructor) => {
+		try {
+			const form = $constructor.networks.qr.payQrForm;
+			return (
+				!!form &&
+				!!paymentBarcodeSvg(
+					payQrPassPayload(buildPayQrUri(form), $constructor.design.qrFormat ?? 'payto').value,
+					$constructor.design.barcode || 'qr'
+				)
+			);
+		} catch {
+			return false;
+		}
+	});
+	const ibanStatus = derived(constructorStore, ($c) => {
+		try {
+			const result = ibanPassPayload(
+				getPaymentLink('iban', $c.networks.iban),
+				$c.design.qrFormat,
+				$c.design.barcode || 'qr'
+			);
+			paymentBarcodeSvg(result.value, $c.design.barcode || 'qr');
+			return '';
+		} catch (error) {
+			return (error as Error).message;
+		}
+	});
 	const userOS = writable<'ios' | 'android' | 'unknown'>('unknown');
 
 	const isAndroidEnabled = true;
@@ -106,27 +148,28 @@
 
 	// Reset colorF when enableDistanceCheck is unchecked
 	$: if (!$enableDistanceCheck && $constructor.design.colorF) {
-		constructor.update(c => ({
+		constructor.update((c) => ({
 			...c,
 			design: { ...c.design, colorF: undefined }
 		}));
 	}
 
 	function updateBarcode(value: string | number) {
-		constructor.update(c => ({
+		constructor.update((c) => ({
 			...c,
 			design: { ...c.design, barcode: String(value) }
 		}));
 	}
 
 	function updatePassMode(value: string | number) {
-		constructor.update(c => ({
+		constructor.update((c) => ({
 			...c,
 			design: { ...c.design, mode: String(value) }
 		}));
 	}
 
 	async function downloadPass(osOverride?: 'ios' | 'android') {
+		if ((hostname === 'qr' && !$payQrReady) || (hostname === 'iban' && !!$ibanStatus)) return;
 		if (!hostname) {
 			toast({ message: 'No hostname selected', type: 'error' });
 			return;
@@ -211,17 +254,19 @@
 		return null;
 	}
 
-	const link = derived(
-		[constructor],
-		([$constructor]) => {
-			if (!hostname) return '#';
-
-			const links = get(constructor.build(hostname));
-			const webLink = links.find((link) => link.label === 'Link');
-
-			return generateWebLink(webLink?.value!);
+	const link = derived([constructor], ([$constructor]) => {
+		if (!hostname) return '#';
+		if (hostname !== 'qr' && hostname !== 'iban') {
+			const output = get(constructor.build(hostname)).find((item) => item.label === 'Link');
+			return generateWebLink(output?.value || '');
 		}
-	);
+		return getWebLink({
+			network: hostname,
+			networkData: { ...$constructor.networks[hostname], design: $constructor.design },
+			design: true,
+			transform: true
+		});
+	});
 
 	function getLink(): string {
 		if (!hostname) return '#';
@@ -270,7 +315,7 @@
 
 	<button
 		type="button"
-		onclick={() => showCustomization = !showCustomization}
+		onclick={() => (showCustomization = !showCustomization)}
 		class="flex items-center justify-between w-full p-0 text-left hover:text-gray-300 transition-colors duration-200 border-none bg-transparent"
 	>
 		<span class="text-lg font-bold">Customization</span>
@@ -284,9 +329,7 @@
 	{#if showCustomization}
 		<div class="space-y-4">
 			<FieldGroup>
-				<FieldGroupLabel>
-					Organization Name / ORIC / Website
-				</FieldGroupLabel>
+				<FieldGroupLabel>Organization Name / ORIC / Website</FieldGroupLabel>
 				<FieldGroupText
 					placeholder="e.g. PINGCHB2"
 					bind:value={$constructor.design.org}
@@ -295,14 +338,17 @@
 						const value = (e.target as HTMLInputElement).value;
 						const sanitized = standardizeOrg(value || null) || '';
 						if (sanitized !== value) {
-							constructor.update(c => ({
+							constructor.update((c) => ({
 								...c,
 								design: { ...c.design, org: sanitized }
 							}));
 						}
 					}}
 				/>
-				<FieldGroupAppendix>If organization has ORIC/Website and matches receiving address, it will be marked as verified.</FieldGroupAppendix>
+				<FieldGroupAppendix
+					>If organization has ORIC/Website and matches receiving address, it will be marked as
+					verified.</FieldGroupAppendix
+				>
 			</FieldGroup>
 
 			<div class="flex flex-col gap-6">
@@ -310,38 +356,27 @@
 			</div>
 
 			<FieldGroup flexType="row" itemPosition="items-center">
-				<FieldGroupColorPicker
-					label="Background Color"
-					bind:value={$constructor.design.colorB}
-				/>
+				<FieldGroupColorPicker label="Background Color" bind:value={$constructor.design.colorB} />
 			</FieldGroup>
 
 			<FieldGroup>
 				<div class="flex items-center">
-					<input
-						type="checkbox"
-						bind:checked={$enableDistanceCheck}
-						id="distanceCheckbox"
-					/>
+					<input type="checkbox" bind:checked={$enableDistanceCheck} id="distanceCheckbox" />
 					<label for="distanceCheckbox" class="ml-2 text-sm">Define foreground color</label>
 				</div>
 			</FieldGroup>
 
 			{#if $enableDistanceCheck}
-
 				<FieldGroup flexType="row" itemPosition="items-center">
-					<FieldGroupColorPicker
-						label="Foreground Color"
-						bind:value={$constructor.design.colorF}
-					/>
+					<FieldGroupColorPicker label="Foreground Color" bind:value={$constructor.design.colorF} />
 				</FieldGroup>
 
 				<div>
 					Current Color Euclidean distance:
-					<span class:text-red-500={$distance !== undefined && $distance < 100}>{$distance !== undefined ? $distance : '—'}</span>
-					<p class="-mb-1 text-gray-400 text-sm">
-						Minimum Euclidean distance of 100 is required.
-					</p>
+					<span class:text-red-500={$distance !== undefined && $distance < 100}
+						>{$distance !== undefined ? $distance : '—'}</span
+					>
+					<p class="-mb-1 text-gray-400 text-sm">Minimum Euclidean distance of 100 is required.</p>
 				</div>
 			{/if}
 
@@ -353,10 +388,10 @@
 					items={languageOptions}
 					onChange={(val) => {
 						const selectedValue = String(val) || '';
-						const selectedLanguage = languageOptions.find(lang => lang.value === selectedValue);
+						const selectedLanguage = languageOptions.find((lang) => lang.value === selectedValue);
 						const isRtl = selectedLanguage?.rtl || false;
 
-						constructor.update(c => ({
+						constructor.update((c) => ({
 							...c,
 							design: { ...c.design, lang: selectedValue, rtl: isRtl }
 						}));
@@ -367,17 +402,37 @@
 
 			<FieldGroup>
 				<div class="flex items-center">
-					<input
-						type="checkbox"
-						bind:checked={$constructor.design.rtl}
-						id="rtlCheckbox"
-					/>
+					<input type="checkbox" bind:checked={$constructor.design.rtl} id="rtlCheckbox" />
 					<label for="rtlCheckbox" class="ml-2 text-sm">Right-to-Left typing (RTL)</label>
 				</div>
 			</FieldGroup>
 
 			<FieldGroup>
-				<FieldGroupLabel>Barcode Type for Wallets</FieldGroupLabel>
+				{#if hostname === 'iban' || (hostname === 'qr' && payQrAdapters[$constructor.networks.qr.payQrForm?.country as PayQrCountry]?.supportsGeneration)}
+					<fieldset class="flex gap-4 mb-4">
+						<legend class="mb-2">Payment QR format</legend>
+						{#each ['payto', 'native'] as const as format}
+							<label class="flex items-center gap-2">
+								<input
+									type="radio"
+									name="qr-format"
+									value={format}
+									checked={($constructor.design.qrFormat ?? 'payto') === format}
+									onchange={() =>
+										constructor.update((c) => ({
+											...c,
+											design: {
+												...c.design,
+												qrFormat: format
+											}
+										}))}
+								/>
+								{format === 'native' ? (hostname === 'iban' ? 'EPC SEPA' : payQrSchemes[$constructor.networks.qr.payQrForm?.country as PayQrCountry]?.name) : 'PayTo'}
+							</label>
+						{/each}
+					</fieldset>
+				{/if}
+				<FieldGroupLabel>Barcode Type</FieldGroupLabel>
 				<ListBox
 					id="barcode-list"
 					value={$barcodeValue}
@@ -421,7 +476,9 @@
 					</a>
 				</div>
 			{:else}
-				<div class="button is-full lg:basis-1/2 bs-12 py-2 px-3 text-center text-white border border-gray-700 bg-gray-700 opacity-50 cursor-not-allowed rounded-lg text-sm flex items-center justify-center gap-2">
+				<div
+					class="button is-full lg:basis-1/2 bs-12 py-2 px-3 text-center text-white border border-gray-700 bg-gray-700 opacity-50 cursor-not-allowed rounded-lg text-sm flex items-center justify-center gap-2"
+				>
 					<ExternalLink class="w-4 h-4 flex-shrink-0" />
 					Open Weblink
 				</div>
@@ -448,9 +505,66 @@
 						class={`w-full ${showGoogle ? 'sm:w-1/2' : ''} py-2 px-3 text-center text-white border border-gray-700 bg-gray-700 hover:bg-gray-600 rounded-lg transition duration-200 outline-none focus-visible:ring focus-visible:ring-green-800 focus-visible:ring-offset-2 active:scale-(0.99) disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-4`}
 						type="button"
 						onclick={() => downloadPass('ios')}
-						disabled={!hostname || $isGenerating}
+						disabled={!hostname ||
+							$isGenerating ||
+							(hostname === 'qr' && !$payQrReady) ||
+							(hostname === 'iban' && !!$ibanStatus)}
 					>
-						<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2" viewBox="0 0 48 36" class="h-6 flex-shrink-0"><g transform="matrix(1.85185 0 0 1.875 -13.778 -13.95)"><clipPath id="a"><path d="M33.265 10.691v12.628l-.001.381a17.18 17.18 0 0 1-.005.321c-.006.233-.02.468-.061.698a2.355 2.355 0 0 1-.219.664 2.26 2.26 0 0 1-1.64 1.195c-.23.041-.465.055-.698.061a17.18 17.18 0 0 1-.321.005l-.381.001-1.459-.001 1.358.001H10.984l1.358-.001-1.459.001-.381-.001a17.18 17.18 0 0 1-.321-.005 4.665 4.665 0 0 1-.698-.061 2.366 2.366 0 0 1-.664-.219 2.26 2.26 0 0 1-1.195-1.64 4.665 4.665 0 0 1-.061-.698 17.18 17.18 0 0 1-.005-.321l-.001-.381v-12.42 1.25-1.459l.001-.381c.001-.107.002-.214.005-.321.006-.233.02-.468.061-.698.042-.234.111-.452.219-.664a2.244 2.244 0 0 1 .977-.975c.212-.108.43-.177.664-.219.23-.041.465-.055.698-.061.107-.003.214-.004.321-.005l.381-.001h19.055l.381.001c.107.001.214.002.321.005.233.006.468.02.698.061.234.042.451.111.664.219a2.26 2.26 0 0 1 1.195 1.64c.041.23.055.465.061.698.003.107.004.214.005.321l.001.381Z"/></clipPath><g clip-path="url(#a)"><path d="M8.351 8.168h24.1v16.781h-24.1z" style="fill:#dedbce"/><path d="M8.629 8.436h23.565v9.997H8.629z" style="fill:#40a5d9"/><use xlink:href="#b" width="117" height="58" transform="matrix(.22359 0 0 .21517 7.44 9.075)"/><path d="M32.193 20.575v-8.129l-.003-.204a2.988 2.988 0 0 0-.039-.443 1.499 1.499 0 0 0-.139-.421 1.424 1.424 0 0 0-1.041-.759 2.988 2.988 0 0 0-.443-.039 6.939 6.939 0 0 0-.204-.003H10.497l-.204.003a2.988 2.988 0 0 0-.443.039c-.148.027-.286.07-.421.139a1.424 1.424 0 0 0-.759 1.041 2.988 2.988 0 0 0-.039.443 6.939 6.939 0 0 0-.003.204v1.167-.727 7.689h23.565Z" style="fill:#ffb003"/><use xlink:href="#c" width="117" height="54" transform="matrix(.22359 0 0 .23111 7.44 11.235)"/><path d="M32.193 22.717v-8.129l-.003-.204a2.988 2.988 0 0 0-.039-.443 1.499 1.499 0 0 0-.139-.421 1.424 1.424 0 0 0-1.041-.759 2.988 2.988 0 0 0-.443-.039 6.939 6.939 0 0 0-.204-.003H10.497l-.204.003a2.988 2.988 0 0 0-.443.039c-.148.027-.286.07-.421.139a1.424 1.424 0 0 0-.759 1.041 2.988 2.988 0 0 0-.039.443 6.939 6.939 0 0 0-.003.204v1.167-.727 7.689h23.565Z" style="fill:#40c740"/><use xlink:href="#d" width="117" height="54" transform="matrix(.22359 0 0 .23111 7.44 13.395)"/><path d="M32.193 24.859V16.73l-.003-.204a2.988 2.988 0 0 0-.039-.443 1.499 1.499 0 0 0-.139-.421 1.424 1.424 0 0 0-1.041-.759 2.988 2.988 0 0 0-.443-.039 6.939 6.939 0 0 0-.204-.003H10.497l-.204.003a2.988 2.988 0 0 0-.443.039c-.148.027-.286.07-.421.139a1.424 1.424 0 0 0-.759 1.041 2.988 2.988 0 0 0-.039.443 6.939 6.939 0 0 0-.003.204v1.167-.727 7.689h23.565Z" style="fill:#f26d5f"/><path d="M7.201 7.008v11.068h1.428v-7.772l.003-.204c.004-.148.013-.297.039-.443.027-.148.07-.286.139-.421a1.424 1.424 0 0 1 1.04-.757c.146-.026.295-.035.443-.039l.204-.003h19.829l.204.003c.148.004.297.013.443.039.148.027.286.07.421.139a1.424 1.424 0 0 1 .759 1.041c.026.146.035.295.039.443l.003.204v7.772h1.428V7.008H7.201Z" style="fill:#d9d6cc"/><use xlink:href="#e" width="125" height="54" transform="matrix(.23232 0 0 .23111 6 15.555)"/><path d="m26.985 17.005-.46.001c-.129.001-.258.002-.387.006a5.678 5.678 0 0 0-.843.074 2.866 2.866 0 0 0-.801.264c-.033.017-.738.337-1.372 1.323-.481.749-1.417 1.543-2.728 1.543-1.31 0-2.246-.794-2.728-1.543-.667-1.039-1.428-1.351-1.373-1.323a2.803 2.803 0 0 0-.801-.264 5.547 5.547 0 0 0-.843-.074 24.97 24.97 0 0 0-.387-.006l-.46-.001h-6.6v9.997h26.421v-9.997h-6.638Z" style="fill:#dedbce"/></g></g></svg>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							xmlns:xlink="http://www.w3.org/1999/xlink"
+							xml:space="preserve"
+							style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2"
+							viewBox="0 0 48 36"
+							class="h-6 flex-shrink-0"
+							><g transform="matrix(1.85185 0 0 1.875 -13.778 -13.95)"
+								><clipPath id="a"
+									><path
+										d="M33.265 10.691v12.628l-.001.381a17.18 17.18 0 0 1-.005.321c-.006.233-.02.468-.061.698a2.355 2.355 0 0 1-.219.664 2.26 2.26 0 0 1-1.64 1.195c-.23.041-.465.055-.698.061a17.18 17.18 0 0 1-.321.005l-.381.001-1.459-.001 1.358.001H10.984l1.358-.001-1.459.001-.381-.001a17.18 17.18 0 0 1-.321-.005 4.665 4.665 0 0 1-.698-.061 2.366 2.366 0 0 1-.664-.219 2.26 2.26 0 0 1-1.195-1.64 4.665 4.665 0 0 1-.061-.698 17.18 17.18 0 0 1-.005-.321l-.001-.381v-12.42 1.25-1.459l.001-.381c.001-.107.002-.214.005-.321.006-.233.02-.468.061-.698.042-.234.111-.452.219-.664a2.244 2.244 0 0 1 .977-.975c.212-.108.43-.177.664-.219.23-.041.465-.055.698-.061.107-.003.214-.004.321-.005l.381-.001h19.055l.381.001c.107.001.214.002.321.005.233.006.468.02.698.061.234.042.451.111.664.219a2.26 2.26 0 0 1 1.195 1.64c.041.23.055.465.061.698.003.107.004.214.005.321l.001.381Z"
+									/></clipPath
+								><g clip-path="url(#a)"
+									><path d="M8.351 8.168h24.1v16.781h-24.1z" style="fill:#dedbce" /><path
+										d="M8.629 8.436h23.565v9.997H8.629z"
+										style="fill:#40a5d9"
+									/><use
+										xlink:href="#b"
+										width="117"
+										height="58"
+										transform="matrix(.22359 0 0 .21517 7.44 9.075)"
+									/><path
+										d="M32.193 20.575v-8.129l-.003-.204a2.988 2.988 0 0 0-.039-.443 1.499 1.499 0 0 0-.139-.421 1.424 1.424 0 0 0-1.041-.759 2.988 2.988 0 0 0-.443-.039 6.939 6.939 0 0 0-.204-.003H10.497l-.204.003a2.988 2.988 0 0 0-.443.039c-.148.027-.286.07-.421.139a1.424 1.424 0 0 0-.759 1.041 2.988 2.988 0 0 0-.039.443 6.939 6.939 0 0 0-.003.204v1.167-.727 7.689h23.565Z"
+										style="fill:#ffb003"
+									/><use
+										xlink:href="#c"
+										width="117"
+										height="54"
+										transform="matrix(.22359 0 0 .23111 7.44 11.235)"
+									/><path
+										d="M32.193 22.717v-8.129l-.003-.204a2.988 2.988 0 0 0-.039-.443 1.499 1.499 0 0 0-.139-.421 1.424 1.424 0 0 0-1.041-.759 2.988 2.988 0 0 0-.443-.039 6.939 6.939 0 0 0-.204-.003H10.497l-.204.003a2.988 2.988 0 0 0-.443.039c-.148.027-.286.07-.421.139a1.424 1.424 0 0 0-.759 1.041 2.988 2.988 0 0 0-.039.443 6.939 6.939 0 0 0-.003.204v1.167-.727 7.689h23.565Z"
+										style="fill:#40c740"
+									/><use
+										xlink:href="#d"
+										width="117"
+										height="54"
+										transform="matrix(.22359 0 0 .23111 7.44 13.395)"
+									/><path
+										d="M32.193 24.859V16.73l-.003-.204a2.988 2.988 0 0 0-.039-.443 1.499 1.499 0 0 0-.139-.421 1.424 1.424 0 0 0-1.041-.759 2.988 2.988 0 0 0-.443-.039 6.939 6.939 0 0 0-.204-.003H10.497l-.204.003a2.988 2.988 0 0 0-.443.039c-.148.027-.286.07-.421.139a1.424 1.424 0 0 0-.759 1.041 2.988 2.988 0 0 0-.039.443 6.939 6.939 0 0 0-.003.204v1.167-.727 7.689h23.565Z"
+										style="fill:#f26d5f"
+									/><path
+										d="M7.201 7.008v11.068h1.428v-7.772l.003-.204c.004-.148.013-.297.039-.443.027-.148.07-.286.139-.421a1.424 1.424 0 0 1 1.04-.757c.146-.026.295-.035.443-.039l.204-.003h19.829l.204.003c.148.004.297.013.443.039.148.027.286.07.421.139a1.424 1.424 0 0 1 .759 1.041c.026.146.035.295.039.443l.003.204v7.772h1.428V7.008H7.201Z"
+										style="fill:#d9d6cc"
+									/><use
+										xlink:href="#e"
+										width="125"
+										height="54"
+										transform="matrix(.23232 0 0 .23111 6 15.555)"
+									/><path
+										d="m26.985 17.005-.46.001c-.129.001-.258.002-.387.006a5.678 5.678 0 0 0-.843.074 2.866 2.866 0 0 0-.801.264c-.033.017-.738.337-1.372 1.323-.481.749-1.417 1.543-2.728 1.543-1.31 0-2.246-.794-2.728-1.543-.667-1.039-1.428-1.351-1.373-1.323a2.803 2.803 0 0 0-.801-.264 5.547 5.547 0 0 0-.843-.074 24.97 24.97 0 0 0-.387-.006l-.46-.001h-6.6v9.997h26.421v-9.997h-6.638Z"
+										style="fill:#dedbce"
+									/></g
+								></g
+							></svg
+						>
 						<span class="flex items-start flex-col gap-1 leading-none">
 							<span class="text-sm text-gray-300">Add PayPass to</span>
 							<span class="font-medium text-white">Apple Wallet</span>
@@ -464,9 +578,35 @@
 						class={`w-full ${showApple ? 'sm:w-1/2' : ''} py-2 px-3 text-center text-white border border-gray-700 bg-gray-700 hover:bg-gray-600 rounded-lg transition duration-200 outline-none focus-visible:ring focus-visible:ring-green-800 focus-visible:ring-offset-2 active:scale-(0.99) disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-4`}
 						type="button"
 						onclick={() => downloadPass('android')}
-						disabled={!hostname || $isGenerating}
+						disabled={!hostname ||
+							$isGenerating ||
+							(hostname === 'qr' && !$payQrReady) ||
+							(hostname === 'iban' && !!$ibanStatus)}
 					>
-						<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2" viewBox="0 0 43 36" class="h-6 flex-shrink-0"><path d="M57 23.791H21v-5.646c0-3.064 2.642-5.645 5.78-5.645h24.44c3.138 0 5.78 2.581 5.78 5.645v5.646Z" style="fill:#34a853;fill-rule:nonzero" transform="translate(-25.083 -14.93) scale(1.19444)"/><path d="M57 29H21v-6c0-3.257 2.642-6 5.78-6h24.44c3.138 0 5.78 2.743 5.78 6v6Z" style="fill:#fbbc04;fill-rule:nonzero" transform="translate(-25.083 -14.93) scale(1.19444)"/><path d="M57 34H21v-6c0-3.257 2.642-6 5.78-6h24.44c3.138 0 5.78 2.743 5.78 6v6Z" style="fill:#ea4335;fill-rule:nonzero" transform="translate(-25.083 -14.93) scale(1.19444)"/><path d="m21 25.241 22.849 5.161c2.631.645 5.589 0 7.726-1.613L57 24.918v12.097c0 3.065-2.63 5.485-5.753 5.485H26.753C23.63 42.5 21 40.08 21 37.015V25.241Z" style="fill:#4285f4;fill-rule:nonzero" transform="translate(-25.083 -14.93) scale(1.19444)"/></svg>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							xml:space="preserve"
+							style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2"
+							viewBox="0 0 43 36"
+							class="h-6 flex-shrink-0"
+							><path
+								d="M57 23.791H21v-5.646c0-3.064 2.642-5.645 5.78-5.645h24.44c3.138 0 5.78 2.581 5.78 5.645v5.646Z"
+								style="fill:#34a853;fill-rule:nonzero"
+								transform="translate(-25.083 -14.93) scale(1.19444)"
+							/><path
+								d="M57 29H21v-6c0-3.257 2.642-6 5.78-6h24.44c3.138 0 5.78 2.743 5.78 6v6Z"
+								style="fill:#fbbc04;fill-rule:nonzero"
+								transform="translate(-25.083 -14.93) scale(1.19444)"
+							/><path
+								d="M57 34H21v-6c0-3.257 2.642-6 5.78-6h24.44c3.138 0 5.78 2.743 5.78 6v6Z"
+								style="fill:#ea4335;fill-rule:nonzero"
+								transform="translate(-25.083 -14.93) scale(1.19444)"
+							/><path
+								d="m21 25.241 22.849 5.161c2.631.645 5.589 0 7.726-1.613L57 24.918v12.097c0 3.065-2.63 5.485-5.753 5.485H26.753C23.63 42.5 21 40.08 21 37.015V25.241Z"
+								style="fill:#4285f4;fill-rule:nonzero"
+								transform="translate(-25.083 -14.93) scale(1.19444)"
+							/></svg
+						>
 						<span class="flex items-start flex-col gap-1 leading-none">
 							<span class="text-sm text-gray-300">Add PayPass to</span>
 							<span class="font-medium text-white">Google Wallet</span>

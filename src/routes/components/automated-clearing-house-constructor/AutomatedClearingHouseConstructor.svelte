@@ -6,11 +6,11 @@
 		FieldGroupNumber,
 		FieldGroupText,
 		FieldGroupRadioWithNumber,
-	} from '$lib/components';
+	} from '#lib/components/index.js';
 
-	import { constructor } from '$lib/store/constructor.store';
+	import { constructor } from '#lib/store/constructor.store.js';
 	import { fly } from 'svelte/transition';
-	import { achAccountSchema, achRoutingSchema } from '$lib/validators/ach.validator';
+	import { achAccountSchema, achRoutingSchema } from '#lib/validators/ach.validator.js';
 
 	let accountError = $state(false);
 	let accountMsg = $state('');

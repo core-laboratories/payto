@@ -1,11 +1,14 @@
-import { error, json } from '@sveltejs/kit';
+import { paymentBarcodeSvg } from '#lib/payqr/barcode.js';
+import { ibanPassPayload } from '#lib/epc/payload.js';
+import { payQrPassPayload } from '#lib/payqr/pass-payload.js';
+import { error } from '@sveltejs/kit';
 import type { RequestEvent } from '@sveltejs/kit';
-import { getValidBackgroundColor, getValidForegroundColor, getAutoTextColor } from '$lib/helpers/color-validation.helper';
-import { getLink, getLinkHostname } from '$lib/helpers/get-link.helper';
-import { getCurrency } from '$lib/helpers/get-currency.helper';
-import { getExplorerUrl } from '$lib/helpers/tx-explorer.helper';
-import { KV } from '$lib/helpers/kv.helper';
-import { standardizeOrg } from '$lib/helpers/standardize.helper';
+import { getValidBackgroundColor, getValidForegroundColor, getAutoTextColor } from '#lib/helpers/color-validation.helper.js';
+import { getLink, getLinkHostname } from '#lib/helpers/get-link.helper.js';
+import { getCurrency } from '#lib/helpers/get-currency.helper.js';
+import { getExplorerUrl } from '#lib/helpers/tx-explorer.helper.js';
+import { KV } from '#lib/helpers/kv.helper.js';
+import { standardizeOrg } from '#lib/helpers/standardize.helper.js';
 import {
 	getImageUrls,
 	getLocationCode,
@@ -17,16 +20,15 @@ import {
 	getVerifiedOrganizationName,
 	getExpirationDate,
 	base64ToUtf8
-} from '$lib/helpers/paypass-operator.helper';
-import { getTitleText } from '$lib/helpers/get-title-name.helper';
-import { buildGoogleWalletPayPassSaveLink } from '$lib/helpers/paypass-android.helper';
-import { buildAppleWalletPayPass } from '$lib/helpers/paypass-ios.helper';
+} from '#lib/helpers/paypass-operator.helper.js';
+import { getTitleText } from '#lib/helpers/get-title-name.helper.js';
+import { buildGoogleWalletPayPassSaveLink } from '#lib/helpers/paypass-android.helper.js';
+import { buildAppleWalletPayPass } from '#lib/helpers/paypass-ios.helper.js';
 import { createClient } from '@supabase/supabase-js';
-import { env } from '$env/dynamic/private';
-import { env as publicEnv } from '$env/dynamic/public';
-import { PUBLIC_ENABLE_STATS } from '$env/static/public';
-import { getNetwork } from '$lib/helpers/get-network.helper';
-import { getAddress } from '$lib/helpers/get-address.helper';
+import * as env from '$app/env/private';
+import { PUBLIC_ENV, PUBLIC_DEV_SERVER_URL, PUBLIC_ENABLE_STATS, PUBLIC_SWAP_URL } from '$app/env/public';
+import { getNetwork } from '#lib/helpers/get-network.helper.js';
+import { getAddress } from '#lib/helpers/get-address.helper.js';
 
 /* ----------------------------------------------------------------
  * Env vars
@@ -45,13 +47,13 @@ const gwIssuerId = env.PRIVATE_GW_ISSUER_ID;
 const gwSaEmail = env.PRIVATE_GW_SA_EMAIL;
 const gwSaKeyPem_b64 = env.PRIVATE_GW_SA_PRIVATE_KEY;
 const gwSaKeyPem = base64ToUtf8(gwSaKeyPem_b64);
-const isDev = import.meta.env.DEV || publicEnv.PUBLIC_ENV === 'preview';
-const devServerUrl = publicEnv.PUBLIC_DEV_SERVER_URL || `http://localhost:${import.meta.env.VITE_DEV_SERVER_PORT || 5173}`;
+const isDev = import.meta.env.DEV || PUBLIC_ENV === 'preview';
+const devServerUrl = PUBLIC_DEV_SERVER_URL || `http://localhost:${import.meta.env.VITE_DEV_SERVER_PORT || 5173}`;
 
 // Base URL for links
 const linkBaseUrl = isDev ? devServerUrl : 'https://payto.money';
 const proUrlLink = `${linkBaseUrl}/activate/pro`;
-const swapUrlLink = env.PUBLIC_SWAP_URL || `${linkBaseUrl}/swap`;
+const swapUrlLink = PUBLIC_SWAP_URL || `${linkBaseUrl}/swap`;
 
 // Enable stats
 const enableStats = PUBLIC_ENABLE_STATS === 'true';
@@ -125,9 +127,9 @@ function parseAmount(v: unknown): number | null {
 function detectOSFromUserAgent(userAgent: string | null): string {
 	if (!userAgent) return '';
 	const ua = userAgent.toLowerCase();
-	if (/iphone|ipad|ipod/.test(ua)) {
+	if ((/iphone|ipad|ipod/).test(ua)) {
 		return 'ios';
-	} else if (/android/.test(ua)) {
+	} else if ((/android/).test(ua)) {
 		return 'android';
 	}
 	return '';
@@ -176,7 +178,8 @@ function getAuthorityApiSecret(
 		return runtimeSecret;
 	}
 
-	const localSecret = env[envKey];
+	// Production secrets come from platform bindings; Node supplies local development secrets.
+	const localSecret = process.env[envKey];
 	if (typeof localSecret === 'string' && localSecret.length > 0) {
 		return localSecret;
 	}
@@ -217,17 +220,18 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 		data.os = data.os || detectOSFromUserAgent(userAgent);
 	} else {
 		const form = await request.formData();
-		authorityField = (form.get('authority') as string) || url.searchParams.get('authority');
+		authorityField = form.get('authority') as string || url.searchParams.get('authority');
 
 		data.hostname = form.get('hostname') as string;
 		data.props = form.get('props') ? JSON.parse(form.get('props') as string) : null;
 		data.design = form.get('design') ? JSON.parse(form.get('design') as string) : null;
 		data.authority = form.get('authority') as string;
 		data.membership = form.get('membership') as string;
-		data.token = (form.get('token') as string) || url.searchParams.get('token');
+		data.token = form.get('token') as string || url.searchParams.get('token');
 		// Auto-detect OS if not provided in form or query params
-		data.os = (form.get('os') as string) || url.searchParams.get('os') || detectOSFromUserAgent(userAgent);
-		data.locale = (form.get('locale') as string) || url.searchParams.get('locale') || null;
+		data.os = form.get('os') as string || url.searchParams.get('os') || detectOSFromUserAgent(userAgent);
+
+		data.locale = form.get('locale') as string || url.searchParams.get('locale') || null;
 
 		const dest = form.get('destination') as string;
 		if (dest && data.props) data.props.destination = dest;
@@ -237,15 +241,15 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 	const isSameOriginRequest = origin === baseOrigin;
 	const issuedPayload =
 		authorityField
-			? buildIssuedPayloadEnvelope({
-					authority: authorityField.toLowerCase(),
-					hostname: data.hostname,
-					props: data.props,
-					design: data.design,
-					membership: data.membership,
-					locale: data.locale
-				})
-			: null;
+		? buildIssuedPayloadEnvelope({
+			authority: authorityField.toLowerCase(),
+			hostname: data.hostname,
+			props: data.props,
+			design: data.design,
+			membership: data.membership,
+			locale: data.locale
+		})
+		: null;
 
 	/* ---------------- Authority config ---------------- */
 
@@ -364,6 +368,7 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 
 	try {
 		const props = data.props;
+		if (data.hostname === 'qr' && props?.payQrForm) props.destination = props.payQrForm.identifier;
 		const design = data.design || {};
 		const hostname = data.hostname;
 		const membership = data.membership;
@@ -384,6 +389,18 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 		/* ---------------- Shared fields ---------------- */
 		const linkHostname = getLinkHostname(hostname, props);
 		const bareLink = getLink(linkHostname, props);
+		let barcodePayload = bareLink;
+		if (hostname === 'qr' || hostname === 'iban') {
+			const format = design.qrFormat ?? 'payto';
+			try {
+				barcodePayload = hostname === 'iban'
+					? ibanPassPayload(bareLink, format, design.barcode || 'qr').value
+					: payQrPassPayload(bareLink, format).value;
+				paymentBarcodeSvg(barcodePayload, design.barcode || 'qr');
+			} catch (cause) {
+				throw error(400, (cause as Error).message);
+			}
+		}
 
 		const originator = kvData?.id || 'payto';
 		const originatorName = kvData?.name;
@@ -403,7 +420,7 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 		const chainId = props.params?.chainId?.value;
 		const explorerUrl = getExplorerUrl(network, { address: destination, chain: chainId }, true, linkBaseUrl);
 		const customCurrencyData = kvData?.customCurrency || {};
-		const currency = getCurrency(props, network as ITransitionType, true);
+		const currency = hostname === 'iban' && barcodePayload.startsWith('BCD\n') ? 'EUR' : getCurrency(props, network as ITransitionType, true);
 		const expirationDate = getExpirationDate(props.params?.dl?.value);
 
 		// Use strict parsing for booleans to avoid "0"/"false" truthiness bugs
@@ -424,13 +441,13 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 			props.params.split.address &&
 			destination &&
 			props.params.split.address.toLowerCase() !== destination.toLowerCase()
-				? {
-						value: props.params.split.value,
-						formattedValue: formatter(currency, kvData?.currencyLocale, customCurrencyData).format(Number(props.params.split.value)),
-						isPercent: props.params.split.isPercent,
-						address: props.params.split.address
-				  }
-				: null;
+			? {
+				value: props.params.split.value,
+				formattedValue: formatter(currency, kvData?.currencyLocale, customCurrencyData).format(Number(props.params.split.value)),
+				isPercent: props.params.split.isPercent,
+				address: props.params.split.address
+			}
+			: null;
 
 		const swap = props.params?.swap?.value || null;
 
@@ -445,7 +462,7 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 
 		/* ---------------- pkpass file naming ---------------- */
 
-		const filenameCompanyBase = (companyName && companyName.trim()) || 'PayPass';
+		const filenameCompanyBase = companyName && companyName.trim() || 'PayPass';
 
 		const safeCompany = filenameCompanyBase.replace(/[^a-zA-Z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
 		const safeDestination = destination.replace(/[^a-zA-Z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
@@ -473,15 +490,15 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 
 		const amountValue =
 			props.params?.amount?.value && Number(props.params.amount.value) > 0
-				? formatter(currency, kvData?.currencyLocale, customCurrencyData).format(Number(props.params.amount.value))
-				: null;
+			? formatter(currency, kvData?.currencyLocale, customCurrencyData).format(Number(props.params.amount.value))
+			: null;
 
 		const finalAmount =
 			amountValue
-				? isRecurring
+			? isRecurring
 					? { value: amountValue, recurrence: { value: props.params?.rc?.value } }
-					: { value: amountValue }
-				: undefined;
+				: { value: amountValue }
+			: undefined;
 
 		/* ---------------- Images, title, text ---------------- */
 
@@ -525,7 +542,7 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 			const { saveUrl, classId: finalClassId, gwObject, gwClass } = await buildGoogleWalletPayPassSaveLink({
 				amountObject: finalAmount,
 				amountType: { recurring: isRecurring, donate: isDonate },
-				barcode: getBarcodeConfig(design.barcode || 'qr', bareLink, codeText).google,
+				barcode: getBarcodeConfig(design.barcode || 'qr', barcodePayload, codeText, hostname === 'qr' || hostname === 'iban' ? 'utf-8' : 'iso-8859-1').google,
 				classId,
 				companyName,
 				donate: isDonate,
@@ -604,7 +621,7 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 			// Otherwise, redirect for form submissions (pure HTML forms)
 			if (noRedirect || wantsJson) {
 				// Return JSON response (for web UI with noRedirect=1 or API calls)
-				return json({ saveUrl, id: objectId, classId: finalClassId, gwObject, gwClass });
+				return Response.json({ saveUrl, id: objectId, classId: finalClassId, gwObject, gwClass });
 			}
 
 			// Default: Redirect to Google Wallet save URL (for pure HTML forms without noRedirect)
@@ -628,7 +645,7 @@ export async function POST({ request, url, fetch, platform }: RequestEvent) {
 			const pkpassBlob = await buildAppleWalletPayPass({
 				amountObject: finalAmount,
 				amountType: { recurring: isRecurring, donate: isDonate },
-				barcode: getBarcodeConfig(design.barcode || 'qr', bareLink, codeText).apple,
+				barcode: getBarcodeConfig(design.barcode || 'qr', barcodePayload, codeText, hostname === 'qr' || hostname === 'iban' ? 'utf-8' : 'iso-8859-1').apple,
 				beacons: appleBeacons,
 				companyName,
 				donate: isDonate,

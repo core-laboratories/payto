@@ -1,11 +1,13 @@
-import { META_CONTENT } from '$lib/data/meta-content.data';
-import { checkValidity } from '$lib/helpers/check-validity.helper';
-import { calculateColorDistance } from '$lib/helpers/euclidean-distance.helper';
-import { standardizeOrg } from '$lib/helpers/standardize.helper';
+import { buildPayQrUri } from '#lib/validators/payqr.validator.js';
+import { parsePayQr, serializePayQr, payQrSchemes } from 'payto-rl';
+import { META_CONTENT } from '#lib/data/meta-content.data.js';
+import { checkValidity } from '#lib/helpers/check-validity.helper.js';
+import { calculateColorDistance } from '#lib/helpers/euclidean-distance.helper.js';
+import { standardizeOrg } from '#lib/helpers/standardize.helper.js';
 import { setLocaleFromPaytoData } from '$i18n';
 import { i18nObject } from '$i18n/i18n-util';
 import type { Locales } from '$i18n/i18n-types';
-import { env as publicEnv } from '$env/dynamic/public';
+import { PUBLIC_ENV, PUBLIC_DEV_SERVER_URL } from '$app/env/public';
 
 /**
  * It takes a list of payloads and a set of props, and returns a link
@@ -14,16 +16,24 @@ import { env as publicEnv } from '$env/dynamic/public';
  * @param props - The props object that was used to initialized store.
  */
 export const generateLink = (payload: IPayload[] = [], props: Record<string, any>, donate: boolean = false) => {
-	let link = payload
-		.filter((payload) => (payload.value !== undefined || payload.query === true))
-		.reduce((acc, payload) => acc.concat('/', payload.value || (payload.placeholder ? payload.placeholder : '')), 'payto:/');
+	const payQrUri = props.network === 'qr' && props.payQrForm ? buildPayQrUri(props.payQrForm) : '';
+	if (props.network === 'qr' && !payQrUri) {
+		const country = props.payQrForm?.country;
+		return country && Object.hasOwn(payQrSchemes, country) ? `payto://qr/${country}` : 'payto://qr';
+	}
 
+	let link = payload.filter((payload) => payload.value !== undefined || payload.query === true).reduce((acc, payload) => acc.concat('/', payload.value || (payload.placeholder ? payload.placeholder : '')), 'payto:/');
 	const { amount, currency, design, split, fiat, swap, ...rest } = props.params || {};
 	const validParams = Object.entries<{ value: string | undefined; mandatory?: boolean }>(rest || {})
 		.filter(([_, param]) => param && (param.mandatory || Boolean(param.value)))
 		.map(([key, param]) => [kebabize(key), param.value]);
 
 	const searchParams = new URLSearchParams(validParams as string[][]);
+	if (payQrUri) {
+		const target = parsePayQr(payQrUri);
+		link = payQrUri.split('?')[0];
+		for (const [key, value] of Object.entries(target.parameters)) searchParams.set(key, value);
+	}
 
 	if (props.params) {
 		// Amount transformer
@@ -35,12 +45,9 @@ export const generateLink = (payload: IPayload[] = [], props: Record<string, any
 				: amount.value
 			);
 		} else if (amount?.value || currency?.value) {
-			searchParams.set(
-				'amount',
-				(amount?.value && currency?.value)
+			searchParams.set('amount', amount?.value && currency?.value
 				? caseCurrency(currency.value) + ':' + amount.value
-				: (currency?.value ? caseCurrency(currency.value) + ':' : amount?.value)
-			);
+				: currency?.value ? caseCurrency(currency.value) + ':' : amount?.value);
 		}
 
 		if (fiat?.value) {
@@ -52,10 +59,8 @@ export const generateLink = (payload: IPayload[] = [], props: Record<string, any
 		}
 
 		// Split transformer
-		if (split?.value && split.address && amount?.value && amount.value > 0 && ((!split.isPercent && split.value < amount.value) || (split.isPercent && split.value < 100))) {
-			searchParams.set(
-				'split',
-				split.isPercent
+		if (split?.value && split.address && amount?.value && amount.value > 0 && (!split.isPercent && split.value < amount.value || split.isPercent && split.value < 100)) {
+			searchParams.set('split', split.isPercent
 				? 'p:' + split.value + '@' + split.address
 				: split.value + '@' + split.address
 			);
@@ -106,11 +111,12 @@ export const generateLink = (payload: IPayload[] = [], props: Record<string, any
 		searchParams.set('donate', '1');
 	}
 
+	if (props.network === 'qr' || props.network === 'iban') searchParams.delete('format');
 	if (searchParams.toString()) {
 		link += '?' + uriNormalize(searchParams.toString());
 	}
 
-	return link;
+	return payQrUri ? serializePayQr(parsePayQr(link)) : link;
 };
 
 /**
@@ -140,13 +146,13 @@ const uriNormalize = (str: string | undefined): string | undefined => {
  * Convert currency to lower case except Smart Contracts
  * @param str - String to be converted
  */
-const caseCurrency = (str: string | undefined) => (str && str.startsWith("0x")) ? str : (str ? str.toLowerCase(): str);
+const caseCurrency = (str: string | undefined) => str && str.startsWith("0x") ? str : str ? str.toLowerCase() : str;
 
 /**
  * Shorten name for title
  * @param str - String to be shorten
  */
-const shortenTitle = (str: string | undefined) => (str && str.length > 10) ? `${str.slice(0,4)}…${str.slice(-4)}` : str;
+const shortenTitle = (str: string | undefined) => str && str.length > 10 ? `${str.slice(0, 4)}…${str.slice(-4)}` : str;
 
 const recurringIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2h4"/><path d="M12 14v-4"/><path d="M4 13a8 8 0 0 1 8-7 8 8 0 1 1-5.3 14L4 17.6"/><path d="M9 17H4v5"/></svg>`;
 
@@ -164,10 +170,8 @@ const getTitle = (prefix: 'pay' | 'donate', props: Record<string, any>, code: st
 		: shortenTitle(props.other);
 	} else {
 		network = props.network !== 'other'
-		? shortenTitle(props.network)
-		: (checkValidity(props.other)
-		? shortenTitle(props.other)
-		: '');
+			? shortenTitle(props.network)
+			: checkValidity(props.other) ? shortenTitle(props.other) : '';
 	}
 
 	let namePrefix;
@@ -234,7 +238,7 @@ const getTitle = (prefix: 'pay' | 'donate', props: Record<string, any>, code: st
 const composeTitle = (namePrefix: string | undefined, network: string | undefined, language?: string) => {
 	if (!namePrefix) return '';
 
-	const LL = i18nObject((language as Locales) || 'en');
+	const LL = i18nObject(language as Locales || 'en');
 	const viaText = LL.paymentButton.via();
 
 	if (network === 'intra') {
@@ -358,6 +362,9 @@ const generateTailwindDonationButton = (link: string, props: Record<string, any>
  */
 const generateMetaTag = (type: ITransitionType, props: Record<string, any>, wellKnown: boolean = false) => {
 	let property = `${type}`;
+	if (type === 'qr' && Object.hasOwn(payQrSchemes, props.payQrForm?.country)) {
+		property += `:${props.payQrForm.country}`;
+	}
 	if (type === 'ican' && props.network) {
 		if (props.network !== 'other') {
 			if (props.chain > 0) {
@@ -423,9 +430,25 @@ export const generate = (type: ITransitionType, props: any, payload: IPayload[])
 			previewable: true,
 			type: 'donation'
 		},
-		{ label: 'Tailwind Payment Button', value: generateTailwindPaymentButton(link, props), type: 'payment' },
-		{ label: 'Tailwind Donation Button', value: generateTailwindDonationButton(generateLink(payload, props, true), props), type: 'donation' },
-		{ label: 'FinTag (Meta Tag)', note: 'Basic payment instructions only.', value: generateMetaTag(type, props) },
+
+		{
+			label: 'Tailwind Payment Button',
+			value: generateTailwindPaymentButton(link, props),
+			type: 'payment'
+		},
+
+		{
+			label: 'Tailwind Donation Button',
+			value: generateTailwindDonationButton(generateLink(payload, props, true), props),
+			type: 'donation'
+		},
+
+		{
+			label: 'FinTag (Meta Tag)',
+			note: 'Basic payment instructions only.',
+			value: generateMetaTag(type, props)
+		},
+
 		{
 			label: 'FinTag (Well-Known)',
 			note: 'Save the content as /.well-known/fintag.json',
@@ -453,8 +476,8 @@ export const getWebLink = ({
 }: IWebLinkOptions): string => {
 	if (!network || !networkData) return '#';
 
-	const domain = (import.meta.env.DEV || publicEnv.PUBLIC_ENV === 'preview')
-		? (publicEnv.PUBLIC_DEV_SERVER_URL || (`http://localhost:${import.meta.env.VITE_DEV_SERVER_PORT || 5173}`))
+	const domain = import.meta.env.DEV || PUBLIC_ENV === 'preview'
+		? PUBLIC_DEV_SERVER_URL || `http://localhost:${import.meta.env.VITE_DEV_SERVER_PORT || 5173}`
 		: 'https://payto.money';
 
 	const secondSegment =
@@ -464,14 +487,20 @@ export const getWebLink = ({
 				: networkData.transport
 			: undefined;
 
-	const finalPayload =
-		payload ??
-		(networkData.network === 'void'
+	const finalPayload = payload ?? (networkData.network === 'iban'
+		? [
+			{ value: 'iban' },
+			...networkData.bic ? [{ value: encodeURIComponent(networkData.bic) }] : [],
+			{
+				value: encodeURIComponent(networkData.iban || networkData.destination || '')
+			}
+		]
+		: networkData.network === 'void'
 			? [
-					{ value: 'void' },
-					...(secondSegment ? [{ value: secondSegment }] : []),
-					{ value: networkData.destination }
-				]
+				{ value: 'void' },
+				...secondSegment ? [{ value: secondSegment }] : [],
+				{ value: networkData.destination }
+			]
 			: [
 					{
 						value:
@@ -486,19 +515,24 @@ export const getWebLink = ({
 		...networkData,
 		params: {
 			...networkData.params,
-			...(design ? { design: networkData.design } : {})
+			...design ? { design: networkData.design } : {}
 		}
 	};
 
-	const link = generateLink(finalPayload, props, doante);
-	return link ? (transform ? `${domain}/${link.slice(5)}` : link) : '#';
+	let link = generateLink(finalPayload, props, doante);
+	const nativeFormat = network === 'iban' ? 'epc' : network === 'qr'
+		? payQrSchemes[networkData.payQrForm?.country as keyof typeof payQrSchemes]?.scheme : undefined;
+	if (design && nativeFormat && ['native', nativeFormat].includes(networkData.design?.qrFormat)) {
+		link += (link.includes('?') ? '&' : '?') + 'format=' + nativeFormat;
+	}
+	return link ? transform ? `${domain}/${link.slice(5)}` : link : '#';
 };
 
 export const generateWebLink = (link: string) => {
 	if (!link) return '#';
 
-	const domain = (import.meta.env.DEV || publicEnv.PUBLIC_ENV === 'preview')
-		? (publicEnv.PUBLIC_DEV_SERVER_URL || (`http://localhost:${import.meta.env.VITE_DEV_SERVER_PORT || 5173}`))
+	const domain = import.meta.env.DEV || PUBLIC_ENV === 'preview'
+		? PUBLIC_DEV_SERVER_URL || `http://localhost:${import.meta.env.VITE_DEV_SERVER_PORT || 5173}`
 		: 'https://payto.money';
 
 	return `${domain}/${link.slice(5)}`;

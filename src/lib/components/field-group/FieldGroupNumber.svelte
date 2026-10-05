@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { getFieldGroupContext } from './fieldgroup.context';
-	import { stripWhitespace as sanitizeWhitespace } from '$lib/helpers/strip-whitespace.helper';
+	import { stripWhitespace as sanitizeWhitespace } from '#lib/helpers/strip-whitespace.helper.js';
 
 	export let value: string | number | undefined;
 	export let placeholder: string;

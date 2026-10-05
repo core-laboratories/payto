@@ -4,6 +4,7 @@
 * @param {ITransitionType | undefined} type - string indicating the address type
 */
 export const getCurrency = (state: any, type: ITransitionType | undefined, pass: boolean = false): string | undefined => {
+	if (type === 'qr') return state?.payQrForm?.currency || undefined;
 	if (pass && Object.keys(state).length > 0 && state.params) {
 		//return state.network;
 		switch (type) {

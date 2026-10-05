@@ -21,7 +21,7 @@ export function getTitleText(hostname: string, destination: string, network: str
 					)
 			);
 		return prefixed ? currencyText + ' ' + shortenTitle(destination) : shortenTitle(destination);
-	} else if (hostname === 'iban' || hostname === 'ach' || hostname === 'bic') {
+	} else if (hostname === 'qr' || hostname === 'iban' || hostname === 'ach' || hostname === 'bic') {
 		return prefixed ? hostname.toUpperCase() + ' ' + shortenTitle(destination) : shortenTitle(destination);
 	} else if (hostname === 'upi' || hostname === 'pix') {
 		return prefixed ? hostname.toUpperCase() + ' ' + splitAddress(destination, '@', 1).toLowerCase() : splitAddress(destination, '@', 1).toLowerCase();

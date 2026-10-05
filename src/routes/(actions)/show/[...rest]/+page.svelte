@@ -2,7 +2,8 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { writable } from 'svelte/store';
-	import { WalletCard } from '$lib/components';
+	import { WalletCard } from '#lib/components/index.js';
+	import { parsePayQr, serializePayQr } from 'payto-rl';
 
 	const queryUrl = page.url.searchParams.get('url');
 	const rest = page.params.rest;
@@ -16,11 +17,15 @@
 		let url: string | undefined;
 		try {
 			if (queryUrl) {
-				url = decodeURIComponent(queryUrl);
+				url = queryUrl; // URLSearchParams has already decoded the outer query value.
 			} else if (rest) {
 				url = decodeURIComponent(rest);
 			} else {
 				throw new Error('No URL parameter provided');
+			}
+
+			if (url && new URL(url).hostname.toLowerCase() === 'qr') {
+				url = serializePayQr(parsePayQr(url));
 			}
 
 			if (!url || !url.startsWith('payto:')) {

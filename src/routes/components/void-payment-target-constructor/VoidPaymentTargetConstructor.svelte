@@ -6,14 +6,14 @@
 		FieldGroupNumber,
 		FieldGroupText,
 		ListBox
-	} from '$lib/components';
+	} from '#lib/components/index.js';
 
-	import { TRANSPORT } from '$lib/data/transports.data';
-	import { stripWhitespace } from '$lib/helpers/strip-whitespace.helper';
-	import { constructor } from '$lib/store/constructor.store';
+	import { TRANSPORT } from '#lib/data/transports.data.js';
+	import { stripWhitespace } from '#lib/helpers/strip-whitespace.helper.js';
+	import { constructor } from '#lib/store/constructor.store.js';
 	import { fade, fly } from 'svelte/transition';
-	import { coordinatesSchema, plusCodeSchema } from '$lib/validators/location.validator';
-	import { bicSchema } from '$lib/validators/bic.validator';
+	import { coordinatesSchema, plusCodeSchema } from '#lib/validators/location.validator.js';
+	import { bicSchema } from '#lib/validators/bic.validator.js';
 
 	let latError = $state(false);
 	let latMsg = $state('');

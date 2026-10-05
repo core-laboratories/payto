@@ -17,6 +17,12 @@ export const TYPES: ITypesObject = {
 		description: 'Automated Clearing House',
 		link: 'https://grokipedia.com/page/Automated_clearing_house'
 	},
+	qr: {
+		value: 'qr',
+		label: 'Pay QR',
+		description: 'QR payments',
+		link: 'https://www.emvco.com/emv-technologies/qr-codes/'
+	},
 	upi: {
 		value: 'upi',
 		label: 'UPI',

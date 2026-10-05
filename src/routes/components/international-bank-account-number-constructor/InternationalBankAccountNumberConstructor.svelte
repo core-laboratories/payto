@@ -5,12 +5,13 @@
 		FieldGroupLabel,
 		FieldGroupNumber,
 		FieldGroupRadioWithNumber,
-		FieldGroupText,
-	} from '$lib/components';
-	import { constructor } from '$lib/store/constructor.store';
+		FieldGroupText
+	} from '#lib/components/index.js';
+	import { constructor } from '#lib/store/constructor.store.js';
 	import { fly } from 'svelte/transition';
-	import { ibanSchema } from '$lib/validators/iban.validator';
-	import { bicSchema } from '$lib/validators/bic.validator';
+	import { ibanSchema } from '#lib/validators/iban.validator.js';
+	import { epcRequiresBic, validEpcReference, epcBeneficiaryNameError } from '#lib/epc/payload.js';
+	import { bicSchema } from '#lib/validators/bic.validator.js';
 
 	let ibanValue = $state<string | undefined>(undefined);
 	let ibanError = $state(false);
@@ -19,6 +20,23 @@
 	let bicValue = $state<string | undefined>(undefined);
 	let bicError = $state(false);
 	let bicMsg = $state('');
+
+	let isEpc = $derived(['native', 'epc'].includes($constructor.design.qrFormat || 'payto'));
+	let beneficiaryNameError = $derived(
+		isEpc ? epcBeneficiaryNameError($constructor.networks.iban.params.receiverName.value || '') : ''
+	);
+	let bicRequired = $derived(isEpc && epcRequiresBic(ibanValue || ''));
+	let missingBic = $derived(bicRequired && !bicValue);
+	let referenceError = $derived(
+		isEpc && !validEpcReference($constructor.networks.iban.params.reference.value || '')
+	);
+	let remittanceConflict = $derived(
+		isEpc &&
+			!!$constructor.networks.iban.params.reference.value &&
+			!!$constructor.networks.iban.params.message.value
+	);
+	const errorBorder =
+		'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500';
 
 	let previousClearedState = false;
 
@@ -45,7 +63,7 @@
 
 	function validateIban(value: string) {
 		if (value === '') {
-			resetIban()
+			resetIban();
 			return;
 		}
 
@@ -93,7 +111,7 @@
 			if (!result.success) {
 				bicError = true;
 				bicMsg = result.error.issues[0]?.message || 'Invalid BIC format';
-				$constructor.networks.iban.bic = undefined;
+				$constructor.networks.iban.bic = value;
 			} else {
 				bicError = false;
 				bicMsg = '';
@@ -135,31 +153,43 @@
 	</FieldGroup>
 
 	<FieldGroup>
-		<FieldGroupLabel>BIC</FieldGroupLabel>
+		<FieldGroupLabel>BIC{bicRequired ? ' *' : ''}</FieldGroupLabel>
 		<FieldGroupText
 			placeholder="e.g. DABADKKK"
+			required={bicRequired}
+			aria-required={bicRequired}
+			aria-invalid={bicError || missingBic}
 			stripWhitespace
 			bind:value={bicValue}
 			oninput={handleBicInput}
 			classValue={`tracking-widest placeholder:tracking-normal uppercase [&:not(:placeholder-shown)]:font-code ${
-				bicError
+				bicError || missingBic
 					? 'border-2 border-rose-500 focus:border-rose-500 focus-visible:border-rose-500'
 					: bicValue
 						? 'border-2 border-emerald-500 focus:border-emerald-500 focus-visible:border-emerald-500'
 						: ''
 			}`}
 		/>
-		{#if bicError && bicMsg}
+		{#if missingBic}
+			<span class="text-sm text-rose-500">BIC is required for a non-EEA beneficiary.</span>
+		{:else if bicError && bicMsg}
 			<span class="text-sm text-rose-500">{bicMsg}</span>
 		{/if}
 	</FieldGroup>
 
 	<FieldGroup>
-		<FieldGroupLabel>Beneficiary Full Name</FieldGroupLabel>
+		<FieldGroupLabel>Beneficiary Full Name{isEpc ? ' *' : ''}</FieldGroupLabel>
 		<FieldGroupText
 			placeholder="e.g. John Doe"
+			required={isEpc}
+			aria-required={isEpc}
+			aria-invalid={!!beneficiaryNameError}
+			classValue={beneficiaryNameError ? errorBorder : ''}
 			bind:value={$constructor.networks.iban.params.receiverName.value}
 		/>
+		{#if beneficiaryNameError}
+			<span class="text-sm text-rose-500">{beneficiaryNameError}</span>
+		{/if}
 	</FieldGroup>
 
 	<FieldGroup>
@@ -170,6 +200,36 @@
 		/>
 	</FieldGroup>
 
+	<FieldGroup
+		><FieldGroupLabel>Creditor reference (RF)</FieldGroupLabel><FieldGroupText
+			placeholder="e.g. RF18539007547034"
+			classValue={referenceError || remittanceConflict ? errorBorder : ''}
+			bind:value={$constructor.networks.iban.params.reference.value}
+		/><FieldGroupAppendix
+			>For EPC SEPA, use this or Message for Beneficiary, not both.</FieldGroupAppendix
+		>
+		{#if referenceError}
+			<span class="text-sm text-rose-500"
+				>Enter a valid RF creditor reference, for example RF18539007547034, or leave it empty.</span
+			>
+		{:else if remittanceConflict}
+			<span class="text-sm text-rose-500"
+				>Use a creditor reference or Message for Beneficiary, not both.</span
+			>
+		{/if}
+	</FieldGroup>
+	<FieldGroup
+		><FieldGroupLabel>Purpose code</FieldGroupLabel><FieldGroupText
+			placeholder="e.g. GDDS"
+			bind:value={$constructor.networks.iban.params.purpose.value}
+		/></FieldGroup
+	>
+	<FieldGroup
+		><FieldGroupLabel>Beneficiary information</FieldGroupLabel><FieldGroupText
+			placeholder="Optional information for the payer"
+			bind:value={$constructor.networks.iban.params.information.value}
+		/></FieldGroup
+	>
 	<FieldGroup>
 		<FieldGroupLabel>Amount</FieldGroupLabel>
 		<FieldGroupNumber

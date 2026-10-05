@@ -1,4 +1,10 @@
+import { buildPayQrUri } from '#lib/validators/payqr.validator.js';
+
 export const META_CONTENT = {
+	qr: (props: Pick<ITransactionState, 'payQrForm'>) => {
+		const uri = props.payQrForm ? buildPayQrUri(props.payQrForm) : '';
+		return uri ? props.payQrForm!.identifier : '';
+	},
 	ican: (props: Record<string, any>) => props.destination || '',
 	iban: (props: Record<string, any>) => props.iban || '',
 	bic: (props: Record<string, any>) => props.bic || '',

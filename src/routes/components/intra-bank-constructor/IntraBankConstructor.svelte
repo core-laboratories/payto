@@ -5,12 +5,12 @@
 		FieldGroupText,
 		FieldGroupNumber,
 		FieldGroupRadioWithNumber,
-	} from '$lib/components';
+	} from '#lib/components/index.js';
 
-	import { constructor } from '$lib/store/constructor.store';
+	import { constructor } from '#lib/store/constructor.store.js';
 	import { fly } from 'svelte/transition';
-	import { bicSchema } from '$lib/validators/bic.validator';
-	import { addressSchema } from '$lib/validators/address.validator';
+	import { bicSchema } from '#lib/validators/bic.validator.js';
+	import { addressSchema } from '#lib/validators/address.validator.js';
 
 	let idError = $state(false);
 	let idMsg = $state('');

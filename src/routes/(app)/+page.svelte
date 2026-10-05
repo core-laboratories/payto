@@ -2,14 +2,14 @@
 	import "../../css/app.css";
 	import {
 		Row, Box, BoxContent, BoxTitle, Page, Tabs, Toast, WalletCard, DesignContent
-	} from '$lib/components';
+	} from '#lib/components/index.js';
 
-	import { TYPES } from '$lib/data/types.data';
-	import { getObjectByType } from '$lib/helpers/get-object-by-type.helper';
-	import { Icon } from '$lib/icons';
-	import { constructor } from '$lib/store/constructor.store';
+	import { TYPES } from '#lib/data/types.data.js';
+	import { getObjectByType } from '#lib/helpers/get-object-by-type.helper.js';
+	import { Icon } from '#lib/icons/index.js';
+	import { constructor } from '#lib/store/constructor.store.js';
 	import { derived, get, writable } from 'svelte/store';
-	import { toast } from '$lib/components/toast';
+	import { toast } from '#lib/components/toast/index.js';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import { ChevronUp, ChevronDown, Copy, Sticker } from 'lucide-svelte';
@@ -230,6 +230,7 @@
 								<h1 class="text-white text-xl font-bold">Online Pass preview</h1>
 								<p class="text-gray-400 text-sm">Online and digital passes look and work differently.</p>
 							</div>
+
 							<WalletCard
 								bind:hostname={$type}
 							/>

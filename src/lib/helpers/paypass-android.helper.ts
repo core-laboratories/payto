@@ -1,5 +1,11 @@
 import * as jose from 'jose';
-import { env as publicEnv } from '$env/dynamic/public';
+
+import {
+	PUBLIC_GW_CALLBACK_URL,
+	PUBLIC_GW_UPDATE_REQUEST_URL,
+	PUBLIC_GW_MULTIPLE_STATUS
+} from '$app/env/public';
+
 import { calculateNotifications } from './paypass-notifications.helper';
 import { getPaypassLocalizedString, type LocalizedText, getPaypassLocalizedValueForLocale as getPaypassLocalizedValue } from './paypass-i18n.helper';
 import { getPayButtonUri } from './get-link.helper';
@@ -214,7 +220,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		textMods.push({
 			id: 'amount',
 			header: headerText,
-			headerI18nKey: headerI18nKey,
+			headerI18nKey,
 			body: formatAmount(amountObject, translations, rtl),
 			onPass: true
 		});
@@ -592,34 +598,34 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		});
 	}
 
-	const normalizedTextModules = textMods
-		.map(m => {
-			const header = m.header.trim();
-			const body = String(m.body ?? '').trim();
+	const normalizedTextModules = textMods.map((m) => {
+		const header = m.header.trim();
+		const body = String(m.body ?? '').trim();
 
-			const headerLoc = m.headerI18nKey ? getPaypassLocalizedString(m.headerI18nKey) : undefined;
-			const localizedHeader = headerLoc ? toGoogleLocalizedString(headerLoc, 'en') : undefined;
+		const headerLoc = m.headerI18nKey
+			? getPaypassLocalizedString(m.headerI18nKey)
+			: undefined;
 
-			const bodyLoc = m.bodyI18nKey ? getPaypassLocalizedString(m.bodyI18nKey) : undefined;
-			const localizedBody = bodyLoc ? toGoogleLocalizedString(bodyLoc, 'en') : undefined;
+		const localizedHeader = headerLoc ? toGoogleLocalizedString(headerLoc, 'en') : undefined;
+		const bodyLoc = m.bodyI18nKey ? getPaypassLocalizedString(m.bodyI18nKey) : undefined;
+		const localizedBody = bodyLoc ? toGoogleLocalizedString(bodyLoc, 'en') : undefined;
 
-			return {
-				...(m.id ? { id: m.id } : {}),
-				header,
-				body,
-				...(localizedHeader ? { localizedHeader } : {}),
-				...(localizedBody ? { localizedBody } : {})
-			};
-		})
-		.filter(m => m.header.length > 0 && m.body.length > 0);
+		return {
+			...m.id ? { id: m.id } : {},
+			header,
+			body,
+			...localizedHeader ? { localizedHeader } : {},
+			...localizedBody ? { localizedBody } : {}
+		};
+	}).filter((m) => m.header.length > 0 && m.body.length > 0);
 
 	// ---------------- Card Row Template ----------------
 	const rows: any[] = [];
 
 	// Look up per-field visibility
-	const purposeMod = textMods.find(m => m.id === 'purpose');
-	const amountMod = textMods.find(m => m.id === 'amount');
+	const purposeMod = textMods.find((m) => m.id === 'purpose');
 
+	const amountMod = textMods.find((m) => m.id === 'amount');
 	const hasItem = !!(purposeMod?.onPass && purposeText && purposeText.trim().length);
 	const hasAmount = !!(amountMod?.onPass && amountObject && amountObject.value && amountObject.value.trim().length);
 
@@ -664,8 +670,14 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		rows.push(row);
 	}
 
-	const callbackUrl = publicEnv.PUBLIC_GW_CALLBACK_URL ? publicEnv.PUBLIC_GW_CALLBACK_URL : `${payload.linkBaseUrl}/pass/gw/callback`; // For later if needed
-	const updateRequestUrl = publicEnv.PUBLIC_GW_UPDATE_REQUEST_URL ? publicEnv.PUBLIC_GW_UPDATE_REQUEST_URL : `${payload.linkBaseUrl}/pass/gw/update`; // For later if needed
+	const callbackUrl = PUBLIC_GW_CALLBACK_URL
+		? PUBLIC_GW_CALLBACK_URL
+		: `${payload.linkBaseUrl}/pass/gw/callback`; // For later if needed
+
+	const updateRequestUrl = PUBLIC_GW_UPDATE_REQUEST_URL
+		? PUBLIC_GW_UPDATE_REQUEST_URL
+		: `${payload.linkBaseUrl}/pass/gw/update`; // For later if needed
+
 	const enableSmartTap = payload.enableSmartTap ? payload.enableSmartTap : true;
 
 	// Process merchantLocations: validate and limit to 10 items max
@@ -675,54 +687,46 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 
 		const validLocations = locations
 			.filter((loc: any) => {
-				// Validate that location has latitude and longitude
-				if (typeof loc?.latitude !== 'number' || typeof loc?.longitude !== 'number') {
-					return false;
-				}
-				// Validate latitude range: -90.0 to +90.0
-				if (loc.latitude < -90.0 || loc.latitude > 90.0) {
-					return false;
-				}
-				// Validate longitude range: -180.0 to +180.0
-				if (loc.longitude < -180.0 || loc.longitude > 180.0) {
-					return false;
-				}
-				return true;
-			})
-			.slice(0, 10) // Limit to 10 items max
-			.map((loc: any) => ({
-				latitude: loc.latitude,
-				longitude: loc.longitude
-			}));
+			// Validate that location has latitude and longitude
+			if (typeof loc?.latitude !== 'number' || typeof loc?.longitude !== 'number') {
+				return false;
+			}
+			// Validate latitude range: -90.0 to +90.0
+			if (loc.latitude < -90.0 || loc.latitude > 90.0) {
+				return false;
+			}
+			// Validate longitude range: -180.0 to +180.0
+			if (loc.longitude < -180.0 || loc.longitude > 180.0) {
+				return false;
+			}
+			return true;
+		}).slice(0, 10).// Limit to 10 items max
+		map((loc: any) => ({ latitude: loc.latitude, longitude: loc.longitude }));
 
 		return validLocations.length > 0 ? validLocations : undefined;
 	})();
 
 	const gwClass: any = {
 		id: fullClassId,
-		issuerName: issuerName,
-		multipleDevicesAndHoldersAllowedStatus: publicEnv.PUBLIC_GW_MULTIPLE_STATUS ? publicEnv.PUBLIC_GW_MULTIPLE_STATUS : 'ONE_USER_ALL_DEVICES',
-		...(hexBackgroundColor ? { hexBackgroundColor } : {}),
-		...(rows.length > 0 ? {
-			classTemplateInfo: {
-				cardTemplateOverride: {
-					cardRowTemplateInfos: rows
-				}
+		issuerName,
+		multipleDevicesAndHoldersAllowedStatus: PUBLIC_GW_MULTIPLE_STATUS ? PUBLIC_GW_MULTIPLE_STATUS : 'ONE_USER_ALL_DEVICES',
+		...hexBackgroundColor ? { hexBackgroundColor } : {},
+		...rows.length > 0
+			? {
+				classTemplateInfo: { cardTemplateOverride: { cardRowTemplateInfos: rows } }
 			}
-		} : {}),
-		...(enableSmartTap ? { enableSmartTap: true } : {}),
-		...(payload.redemptionIssuers?.length
-			? { redemptionIssuers: payload.redemptionIssuers }
-			: {}),
-		...(merchantLocations ? { merchantLocations } : {}),
-		...(callbackUrl || updateRequestUrl
+			: {},
+		...enableSmartTap ? { enableSmartTap: true } : {},
+		...payload.redemptionIssuers?.length ? { redemptionIssuers: payload.redemptionIssuers } : {},
+		...merchantLocations ? { merchantLocations } : {},
+		...callbackUrl || updateRequestUrl
 			? {
 				callbackOptions: {
-					...(callbackUrl ? { url: callbackUrl } : {}),
-					...(updateRequestUrl ? { updateRequestUrl: updateRequestUrl } : {})
+					...callbackUrl ? { url: callbackUrl } : {},
+					...updateRequestUrl ? { updateRequestUrl } : {}
 				}
-				}
-			: {})
+			}
+			: {}
 	};
 
 	const validTimeInterval = (() => {
@@ -770,10 +774,7 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 		id: payload.id,
 		classId: fullClassId,
 		state: 'active',
-		...(validTimeInterval ? {
-			validTimeInterval
-		} : {}),
-
+		...validTimeInterval ? { validTimeInterval } : {},
 		appLinkData: {
 			displayText: { defaultValue: { language: locale, value: getPaypassLocalizedValue('paypass.pay', locale) || 'Pay' } },
 			webAppLinkInfo: {
@@ -785,85 +786,131 @@ export async function buildGoogleWalletPayPassSaveLink(config: GoogleWalletPayPa
 				}
 			}
 		},
+		cardTitle: {
+			defaultValue: {
+				language: locale,
+				value: orgName && orgName.trim() || paypassHeaderLoc?.defaultValue || 'PayPass'
+			}
+		},
+		header: {
+			defaultValue: { language: locale, value: titleText && titleText.trim() }
+		},
 
-		cardTitle: { defaultValue: { language: locale, value: (orgName && orgName.trim()) || paypassHeaderLoc?.defaultValue || 'PayPass' } },
-
-		header: { defaultValue: { language: locale, value: (titleText && titleText.trim()) } },
-		...(subheaderText && subheaderText.trim() ? {
-			subheader: { defaultValue: { language: locale, value: subheaderText.trim() } }
-		} : {}),
-
-		...(logoUrl ? { logo: { sourceUri: { uri: logoUrl } } } : {}),
-		...(heroUrl ? { heroImage: { sourceUri: { uri: heroUrl } } } : {}),
-		...(hexBackgroundColor ? { hexBackgroundColor } : {}),
-
+		...subheaderText && subheaderText.trim()
+			? {
+				subheader: {
+					defaultValue: { language: locale, value: subheaderText.trim() }
+				}
+			}
+			: {},
+		...logoUrl ? { logo: { sourceUri: { uri: logoUrl } } } : {},
+		...heroUrl ? { heroImage: { sourceUri: { uri: heroUrl } } } : {},
+		...hexBackgroundColor ? { hexBackgroundColor } : {},
 		barcode: normalizedBarcode,
 
 		smartTapRedemptionValue: payload.basicLink,
 
 		locations: payload.props?.params?.loc?.lat && payload.props?.params?.loc?.lon ? [
-			{
-				latitude: payload.props.params.loc.lat,
-				longitude: payload.props.params.loc.lon,
-				relevantText: payload.props.params?.message?.value
-					? payload.props.params.message.value
-					: getPaypassLocalizedValue('paypass.paymentLocation', locale) || 'Payment Location'
-			}
+				{
+					latitude: payload.props.params.loc.lat,
+					longitude: payload.props.params.loc.lon,
+					relevantText: payload.props.params?.message?.value
+						? payload.props.params.message.value
+						: getPaypassLocalizedValue('paypass.paymentLocation', locale) || 'Payment Location'
+				}
 		] : [],
 
 		textModulesData: normalizedTextModules,
 
 		linksModuleData: {
 			uris: [
-				...(payload.props?.params?.loc?.lat && payload.props?.params?.loc?.lon ? [{
-					kind: 'walletobjects#uri',
-					uri: `https://www.google.com/maps/dir/?api=1&origin=Current+Location&destination=${payload.props.params.loc.lat},${payload.props.params.loc.lon}`,
-					description: getPaypassLocalizedValue('paypass.navigateToLocation', locale) || 'Navigate to Location'
-				}] : []),
-				...(payload.explorerUrl ? [{
-					kind: 'walletobjects#uri',
-					uri: payload.explorerUrl,
-					description: getPaypassLocalizedValue('paypass.viewTransactions', locale) || 'View Transactions'
-				}] : []),
-				...(payload.externalLink ? [{
-					kind: 'walletobjects#uri',
-					uri: payload.externalLink,
-					description: getPaypassLocalizedValue('paypass.onlinePaypass', locale) || 'Online PayPass'
-				}] : []),
-				...(oric && payload.cardTopupUrl ? [{
-					kind: 'walletobjects#uri',
-					uri: payload.cardTopupUrl,
-					description: getPaypassLocalizedValue('paypass.topUpCryptoCard', locale) || 'Top up CryptoCard'
-				}] : []),
-				...(payload.swapUrl ? [{
-					kind: 'walletobjects#uri',
-					uri: payload.swapUrl,
-					description: getPaypassLocalizedValue('paypass.swapCurrency', locale) || 'Swap Currency'
-				}] : []),
-				...(payload.proUrl && payload.props.network == 'xcb' ? [{
-					kind: 'walletobjects#uri',
-					uri: payload.proUrl,
-					description: getPaypassLocalizedValue('paypass.activatePro', locale) || 'Activate Pro'
-				}] : []),
-				...(payload.props.network === 'xcb' ? [{
-					kind: 'walletobjects#uri',
-					uri: 'sms:+12019715152',
-					description: getPaypassLocalizedValue('paypass.sendOfflineTransaction', locale) || 'Send Offline Transaction'
-				}] : [])
+				...payload.props?.params?.loc?.lat && payload.props?.params?.loc?.lon
+					? [
+						{
+							kind: 'walletobjects#uri',
+							uri: `https://www.google.com/maps/dir/?api=1&origin=Current+Location&destination=${payload.props.params.loc.lat},${payload.props.params.loc.lon}`,
+							description: getPaypassLocalizedValue('paypass.navigateToLocation', locale) || 'Navigate to Location'
+						}
+					]
+					: [],
+
+				...payload.explorerUrl
+					? [
+						{
+							kind: 'walletobjects#uri',
+							uri: payload.explorerUrl,
+							description: getPaypassLocalizedValue('paypass.viewTransactions', locale) || 'View Transactions'
+						}
+					]
+					: [],
+
+				...payload.externalLink
+					? [
+						{
+							kind: 'walletobjects#uri',
+							uri: payload.externalLink,
+							description: getPaypassLocalizedValue('paypass.onlinePaypass', locale) || 'Online PayPass'
+						}
+					]
+					: [],
+
+				...oric && payload.cardTopupUrl
+					? [
+						{
+							kind: 'walletobjects#uri',
+							uri: payload.cardTopupUrl,
+							description: getPaypassLocalizedValue('paypass.topUpCryptoCard', locale) || 'Top up CryptoCard'
+						}
+					]
+					: [],
+
+				...payload.swapUrl
+					? [
+						{
+							kind: 'walletobjects#uri',
+							uri: payload.swapUrl,
+							description: getPaypassLocalizedValue('paypass.swapCurrency', locale) || 'Swap Currency'
+						}
+					]
+					: [],
+
+				...payload.proUrl && payload.props.network == 'xcb'
+					? [
+						{
+							kind: 'walletobjects#uri',
+							uri: payload.proUrl,
+							description: getPaypassLocalizedValue('paypass.activatePro', locale) || 'Activate Pro'
+						}
+					]
+					: [],
+
+				...payload.props.network === 'xcb'
+					? [
+						{
+							kind: 'walletobjects#uri',
+							uri: 'sms:+12019715152',
+							description: getPaypassLocalizedValue('paypass.sendOfflineTransaction', locale) || 'Send Offline Transaction'
+						}
+					]
+					: []
 			]
 		},
 
 		imageModulesData: [
-			...(iconUrl ? [{
-				id: 'icon',
-				mainImage: {
-					sourceUri: { uri: iconUrl },
-					contentDescription: { defaultValue: { language: 'en-US', value: 'Icon' } }
-				}
-			}] : [])
+			...iconUrl
+				? [
+					{
+						id: 'icon',
+						mainImage: {
+							sourceUri: { uri: iconUrl },
+							contentDescription: { defaultValue: { language: 'en-US', value: 'Icon' } }
+						}
+					}
+				]
+				: []
 		],
 
-		...(notifications ? { notifications } : {})
+		...notifications ? { notifications } : {}
 	};
 
 	// ---------------- Sign JWT ----------------

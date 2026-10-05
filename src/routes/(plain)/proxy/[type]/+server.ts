@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import type { RequestEvent } from '@sveltejs/kit';
-import { getExplorerUrl } from '$lib/helpers/tx-explorer.helper';
+import { getExplorerUrl } from '#lib/helpers/tx-explorer.helper.js';
 
 /**
  * Proxy route handler
@@ -28,7 +28,7 @@ export async function GET(event: RequestEvent) {
 			}
 
 			// Perform 301 permanent redirect
-			throw redirect(301, targetUrl);
+			throw redirect(301, targetUrl, { external: true });
 		}
 
 		default:

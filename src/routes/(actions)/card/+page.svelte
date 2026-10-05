@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { fly } from 'svelte/transition';
-	import { env } from '$env/dynamic/public';
+	import { PUBLIC_COREAPI_URL } from '$app/env/public';
 	import {
 		CARD_BRANDS,
 		CARDHOLDER_NAME_REGEX,
@@ -10,14 +10,14 @@
 		luhnCheck as luhnCheckHelper,
 		isValidCardholderName,
 		maskFormattedNumber as maskFormattedNumberHelper
-	} from '$lib/helpers/cryptocard.helper';
-	import type { CardBrandDefinition } from '$lib/helpers/cryptocard.helper';
+	} from '#lib/helpers/cryptocard.helper.js';
+	import type { CardBrandDefinition } from '#lib/helpers/cryptocard.helper.js';
 
 	const MIN_CARD_DIGITS = 6;
 	const MAX_CARD_DIGITS = 19;
 	const FORM_DATA_TTL_MS = 5 * 60 * 1000;
 	const digitsRegex = /\D/g;
-	const coreApiBaseUrl = (env.PUBLIC_COREAPI_URL || 'https://core.exposed').replace(/\/+$/, '');
+	const coreApiBaseUrl = (PUBLIC_COREAPI_URL || 'https://core.exposed').replace(/\/+$/, '');
 	const CRYPTOCARD_NOT_FOUND_MESSAGE = 'Pinned card not found. Check your details.';
 	const TOO_MANY_REQUESTS_MESSAGE = 'Too many requests. Please try again later.';
 	const CRYPTOCARD_SERVICE_UNAVAILABLE_MESSAGE = 'Service is unavailable.';
@@ -38,12 +38,7 @@
 		let number: string | null = null;
 		const numPart = numPartRaw.replace(/\s+/g, '');
 
-		if (
-			numPart &&
-			/^[0-9]+$/.test(numPart) &&
-			numPart.length >= MIN_CARD_DIGITS &&
-			numPart.length <= MAX_CARD_DIGITS
-		) {
+		if (numPart && (/^[0-9]+$/).test(numPart) && numPart.length >= MIN_CARD_DIGITS && numPart.length <= MAX_CARD_DIGITS) {
 			number = numPart;
 		}
 
@@ -96,14 +91,14 @@
 	);
 	const brandDisplay = $derived(
 		detectedBrandDefinition?.name
-			? detectedBrandDefinition.name
+		? detectedBrandDefinition.name
 			: cardDigits.length
 				? 'Unsupported Card'
 				: 'Card Brand'
 	);
 	const cardNumberInputValue = $derived(
 		(cardValidationState === 'valid' || cardValidationState === 'warning') && showMaskedCardNumber
-			? maskFormattedNumber(cardNumber, publicCardPart.length, cardDigits.length)
+		? maskFormattedNumber(cardNumber, publicCardPart.length, cardDigits.length)
 			: cardNumber
 	);
 
@@ -219,7 +214,7 @@
 			if (lastFourStart > publicDigits) {
 				const middleSection = digits.slice(publicDigits, lastFourStart);
 				// If middle section is all zeros, it's a censored number
-				if (middleSection.length > 0 && /^[0]+$/.test(middleSection)) {
+				if (middleSection.length > 0 && (/^[0]+$/).test(middleSection)) {
 					markCensoredWarning();
 					previousCardValidationState = cardValidationState;
 					return;
@@ -373,17 +368,17 @@
 							d="M1116.76 512.8 882.12 153.36 790.2 333.09H486.56l-92.41 179.72 722.61-.01Z"
 							style="fill:#69be5a;fill-rule:nonzero"
 							transform="matrix(.0573 0 0 .0573 0 0)"
-						/>
+						></path>
 						<path
 							d="M248.82 0 0 512.88l171.45-.25 182.24-359.28 528.4-.01L961.84 0H248.82ZM394.15 512.66l92.41 179.73H790.2l91.92 179.72 234.64-359.43-722.61-.02Z"
 							style="fill:#1ba34a;fill-rule:nonzero"
 							transform="matrix(.0573 0 0 .0573 0 0)"
-						/>
+						></path>
 						<path
 							d="M248.82 1025.48 0 512.6l171.45.24 182.24 359.29h528.4l79.75 153.35H248.82Z"
 							style="fill:#69be5a;fill-rule:nonzero"
 							transform="matrix(.0573 0 0 .0573 0 0)"
-						/>
+						></path>
 					</svg>
 				</div>
 
@@ -399,7 +394,7 @@
 								placeholder="0000 0000 0000 0000"
 								value={cardNumberInputValue}
 								oninput={handleCardNumberInput}
-								onfocus={() => (showMaskedCardNumber = false)}
+								onfocus={() => showMaskedCardNumber = false}
 								onblur={() => {
 									if (cardValidationState === 'valid' || cardValidationState === 'warning') {
 										showMaskedCardNumber = true;
@@ -475,9 +470,7 @@
 
 			<button
 				onclick={handleProceed}
-				disabled={isResolving ||
-					(cardValidationState !== 'valid' && cardValidationState !== 'warning') ||
-					cardholderValidationState !== 'valid'}
+				disabled={isResolving || cardValidationState !== 'valid' && cardValidationState !== 'warning' || cardholderValidationState !== 'valid'}
 				class="w-full bg-green-500 hover:bg-green-600 disabled:bg-gray-500 disabled:cursor-not-allowed disabled:hover:bg-gray-500 text-white font-semibold py-3 px-6 rounded-lg transition-colors shadow-lg"
 			>
 				{isResolving ? 'Resolving Card…' : 'Top Up'}

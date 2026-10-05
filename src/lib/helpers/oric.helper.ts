@@ -1,4 +1,4 @@
-import { bicSchema } from '$lib/validators/bic.validator';
+import { bicSchema } from '#lib/validators/bic.validator.js';
 import { KV } from './kv.helper';
 
 export interface VerifyOrganizationResult {

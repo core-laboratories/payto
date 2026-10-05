@@ -1,0 +1,261 @@
+# PayTo Money
+
+> PayTo URI construction, payment-data validation, online PayPass previews, and Apple Wallet / Google Wallet pass generation. This file describes implemented behavior, not payment-network certification or proof that an account is registered.
+
+Implementation snapshot: 2026-09-16. Website: https://payto.money. Public URL: https://payto.money/llms.txt. Repository source: static/llms.txt.
+
+## Documentation and implementation
+
+- [URI scheme](https://github.com/core-laboratories/Payto/blob/HEAD/docs/scheme.md): general payment authorities and query parameters.
+- [Pay QR](https://github.com/core-laboratories/Payto/blob/HEAD/docs/PAYQR.md): national profiles, field mappings, sources and validation limitations.
+- [EPC SEPA](https://github.com/core-laboratories/Payto/blob/HEAD/docs/IBAN-EPC.md): IBAN format requirements and wallet API examples.
+- [Wallet tests](https://github.com/core-laboratories/Payto/blob/HEAD/docs/WALLET-TESTING.md): signed-artifact testing and live acceptance limits.
+- [TypeScript library](https://github.com/bchainhub/payto-rl): PayTo URI codec and metadata.
+- [Flutter library](https://github.com/bchainhub/flutter_paytorl): Dart PayTo URI codec and metadata.
+
+## PayPass: online, Apple Wallet and Google Wallet
+
+A PayPass presents payment details and a barcode for the selected payment format.
+Create one at https://payto.money/?pass=1#pass. Fill the payment constructor,
+open the PayPass section, choose the format and barcode type, and customize the
+item, organization, colors or language as needed. Copy/Open Weblink shares the
+online PayPass. The online preview and downloaded wallet passes have different
+layouts; the selected payment payload is shared.
+
+Apple Wallet: choose Add PayPass to Apple Wallet, or issue with os=ios through
+the form/API. The server returns a signed .pkpass attachment. Apple-specific
+Organization settings include up to 10 iBeacon proximity triggers and merchant
+locations. Issuance requires configured Apple signing credentials.
+
+Google Wallet: choose Add PayPass to Google Wallet, or issue with os=android.
+The server returns or redirects to a signed Save to Wallet link. Organization
+settings include Smart Tap (NFC) support and redemption issuers. Availability
+requires the applicable issuer/device configuration; a barcode does not by itself
+enable NFC. Issuance requires configured Google issuer/service-account credentials.
+
+PayTo is the default payload for both wallets and the online view. EPC and
+supported national formats are optional selections; the technical requirements
+and API examples appear below. A PayPass carries payment instructions; creating
+or saving one is not evidence of a completed payment.
+
+## Pro, fiat partners and Organization onboarding
+
+- [Plans and features](https://payto.money/pro): Pro, Pro+ / PayTo:Fiat and Organization.
+- [Create and activate Pro inside a PayPass](https://payto.money/?pass=1#pass).
+- [Register with a fiat partner](https://payto.money/pro/partners): choose a listed provider and follow its registration link.
+- [Become a partner / Organization issuer](https://payto.money/pro#org): the partners page directs prospective partners to Join PayTo:Organization.
+- [Contact Organization sales](mailto:sales@payto.money?subject=Pro%20Organization): send organization details for onboarding.
+
+The Pro page describes these offerings:
+
+- Pro: PayPass incoming-payment notifications via Email and Telegram for XCB and
+  supported Well-Known Tokens, a Blockies identicon, and community support where
+  configured. Activation starts inside a PayPass. Do not assume these notification
+  capabilities apply to every bank or Pay QR payment network.
+- Pro+ / PayTo:Fiat: register with a partner for fiat-to-fiat settlement, digital
+  asset support, CryptoCard acceptance for fiat top-ups, and dedicated partner
+  support. Partner registration is distinct from becoming an issuing organization.
+- Organization / PayTo:Org: white-label PayPass issuance via POST forms or API,
+  up to 10 custom currencies per PayPass, Apple iBeacon proximity triggers and
+  merchant locations, Google Smart Tap and redemption issuers, and ORIC-linked
+  issuer badge / CryptoCard top-up features where configured. ORIC is required
+  for the advertised CryptoCard top-up capability.
+
+Prices are deployment-configured: the Pro page displays CTN per 30 days and
+Organization EUR per year. Read https://payto.money/pro for current prices rather
+than treating this file as a price list. The partner directory is the source for
+available providers and registration links.
+
+After Organization registration, the issuer receives a configured authority ID.
+Use https://payto.money/?authority={id}&pass=1#pass for the issuer's constructor,
+and POST https://payto.money/pass?authority={id} for form/API issuance. Authority
+configuration controls branding, allowed submission methods and issuer features.
+API issuance uses the configured payload-bound bearer-token flow; external
+issuer forms require a signed token when configured. Keep signing secrets on the
+issuer backend. Selecting an authority ID alone is not authorization.
+
+Onboarding and configuration details are in the
+[Organization/API README](https://github.com/core-laboratories/Payto/blob/HEAD/README.md#pro-features).
+Contact sales for Organization/partner setup; this file does not register an
+issuer, contact a partner, activate a subscription or submit an application.
+
+## Format selection
+
+Payment URI authority and barcode payload format are separate concepts. The URI remains payto://iban/... or payto://qr/... even when a native barcode is selected.
+
+| Payment method | Native format value | UI name | Available formats |
+| --- | --- | --- | --- |
+| IBAN | epc | EPC SEPA | payto, epc |
+| Cambodia (kh) | khqr | KHQR | payto, khqr |
+| Laos (la) | laoqr | LaoQR | payto, laoqr |
+| Malaysia (my) | duitnow | DuitNow QR | payto, duitnow |
+| Myanmar (mm) | mmqr | MMQR / MyanmarPay | payto, mmqr |
+| Singapore (sg) | paynow | SGQR / PayNow | payto, paynow |
+| Thailand (th) | promptpay | Thai QR / PromptPay QR | payto, promptpay |
+| Vietnam (vn) | vietqr | VietQR | payto, vietqr |
+| Philippines (ph) | unavailable | QR Ph | payto only |
+| Indonesia (id) | unavailable | QRIS | payto only |
+| Brunei (bn) | unavailable | tarusQR | payto only; absent from constructor |
+| Other payment authorities | unavailable here | network-specific | payto only |
+
+PayTo is the first/default format. The website hides the format switch when only PayTo is supported. A selected native format must match the authority/country. Invalid or unavailable native data does not silently fall back to PayTo.
+
+Payment/integration links never include format or qr-payload. PayPass preview/copy/Open Weblink presentation links include format=epc, format=khqr, etc., only for a nondefault selection. Missing format means PayTo; explicit format=payto is accepted but omitted from generated presentation links. Legacy native is accepted as an alias in existing inputs; generate named format values instead.
+
+## PayTo format
+
+Payload: the canonical PayTo URI itself. It is not an EPC or national banking payload.
+
+General structure: payto://{authority}/{destination}?{parameters}
+
+Supported payment families include IBAN, ICAN/crypto networks, ACH, UPI, PIX, BIC/ORIC, intra-bank transfer, cash/location handoff (void), and Pay QR (qr). See the URI scheme reference for each authority's path and parameter rules. Native UPI/PIX and other nonlisted encoders are not implied by URI support.
+
+Common payment parameters include amount, receiver-name, message and reference. General URI extensions include fiat, dl, rc, split, swap and network-specific routing details; support differs by authority and native adapter. Unknown parameters may be preserved by the portable codec but rejected by a native adapter that cannot represent them.
+
+Presentation options include item, org, color-f, color-b, barcode, lang, rtl, mode and donate. Presentation data does not establish account identity or payment authorization. Barcode payment payloads exclude presentation format selection.
+
+## EPC SEPA: epc
+
+URI: payto://iban/[BIC/]IBAN
+
+Required for native generation: a valid IBAN within the supported SEPA scope and receiver-name (1–70 characters). BIC is required for non-EEA beneficiaries and must validate if supplied. Payer-side non-EEA involvement also requires BIC under the guideline but cannot be inferred from the recipient URI. PayTo mode does not require BIC or receiver-name.
+
+Optional fields:
+
+- amount: EUR only; 0.01–999999999.99, maximum two decimals. Omitted amount means the payer chooses. A native bare amount assumes EUR.
+- reference: ISO 11649 RF creditor reference with validated checksum, up to 25 characters in this profile.
+- message: unstructured remittance, up to 140 characters; mutually exclusive with reference.
+- purpose: four uppercase letters; syntax checked, not membership in the complete ISO code list.
+- information: beneficiary information, up to 70 characters.
+
+The application rejects controls, duplicate parameters, unsupported payment instructions and payloads above 331 UTF-8 bytes. Recurring/deadline instructions cannot be silently embedded into EPC.
+
+EPC069-12 v3.1 payload: LF-separated BCD, 002, 1, SCT, BIC, beneficiary name, IBAN, optional EUR-prefixed amount, purpose, RF reference, unstructured remittance, information. Internal empty lines are preserved; trailing empty fields are omitted. UTF-8 charset indicator is 1. EPC QR uses error correction M.
+
+Example payment link:
+payto://iban/FR1420041010050500013M02606?receiver-name=Example%20Beneficiary&amount=EUR%3A12.30&reference=RF18539007547034
+
+## Pay QR URI contract
+
+Canonical authority is qr, not payqr:
+payto://qr/{country}/{identifier}
+
+Country is lowercase ISO 3166-1 alpha-2; it determines the scheme. Do not add a scheme path segment or scheme query parameter. Identifier case and leading zeros are preserved; percent-encode path data, such as @ and +. Thai mobile input has explicit canonical normalization. Nondefault identifier types use identifier-type.
+
+Strict parsing requires country and identifier. A country-only link such as payto://qr/kh is a constructor draft, not a complete library target or payable barcode.
+
+Duplicate query keys, malformed escaping/UTF-8, controls, extra path segments, credentials, ports and fragments are rejected. QR URIs are capped at 8192 characters. Query values are capped at 512 UTF-16 units. Unknown extension keys are preserved subject to generic validation. Serialization sorts QR query keys.
+
+Amounts use amount=CURRENCY:positive-decimal, no exponent/sign/grouping or floating-point conversion, no leading zeros except 0.x, up to two decimal places and 13 numeric-value characters. KHR and VND use whole units in this profile. Currency is not a standalone currency query parameter; static KHQR may use qr-currency=KHR|USD. Dynamic mode requires amount in the supported URI profile.
+
+Optional field inventory (country applicability and native support differ):
+identifier-type, receiver-name, reference, message, org, acquirer-id, application-id, merchant-city, mcc, scheme-id, local-name, qr-type, payment-mode, recipient-type, merchant-id, acquiring-bank, account-information, bill-number, store-label, terminal-label, merchant-mobile, postal-code, expiry-date, amount-editable, creation-timestamp, expiration-timestamp.
+
+FinTag uses the country-qualified qr property:
+<meta property="qr:kh" content="name@bank" />
+[{"qr:kh":"name@bank"}]
+
+## Cambodia: khqr
+
+Identifier: Bakong account ID, name@bank syntax, at most 32 characters. Currency: KHR or USD. Native minimum: identifier and receiver-name (1–25 printable ASCII characters). Currency defaults to KHR and merchant-city to Phnom Penh.
+
+recipient-type=individual is the default. Merchant mode also requires merchant-id and acquiring-bank. Optional individual account-information and other supported additional data are subject to profile restrictions. With an amount, creation-timestamp and expiration-timestamp are required as 13-digit epoch-millisecond strings; expiry must follow creation and not be expired at generation. Static and dynamic mode must agree with amount presence. Native output uses the website KHQR adapter; no issuer enrollment is performed.
+
+Example: payto://qr/kh/name%40bank?qr-currency=KHR&receiver-name=Test
+
+## Laos: laoqr
+
+Currency: LAK. Native minimum: identifier (1–25 printable ASCII characters without spaces), receiver-name, institution-supplied application-id (16 alphanumeric characters), and acquirer-id (six-digit IIN). Do not invent the institution's AID or IIN. An amount requires qr-type=dynamic. Optional native additional fields include bill-number, reference and message. The implemented profile is credit fund transfer.
+
+## Malaysia: duitnow
+
+Currency: MYR. Identifier: 1–28 ASCII alphanumeric characters. Native minimum: identifier, six-digit acquirer-id, receiver-name, merchant-city and four-digit mcc. Name/city limits are 25/15 printable ASCII characters. Acquirer ID and MCC must come from actual payment details. Supported additional fields include merchant-mobile, postal-code, store-label, reference and terminal-label; consult the adapter for exact applicability.
+
+## Myanmar: mmqr
+
+Currency: MMK. Identifier: 15 digits. Native minimum: merchant identifier, scheme-id supplied by the acquirer (reverse domain, at most 32 characters), English receiver-name, merchant-city, four-digit mcc, and local-name (1–25 Myanmar characters with the supported spaces/digits). Terminal label defaults to 000000. The domestic merchant profile includes the Myanmar-language template. Preserve Unicode; do not transliterate the signed barcode data.
+
+## Singapore: paynow
+
+Currency: SGD. Identifier types: mobile (+65 followed by eight digits starting 8 or 9), or uen (supported subset: ten uppercase alphanumeric characters). Native minimum: identifier and receiver-name. Native city/MCC are Singapore/0000. Optional reference (up to 35 characters), amount-editable=0|1 and expiry-date=YYYYMMDD. A noneditable amount requires amount. NRIC/FIN/VPA profiles are not implemented; this is the supported PayNow profile, not arbitrary SGQR aggregation.
+
+## Thailand: promptpay
+
+Currency: THB. Native minimum: identifier and receiver-name. Identifier types: mobile (canonical 0066 plus nine digits), national-id (13 digits), ewallet (15 digits). Local 0-prefixed ten-digit and +66 mobile inputs normalize to canonical form. ID checks verify syntax, not registration or identity. MCC/city are optional. This implements domestic credit transfer; bill-payment and cross-border profiles are not implied. Unsupported native parameters are rejected.
+
+## Vietnam: vietqr
+
+Currency: VND, whole units. Identifier: 1–19 ASCII alphanumeric characters; preserve leading zeros. Native minimum: account identifier and acquirer-id (six-digit receiving bank BIN). Name/city are not required. Optional amount, bill-number and message; supported dynamic mode requires amount. Native output uses the QRIBFTTA account-transfer service.
+
+Example: payto://qr/vn/00123?acquirer-id=970468
+
+## PayTo-only national destinations
+
+Philippines (ph, scheme qrph): opaque issuer identifier, PHP positive decimals; optional payment-mode=p2p|p2m and qr-type=static|dynamic. No native QR Ph generation/semantic decoding is implemented. Portable acceptance is not issuer/account verification.
+
+Indonesia (id, scheme qris): opaque issuer identifier, IDR, supported URI amount cap 10000000 using decimal-safe comparison. Explicit static requests prohibit amount; dynamic requests require amount. Native QRIS generation/semantic decoding is unavailable. Generic EMV CRC validity does not prove QRIS compliance.
+
+Brunei (bn, scheme tarusqr): existing portable links remain readable; removed from the country selector. Native generation and verified currency rules are unavailable. Do not guess national credentials or payload tags.
+
+## Barcode types and wallet API
+
+Barcode choices: qr, pdf417, aztec, code128. Both Apple and Google generators use the selected payment payload. Alternative symbologies are application encodings; EPC069-12 standardizes QR only, and bank-app acceptance of other types is not guaranteed. Valid selected-format fields and encodable data are required; otherwise the preview barcode area is hidden and pass requests fail with HTTP 400.
+
+POST /pass accepts application/json, application/x-www-form-urlencoded and multipart/form-data. Required routing fields: hostname, props.network, and os (ios or android; explicit selection is recommended). Use hostname/network iban for EPC, qr for Pay QR. Existing authority, origin, API-token and issuer-configuration requirements apply; examples do not bypass authorization.
+
+Select format with design.qrFormat, not an added payment-URI query. Omitted design, omitted qrFormat, or payto means PayTo. design.barcode defaults to qr. Form submissions JSON-stringify props and design into their named fields. QR form values use camelCase in props.payQrForm; URI keys use the hyphenated names listed above. The application maps between these representations.
+
+EPC JSON example:
+```json
+{
+	"hostname": "iban",
+	"os": "ios",
+	"props": {
+		"network": "iban",
+		"iban": "FR1420041010050500013M02606",
+		"params": {
+			"receiverName": { "value": "Example Beneficiary" },
+			"currency": { "value": "EUR" },
+			"amount": { "value": "12.30" }
+		}
+	},
+	"design": { "qrFormat": "epc", "barcode": "qr" }
+}
+```
+
+VietQR JSON example:
+```json
+{
+	"hostname": "qr",
+	"os": "android",
+	"props": {
+		"network": "qr",
+		"payQrForm": {
+			"country": "vn",
+			"scheme": "vietqr",
+			"identifier": "00123",
+			"identifierType": "account",
+			"acquirerId": "970468"
+		}
+	},
+	"design": { "qrFormat": "vietqr", "barcode": "qr" }
+}
+```
+
+Apple response: signed .pkpass attachment, application/vnd.apple.pkpass. Google response: signed Save to Wallet redirect by default; request /pass?noRedirect=1 or Accept: application/json for JSON containing saveUrl, id, classId, gwObject and gwClass. Invalid payment/format data is rejected before signing. QR/IBAN Apple barcode messages use UTF-8.
+
+## Library boundaries and validation gaps
+
+payto-rl and flutter_paytorl encode/decode PayTo links and expose structured payment data. They do not generate EPC/national payment payloads or barcode images. The existing inspectEmvMpm utility inspects a raw EMV envelope only; it is not a national-payment decoder.
+
+Payto.formats is derived capability metadata: ['payto', 'epc'] for IBAN, ['payto', '<scheme>'] for supported native Pay QR countries. For PayTo-only methods the getter is undefined (TypeScript) or null (Dart), and object JSON omits formats entirely. Never emit ['payto'] alone. Metadata is not a URI query and does not prove current fields suffice for native generation.
+
+All current Pay QR fields round-trip through parameter maps, but not all have dedicated getters/setters or top-level JSON properties. Use Payto.payQr.parameters or parsed-target parameters for full coverage. TypeScript exposes parsePayQr/serializePayQr and toJSONObject(); Dart exposes PayQrTarget and toJsonObject().toJson(). URI serialization remains PayTo text.
+
+reference, purpose and information are readable/writable URI extensions; null removes them. Libraries do not apply EPC payload validation to those IBAN extension values. Country-specific validation is incomplete and not fully identical between the two libraries and website. Additional website checks include KH timestamp ordering, Lao identifier restrictions and some merchant/country combinations. Preserve raw data; do not claim complete validation parity or native-generation readiness based only on successful parsing.
+
+## Verification
+
+npm run test:wallet runs wallet request tests and real signed-artifact tests. OpenSSL is required for independent Apple CMS verification. Temporary test keys, local image fixtures and disabled external fetches avoid production credentials. Tests inspect ZIP contents, manifest hashes, signatures, exact payment payloads, Google JWTs, form/API defaults, invalid data and tampering. Browser tests run with npm test; unit tests with npm run test:unit -- --run.
+
+Offline test signatures are not Apple-trusted production signatures. No live Google registration, device installation, bank scanning or payment-network certification is implied by passing tests.

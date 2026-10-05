@@ -1,10 +1,10 @@
 import { validateWalletAddress } from 'blockchain-wallet-validator';
-import { ibanSchema } from '$lib/validators/iban.validator';
-import { bicSchema } from '$lib/validators/bic.validator';
-import { pixSchema } from '$lib/validators/pix.validator';
-import { upiSchema } from '$lib/validators/upi.validator';
-import { achAccountSchema, achRoutingSchema } from '$lib/validators/ach.validator';
-import { addressSchema } from '$lib/validators/address.validator';
+import { ibanSchema } from '#lib/validators/iban.validator.js';
+import { bicSchema } from '#lib/validators/bic.validator.js';
+import { pixSchema } from '#lib/validators/pix.validator.js';
+import { upiSchema } from '#lib/validators/upi.validator.js';
+import { achAccountSchema, achRoutingSchema } from '#lib/validators/ach.validator.js';
+import { addressSchema } from '#lib/validators/address.validator.js';
 
 const PUBLIC_ENABLE_TESTNET = import.meta.env.PUBLIC_ENABLE_TESTNET || 'true';
 const isTestnetAllowed = PUBLIC_ENABLE_TESTNET === 'true';

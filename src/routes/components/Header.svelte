@@ -3,7 +3,7 @@
 	import { fly } from 'svelte/transition';
 	import { deviceSherlock } from 'device-sherlock';
 
-	const words = ['ICAN', 'IBAN', 'ACH', 'UPI', 'PIX', 'CASH', '$€¥₹₽', 'Money'];
+	const words = ['ICAN', 'IBAN', 'ACH', 'QR', 'UPI', 'PIX', 'CASH', '$€¥₹元₽'];
 	let currentText = '';
 	let isAnimating = false;
 	let isAddingLetters = true;
@@ -59,7 +59,7 @@
 			<h1 class="flex flex-col items-start mb-3 text-5xl tracking-wide lg:text-6xl lg:flex-row pt-logo">
 				<span class="flex items-center">
 					<span class="text-core">Pay</span>
-					<span class="text-seagreen">To:</span>
+					<span class="text-seagreen">To://</span>
 					{#if currentText}
 						<span class="text-zinc-400/60 ms-2 text-4xl lg:text-5xl flex items-center">
 							{#each currentText.split('') as letter, i (i)}
