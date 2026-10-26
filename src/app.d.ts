@@ -71,7 +71,6 @@ interface ITransactionState {
 	destination?: string;
 	chain?: string;
 	isSplit?: boolean;
-	isFiat?: boolean;
 	isSwap?: boolean;
 	isDl?: boolean;
 	isRc?: boolean;
@@ -138,7 +137,6 @@ interface IComplexState {
 	amount: IValue;
 	dl?: IDlValue;
 	rc?: IRcValue;
-	fiat?: IValue;
 	swap?: IValue;
 	receiverName?: IValue;
 	message?: IValue;

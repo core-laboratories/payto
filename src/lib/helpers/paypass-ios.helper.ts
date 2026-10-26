@@ -3,7 +3,7 @@ import forge from 'node-forge';
 import {
 	getPaypassLocalizedValueForLocale as getPaypassLocalizedValue
 } from './paypass-i18n.helper';
-import { locales as availableLocales } from '$i18n/i18n-util';
+import { locales as availableLocales } from '#i18n/i18n-util';
 import { formatAmount, formatAddressText } from './paypass-operator.helper';
 
 const isDebug = false;

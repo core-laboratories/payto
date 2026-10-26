@@ -38,7 +38,7 @@ path = recipient locator
 query = optional key/value parameters
 
 transactional fields:
-  amount, fiat, dl, rc, split, swap, receiver-name, sender-name, message, receipt, reference, id, loc, bic,
+  amount, dl, rc, split, swap, receiver-name, sender-name, message, receipt, reference, id, loc, bic,
   bank-name, bank-address, corr-bank-bic, corr-bank-name, corr-bank-address
 
 presentation / UX fields:
@@ -92,7 +92,7 @@ payto-URI = "payto://" authority path-abempty [ "?" opts ]
 opts      = opt *( "&" opt )
 opt       = opt-name "=" opt-value
 
-opt-name  = "amount" / "fiat" / "dl" / "rc" / "split" / "swap" /
+opt-name  = "amount" / "dl" / "rc" / "split" / "swap" /
             "receiver-name" / "sender-name" / "message" / "receipt" / "id" /
             "org" / "item" / "color-f" / "color-b" / "barcode" /
             "rtl" / "lang" / "mode" / "donate" /
@@ -386,7 +386,7 @@ This section is intentionally compact for implementers.
 
 | Authority                                  | Path meaning                       | Important related params                                                                                                    |
 | ------------------------------------------ | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `xcb`, `btc`, `eth`, `ltc`, `xmr`, `other` | crypto destination address or name | `amount`, `fiat`, `dl`, `rc`, `split`, `swap`                                                                               |
+| `xcb`, `btc`, `eth`, `ltc`, `xmr`, `other` | crypto destination address or name | `amount`, `dl`, `rc`, `split`, `swap`                                                                               |
 | `iban`                                     | IBAN, optionally preceded by BIC   | `amount`, `receiver-name`, `sender-name`, `message`                                                                         |
 | `qr`                                       | country / identifier               | `identifier-type`, `amount`, national-profile fields; see [Pay QR](#pay-qr)                                                 |
 | `ach`                                      | ACH account identifier             | `amount`, `receiver-name`                                                                                                   |
@@ -405,11 +405,10 @@ These parameters affect the payment itself.
 | Parameter           | Type          | Meaning                                                                                 | Example                                    |
 | ------------------- | ------------- | --------------------------------------------------------------------------------------- | ------------------------------------------ |
 | `amount`            | string        | requested amount, optionally with currency/asset prefix                                 | `eur:19.90`, `ctn:25`, `25`                |
-| `fiat`              | string        | ICAN display / quote fiat                                                               | `eur`                                      |
 | `dl`                | string/number | expiry timestamp or relative minutes                                                    | `15`, `1735689599`, `2025-12-31T23:59:59Z` |
 | `rc`                | string        | recurrence cadence                                                                      | `m`, `2w`, `30d`                           |
 | `split`             | string        | ICAN split instruction                                                                  | `p:10@Xy...y`                              |
-| `swap`              | string        | ICAN asset conversion target                                                            | `usdc`                                     |
+| `swap`              | string        | ICAN asset to transfer or process                                                            | `usdc`                                     |
 | `receiver-name`     | string        | recipient display label                                                                 | `Acme GmbH`                                |
 | `sender-name`       | string        | sender display label                                                                    | `John Doe`                                 |
 | `message`           | string        | payment memo / reference                                                                | `Invoice 123`                              |
@@ -452,16 +451,6 @@ payto://xcb/Xx...x?amount=ctn:25.00
 payto://xcb/Xx...x?amount=25.00
 payto://iban/DE89...3704?amount=eur:199.90
 payto://pix/abc-key?amount=brl:15
-```
-
-### `fiat`
-
-ICAN-only display / conversion hint.
-
-Example:
-
-```txt
-payto://xcb/Xx...x?amount=ctn:25.00&fiat=eur
 ```
 
 ### `dl`
@@ -539,12 +528,12 @@ Rules:
 
 ### `swap`
 
-ICAN-only asset conversion hint.
+ICAN asset to transfer or use as the processing currency. The currency in `amount` defines the requested amount.
 
 Example:
 
 ```txt
-payto://xcb/Xx...x?amount=ctn:20&swap=usdc
+payto://xcb/Xx...x?amount=usd:20&swap=ctn
 ```
 
 ### `receiver-name`
@@ -834,10 +823,10 @@ Clients that do not support the requested mode should ignore it.
 payto://xcb/cb7147879011ea207df5b35a24ca6f0859dcfb145999?amount=100
 ```
 
-### 2. ICAN payment with fiat quote, split, swap, expiry, and recurrence
+### 2. ICAN payment with amount currency, split, swap, expiry, and recurrence
 
 ```txt
-payto://xcb/Xx...x@777?amount=ctn:100&fiat=eur&split=p:10@Xy...y&swap=ctn&dl=30&rc=30d
+payto://xcb/Xx...x@777?amount=eur:100&split=p:10@Xy...y&swap=ctn&dl=30&rc=30d
 ```
 
 ### 3. ICAN donation with PayPass styling

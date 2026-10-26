@@ -1,6 +1,6 @@
-import type { Locales, BaseTranslation } from '$i18n/i18n-types';
-import { locales as availableLocales, loadedLocales } from '$i18n/i18n-util';
-import { loadAllLocales } from '$i18n/i18n-util.sync';
+import type { Locales, BaseTranslation } from '#i18n/i18n-types';
+import { locales as availableLocales, loadedLocales } from '#i18n/i18n-util';
+import { loadAllLocales } from '#i18n/i18n-util.sync';
 
 export type LocalizedText = {
 	/**

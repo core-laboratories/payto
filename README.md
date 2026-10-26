@@ -597,7 +597,6 @@ Use `payto://qr/{country}/{identifier}` with lowercase ISO country codes. PayQR 
 
 See [PayQR API, country validation, encoder capabilities and authoritative references](docs/PAYQR.md). A PayTo URI, national payment payload, QR image and payment-network connection are separate things. Generating a syntactically valid QR does not imply participation in or authorization to acquire transactions from a payment network. Unsupported national profiles fail closed.
 
-
 ## PayPass formats and wallet support
 
 PayTo is the default for previews, Apple Wallet and Google Wallet. IBAN offers
@@ -623,7 +622,6 @@ omitting it for PayTo-only methods. They handle PayTo URI data, not native paylo
 conversion. All current Pay QR fields round-trip through parameter maps, but
 field accessors and validation parity are incomplete; see [coverage and known
 gaps](docs/PAYQR.md#field-coverage-and-validation-boundaries).
-
 
 ## Wallet generation tests
 

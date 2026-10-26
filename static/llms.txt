@@ -110,7 +110,7 @@ General structure: payto://{authority}/{destination}?{parameters}
 
 Supported payment families include IBAN, ICAN/crypto networks, ACH, UPI, PIX, BIC/ORIC, intra-bank transfer, cash/location handoff (void), and Pay QR (qr). See the URI scheme reference for each authority's path and parameter rules. Native UPI/PIX and other nonlisted encoders are not implied by URI support.
 
-Common payment parameters include amount, receiver-name, message and reference. General URI extensions include fiat, dl, rc, split, swap and network-specific routing details; support differs by authority and native adapter. Unknown parameters may be preserved by the portable codec but rejected by a native adapter that cannot represent them.
+Common payment parameters include amount, receiver-name, message and reference. General URI extensions include dl, rc, split, swap and network-specific routing details; support differs by authority and native adapter. Unknown parameters may be preserved by the portable codec but rejected by a native adapter that cannot represent them.
 
 Presentation options include item, org, color-f, color-b, barcode, lang, rtl, mode and donate. Presentation data does not establish account identity or payment authorization. Barcode payment payloads exclude presentation format selection.
 

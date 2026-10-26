@@ -41,7 +41,6 @@
 	// Uppercase (Tailwind) only while length ≤10 so it updates on every keystroke; longer = case as inserted
 	let tokenUpperCaseClass = $derived(($constructor.networks.ican.params?.currency?.value ?? '').length <= 10 ? 'uppercase' : '');
 
-	let tokens = $derived(TRANSPORT.ican.find((item) => item.value === $constructor.networks.ican.network)?.tokens);
 	let previousClearedState = false;
 
 	let showAdvancedOptions = $state(false);
@@ -93,12 +92,6 @@
 	function getCurrentDateTime() {
 		const now = new Date();
 		return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}T${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-	}
-
-	function handleFiatChange() {
-		if (!$constructor.networks.ican.isFiat) {
-			$constructor.networks.ican.params.fiat.value = undefined;
-		}
 	}
 
 	function handleSwapChange() {
@@ -444,46 +437,44 @@
 		</div>
 	</FieldGroup>
 
-	{#if tokens === true}
-		<FieldGroup>
-			<FieldGroupLabel><span class="relative overflow-hidden cursor-help group hover:overflow-visible focus-visible:outline-none border-b border-dotted border-gray-400" aria-describedby="tooltip-tokencode">Token Code<span role="tooltip" id="tooltip-tokencode" class="invisible absolute bottom-full left-1/2 z-10 mb-2 w-48 -translate-x-1/2 rounded bg-slate-700 p-2 text-xs text-white opacity-0 transition-all before:invisible before:absolute before:left-1/2 before:top-full before:z-10 before:mb-2 before:-ml-1 before:border-x-4 before:border-t-4 before:border-x-transparent before:border-t-slate-700 before:opacity-0 before:transition-all before:content-[''] group-hover:visible group-hover:block group-hover:opacity-100 group-hover:before:visible group-hover:before:opacity-100">Token Code from <a href="https://github.com/bchainhub/well-known" target="_blank" rel="noopener">Well-Known registry</a></span></span> / Token Address</FieldGroupLabel>
-			<div class="relative bg-gray-900 rounded-md">
-				<FieldGroupText
-					placeholder="e.g. CTN; 0x1ab…"
-					stripWhitespace
-					bind:value={$constructor.networks.ican.params.currency.value}
-					classValue={`tracking-widest placeholder:tracking-normal [&:not(:placeholder-shown)]:font-code ${tokenUpperCaseClass} ${$constructor.networks.ican.params?.currency?.value ? 'pr-10' : ''}`}
-				/>
-				{#if $constructor.networks.ican.params?.currency?.value && tokenWellKnownLookup !== 'idle' && tokenWellKnownLookup !== 'loading'}
+	<FieldGroup>
+		<FieldGroupLabel><span class="relative overflow-hidden cursor-help group hover:overflow-visible focus-visible:outline-none border-b border-dotted border-gray-400" aria-describedby="tooltip-tokencode">Currency / Token Code<span role="tooltip" id="tooltip-tokencode" class="invisible absolute bottom-full left-1/2 z-10 mb-2 w-48 -translate-x-1/2 rounded bg-slate-700 p-2 text-xs text-white opacity-0 transition-all before:invisible before:absolute before:left-1/2 before:top-full before:z-10 before:mb-2 before:-ml-1 before:border-x-4 before:border-t-4 before:border-x-transparent before:border-t-slate-700 before:opacity-0 before:transition-all before:content-[''] group-hover:visible group-hover:block group-hover:opacity-100 group-hover:before:visible group-hover:before:opacity-100">Token Code from <a href="https://github.com/bchainhub/well-known" target="_blank" rel="noopener">Well-Known registry</a></span></span> / Token Address</FieldGroupLabel>
+		<div class="relative bg-gray-900 rounded-md">
+			<FieldGroupText
+				placeholder="e.g. USD; EUR; CTN; 0x1ab…"
+				stripWhitespace
+				bind:value={$constructor.networks.ican.params.currency.value}
+				classValue={`tracking-widest placeholder:tracking-normal [&:not(:placeholder-shown)]:font-code ${tokenUpperCaseClass} ${$constructor.networks.ican.params?.currency?.value ? 'pr-10' : ''}`}
+			/>
+			{#if $constructor.networks.ican.params?.currency?.value && tokenWellKnownLookup !== 'idle' && tokenWellKnownLookup !== 'loading'}
+				<span
+					class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center cursor-help group bg-gray-900 rounded-r-md"
+					aria-describedby="tooltip-wellknown"
+				>
+					{#if tokenWellKnownLookup === true}
+						<BookmarkCheck class="w-5 h-5 text-emerald-500 shrink-0" aria-hidden="true" />
+					{:else}
+						<BookmarkX class="w-5 h-5 text-amber-500 shrink-0" aria-hidden="true" />
+					{/if}
 					<span
-						class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center cursor-help group bg-gray-900 rounded-r-md"
-						aria-describedby="tooltip-wellknown"
+						role="tooltip"
+						id="tooltip-wellknown"
+						class="invisible absolute bottom-full left-1/2 z-10 mb-2 w-52 -translate-x-1/2 rounded bg-slate-700 p-2 text-xs text-white opacity-0 transition-all before:invisible before:absolute before:left-1/2 before:top-full before:z-10 before:mb-2 before:-ml-1 before:border-x-4 before:border-t-4 before:border-x-transparent before:border-t-slate-700 before:opacity-0 before:transition-all before:content-[''] group-hover:visible group-hover:block group-hover:opacity-100 group-hover:before:visible group-hover:before:opacity-100 break-words overflow-hidden"
 					>
-						{#if tokenWellKnownLookup === true}
-							<BookmarkCheck class="w-5 h-5 text-emerald-500 shrink-0" aria-hidden="true" />
-						{:else}
-							<BookmarkX class="w-5 h-5 text-amber-500 shrink-0" aria-hidden="true" />
-						{/if}
-						<span
-							role="tooltip"
-							id="tooltip-wellknown"
-							class="invisible absolute bottom-full left-1/2 z-10 mb-2 w-52 -translate-x-1/2 rounded bg-slate-700 p-2 text-xs text-white opacity-0 transition-all before:invisible before:absolute before:left-1/2 before:top-full before:z-10 before:mb-2 before:-ml-1 before:border-x-4 before:border-t-4 before:border-x-transparent before:border-t-slate-700 before:opacity-0 before:transition-all before:content-[''] group-hover:visible group-hover:block group-hover:opacity-100 group-hover:before:visible group-hover:before:opacity-100 break-words overflow-hidden"
-						>
-							{tokenWellKnownLookup === true
-								? 'Found in well-known registry'
-								: `Not found in well-known registry for network ${(tokenWellKnownNetwork || '—').toUpperCase()}`}
-						</span>
+						{tokenWellKnownLookup === true
+							? 'Found in well-known registry'
+							: `Not found in well-known registry for network ${(tokenWellKnownNetwork || '—').toUpperCase()}`}
 					</span>
-				{/if}
-			</div>
-			<FieldGroupAppendix>
-				If left empty, the default is the network currency or local fiat.
-			</FieldGroupAppendix>
-		</FieldGroup>
-	{/if}
+				</span>
+			{/if}
+		</div>
+		<FieldGroupAppendix>
+			If left empty, the default is the network currency or local fiat.
+		</FieldGroupAppendix>
+	</FieldGroup>
 
 	<FieldGroup>
-		<FieldGroupLabel>{$constructor.networks.ican.isFiat ? 'Fiat Amount' : 'Amount'}</FieldGroupLabel>
+		<FieldGroupLabel>Amount</FieldGroupLabel>
 
 		<FieldGroupNumber
 			placeholder="e.g. 3.14"
@@ -557,36 +548,12 @@
 
 			{#if $constructor.networks.ican.isSwap}
 				<FieldGroup>
-					<FieldGroupLabel>Asset to receive</FieldGroupLabel>
+					<FieldGroupLabel>Asset to transfer or swap</FieldGroupLabel>
 					<FieldGroupText
-						placeholder="e.g. XAU (Gold); USD (US Dollar)"
+						placeholder="e.g. XAU (Gold); CTN (Core Token)"
 						stripWhitespace
 						classValue="uppercase placeholder:normal-case"
 						bind:value={$constructor.networks.ican.params.swap.value}
-					/>
-				</FieldGroup>
-			{/if}
-
-			<FieldGroup>
-				<div class="flex items-center">
-					<input
-						type="checkbox"
-						bind:checked={$constructor.networks.ican.isFiat}
-						id="fiatCheckbox"
-						onchange={handleFiatChange}
-					/>
-					<label for="fiatCheckbox" class="ml-2">Quoted in Fiat</label>
-				</div>
-			</FieldGroup>
-
-			{#if $constructor.networks.ican.isFiat}
-				<FieldGroup>
-					<FieldGroupLabel>Fiat Currency</FieldGroupLabel>
-					<FieldGroupText
-						placeholder="e.g. USD"
-						stripWhitespace
-						classValue="uppercase placeholder:normal-case"
-						bind:value={$constructor.networks.ican.params.fiat.value}
 					/>
 				</FieldGroup>
 			{/if}
