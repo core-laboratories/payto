@@ -16,7 +16,7 @@
 	import { getAddress } from '#lib/helpers/get-address.helper.js';
 	import { standardizeOrg } from '#lib/helpers/standardize.helper.js';
 	import { toast } from '#lib/components/toast/index.js';
-	import { setLocaleFromPaytoData } from '$i18n';
+	import { setLocaleFromPaytoData } from '#i18n';
 	import { buildPayQrUri } from '#lib/validators/payqr.validator.js';
 	import { paymentBarcodeSvg } from '#lib/payqr/barcode.js';
 	import { payQrAdapters } from '#lib/payqr/national/adapters.js';

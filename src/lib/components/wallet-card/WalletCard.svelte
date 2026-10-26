@@ -27,7 +27,7 @@
 	import { onDestroy, onMount } from 'svelte';
 	import { blo } from "@blockchainhub/blo";
 	import { X, QrCode, Nfc, Navigation2, BadgeCheck, TriangleAlert } from 'lucide-svelte';
-	import { LL, setLocaleFromPaytoData, init } from '$i18n';
+	import { LL, setLocaleFromPaytoData, init } from '#i18n';
 	import { formatLocalizedNumber, formatRecurringSymbol, getNumberingSystem, isRtlLanguage } from '#lib/helpers/i18n.js';
 	import { verifyOrganization } from '#lib/helpers/oric.helper.js';
 	import { verifyWebsite } from '#lib/helpers/fintag.helper.js';
@@ -332,10 +332,7 @@
 					colorForeground,
 					organization: payto.organization || undefined,
 					organizationImage: undefined,
-					currency: payto.currency ?
-						payto.currency[1] ?
-							payto.currency[1] :
-							payto.currency[0] :
+					currency: payto.currency?.[0] ??
 						getCurrency($constructorStore.networks[getCategoryByValue(payto.hostname!) as ITransitionType], getCategoryByValue(payto.hostname!) as ITransitionType),
 					network: payto.hostname === 'void' ? payto.void! : payto.network,
 					item: payto.item || undefined,

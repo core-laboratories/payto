@@ -4,9 +4,9 @@ import { META_CONTENT } from '#lib/data/meta-content.data.js';
 import { checkValidity } from '#lib/helpers/check-validity.helper.js';
 import { calculateColorDistance } from '#lib/helpers/euclidean-distance.helper.js';
 import { standardizeOrg } from '#lib/helpers/standardize.helper.js';
-import { setLocaleFromPaytoData } from '$i18n';
-import { i18nObject } from '$i18n/i18n-util';
-import type { Locales } from '$i18n/i18n-types';
+import { setLocaleFromPaytoData } from '#i18n';
+import { i18nObject } from '#i18n/i18n-util';
+import type { Locales } from '#i18n/i18n-types';
 import { PUBLIC_ENV, PUBLIC_DEV_SERVER_URL } from '$app/env/public';
 
 /**
@@ -23,7 +23,8 @@ export const generateLink = (payload: IPayload[] = [], props: Record<string, any
 	}
 
 	let link = payload.filter((payload) => payload.value !== undefined || payload.query === true).reduce((acc, payload) => acc.concat('/', payload.value || (payload.placeholder ? payload.placeholder : '')), 'payto:/');
-	const { amount, currency, design, split, fiat, swap, ...rest } = props.params || {};
+	// Discard legacy fiat values from saved constructor data.
+	const { amount, currency, design, split, fiat: _fiat, swap, ...rest } = props.params || {};
 	const validParams = Object.entries<{ value: string | undefined; mandatory?: boolean }>(rest || {})
 		.filter(([_, param]) => param && (param.mandatory || Boolean(param.value)))
 		.map(([key, param]) => [kebabize(key), param.value]);
@@ -48,10 +49,6 @@ export const generateLink = (payload: IPayload[] = [], props: Record<string, any
 			searchParams.set('amount', amount?.value && currency?.value
 				? caseCurrency(currency.value) + ':' + amount.value
 				: currency?.value ? caseCurrency(currency.value) + ':' : amount?.value);
-		}
-
-		if (fiat?.value) {
-			searchParams.set('fiat', fiat.value.toLowerCase());
 		}
 
 		if (swap?.value) {
