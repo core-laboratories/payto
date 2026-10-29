@@ -1,3 +1,6 @@
+import Payto from 'payto-rl';
+import { generateLink } from '#lib/helpers/generate.helper.js';
+import { formatter } from '#lib/helpers/paypass-operator.helper.js';
 import { beforeAll, afterAll, describe, expect, it, vi } from 'vitest';
 import { generateKeyPairSync, createHash, verify } from 'node:crypto';
 import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
@@ -563,4 +566,30 @@ describe('National payloads across alternate barcode types', () => {
 					if (os === 'ios') await apple(response, sample.payload, appleType);
 					else await google(response, sample.payload, googleType);
 				});
+});
+
+// Generated random BIP173 address; never use the reporter's recipient in tests.
+describe('BTC payment request precision', () => {
+	const address = 'bc1q2arlmu9m58k22htatp099kznd32pygqm9luxw0';
+	for (const amount of ['0.000123', '0.00000001', '0.00012345', '0.00009999', '1.23456789', '0.00012300', '0.12345678', '0.10000000', '1.00000000', '0.00000000']) {
+		it(`preserves ${amount} through constructor generation and wallet formatting`, () => {
+			const uri = generateLink([{ value: 'btc' }, { value: address }] as any, {
+				network: 'btc',
+				params: {
+					currency: { value: 'btc' }, amount: { value: amount },
+					org: { value: 'Precision Test' }, item: { value: 'Test BTC' }
+				}
+			});
+			const parsed = new Payto(uri);
+			expect(parsed.address).toBe(address);
+			expect(parsed.amount).toBe(`btc:${amount}`);
+			expect(parsed.value).toBe(Number(amount));
+			for (const locale of ['en-US', 'nl-NL']) {
+				const expected = new Intl.NumberFormat(locale, {
+					minimumFractionDigits: 8, maximumFractionDigits: 8
+				}).format(Number(amount));
+				expect(formatter('btc', locale).format(parsed.value!)).toContain(expected);
+			}
+		});
+	}
 });
