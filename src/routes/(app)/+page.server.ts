@@ -1,6 +1,7 @@
 import { redirect } from '@sveltejs/kit';
+import type { PageServerLoad } from './$types';
 
-export async function load({ url }) {
+export const load: PageServerLoad = async ({ url }) => {
 	const fullUrl = new URL(url.href);
 	const authority = url.searchParams.get('authority') ?? undefined;
 	const hasPass = url.searchParams.get('pass') === '1';
@@ -18,4 +19,4 @@ export async function load({ url }) {
 		authority,
 		hasPass,
 	};
-}
+};
