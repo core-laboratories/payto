@@ -28,3 +28,36 @@ describe('ICAN amount currency', () => {
 		expect(passLink.searchParams.has('fiat')).toBe(false);
 	});
 });
+
+describe('decimal payment amounts', () => {
+	it.each([
+		[0.00000001, '0.00000001'],
+		['1e-8', '0.00000001'],
+		[1.234e-7, '0.0000001234'],
+		[1e21, '1000000000000000000000'],
+		['0.0000000100', '0.0000000100']
+	])('serializes %s without scientific notation', (value, expected) => {
+		const props = {
+			network: 'btc',
+			destination: 'bc1uv0kxu0nmh0j45ckg0r3zhh0yra4wy6yw2pqvvj',
+			params: { amount: { value } }
+		};
+		expect(new URL(getLink('ican', props)).searchParams.get('amount')).toBe(expected);
+		props.params.amount = { value, mandatory: true } as typeof props.params.amount;
+		expect(new URL(getLink('ican', props)).searchParams.get('amount')).toBe(expected);
+		expect(new URL(getLink('ican', {
+			...props,
+			params: { ...props.params, currency: { value: 'BTC' } }
+		})).searchParams.get('amount')).toBe(`btc:${expected}`);
+	});
+
+	it.each([false, true])('serializes decimal split values (percent: %s)', (isPercent) => {
+		const uri = generateLink([], {
+			params: {
+				amount: { value: 1 },
+				split: { value: 1e-8, address: 'recipient', isPercent }
+			}
+		});
+		expect(new URL(uri).searchParams.get('split')).toBe(`${isPercent ? 'p:' : ''}0.00000001@recipient`);
+	});
+});

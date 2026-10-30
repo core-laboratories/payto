@@ -1,3 +1,4 @@
+import { toDecimalString } from './decimal.helper';
 import { buildPayQrUri } from '#lib/validators/payqr.validator.js';
 import { parsePayQr, serializePayQr, payQrSchemes } from 'payto-rl';
 import { META_CONTENT } from '#lib/data/meta-content.data.js';
@@ -38,17 +39,18 @@ export const generateLink = (payload: IPayload[] = [], props: Record<string, any
 
 	if (props.params) {
 		// Amount transformer
+		const amountValue = amount?.value == null ? amount?.value : toDecimalString(amount.value);
 		if (amount?.mandatory) {
 			searchParams.set(
 				'amount',
 				currency?.value
-				? caseCurrency(currency.value) + ':' + amount.value
-				: amount.value
+				? caseCurrency(currency.value) + ':' + amountValue
+				: amountValue
 			);
 		} else if (amount?.value || currency?.value) {
 			searchParams.set('amount', amount?.value && currency?.value
-				? caseCurrency(currency.value) + ':' + amount.value
-				: currency?.value ? caseCurrency(currency.value) + ':' : amount?.value);
+				? caseCurrency(currency.value) + ':' + amountValue
+				: currency?.value ? caseCurrency(currency.value) + ':' : amountValue);
 		}
 
 		if (swap?.value) {
@@ -58,8 +60,8 @@ export const generateLink = (payload: IPayload[] = [], props: Record<string, any
 		// Split transformer
 		if (split?.value && split.address && amount?.value && amount.value > 0 && (!split.isPercent && split.value < amount.value || split.isPercent && split.value < 100)) {
 			searchParams.set('split', split.isPercent
-				? 'p:' + split.value + '@' + split.address
-				: split.value + '@' + split.address
+				? 'p:' + toDecimalString(split.value) + '@' + split.address
+				: toDecimalString(split.value) + '@' + split.address
 			);
 		}
 
