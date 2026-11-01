@@ -346,7 +346,7 @@ shared PayPass presentation links use it only for a nondefault format.
 
 ## Wallet generation verification
 
-See [wallet testing](WALLET-TESTING.md) for the real signed-artifact suite covering
+See [wallet testing](wallet-testing.md) for the real signed-artifact suite covering
 Apple `.pkpass` archives and Google Wallet JWTs, API/form defaults, supported
 country formats, alternate barcodes and rejection paths. Run `npm run test:wallet`.
 The suite uses temporary test keys and does not claim live device/service acceptance.

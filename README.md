@@ -595,7 +595,7 @@ List of sponsors: [![GitHub Sponsors](https://img.shields.io/github/sponsors/cor
 
 Use `payto://qr/{country}/{identifier}` with lowercase ISO country codes. PayQR is global; **Pay QR** is the website's label. Current mappings are BN tarusQR, KH KHQR, ID QRIS, LA LaoQR, MY DuitNow QR, MM MMQR, PH QR Ph, SG PayNow/SGQR, TH PromptPay/Thai QR and VN VietQR.
 
-See [PayQR API, country validation, encoder capabilities and authoritative references](docs/PAYQR.md). A PayTo URI, national payment payload, QR image and payment-network connection are separate things. Generating a syntactically valid QR does not imply participation in or authorization to acquire transactions from a payment network. Unsupported national profiles fail closed.
+See [PayQR API, country validation, encoder capabilities and authoritative references](docs/payqr.md). A PayTo URI, national payment payload, QR image and payment-network connection are separate things. Generating a syntactically valid QR does not imply participation in or authorization to acquire transactions from a payment network. Unsupported national profiles fail closed.
 
 ## PayPass formats and wallet support
 
@@ -610,8 +610,8 @@ matching supported scheme (`khqr`, `laoqr`, `duitnow`, `mmqr`, `paynow`,
 `promptpay`, `vietqr`). Omitting the format or entire design object selects PayTo.
 Use `os: "ios"` for Apple Wallet and `os: "android"` for Google Wallet. In form
 submissions, `props` and `design` are JSON-encoded fields. Existing authorization
-requirements apply. See [Pay QR examples](docs/PAYQR.md#pass-form-and-api-format-selection)
-and [EPC examples and requirements](docs/IBAN-EPC.md#formapi).
+requirements apply. See [Pay QR examples](docs/payqr.md#pass-form-and-api-format-selection)
+and [EPC examples and requirements](docs/iban-epc.md#formapi).
 
 Payment/integration links never include `format`. Copied/opened PayPass links
 include it only for a nondefault selection, such as `format=epc` or `format=khqr`.
@@ -621,11 +621,11 @@ The libraries expose optional `formats` metadata (for example, `['payto', 'epc']
 omitting it for PayTo-only methods. They handle PayTo URI data, not native payload
 conversion. All current Pay QR fields round-trip through parameter maps, but
 field accessors and validation parity are incomplete; see [coverage and known
-gaps](docs/PAYQR.md#field-coverage-and-validation-boundaries).
+gaps](docs/payqr.md#field-coverage-and-validation-boundaries).
 
 ## Wallet generation tests
 
 Run `npm run test:wallet` for Apple/Google generation coverage, including real
 signed artifacts with temporary test keys, native/PayTo payloads, API/form
 requests and invalid-input handling. OpenSSL is required. See
-[wallet test coverage and live-testing limits](docs/WALLET-TESTING.md).
+[wallet test coverage and live-testing limits](docs/wallet-testing.md).
