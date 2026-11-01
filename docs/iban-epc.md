@@ -37,6 +37,6 @@ Use `os: "android"` for Google Wallet. Omit `design`, omit `design.qrFormat`, or
 
 ## Verification
 
-Tests cover the guideline's example fields using UTF-8, optional amount/BIC, RF checksums, field and byte limits, wrong currencies, invalid IBAN/BIC, mutually exclusive remittance, all four barcode types, JSON/form and both wallet platforms, preview readiness and shared/copied links. The fast API tests mock wallet builders; the [artifact suite](WALLET-TESTING.md) also exercises real builders and verifies signatures using ephemeral test credentials. No passes are registered or published.
+Tests cover the guideline's example fields using UTF-8, optional amount/BIC, RF checksums, field and byte limits, wrong currencies, invalid IBAN/BIC, mutually exclusive remittance, all four barcode types, JSON/form and both wallet platforms, preview readiness and shared/copied links. The fast API tests mock wallet builders; the [artifact suite](wallet-testing.md) also exercises real builders and verifies signatures using ephemeral test credentials. No passes are registered or published.
 
 The legacy `native` format remains accepted as an alias for `epc`; newly generated PayPass links use `epc`.

@@ -233,7 +233,7 @@ for non-EEA beneficiaries and validated whenever supplied. EPC supports EUR only
 `reference`, `purpose` and `information` are preserved in PayTo links in both
 formats. Native EPC validates RF references, purpose syntax and field lengths;
 RF reference and unstructured `message` are mutually exclusive. See
-[IBAN/EPC requirements and API example](IBAN-EPC.md).
+[IBAN/EPC requirements and API example](iban-epc.md).
 
 ### Pay QR
 
@@ -263,7 +263,7 @@ QR monetary data uses `amount=CURRENCY:positive-decimal` with country-specific
 currency/precision rules. Static KHQR can select `qr-currency=KHR|USD` without an
 amount. Country-specific fields include routing credentials, receiver name,
 merchant data, static/dynamic settings and timestamps. Native formats require
-more than a portable identifier; see the full [field mappings and requirements](PAYQR.md).
+more than a portable identifier; see the full [field mappings and requirements](payqr.md).
 Duplicate query keys, malformed escaping, controls and unsupported path shapes
 are rejected. Library validation is not complete native-generation validation.
 
@@ -647,8 +647,8 @@ Both Apple Wallet and Google Wallet use the selected payload. JSON and form
 POSTs to `https://payto.money/pass` accept `design.qrFormat`; omit that property
 or the whole design object for PayTo. Use `os: "ios"` or `os: "android"`.
 Form fields `props` and `design` contain JSON strings. Existing authorization
-rules apply. See [Pay QR API](PAYQR.md#pass-form-and-api-format-selection) and
-[EPC API](IBAN-EPC.md#formapi).
+rules apply. See [Pay QR API](payqr.md#pass-form-and-api-format-selection) and
+[EPC API](iban-epc.md#formapi).
 
 `design.barcode` chooses `qr`, `pdf417`, `aztec` or `code128`; default `qr`.
 Invalid selected-format data hides the preview barcode and blocks downloads.
@@ -664,7 +664,7 @@ This is derived metadata, not a URI parameter or proof of native-generation
 readiness. Libraries encode/decode PayTo links only; native payload conversion
 and rendering stay in the website. Not every Pay QR parameter has a dedicated
 property, and validation parity remains incomplete; use the parameter map and
-consult [coverage limitations](PAYQR.md#field-coverage-and-validation-boundaries).
+consult [coverage limitations](payqr.md#field-coverage-and-validation-boundaries).
 
 ### Portal-exposed today
 

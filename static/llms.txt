@@ -7,9 +7,9 @@ Implementation snapshot: 2026-09-16. Website: https://payto.money. Public URL: h
 ## Documentation and implementation
 
 - [URI scheme](https://github.com/core-laboratories/Payto/blob/HEAD/docs/scheme.md): general payment authorities and query parameters.
-- [Pay QR](https://github.com/core-laboratories/Payto/blob/HEAD/docs/PAYQR.md): national profiles, field mappings, sources and validation limitations.
-- [EPC SEPA](https://github.com/core-laboratories/Payto/blob/HEAD/docs/IBAN-EPC.md): IBAN format requirements and wallet API examples.
-- [Wallet tests](https://github.com/core-laboratories/Payto/blob/HEAD/docs/WALLET-TESTING.md): signed-artifact testing and live acceptance limits.
+- [Pay QR](https://github.com/core-laboratories/Payto/blob/HEAD/docs/payqr.md): national profiles, field mappings, sources and validation limitations.
+- [EPC SEPA](https://github.com/core-laboratories/Payto/blob/HEAD/docs/iban-epc.md): IBAN format requirements and wallet API examples.
+- [Wallet tests](https://github.com/core-laboratories/Payto/blob/HEAD/docs/wallet-testing.md): signed-artifact testing and live acceptance limits.
 - [TypeScript library](https://github.com/bchainhub/payto-rl): PayTo URI codec and metadata.
 - [Flutter library](https://github.com/bchainhub/flutter_paytorl): Dart PayTo URI codec and metadata.
 
