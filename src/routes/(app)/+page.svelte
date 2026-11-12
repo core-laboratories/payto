@@ -332,9 +332,12 @@
 								</div>
 							</div>
 						{/if}
-						<p>
-							<code class="text-xs">payto://</code> opens installed apps that support the PayTo protocol. If you don't have an app installed that handles PayTo links, clicking the link will not open anything. <code class="text-xs">web+payto://</code> is for web applications and will not open installed apps.
-						</p>
+						<a
+							class="self-start mt-2 inline-flex items-center gap-2 px-3 py-2 text-sm text-white no-underline! border border-gray-600 rounded-sm transition duration-200 hover:border-emerald-400"
+							href="https://chromewebstore.google.com/detail/core-extension/pnkikglofdlbgifmfllgekdpdjabgiob"
+							target="_blank"
+							rel="noopener noreferrer"
+						><img src="/icons/core-extension.webp" alt="" width="32" height="32" class="w-6 h-6" />Get Core Extension to open PayTo links</a>
 					</div>
 				{/if}
 			</BoxContent>
